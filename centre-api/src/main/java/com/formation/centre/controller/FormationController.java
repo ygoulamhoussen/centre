@@ -8,6 +8,7 @@ import com.formation.centre.model.Formation;
 import com.formation.centre.repository.FormationRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/formations")
@@ -34,6 +35,30 @@ public class FormationController {
             return new ResponseEntity<>(_formation, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Formation> updateFormation(@PathVariable("id") long id, @RequestBody Formation formation) {
+        Optional<Formation> formationData = formationRepository.findById(id);
+
+        if (formationData.isPresent()) {
+            Formation _formation = formationData.get();
+            _formation.setTitre(formation.getTitre());
+            _formation.setDescription(formation.getDescription());
+            return new ResponseEntity<>(formationRepository.save(_formation), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<HttpStatus> deleteFormation(@PathVariable("id") long id) {
+        try {
+            formationRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

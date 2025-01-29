@@ -33,27 +33,25 @@ export default {
   },
   data() {
     return {
-      contacts: [],
+      contacts: [
+        {
+          id: 1,
+          title: "Service Client",
+          description: "Pour toute question relative à nos formations, contactez notre service client."
+        },
+        {
+          id: 2,
+          title: "Support Technique",
+          description: "Pour toute assistance technique, contactez notre support technique."
+        },
+        {
+          id: 3,
+          title: "Service Administratif",
+          description: "Pour toute question administrative, contactez notre service administratif."
+        }
+      ],
       errorMessage: "" // Ajouter une propriété pour les messages d'erreur
     };
-  },
-  created() {
-    this.fetchContacts();
-  },
-  methods: {
-    async fetchContacts() {
-      try {
-        const response = await fetch('http://localhost:8080/api/contacts');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        this.contacts = await response.json();
-        this.errorMessage = ""; // Effacer le message d'erreur en cas de succès
-      } catch (error) {
-        console.error('Erreur lors de la récupération des contacts:', error);
-        this.errorMessage = 'Erreur lors de la récupération des contacts. Veuillez réessayer.'; // Définir le message d'erreur
-      }
-    }
   }
 };
 </script>

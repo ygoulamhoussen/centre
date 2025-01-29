@@ -4,7 +4,8 @@ import ContactPage from '../views/ContactPage.vue';
 import FormationsPage from '../views/FormationsPage.vue';
 import AdminPage from '../views/AdminPage.vue';
 import LoginPage from '../views/LoginPage.vue';
-import { useStore } from '../stores/store'; // Import the store
+import FormationsManagementPage from '../views/FormationsManagementPage.vue'; // Import the new page
+import { useAuthStore } from '../stores/auth'; // Correct the import path
 
 const routes = [
   { path: '/', component: HomePage },
@@ -13,6 +14,11 @@ const routes = [
   {
     path: '/admin',
     component: AdminPage,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/formations',
+    component: FormationsManagementPage,
     meta: { requiresAuth: true, requiresAdmin: true }
   },
   { path: '/login', component: LoginPage }
@@ -25,9 +31,9 @@ const router = createRouter({
 
 // Navigation guard to check for authentication and admin access
 router.beforeEach((to, from, next) => {
-  const userProfile = JSON.parse(sessionStorage.getItem('userProfile'));
-  const isAuthenticated = userProfile !== null;
-  const isAdmin = isAuthenticated && userProfile.role === 'ADMINISTRATEUR';
+  const authStore = useAuthStore();
+  const isAuthenticated = authStore.isAuthenticated;
+  const isAdmin = authStore.isAdmin;
 
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!isAuthenticated) {

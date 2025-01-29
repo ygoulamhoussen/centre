@@ -19,6 +19,8 @@
 </template>
 
 <script>
+import { useAuthStore } from '../stores/auth'; // Correct the import path
+
 export default {
   name: "LoginPage",
   data() {
@@ -31,9 +33,6 @@ export default {
   },
   methods: {
     async login() {
-      console.log('Login method called'); // Debugging line
-      console.log('Email:', this.email); // Debugging line
-      console.log('Password:', this.password); // Debugging line
       try {
         const response = await fetch('http://localhost:8080/api/utilisateurs/login', {
           method: 'POST',
@@ -46,14 +45,12 @@ export default {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        console.log('Login successful:', data); // Debugging line
         this.errorMessage = "";
         this.successMessage = "Connexion réussie !"; // Set success message
-        sessionStorage.setItem('userProfile', JSON.stringify(data)); // Store user profile in session
+        const authStore = useAuthStore();
+        authStore.login(data);
         this.$router.push('/'); // Redirect to homepage
-        // ... handle successful login ...
       } catch (error) {
-        console.error('Error during login:', error);
         this.errorMessage = 'Erreur lors de la connexion. Veuillez réessayer.';
         this.successMessage = ""; // Clear success message on error
       }

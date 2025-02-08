@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.formation.centre.model.Formation;
 import com.formation.centre.repository.FormationRepository;
+import com.formation.centre.service.FormationService;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,9 @@ public class FormationController {
 
     @Autowired
     private FormationRepository formationRepository;
+
+    @Autowired
+    private FormationService formationService;
 
     @GetMapping
     public ResponseEntity<List<Formation>> getAllFormations() {
@@ -65,5 +69,10 @@ public class FormationController {
     @RequestMapping(method = RequestMethod.OPTIONS)
     public ResponseEntity<?> handleOptions() {
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/search")
+    public List<Formation> searchFormations(@RequestParam(required = false) String searchString) {
+        return formationService.searchFormations(searchString);
     }
 }

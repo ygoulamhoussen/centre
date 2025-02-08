@@ -5,6 +5,7 @@ import FormationsPage from '../views/FormationsPage.vue';
 import AdminPage from '../views/AdminPage.vue';
 import LoginPage from '../views/LoginPage.vue';
 import FormationsManagementPage from '../views/FormationsManagementPage.vue'; // Import the new page
+import FormateursPage from '../views/FormateursPage.vue'; // Import the new page
 import { useAuthStore } from '../stores/auth'; // Correct the import path
 
 const routes = [
@@ -19,6 +20,11 @@ const routes = [
   {
     path: '/admin/formations',
     component: FormationsManagementPage,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/formateurs',
+    component: FormateursPage,
     meta: { requiresAuth: true, requiresAdmin: true }
   },
   { path: '/login', component: LoginPage }

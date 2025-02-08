@@ -1,63 +1,47 @@
 <template>
-  <div class="formations-management-page">
+  <DefaultLayout :breadcrumbSegments="breadcrumbSegments">
     <HeaderSection
       title="Gestion des Formations"
       subtitle="Ajoutez, mettez à jour ou supprimez des formations."
-      link="/admin"
-      linkText="Retour à l'administration"
     />
-    <section class="fr-container fr-my-6w">
-      <button @click="showAddForm" class="fr-btn fr-btn--primary">Ajouter une Formation</button>
-      <DSFRTable
-        title="Liste des Formations"
-        :headers="['Titre', 'Description', 'Actions']"
-        :rows="tableRows"
-        :escapeHtml="false"
-      />
-      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-    </section>
-
-    <div v-if="showForm" class="fr-modal" id="modal-form">
-      <div class="fr-container fr-my-6w">
-        <h2>{{ formTitle }}</h2>
-        <form @submit.prevent="submitForm">
-          <div class="form-group">
-            <label for="titre">Titre</label>
-            <input type="text" id="titre" v-model="form.titre" required />
-          </div>
-          <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description" v-model="form.description" required></textarea>
-          </div>
-          <button type="submit" class="fr-btn fr-btn--primary">Enregistrer</button>
-          <button type="button" @click="cancelForm" class="fr-btn fr-btn--secondary">Annuler</button>
-        </form>
-      </div>
-    </div>
-  </div>
+    <DSFRTable
+      title="Liste des Formations"
+      :headers="['Titre', 'Description', 'Actions']"
+      :rows="tableRows"
+      @add="addFormation"
+      @edit="editFormation"
+      @delete="deleteFormation"
+    />
+    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+    <p class="back-button">
+      <a href="/admin" class="fr-btn fr-btn--primary">Retour à l'administration</a>
+    </p>
+  </DefaultLayout>
 </template>
 
 <script>
 import HeaderSection from '../components/HeaderSection.vue';
 import DSFRTable from '../components/DSFRTable.vue';
+import DefaultLayout from '../layouts/DefaultLayout.vue';
 import { ref, onMounted, computed } from 'vue';
 
 export default {
   name: "FormationsManagementPage",
   components: {
     HeaderSection,
-    DSFRTable
+    DSFRTable,
+    DefaultLayout
   },
   setup() {
     const formations = ref([]);
     const errorMessage = ref("");
-    const showForm = ref(false);
-    const formTitle = ref("");
-    const form = ref({
-      id: null,
-      titre: "",
-      description: ""
-    });
+    const currentFormation = ref(null);
+
+    const breadcrumbSegments = [
+      { name: 'Accueil', link: '/' },
+      { name: 'Admin', link: '/admin' },
+      { name: 'Gestion des Formations', link: '/admin/formations' }
+    ];
 
     const fetchFormations = async () => {
       try {
@@ -73,19 +57,50 @@ export default {
       }
     };
 
-    const showAddForm = () => {
-      formTitle.value = "Ajouter une Formation";
-      form.value = { id: null, titre: "", description: "" };
-      showForm.value = true;
+    const addFormation = async (formation) => {
+      try {
+        const response = await fetch('http://localhost:8080/api/formations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formation)
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        fetchFormations();
+        errorMessage.value = ""; // Clear error message on success
+      } catch (error) {
+        console.error('Error adding formation:', error);
+        errorMessage.value = 'Erreur lors de l\'ajout de la formation. Veuillez réessayer.'; // Set error message
+      }
     };
 
-    const editFormation = (formation) => {
-      formTitle.value = "Modifier la Formation";
-      form.value = { ...formation };
-      showForm.value = true;
+    const editFormation = async (index, formation) => {
+      const id = formations.value[index].id;
+      currentFormation.value = { ...formations.value[index] }; // Store current formation data
+      try {
+        const response = await fetch(`http://localhost:8080/api/formations/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formation)
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        fetchFormations();
+        errorMessage.value = ""; // Clear error message on success
+      } catch (error) {
+        console.error('Error editing formation:', error);
+        errorMessage.value = 'Erreur lors de la modification de la formation. Veuillez réessayer.'; // Set error message
+      }
     };
 
-    const deleteFormation = async (id) => {
+    const deleteFormation = async (index) => {
+      const id = formations.value[index].id;
       try {
         const response = await fetch(`http://localhost:8080/api/formations/${id}`, {
           method: 'DELETE'
@@ -101,39 +116,11 @@ export default {
       }
     };
 
-    const submitForm = async () => {
-      try {
-        const method = form.value.id ? 'PUT' : 'POST';
-        const url = form.value.id ? `http://localhost:8080/api/formations/${form.value.id}` : 'http://localhost:8080/api/formations';
-        const response = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(form.value)
-        });
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        fetchFormations();
-        showForm.value = false;
-        errorMessage.value = ""; // Clear error message on success
-      } catch (error) {
-        console.error('Error saving formation:', error);
-        errorMessage.value = 'Erreur lors de l\'enregistrement de la formation. Veuillez réessayer.'; // Set error message
-      }
-    };
-
-    const cancelForm = () => {
-      showForm.value = false;
-    };
-
     const tableRows = computed(() => {
       return formations.value.map(formation => [
         formation.titre,
         formation.description,
-        `<button @click="editFormation(${formation})" class="fr-btn fr-btn--secondary">Modifier</button>
-         <button @click="deleteFormation(${formation.id})" class="fr-btn fr-btn--tertiary">Supprimer</button>`
+        '' // Placeholder for action buttons
       ]);
     });
 
@@ -144,15 +131,12 @@ export default {
     return {
       formations,
       errorMessage,
-      showForm,
-      formTitle,
-      form,
-      showAddForm,
+      addFormation,
       editFormation,
       deleteFormation,
-      submitForm,
-      cancelForm,
-      tableRows
+      tableRows,
+      breadcrumbSegments,
+      currentFormation
     };
   }
 };
@@ -169,34 +153,8 @@ export default {
   text-align: center;
 }
 
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-.fr-modal {
-  display: block;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+.back-button {
+  margin-top: 20px;
+  text-align: left;
 }
 </style>

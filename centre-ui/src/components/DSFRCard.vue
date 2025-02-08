@@ -19,11 +19,6 @@
         </div>
       </div>
     </div>
-    <div class="fr-card__header">
-      <div class="fr-card__img">
-        <img class="fr-responsive-img" :src="imageSrc" :alt="imageAlt" />
-      </div>
-    </div>
   </div>
 </template>
 

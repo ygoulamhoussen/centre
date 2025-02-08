@@ -1,5 +1,5 @@
 <template>
-  <section class="fr-container fr-my-6w">
+
     <h2 class="fr-h3">Témoignages</h2>
     <div class="fr-grid-row fr-grid-row--gutters">
       <div
@@ -15,7 +15,7 @@
         </div>
       </div>
     </div>
-  </section>
+
 </template>
 
 <script>

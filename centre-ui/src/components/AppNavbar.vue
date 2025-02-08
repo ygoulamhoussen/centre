@@ -66,9 +66,6 @@
             <li class="fr-nav__item">
               <a class="fr-nav__link" href="/contact" target="_self">Contact</a>
             </li>
-            <li class="fr-nav__item" v-if="authStore.isAuthenticated">
-              <a class="fr-nav__link" href="/profile" target="_self">Profil</a>
-            </li>
             <li class="fr-nav__item" v-if="authStore.isAuthenticated && authStore.isAdmin">
               <a class="fr-nav__link" href="/admin" target="_self">Admin</a>
             </li>

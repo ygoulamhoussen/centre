@@ -1,53 +1,40 @@
 <template>
-  <div>
+  <DefaultLayout :breadcrumbSegments="breadcrumbSegments">
     <HeaderSection
       title="Bienvenue au Centre de Formation"
       subtitle="Explorez nos formations pour développer vos compétences et réussir votre avenir."
       link="/formations"
       linkText="Découvrir nos formations"
     />
-    <section class="fr-container fr-my-6w">
+
       <h2 class="fr-h3">Qui sommes-nous ?</h2>
       <p class="fr-text">
         Notre centre de formation propose des programmes diversifiés pour répondre aux besoins
         des étudiants et des professionnels. Rejoignez une communauté dynamique et bénéficiez de l'expertise de nos formateurs.
       </p>
-    </section>
-    <section class="fr-container fr-my-6w">
-      <h2 class="fr-h3">Nos Formations</h2>
-      <div class="fr-grid-row fr-grid-row--gutters">
-        <div
-          class="fr-col-12 fr-col-md-4"
-          v-for="course in courses"
-          :key="course.id"
-        >
-          <ContentCard :title="course.title" :description="course.description" />
-        </div>
-      </div>
-    </section>
+
+
+
+
     <TestimonialsSection :testimonials="testimonials" />
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-    <footer class="fr-footer" role="contentinfo">
-      <div class="fr-container">
-        <div class="fr-footer__bottom">
-          <p class="fr-footer__bottom-title">&copy; 2024 Centre de Formation</p>
-        </div>
-      </div>
-    </footer>
-  </div>
+
+  </DefaultLayout>
 </template>
 
 <script>
 import HeaderSection from '../components/HeaderSection.vue';
 import ContentCard from '../components/ContentCard.vue';
 import TestimonialsSection from '../components/TestimonialsSection.vue';
+import DefaultLayout from '../layouts/DefaultLayout.vue';
 
 export default {
   name: "HomePage",
   components: {
     HeaderSection,
     ContentCard,
-    TestimonialsSection
+    TestimonialsSection,
+    DefaultLayout
   },
   data() {
     return {
@@ -88,7 +75,10 @@ export default {
           message: "J'ai beaucoup appris et je recommande vivement ce centre de formation.",
         },
       ],
-      errorMessage: "" // Add error message data property
+      errorMessage: "", // Add error message data property
+      breadcrumbSegments: [
+        { name: 'Accueil', link: '/' }
+      ]
     };
   },
   created() {

@@ -1,13 +1,11 @@
 <template>
   <section class="fr-hero fr-hero--lg">
-    <div class="fr-container">
+    <div >
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col-12">
           <h1 class="fr-display-lg">{{ title }}</h1>
           <p class="fr-text--lead">{{ subtitle }}</p>
-          <p>
-            <a :href="link" class="fr-btn fr-btn--primary">{{ linkText }}</a>
-          </p>
+
         </div>
       </div>
     </div>

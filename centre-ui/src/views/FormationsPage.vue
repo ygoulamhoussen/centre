@@ -1,10 +1,8 @@
 <template>
-  <div class="fr-container fr-mt-6w">
+  <DefaultLayout :breadcrumbSegments="breadcrumbSegments">
     <HeaderSection
       title="Nos Formations"
       subtitle="Découvrez les formations proposées par notre centre pour développer vos compétences dans le domaine informatique."
-      link="/"
-      linkText="Retour à l'accueil"
     />
     <section>
       <div class="fr-grid-row fr-grid-row--gutters">
@@ -17,24 +15,33 @@
         </div>
       </div>
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <p class="back-button">
+        <a href="/" class="fr-btn fr-btn--primary">Retour à l'accueil</a>
+      </p>
     </section>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script>
 import HeaderSection from '../components/HeaderSection.vue';
 import ContentCard from '../components/ContentCard.vue';
+import DefaultLayout from '../layouts/DefaultLayout.vue';
 
 export default {
   name: "FormationsPage",
   components: {
     HeaderSection,
-    ContentCard
+    ContentCard,
+    DefaultLayout
   },
   data() {
     return {
       formations: [],
-      errorMessage: "" // Add error message data property
+      errorMessage: "", // Add error message data property
+      breadcrumbSegments: [
+        { name: 'Accueil', link: '/' },
+        { name: 'Formations', link: '/formations' }
+      ]
     };
   },
   created() {
@@ -64,5 +71,9 @@ export default {
   color: red;
   margin-top: 10px;
   text-align: center;
+}
+.back-button {
+  margin-top: 20px;
+  text-align: left;
 }
 </style>

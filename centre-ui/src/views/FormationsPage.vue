@@ -5,9 +5,17 @@
       subtitle="Découvrez les formations proposées par notre centre pour développer vos compétences dans le domaine informatique."
     />
     <section>
+      <input
+        type="text"
+        v-model="searchQuery"
+        @input="searchFormations"
+        placeholder="Rechercher une formation"
+        class="fr-input"
+      />
+      <br>
       <div class="fr-grid-row fr-grid-row--gutters">
         <div
-          v-for="formation in formations"
+          v-for="formation in filteredFormations"
           :key="formation.id"
           class="fr-col-12 fr-col-md-6 fr-col-lg-4"
         >
@@ -37,7 +45,9 @@ export default {
   data() {
     return {
       formations: [],
-      errorMessage: "", // Add error message data property
+      filteredFormations: [],
+      searchQuery: "",
+      errorMessage: "",
       breadcrumbSegments: [
         { name: 'Accueil', link: '/' },
         { name: 'Formations', link: '/formations' }
@@ -55,10 +65,24 @@ export default {
           throw new Error('Network response was not ok');
         }
         this.formations = await response.json();
-        this.errorMessage = ""; // Clear error message on success
+        this.filteredFormations = this.formations;
+        this.errorMessage = "";
       } catch (error) {
         console.error('Error fetching formations:', error);
-        this.errorMessage = 'Erreur lors de la récupération des formations. Veuillez réessayer.'; // Set error message
+        this.errorMessage = 'Erreur lors de la récupération des formations. Veuillez réessayer.';
+      }
+    },
+    async searchFormations() {
+      try {
+        const response = await fetch(`http://localhost:8080/api/formations/search?searchString=${this.searchQuery}`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        this.filteredFormations = await response.json();
+        this.errorMessage = "";
+      } catch (error) {
+        console.error('Error searching formations:', error);
+        this.errorMessage = 'Erreur lors de la recherche des formations. Veuillez réessayer.';
       }
     }
   }

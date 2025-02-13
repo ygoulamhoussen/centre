@@ -53,7 +53,7 @@ export default {
           description: "Pour toute question administrative, contactez notre service administratif."
         }
       ],
-      errorMessage: "", // Ajouter une propriété pour les messages d'erreur
+      errorMessage: "",
       breadcrumbSegments: [
         { name: 'Accueil', link: '/' },
         { name: 'Contact', link: '/contact' }

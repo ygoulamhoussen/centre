@@ -75,7 +75,7 @@ export default {
           message: "J'ai beaucoup appris et je recommande vivement ce centre de formation.",
         },
       ],
-      errorMessage: "", // Add error message data property
+      errorMessage: "",
       breadcrumbSegments: [
         { name: 'Accueil', link: '/' }
       ]
@@ -88,10 +88,10 @@ export default {
     async fetchData() {
       try {
         // Simulate fetching data for courses and testimonials
-        this.errorMessage = ""; // Clear error message on success
+        this.errorMessage = "";
       } catch (error) {
         console.error('Error fetching data:', error);
-        this.errorMessage = 'Erreur lors de la récupération des données. Veuillez réessayer.'; // Set error message
+        this.errorMessage = 'Erreur lors de la récupération des données. Veuillez réessayer.';
       }
     }
   }

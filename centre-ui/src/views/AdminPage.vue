@@ -47,8 +47,6 @@
 import HeaderSection from '../components/HeaderSection.vue';
 import DSFRCard from '../components/DSFRCard.vue';
 import DefaultLayout from '../layouts/DefaultLayout.vue';
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 
 export default {
   name: "AdminPage",
@@ -57,54 +55,44 @@ export default {
     DSFRCard,
     DefaultLayout
   },
-  setup() {
-    const isAdmin = ref(false);
-    const errorMessage = ref("");
-    const router = useRouter();
-
-    const breadcrumbSegments = [
-      { name: 'Accueil', link: '/' },
-      { name: 'Admin', link: '/admin' }
-    ];
-
-    const initializeAuth = () => {
+  data() {
+    return {
+      isAdmin: false,
+      errorMessage: "",
+      breadcrumbSegments: [
+        { name: 'Accueil', link: '/' },
+        { name: 'Admin', link: '/admin' }
+      ]
+    };
+  },
+  created() {
+    this.initializeAuth();
+  },
+  methods: {
+    initializeAuth() {
       const userProfile = JSON.parse(sessionStorage.getItem('userProfile'));
       if (userProfile) {
-        isAdmin.value = userProfile.role === 'ADMINISTRATEUR';
+        this.isAdmin = userProfile.role === 'ADMINISTRATEUR';
       }
-    };
-
-    const addFormateur = () => {
+    },
+    addFormateur() {
       try {
         // Logique pour ajouter un formateur
-        errorMessage.value = ""; // Clear error message on success
+        this.errorMessage = "";
       } catch (error) {
         console.error('Error adding formateur:', error);
-        errorMessage.value = 'Erreur lors de l\'ajout du formateur. Veuillez réessayer.'; // Set error message
+        this.errorMessage = 'Erreur lors de l\'ajout du formateur. Veuillez réessayer.';
       }
-    };
-
-    const addSession = () => {
+    },
+    addSession() {
       try {
         // Logique pour ajouter une session
-        errorMessage.value = ""; // Clear error message on success
+        this.errorMessage = "";
       } catch (error) {
         console.error('Error adding session:', error);
-        errorMessage.value = 'Erreur lors de l\'ajout de la session. Veuillez réessayer.'; // Set error message
+        this.errorMessage = 'Erreur lors de l\'ajout de la session. Veuillez réessayer.';
       }
-    };
-
-    onMounted(() => {
-      initializeAuth();
-    });
-
-    return {
-      isAdmin,
-      errorMessage,
-      addFormateur,
-      addSession,
-      breadcrumbSegments
-    };
+    }
   }
 };
 </script>

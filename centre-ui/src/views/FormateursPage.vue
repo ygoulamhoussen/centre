@@ -8,7 +8,7 @@
       <DSFRTable
         title="Liste des Formateurs"
         :headers="['Nom', 'Email', 'Actions']"
-        :rows="formateursTableRows"
+        :rows="formateursTableRows()"
         @add="addFormateur"
         @edit="editFormateur"
         @delete="deleteFormateur"
@@ -26,8 +26,6 @@
 import HeaderSection from '../components/HeaderSection.vue';
 import DSFRTable from '../components/DSFRTable.vue';
 import DefaultLayout from '../layouts/DefaultLayout.vue';
-import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
 
 export default {
   name: "FormateursPage",
@@ -36,39 +34,42 @@ export default {
     DSFRTable,
     DefaultLayout
   },
-  setup() {
-    const isAdmin = ref(false);
-    const errorMessage = ref("");
-    const formateurs = ref([]);
-    const router = useRouter();
-
-    const breadcrumbSegments = [
-      { name: 'Accueil', link: '/' },
-      { name: 'Admin', link: '/admin' },
-      { name: 'Formateurs', link: '/admin/formateurs' }
-    ];
-
-    const initializeAuth = () => {
+  data() {
+    return {
+      isAdmin: false,
+      errorMessage: "",
+      formateurs: [],
+      breadcrumbSegments: [
+        { name: 'Accueil', link: '/' },
+        { name: 'Admin', link: '/admin' },
+        { name: 'Formateurs', link: '/admin/formateurs' }
+      ]
+    };
+  },
+  created() {
+    this.initializeAuth();
+    this.fetchFormateurs();
+  },
+  methods: {
+    initializeAuth() {
       const userProfile = JSON.parse(sessionStorage.getItem('userProfile'));
       if (userProfile) {
-        isAdmin.value = userProfile.role === 'ADMINISTRATEUR';
+        this.isAdmin = userProfile.role === 'ADMINISTRATEUR';
       }
-    };
-
-    const fetchFormateurs = async () => {
+    },
+    async fetchFormateurs() {
       try {
         const response = await fetch('http://localhost:8080/api/formateurs');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        formateurs.value = await response.json();
+        this.formateurs = await response.json();
       } catch (error) {
         console.error('Error fetching formateurs:', error);
-        errorMessage.value = 'Erreur lors de la récupération des formateurs. Veuillez réessayer.';
+        this.errorMessage = 'Erreur lors de la récupération des formateurs. Veuillez réessayer.';
       }
-    };
-
-    const addFormateur = async (formateur) => {
+    },
+    async addFormateur(formateur) {
       try {
         const response = await fetch('http://localhost:8080/api/formateurs', {
           method: 'POST',
@@ -80,15 +81,14 @@ export default {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        await fetchFormateurs(); // Refresh the list
-        errorMessage.value = ""; // Clear error message on success
+        await this.fetchFormateurs();
+        this.errorMessage = "";
       } catch (error) {
         console.error('Error adding formateur:', error);
-        errorMessage.value = 'Erreur lors de l\'ajout du formateur. Veuillez réessayer.';
+        this.errorMessage = 'Erreur lors de l\'ajout du formateur. Veuillez réessayer.';
       }
-    };
-
-    const editFormateur = async (id, formateur) => {
+    },
+    async editFormateur(id, formateur) {
       try {
         const response = await fetch(`http://localhost:8080/api/formateurs/${id}`, {
           method: 'PUT',
@@ -100,15 +100,14 @@ export default {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        await fetchFormateurs(); // Refresh the list
-        errorMessage.value = ""; // Clear error message on success
+        await this.fetchFormateurs();
+        this.errorMessage = "";
       } catch (error) {
         console.error('Error editing formateur:', error);
-        errorMessage.value = 'Erreur lors de la modification du formateur. Veuillez réessayer.';
+        this.errorMessage = 'Erreur lors de la modification du formateur. Veuillez réessayer.';
       }
-    };
-
-    const deleteFormateur = async (id) => {
+    },
+    async deleteFormateur(id) {
       try {
         const response = await fetch(`http://localhost:8080/api/formateurs/${id}`, {
           method: 'DELETE'
@@ -116,48 +115,31 @@ export default {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        await fetchFormateurs(); // Refresh the list
-        errorMessage.value = ""; // Clear error message on success
+        await this.fetchFormateurs();
+        this.errorMessage = "";
       } catch (error) {
         console.error('Error deleting formateur:', error);
-        errorMessage.value = 'Erreur lors de la suppression du formateur. Veuillez réessayer.';
+        this.errorMessage = 'Erreur lors de la suppression du formateur. Veuillez réessayer.';
       }
-    };
-
-    const formateursTableRows = computed(() => {
-      return formateurs.value.map(formateur => ({
+    },
+    formateursTableRows() {
+      return this.formateurs.map(formateur => ({
         Nom: formateur.nom,
         Email: formateur.email,
         Actions: {
-          edit: () => openEditForm(formateur),
-          delete: () => deleteFormateur(formateur.id)
+          edit: () => this.openEditForm(formateur),
+          delete: () => this.deleteFormateur(formateur.id)
         }
       }));
-    });
-
-    const openEditForm = (formateur) => {
+    },
+    openEditForm(formateur) {
       const form = {
         id: formateur.id,
         Nom: formateur.nom,
         Email: formateur.email
       };
-      editFormateur(formateur.id, form);
-    };
-
-    onMounted(() => {
-      initializeAuth();
-      fetchFormateurs();
-    });
-
-    return {
-      isAdmin,
-      errorMessage,
-      formateursTableRows,
-      addFormateur,
-      editFormateur,
-      deleteFormateur,
-      breadcrumbSegments
-    };
+      this.editFormateur(formateur.id, form);
+    }
   }
 };
 </script>

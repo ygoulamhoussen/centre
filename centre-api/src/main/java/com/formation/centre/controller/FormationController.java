@@ -1,12 +1,13 @@
 package com.formation.centre.controller;
 
+import com.formation.centre.exception.FormationNotFoundException;
+import com.formation.centre.model.Formation;
+import com.formation.centre.repository.FormationRepository;
+import com.formation.centre.service.FormationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.formation.centre.model.Formation;
-import com.formation.centre.repository.FormationRepository;
-import com.formation.centre.service.FormationService;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,15 +45,15 @@ public class FormationController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Formation> updateFormation(@PathVariable("id") long id, @RequestBody Formation formation) {
-        Optional<Formation> formationData = formationRepository.findById(id);
-
-        if (formationData.isPresent()) {
-            Formation _formation = formationData.get();
+        try {
+            Formation _formation = formationService.getFormationById(id);
             _formation.setTitre(formation.getTitre());
             _formation.setDescription(formation.getDescription());
             return new ResponseEntity<>(formationRepository.save(_formation), HttpStatus.OK);
-        } else {
+        } catch (FormationNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -72,7 +73,12 @@ public class FormationController {
     }
 
     @GetMapping("/search")
-    public List<Formation> searchFormations(@RequestParam(required = false) String searchString) {
-        return formationService.searchFormations(searchString);
+    public ResponseEntity<List<Formation>> searchFormations(@RequestParam(required = false) String searchString) {
+        try {
+            List<Formation> formations = formationService.searchFormations(searchString);
+            return new ResponseEntity<>(formations, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

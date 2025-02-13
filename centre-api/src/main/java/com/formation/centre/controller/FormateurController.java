@@ -24,12 +24,12 @@ public class FormateurController {
     public Formateur createFormateur(@RequestBody Formateur formateur) {
         return formateurService.createFormateur(formateur);
     }
-
+/* 
     @PutMapping("/{id}")
     public ResponseEntity<Formateur> updateFormateur(@PathVariable Long id, @RequestBody Formateur formateurDetails) {
         Formateur updatedFormateur = formateurService.updateFormateur(id, formateurDetails);
         return ResponseEntity.ok(updatedFormateur);
-    }
+    } */
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFormateur(@PathVariable Long id) {

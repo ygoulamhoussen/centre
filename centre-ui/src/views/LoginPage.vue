@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { useAuthStore } from '../stores/auth'; // Correct the import path
+import { useAuthStore } from '../stores/auth';
 
 export default {
   name: "LoginPage",
@@ -28,7 +28,7 @@ export default {
       email: "",
       password: "",
       errorMessage: "",
-      successMessage: "" // Add success message data property
+      successMessage: ""
     };
   },
   methods: {
@@ -46,17 +46,17 @@ export default {
         }
         const data = await response.json();
         this.errorMessage = "";
-        this.successMessage = "Connexion réussie !"; // Set success message
+        this.successMessage = "Connexion réussie !";
         const authStore = useAuthStore();
         authStore.login(data);
-        this.$router.push('/'); // Redirect to homepage
+        this.$router.push('/');
       } catch (error) {
         this.errorMessage = 'Erreur lors de la connexion. Veuillez réessayer.';
-        this.successMessage = ""; // Clear success message on error
+        this.successMessage = "";
       }
     },
     cancel() {
-      this.$router.push('/'); // Redirect to homepage
+      this.$router.push('/');
     }
   }
 };

@@ -1,6 +1,6 @@
 package com.formation.centre.controller;
 
-import com.formation.centre.exception.FormationNotFoundException;
+
 import com.formation.centre.model.Formation;
 import com.formation.centre.repository.FormationRepository;
 import com.formation.centre.service.FormationService;
@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/formations")
-@CrossOrigin(origins = "http://localhost:5173") // Permet les appels depuis votre frontend
+@CrossOrigin(origins = "http://localhost:5174", maxAge = 3600)
 public class FormationController {
 
     @Autowired
@@ -46,12 +46,15 @@ public class FormationController {
     @PutMapping("/{id}")
     public ResponseEntity<Formation> updateFormation(@PathVariable("id") long id, @RequestBody Formation formation) {
         try {
-            Formation _formation = formationService.getFormationById(id);
-            _formation.setTitre(formation.getTitre());
-            _formation.setDescription(formation.getDescription());
-            return new ResponseEntity<>(formationRepository.save(_formation), HttpStatus.OK);
-        } catch (FormationNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            Optional<Formation> formationData = formationService.getFormationById(id);
+            if (formationData.isPresent()) {
+                Formation _formation = formationData.get();
+                _formation.setTitre(formation.getTitre());
+                _formation.setDescription(formation.getDescription());
+                return new ResponseEntity<>(formationRepository.save(_formation), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -36,14 +36,28 @@
           </div>
         </div>
       </div>
-      <!-- Modale utilisée pour ajouter ET modifier -->
-      <FormateurFormModal 
-        v-if="showAddModal" 
-        :title="modalTitle" 
-        :form="currentForm" 
-        @submit="handleFormSubmit" 
-        @cancel="closeModal" />
     </section>
+
+    <!-- Inline Modal replaced external FormateurFormModal -->
+    <div v-if="showAddModal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>{{ modalTitle }}</h2>
+        <form @submit.prevent="submitModal">
+          <div class="form-group">
+            <label for="nom">Nom</label>
+            <input type="text" id="nom" v-model="currentForm.nom" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" v-model="currentForm.email" required />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="fr-btn fr-btn--primary">Enregistrer</button>
+            <button type="button" @click="closeModal" class="fr-btn fr-btn--secondary">Annuler</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <p class="back-button">
@@ -55,14 +69,12 @@
 <script>
 import HeaderSection from '../components/HeaderSection.vue';
 import DefaultLayout from '../layouts/DefaultLayout.vue';
-import FormateurFormModal from '../components/FormateurFormModal.vue';
 
 export default {
   name: "FormateursPage",
   components: {
     HeaderSection,
-    DefaultLayout,
-    FormateurFormModal
+    DefaultLayout
   },
   data() {
     return {
@@ -162,6 +174,10 @@ export default {
       this.modalTitle = 'Ajouter un formateur';
       this.showAddModal = true;
     },
+    // New method to handle inline modal submission
+    submitModal() {
+      this.handleFormSubmit({ ...this.currentForm });
+    },
     openEditForm(formateur) {
       this.currentForm = { ...formateur };
       this.modalTitle = 'Modifier le formateur';
@@ -196,5 +212,43 @@ export default {
 .back-button {
   margin-top: 20px;
   text-align: left;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 4px;
+  width: 90%;
+  max-width: 500px;
+}
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
 }
 </style>

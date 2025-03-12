@@ -33,8 +33,9 @@ export default {
     };
   },
   methods: {
-    onSubmit() {
-      this.$emit('submit', this.localForm);
+    onSubmit(e) {
+      // Ignore the native event and emit only the copied form data
+      this.$emit('submit', { ...this.localForm });
     }
   },
   watch: {

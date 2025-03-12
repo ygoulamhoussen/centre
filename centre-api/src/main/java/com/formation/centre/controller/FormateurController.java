@@ -29,6 +29,11 @@ public class FormateurController {
     
     @PostMapping("/creer")
     public ResponseEntity<Formateur> createFormateur(@RequestBody Formateur formateur) {
+        // Validate required fields
+        if (formateur.getNom() == null || formateur.getNom().trim().isEmpty() ||
+            formateur.getEmail() == null || formateur.getEmail().trim().isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         try {
             Formateur savedFormateur = formateurRepository.save(formateur);
             return new ResponseEntity<>(savedFormateur, HttpStatus.CREATED);

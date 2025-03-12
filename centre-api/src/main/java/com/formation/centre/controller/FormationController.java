@@ -14,7 +14,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/formations")
-@CrossOrigin(origins = "http://localhost:5174", maxAge = 3600)
 public class FormationController {
 
     @Autowired
@@ -46,7 +45,7 @@ public class FormationController {
     @PutMapping("/{id}")
     public ResponseEntity<Formation> updateFormation(@PathVariable("id") long id, @RequestBody Formation formation) {
         try {
-            Optional<Formation> formationData = formationService.getFormationById(id);
+            Optional<Formation> formationData = formationRepository.findById(id);
             if (formationData.isPresent()) {
                 Formation _formation = formationData.get();
                 _formation.setTitre(formation.getTitre());

@@ -104,7 +104,7 @@ export default {
     },
     async addFormation(formation) {
       try {
-        const response = await fetch('http://localhost:8080/api/formations', {
+        const response = await fetch('http://localhost:8080/api/formations/creer/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -123,8 +123,8 @@ export default {
     },
     async editFormation(id, formation) {
       try {
-        const response = await fetch(`http://localhost:8080/api/formations/${id}`, {
-          method: 'PUT',
+        const response = await fetch(`http://localhost:8080/api/formations/update/${id}`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
@@ -143,7 +143,7 @@ export default {
     async deleteFormation(index) {
       const id = this.formations[index].id;
       try {
-        const response = await fetch(`http://localhost:8080/api/formations/${id}`, {
+        const response = await fetch(`http://localhost:8080/api/formations/delete/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) {

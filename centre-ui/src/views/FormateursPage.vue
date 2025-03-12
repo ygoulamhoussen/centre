@@ -5,14 +5,44 @@
       subtitle="Ajoutez, modifiez ou supprimez des formateurs."
     />
     <section v-if="isAdmin">
-      <DSFRTable
-        title="Liste des Formateurs"
-        :headers="['Nom', 'Email', 'Actions']"
-        :rows="formateursTableRows()"
-        @add="addFormateur"
-        @edit="editFormateur"
-        @delete="deleteFormateur"
-      />
+      <!-- Mise en forme identique à DSFRTable -->
+      <div class="button-container">
+        <button @click="addFormateurPrompt" class="fr-btn fr-btn--primary">Ajouter</button>
+      </div>
+      <div class="fr-table fr-table--bordered">
+        <div class="fr-table__wrapper">
+          <div class="fr-table__container">
+            <div class="fr-table__content">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="formateur in formateurs" :key="formateur.id">
+                    <td>{{ formateur.nom }}</td>
+                    <td>{{ formateur.email }}</td>
+                    <td>
+                      <button @click="openEditForm(formateur)" class="fr-btn fr-btn--secondary">Modifier</button>
+                      <button @click="deleteFormateur(formateur.id)" class="fr-btn fr-btn--tertiary">Supprimer</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Modale utilisée pour ajouter ET modifier -->
+      <FormateurFormModal 
+        v-if="showAddModal" 
+        :title="modalTitle" 
+        :form="currentForm" 
+        @submit="handleFormSubmit" 
+        @cancel="closeModal" />
     </section>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
@@ -24,15 +54,15 @@
 
 <script>
 import HeaderSection from '../components/HeaderSection.vue';
-import DSFRTable from '../components/DSFRTable.vue';
 import DefaultLayout from '../layouts/DefaultLayout.vue';
+import FormateurFormModal from '../components/FormateurFormModal.vue';
 
 export default {
   name: "FormateursPage",
   components: {
     HeaderSection,
-    DSFRTable,
-    DefaultLayout
+    DefaultLayout,
+    FormateurFormModal
   },
   data() {
     return {
@@ -43,7 +73,13 @@ export default {
         { name: 'Accueil', link: '/' },
         { name: 'Admin', link: '/admin' },
         { name: 'Formateurs', link: '/admin/formateurs' }
-      ]
+      ],
+      showAddModal: false,
+      currentForm: {
+        nom: '',
+        email: ''
+      },
+      modalTitle: 'Ajouter un formateur'
     };
   },
   created() {
@@ -71,26 +107,25 @@ export default {
     },
     async addFormateur(formateur) {
       try {
-        const response = await fetch('http://localhost:8080/api/formateurs', {
+        const response = await fetch('http://localhost:8080/api/formateurs/creer', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formateur)
         });
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          const errorText = await response.text();
+          throw new Error(errorText);
         }
         await this.fetchFormateurs();
         this.errorMessage = "";
       } catch (error) {
         console.error('Error adding formateur:', error);
-        this.errorMessage = 'Erreur lors de l\'ajout du formateur. Veuillez réessayer.';
+        this.errorMessage = `Erreur lors de l'ajout du formateur: ${error.message}`;
       }
     },
     async editFormateur(id, formateur) {
       try {
-        const response = await fetch(`http://localhost:8080/api/formateurs/${id}`, {
+        const response = await fetch(`http://localhost:8080/api/formateurs/update/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -109,7 +144,7 @@ export default {
     },
     async deleteFormateur(id) {
       try {
-        const response = await fetch(`http://localhost:8080/api/formateurs/${id}`, {
+        const response = await fetch(`http://localhost:8080/api/formateurs/delete/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) {
@@ -122,23 +157,26 @@ export default {
         this.errorMessage = 'Erreur lors de la suppression du formateur. Veuillez réessayer.';
       }
     },
-    formateursTableRows() {
-      return this.formateurs.map(formateur => ({
-        Nom: formateur.nom,
-        Email: formateur.email,
-        Actions: {
-          edit: () => this.openEditForm(formateur),
-          delete: () => this.deleteFormateur(formateur.id)
-        }
-      }));
+    addFormateurPrompt() {
+      this.currentForm = { nom: '', email: '' };
+      this.modalTitle = 'Ajouter un formateur';
+      this.showAddModal = true;
     },
     openEditForm(formateur) {
-      const form = {
-        id: formateur.id,
-        Nom: formateur.nom,
-        Email: formateur.email
-      };
-      this.editFormateur(formateur.id, form);
+      this.currentForm = { ...formateur };
+      this.modalTitle = 'Modifier le formateur';
+      this.showAddModal = true;
+    },
+    handleFormSubmit(formData) {
+      if (formData.id) {
+        this.editFormateur(formData.id, formData);
+      } else {
+        this.addFormateur(formData);
+      }
+      this.closeModal();
+    },
+    closeModal() {
+      this.showAddModal = false;
     }
   }
 };

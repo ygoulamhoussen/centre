@@ -36,22 +36,24 @@
       </div>
     </div>
 
-    <div v-if="showForm" class="form-container">
-      <h2>{{ formTitle }}</h2>
-      <form @submit.prevent="submitForm">
-        <div class="form-group">
-          <label for="titre">Titre</label>
-          <input type="text" id="titre" v-model="form.titre" required />
-        </div>
-        <div class="form-group">
-          <label for="description">Description</label>
-          <textarea id="description" v-model="form.description" required></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="fr-btn fr-btn--primary">Enregistrer</button>
-          <button type="button" @click="closeForm" class="fr-btn fr-btn--secondary">Annuler</button>
-        </div>
-      </form>
+    <div v-if="showForm" class="modal-overlay">
+      <div class="modal-content">
+        <h2>{{ formTitle }}</h2>
+        <form @submit.prevent="submitForm">
+          <div class="form-group">
+            <label for="titre">Titre</label>
+            <input type="text" id="titre" v-model="form.titre" required />
+          </div>
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" v-model="form.description" required></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="fr-btn fr-btn--primary">Enregistrer</button>
+            <button type="button" @click="closeForm" class="fr-btn fr-btn--secondary">Annuler</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
@@ -104,7 +106,7 @@ export default {
     },
     async addFormation(formation) {
       try {
-        const response = await fetch('http://localhost:8080/api/formations/creer/', {
+        const response = await fetch('http://localhost:8080/api/formations', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -123,8 +125,8 @@ export default {
     },
     async editFormation(id, formation) {
       try {
-        const response = await fetch(`http://localhost:8080/api/formations/update/${id}`, {
-          method: 'POST',
+        const response = await fetch(`http://localhost:8080/api/formations/${id}`, {
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           },
@@ -143,7 +145,7 @@ export default {
     async deleteFormation(index) {
       const id = this.formations[index].id;
       try {
-        const response = await fetch(`http://localhost:8080/api/formations/delete/${id}`, {
+        const response = await fetch(`http://localhost:8080/api/formations/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) {
@@ -218,5 +220,50 @@ export default {
 .back-button {
   margin-top: 20px;
   text-align: left;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 4px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
 }
 </style>

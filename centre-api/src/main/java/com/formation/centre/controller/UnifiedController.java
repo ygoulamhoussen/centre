@@ -7,6 +7,8 @@ import com.formation.centre.repository.FormateurRepository;
 import com.formation.centre.repository.UtilisateurRepository;
 import com.formation.centre.repository.FormationRepository;
 import com.formation.centre.service.FormationService;
+import com.formation.centre.service.FormateurService;
+import com.formation.centre.dto.FormateurDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,43 +21,40 @@ public class UnifiedController {
 
     // Formateur endpoints
     @Autowired
-    private FormateurRepository formateurRepository;
+    private FormateurService formateurService;
 
     @GetMapping("/api/formateurs")
-    public ResponseEntity<List<Formateur>> getAllFormateurs() {
+    public ResponseEntity<List<FormateurDTO>> getAllFormateurs() {
         try {
-            List<Formateur> formateurs = formateurRepository.findAll();
-            return new ResponseEntity<>(formateurs, HttpStatus.OK);
+            List<FormateurDTO> dtos = formateurService.getAllFormateursDTO();
+            return new ResponseEntity<>(dtos, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     
     @PostMapping("/api/formateurs/creer")
-    public ResponseEntity<Formateur> createFormateur(@RequestBody Formateur formateur) {
-        if (formateur.getNom() == null || formateur.getNom().trim().isEmpty() ||
-            formateur.getEmail() == null || formateur.getEmail().trim().isEmpty()) {
+    public ResponseEntity<FormateurDTO> createFormateur(@RequestBody FormateurDTO dto) {
+        if (dto.getNom() == null || dto.getNom().trim().isEmpty() ||
+            dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         try {
-            Formateur savedFormateur = formateurRepository.save(formateur);
-            return new ResponseEntity<>(savedFormateur, HttpStatus.CREATED);
+            FormateurDTO savedDto = formateurService.createFormateurDTO(dto);
+            return new ResponseEntity<>(savedDto, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     
     @PutMapping("/api/formateurs/update/{id}")
-    public ResponseEntity<Formateur> updateFormateur(@PathVariable("id") long id, @RequestBody Formateur formateur) {
+    public ResponseEntity<FormateurDTO> updateFormateur(@PathVariable("id") long id, @RequestBody FormateurDTO dto) {
         try {
-            Optional<Formateur> formateurData = formateurRepository.findById(id);
-            if (formateurData.isPresent()) {
-                Formateur _formateur = formateurData.get();
-                _formateur.setNom(formateur.getNom());
-                _formateur.setEmail(formateur.getEmail());
-                return new ResponseEntity<>(formateurRepository.save(_formateur), HttpStatus.OK);
+            Optional<FormateurDTO> updated = formateurService.updateFormateurDTO(id, dto);
+            if(updated.isPresent()){
+               return new ResponseEntity<>(updated.get(), HttpStatus.OK);
             } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+               return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -65,7 +64,7 @@ public class UnifiedController {
     @DeleteMapping("/api/formateurs/delete/{id}")
     public ResponseEntity<HttpStatus> deleteFormateur(@PathVariable("id") long id) {
         try {
-            formateurRepository.deleteById(id);
+            formateurService.deleteFormateur(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

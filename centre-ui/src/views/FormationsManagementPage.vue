@@ -177,6 +177,8 @@ export default {
       } else {
         this.editFormation(this.form.id, this.form);
       }
+      // Nettoyage du formulaire après soumission
+      this.form = {};
       this.closeForm();
     }
   }

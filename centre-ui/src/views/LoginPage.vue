@@ -36,9 +36,7 @@ export default {
       try {
         const response = await fetch('http://localhost:8080/api/utilisateurs/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: this.email, motDePasse: this.password })
         });
         if (!response.ok) {
@@ -46,7 +44,10 @@ export default {
         }
         const data = await response.json();
         this.errorMessage = "";
-        this.successMessage = "Connexion réussie !";
+        this.successMessage = "Connexion réussie, redirection en cours...";
+        // Reset des champs après la connexion
+        this.email = "";
+        this.password = "";
         const authStore = useAuthStore();
         authStore.login(data);
         this.$router.push('/');

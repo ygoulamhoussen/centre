@@ -86,7 +86,8 @@ export default {
     },
     addSession() {
       try {
-        // Logique pour ajouter une session
+        // Fonctionnalité non implémentée, informer l'utilisateur
+        alert("La fonctionnalité d'ajout de session n'est pas encore disponible.");
         this.errorMessage = "";
       } catch (error) {
         console.error('Error adding session:', error);

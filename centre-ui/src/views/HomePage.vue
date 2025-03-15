@@ -76,6 +76,7 @@ export default {
         },
       ],
       errorMessage: "",
+      successMessage: "", // Ajout de la propriété successMessage
       breadcrumbSegments: [
         { name: 'Accueil', link: '/' }
       ]
@@ -89,6 +90,7 @@ export default {
       try {
         // Simulate fetching data for courses and testimonials
         this.errorMessage = "";
+        this.successMessage = "Les données ont été chargées avec succès."; // nouveau message de succès
       } catch (error) {
         console.error('Error fetching data:', error);
         this.errorMessage = 'Erreur lors de la récupération des données. Veuillez réessayer.';

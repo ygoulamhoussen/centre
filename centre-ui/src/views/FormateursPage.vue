@@ -177,6 +177,8 @@ export default {
     // New method to handle inline modal submission
     submitModal() {
       this.handleFormSubmit({ ...this.currentForm });
+      // Réinitialisation du formulaire après soumission
+      this.currentForm = { nom: '', email: '' };
     },
     openEditForm(formateur) {
       this.currentForm = { ...formateur };

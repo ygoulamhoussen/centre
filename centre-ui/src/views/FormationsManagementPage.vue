@@ -39,7 +39,7 @@
     <div v-if="showForm" class="modal-overlay">
       <div class="modal-content">
         <h2>{{ formTitle }}</h2>
-        <form @submit.prevent="submitForm">
+        <form ref="formationForm" @submit.prevent="submitForm">
           <div class="form-group">
             <label for="titre">Titre</label>
             <input type="text" id="titre" v-model="form.titre" required />
@@ -49,10 +49,12 @@
             <textarea id="description" v-model="form.description" required></textarea>
           </div>
           <div class="form-actions">
-            <button type="submit" class="fr-btn fr-btn--primary">Enregistrer</button>
             <button type="button" @click="closeForm" class="fr-btn fr-btn--secondary">Annuler</button>
           </div>
         </form>
+        <div class="form-submit-outside">
+          <button type="button" @click="submitForm" class="fr-btn fr-btn--primary">Enregistrer</button>
+        </div>
       </div>
     </div>
 
@@ -172,6 +174,14 @@ export default {
       this.showForm = false;
     },
     submitForm() {
+      // Check HTML5 form validity before submission and trigger browser messages
+      if (!this.$refs.formationForm.checkValidity()) {
+        this.errorMessage = "Veuillez remplir tous les champs requis.";
+        this.$refs.formationForm.reportValidity();
+        return;
+      } else {
+        this.errorMessage = "";
+      }
       if (this.form.id === undefined) {
         this.addFormation(this.form);
       } else {
@@ -267,5 +277,10 @@ export default {
   display: flex;
   gap: 10px;
   margin-top: 15px;
+}
+
+.form-submit-outside {
+  text-align: right;
+  margin-top: 10px;
 }
 </style>

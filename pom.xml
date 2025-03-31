@@ -20,8 +20,8 @@
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
     </properties>
     <modules>
-        <module>centre-api</module>
         <module>centre-ui</module>
+        <module>centre-api</module>
     </modules>
     <build>
         <pluginManagement>

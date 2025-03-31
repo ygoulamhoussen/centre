@@ -85,7 +85,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.basedir}/src/main/resources/static</outputDirectory>
+							<outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${project.parent.basedir}/centre-ui/target/dist</directory>

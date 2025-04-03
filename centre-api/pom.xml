@@ -62,10 +62,7 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-jersey</artifactId>
-</dependency>
+
 	</dependencies>
 
 	<build>
@@ -88,7 +85,7 @@
 							<outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
 							<resources>
 								<resource>
-									<directory>${project.parent.basedir}/centre-ui/target/dist</directory>
+									<directory>../centre-ui/dist</directory>
 									<filtering>false</filtering>
 								</resource>
 							</resources>

@@ -20,6 +20,7 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.11.3</version>
                 <executions>
+                    <!-- Installe Node.js et npm -->
                     <execution>
                         <id>install node and npm</id>
                         <goals>
@@ -30,6 +31,7 @@
                             <npmVersion>6.14.13</npmVersion>
                         </configuration>
                     </execution>
+                    <!-- Installe les dépendances npm -->
                     <execution>
                         <id>npm install</id>
                         <goals>
@@ -39,6 +41,7 @@
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
+                    <!-- Exécute le build front-end -->
                     <execution>
                         <id>npm run build</id>
                         <goals>
@@ -46,6 +49,9 @@
                         </goals>
                         <configuration>
                             <arguments>run build</arguments>
+                            <environmentVariables>
+                                <PATH>${project.basedir}/node_modules/.bin:${env.PATH}</PATH>
+                            </environmentVariables>
                         </configuration>
                     </execution>
                 </executions>

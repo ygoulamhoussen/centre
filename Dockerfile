@@ -1,11 +1,14 @@
-FROM eclipse-temurin:17-jdk
+# Utiliser l'image officielle de Java
+FROM openjdk:17-slim
 
-WORKDIR /app
+# Copier le fichier JAR généré dans l'image Docker
+COPY centre-api/target/centre-api-0.0.1-SNAPSHOT.jar /usr/app/centre-api.jar
 
-COPY . .
-
-RUN ./mvnw clean package -DskipTests
-
+# Exposer le port 8080
 EXPOSE 8080
 
-CMD ["java", "-jar", "centre-api/target/centre-api-0.0.1-SNAPSHOT.jar"]
+# Définir le répertoire de travail
+WORKDIR /usr/app
+
+# Lancer l'application Spring Boot
+CMD ["java", "-jar", "centre-api.jar"]

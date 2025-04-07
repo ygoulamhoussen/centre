@@ -66,7 +66,6 @@ export default {
         }
         this.formations = await response.json();
         this.filteredFormations = this.formations;
-        this.errorMessage = "";
       } catch (error) {
         console.error('Error fetching formations:', error);
         this.errorMessage = 'Erreur lors de la récupération des formations. Veuillez réessayer.';
@@ -74,12 +73,11 @@ export default {
     },
     async searchFormations() {
       try {
-        const response = await fetch(`http://localhost:8080/api/formations/search?searchString=${this.searchQuery}`);
+        const response = await fetch(`${this.$backendUrl}/api/formations/search?searchString=${this.searchQuery}`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         this.filteredFormations = await response.json();
-        this.errorMessage = "";
       } catch (error) {
         console.error('Error searching formations:', error);
         this.errorMessage = 'Erreur lors de la recherche des formations. Veuillez réessayer.';

@@ -95,12 +95,11 @@ export default {
   methods: {
     async fetchFormations() {
       try {
-        const response = await fetch('http://localhost:8080/api/formations');
+        const response = await fetch(`${this.$backendUrl}/api/formations`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         this.formations = await response.json();
-        this.errorMessage = "";
       } catch (error) {
         console.error('Error fetching formations:', error);
         this.errorMessage = 'Erreur lors de la récupération des formations. Veuillez réessayer.';
@@ -108,18 +107,15 @@ export default {
     },
     async addFormation(formation) {
       try {
-        const response = await fetch('http://localhost:8080/api/formations', {
+        const response = await fetch(`${this.$backendUrl}/api/formations`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formation)
         });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         this.fetchFormations();
-        this.errorMessage = "";
       } catch (error) {
         console.error('Error adding formation:', error);
         this.errorMessage = 'Erreur lors de l\'ajout de la formation. Veuillez réessayer.';
@@ -127,18 +123,15 @@ export default {
     },
     async editFormation(id, formation) {
       try {
-        const response = await fetch(`http://localhost:8080/api/formations/${id}`, {
+        const response = await fetch(`${this.$backendUrl}/api/formations/${id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formation)
         });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         this.fetchFormations();
-        this.errorMessage = "";
       } catch (error) {
         console.error('Error editing formation:', error);
         this.errorMessage = 'Erreur lors de la modification de la formation. Veuillez réessayer.';
@@ -147,14 +140,13 @@ export default {
     async deleteFormation(index) {
       const id = this.formations[index].id;
       try {
-        const response = await fetch(`http://localhost:8080/api/formations/${id}`, {
+        const response = await fetch(`${this.$backendUrl}/api/formations/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         this.fetchFormations();
-        this.errorMessage = "";
       } catch (error) {
         console.error('Error deleting formation:', error);
         this.errorMessage = 'Erreur lors de la suppression de la formation. Veuillez réessayer.';

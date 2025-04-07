@@ -107,7 +107,7 @@ export default {
     },
     async fetchFormateurs() {
       try {
-        const response = await fetch('http://localhost:8080/api/formateurs');
+        const response = await fetch(`${this.$backendUrl}/api/formateurs`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -119,7 +119,7 @@ export default {
     },
     async addFormateur(formateur) {
       try {
-        const response = await fetch('http://localhost:8080/api/formateurs/creer', {
+        const response = await fetch(`${this.$backendUrl}/api/formateurs/creer`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formateur)
@@ -129,7 +129,6 @@ export default {
           throw new Error(errorText);
         }
         await this.fetchFormateurs();
-        this.errorMessage = "";
       } catch (error) {
         console.error('Error adding formateur:', error);
         this.errorMessage = `Erreur lors de l'ajout du formateur: ${error.message}`;
@@ -137,18 +136,15 @@ export default {
     },
     async editFormateur(id, formateur) {
       try {
-        const response = await fetch(`http://localhost:8080/api/formateurs/update/${id}`, {
+        const response = await fetch(`${this.$backendUrl}/api/formateurs/update/${id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formateur)
         });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         await this.fetchFormateurs();
-        this.errorMessage = "";
       } catch (error) {
         console.error('Error editing formateur:', error);
         this.errorMessage = 'Erreur lors de la modification du formateur. Veuillez réessayer.';
@@ -156,14 +152,13 @@ export default {
     },
     async deleteFormateur(id) {
       try {
-        const response = await fetch(`http://localhost:8080/api/formateurs/delete/${id}`, {
+        const response = await fetch(`${this.$backendUrl}/api/formateurs/delete/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         await this.fetchFormateurs();
-        this.errorMessage = "";
       } catch (error) {
         console.error('Error deleting formateur:', error);
         this.errorMessage = 'Erreur lors de la suppression du formateur. Veuillez réessayer.';

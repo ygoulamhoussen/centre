@@ -35,8 +35,7 @@ CREATE TABLE IF NOT EXISTS public.etudiant
 )
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.etudiant
-    OWNER to postgres;
+
 
 -- Créer la table formateur
 CREATE TABLE IF NOT EXISTS public.formateur
@@ -48,8 +47,7 @@ CREATE TABLE IF NOT EXISTS public.formateur
 )
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.formateur
-    OWNER to postgres;
+
 
 -- Créer la table formation
 CREATE TABLE IF NOT EXISTS public.formation
@@ -66,8 +64,6 @@ CREATE TABLE IF NOT EXISTS public.formation
 )
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.formation
-    OWNER to postgres;
 
 
 -- Créer la table salle
@@ -80,8 +76,7 @@ CREATE TABLE IF NOT EXISTS public.salle
 )
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.salle
-    OWNER to postgres;
+
 -- Créer la table session
 CREATE TABLE IF NOT EXISTS public.session
 (
@@ -107,8 +102,7 @@ CREATE TABLE IF NOT EXISTS public.session
 )
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.session
-    OWNER to postgres;
+
 
 
 
@@ -122,10 +116,7 @@ CREATE TABLE IF NOT EXISTS public.utilisateur
     role character varying(255) COLLATE pg_catalog."default",
     CONSTRAINT utilisateur_pkey PRIMARY KEY (id)
 )
-TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.utilisateur
-    OWNER to postgres;
 
 -- Créer la table inscription
 CREATE TABLE IF NOT EXISTS public.inscription
@@ -150,10 +141,5 @@ CREATE TABLE IF NOT EXISTS public.inscription
 )
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.inscription
-    OWNER to postgres;
 
--- Accorder les privilèges
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO spring_db_6ox3_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO spring_db_6ox3_user;
 

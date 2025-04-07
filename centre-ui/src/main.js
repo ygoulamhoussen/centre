@@ -14,8 +14,8 @@ const app = createApp(App);
 const pinia = createPinia();
 
 // Définir l'URL du backend en fonction de l'environnement
-//const backendUrl = process.env.VUE_APP_BACKEND_URL || "http://localhost:8080";
-const backendUrl = "https://centre-2vhd.onrender.com";
+const backendUrl = import.meta.env.VUE_APP_BACKEND_URL || "http://localhost:8080"; // Pour Vite
+// const backendUrl = process.env.VUE_APP_BACKEND_URL || "http://localhost:8080"; // Pour Vue CLI
 
 // Ajouter l'URL du backend comme propriété globale
 app.config.globalProperties.$backendUrl = backendUrl;

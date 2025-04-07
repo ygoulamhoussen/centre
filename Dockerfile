@@ -26,6 +26,9 @@ RUN apt-get update && apt-get install -y maven
 # Copier le code backend dans le conteneur
 COPY centre-api /app/centre-api
 
+# Copier les fichiers générés du frontend dans le backend
+COPY --from=frontend-build /app/centre-ui/dist /app/centre-api/src/main/resources/static
+
 # Installer les dépendances backend et construire le projet
 RUN mvn clean install -DskipTests
 
@@ -34,9 +37,8 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-# Copier les fichiers du frontend et du backend dans l'image finale
-COPY --from=frontend-build /app/centre-ui/dist /app/centre-ui/dist
-COPY --from=backend-build /app/centre-api/target /app/centre-api/target
+# Copier le fichier JAR généré depuis l'étape précédente
+COPY --from=backend-build /app/centre-api/target/centre-api-0.0.1-SNAPSHOT.jar /app/centre-api.jar
 
 # Définir l'entrée pour l'application (par exemple, démarrer l'application backend)
-CMD ["java", "-jar", "/app/centre-api/target/centre-api-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "/app/centre-api.jar"]

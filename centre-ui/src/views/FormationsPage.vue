@@ -60,7 +60,7 @@ export default {
   methods: {
     async fetchFormations() {
       try {
-        const response = await fetch('http://localhost:8080/api/formations');
+        const response = await fetch(`${this.$backendUrl}/api/formations`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

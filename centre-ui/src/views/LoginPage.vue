@@ -34,7 +34,7 @@ export default {
   methods: {
     async login() {
       try {
-        const response = await fetch('http://localhost:8080/api/utilisateurs/login', {
+        const response = await fetch(`${this.$backendUrl}/api/utilisateurs/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: this.email, motDePasse: this.password })
@@ -45,7 +45,6 @@ export default {
         const data = await response.json();
         this.errorMessage = "";
         this.successMessage = "Connexion réussie, redirection en cours...";
-        // Reset des champs après la connexion
         this.email = "";
         this.password = "";
         const authStore = useAuthStore();

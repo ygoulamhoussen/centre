@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS public.utilisateur
     role character varying(255) COLLATE pg_catalog."default",
     CONSTRAINT utilisateur_pkey PRIMARY KEY (id)
 )
-
+TABLESPACE pg_default;
 
 -- Créer la table inscription
 CREATE TABLE IF NOT EXISTS public.inscription

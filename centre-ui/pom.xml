@@ -2,97 +2,38 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>com.formation</groupId>
         <artifactId>centre</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
+
     <groupId>com.formation</groupId>
     <artifactId>centre-ui</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <name>centre-ui</name>
     <description>Vue.js frontend for the centre project</description>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.11.3</version>
-                <executions>
-                    <!-- Installe Node.js et npm -->
-                    <execution>
-                        <id>install node and npm</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <configuration>
-                            <nodeVersion>v18.18.2</nodeVersion>
-                            <npmVersion>9.8.1</npmVersion>
-                        </configuration>
-                    </execution>
-                    <!-- Nettoie et installe les dépendances npm -->
-                    <execution>
-                        <id>npm clean install</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>ci</arguments>
-                        </configuration>
-                    </execution>
-                    <!-- Exécute le build front-end -->
-                    <execution>
-                        <id>npm run build</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>run build</arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
-    <profiles>
-    <profile>
-        <id>build-frontend</id>
-        <build>
-            <plugins>
-                <plugin>
-                    <groupId>com.github.eirslett</groupId>
-                    <artifactId>frontend-maven-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <id>install node and npm</id>
-                            <goals>
-                                <goal>install-node-and-npm</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>npm clean install</id>
-                            <goals>
-                                <goal>npm</goal>
-                            </goals>
-                            <configuration>
-                                <arguments>ci</arguments>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>npm run build</id>
-                            <goals>
-                                <goal>npm</goal>
-                            </goals>
-                            <configuration>
-                                <arguments>run build</arguments>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </build>
-    </profile>
-</profiles>
+    <build>
+<plugins>
+    <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <version>1.11.3</version>
+        <executions>
+            <execution>
+                <goals>
+                    <goal>npm</goal>
+                </goals>
+                <configuration>
+                    <arguments>run build</arguments>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin>
+</plugins>
+    </build>
 </project>

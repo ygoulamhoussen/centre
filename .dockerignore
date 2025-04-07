@@ -1,0 +1,4 @@
+
+# Ignorer les répertoires générés
+centre-ui/node_modules
+target

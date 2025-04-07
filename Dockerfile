@@ -1,14 +1,42 @@
-# Utiliser l'image officielle de Java
-FROM openjdk:17-slim
+# Étape 1 : Construction de l'image pour le frontend
+FROM node:18 AS frontend-build
 
-# Copier le fichier JAR généré dans l'image Docker
-COPY centre-api/target/centre-api-0.0.1-SNAPSHOT.jar /usr/app/centre-api.jar
+WORKDIR /app/centre-ui
 
-# Exposer le port 8080
-EXPOSE 8080
+# Copier les fichiers du projet frontend dans le conteneur
+COPY centre-ui/package*.json ./
 
-# Définir le répertoire de travail
-WORKDIR /usr/app
+# Installer les dépendances frontend (npm install)
+RUN npm install
 
-# Lancer l'application Spring Boot
-CMD ["java", "-jar", "centre-api.jar"]
+# Copier le reste des fichiers
+COPY centre-ui/ .
+
+# Exécuter la commande de build du frontend
+RUN npm run build
+
+# Étape 2 : Construction de l'image pour le backend
+FROM openjdk:17-jdk-slim AS backend-build
+
+WORKDIR /app/centre-api
+
+# Installer Maven dans l'image
+RUN apt-get update && apt-get install -y maven
+
+# Copier le code backend dans le conteneur
+COPY centre-api /app/centre-api
+
+# Installer les dépendances backend et construire le projet
+RUN mvn clean install -DskipTests
+
+# Étape 3 : Construction de l'image finale pour l'exécution
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+# Copier les fichiers du frontend et du backend dans l'image finale
+COPY --from=frontend-build /app/centre-ui/dist /app/centre-ui/dist
+COPY --from=backend-build /app/centre-api/target /app/centre-api/target
+
+# Définir l'entrée pour l'application (par exemple, démarrer l'application backend)
+CMD ["java", "-jar", "/app/centre-api/target/centre-api-0.0.1-SNAPSHOT.jar"]

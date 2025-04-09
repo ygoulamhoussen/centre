@@ -1,3 +1,29 @@
+<script lang="ts" setup>
+import svgContract from '@gouvfr/dsfr/dist/artwork/pictograms/document/contract.svg'
+import svgDocument from '@gouvfr/dsfr/dist/artwork/pictograms/document/driving-licence.svg'
+
+const offers = [
+  {
+    id: 'tile-autonome',
+    title: 'Autonome',
+    description: 'À partir de 9,99€ /mois HT',
+    details:
+      'Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.',
+    svgPath: svgContract,
+    to: '#essai-gratuit',
+  },
+  {
+    id: 'tile-supervise',
+    title: 'Supervisé',
+    description: 'À partir de 19,99€ /mois HT',
+    details:
+      'Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, attestation et révision par un expert-comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.',
+    svgPath: svgDocument,
+    to: '#essai-gratuit',
+  },
+]
+</script>
+
 <template>
   <main>
     <!-- Section de présentation -->
@@ -39,35 +65,18 @@
     <section class="fr-container fr-mt-10w">
       <h2 class="fr-h3">Nos offres</h2>
       <div class="fr-grid-row">
-        <div class="fr-col-12 fr-col-md-6">
-          <div class="fr-tile fr-enlarge-link" id="tile-autonome">
-            <div class="fr-tile__body">
-              <div class="fr-tile__content">
-                <h3 class="fr-tile__title">
-                  <a href="#essai-gratuit">Autonome</a>
-                </h3>
-                <p class="fr-tile__desc">À partir de 9,99€ /mois HT</p>
-                <p>
-                  Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="fr-col-12 fr-col-md-6">
-          <div class="fr-tile fr-enlarge-link" id="tile-supervise">
-            <div class="fr-tile__body">
-              <div class="fr-tile__content">
-                <h3 class="fr-tile__title">
-                  <a href="#essai-gratuit">Supervisé</a>
-                </h3>
-                <p class="fr-tile__desc">À partir de 19,99€ /mois HT</p>
-                <p>
-                  Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, attestation et révision par un expert-comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.
-                </p>
-              </div>
-            </div>
-          </div>
+        <div
+          v-for="offer in offers"
+          :key="offer.id"
+          class="fr-col-12 fr-col-md-6"
+        >
+          <DsfrTile
+            :title="offer.title"
+            :description="offer.description"
+            :details="offer.details"
+            :svg-path="offer.svgPath"
+            :to="offer.to"
+          />
         </div>
       </div>
     </section>

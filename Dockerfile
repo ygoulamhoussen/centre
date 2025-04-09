@@ -12,6 +12,9 @@ RUN npm install
 # Copier le reste du code frontend
 COPY centre-ui/ .
 
+# ⚠️ Générer les fichiers dts d'auto-import
+RUN npx unplugin-auto-import
+
 # Ajouter un tsconfig spécial build pour ignorer les tests
 COPY centre-ui/tsconfig.build.json ./tsconfig.json
 

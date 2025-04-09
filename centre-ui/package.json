@@ -20,6 +20,7 @@
   "dependencies": {
     "@gouvfr/dsfr": "~1.12.1",
     "@gouvminint/vue-dsfr": "^6.0.0",
+    "centre-ui": "file:",
     "focus-trap": "^7.5.4",
     "focus-trap-vue": "^4.0.3",
     "pinia": "^2.2.2",

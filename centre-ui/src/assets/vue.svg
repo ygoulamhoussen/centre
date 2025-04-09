@@ -1,8 +1,0 @@
-<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <!-- Cercle extérieur -->
-  <circle cx="50" cy="50" r="45" stroke="#000091" stroke-width="5" fill="none" />
-  <!-- Livre ouvert -->
-  <path d="M30 35 L50 25 L70 35 L70 65 L50 75 L30 65 Z" fill="#000091" />
-  <!-- Texte -->
-  <text x="50" y="90" font-size="12" text-anchor="middle" fill="#000091">Centre de Formation</text>
-</svg>

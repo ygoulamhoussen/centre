@@ -6,8 +6,8 @@ WORKDIR /app/centre-ui
 # Copier les fichiers package pour installer les dépendances
 COPY centre-ui/package*.json ./
 
-# Installer les dépendances frontend
-RUN npm install
+RUN npm install --legacy-peer-deps
+
 
 # Copier le reste du code frontend
 COPY centre-ui/ .

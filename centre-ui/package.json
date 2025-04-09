@@ -15,7 +15,10 @@
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "type-check": "vue-tsc --build --force"
+    "type-check": "vue-tsc --build --force",
+    "generate:auto-imports": "unplugin-auto-import"
+}
+
   },
   "dependencies": {
     "@gouvfr/dsfr": "~1.12.1",

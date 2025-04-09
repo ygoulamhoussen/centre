@@ -3,16 +3,19 @@ FROM node:18 AS frontend-build
 
 WORKDIR /app/centre-ui
 
-# Copier les fichiers du projet frontend dans le conteneur
+# Copier les fichiers package pour installer les dépendances
 COPY centre-ui/package*.json ./
 
-# Installer les dépendances frontend (npm install)
+# Installer les dépendances frontend
 RUN npm install
 
-# Copier le reste des fichiers
+# Copier le reste du code frontend
 COPY centre-ui/ .
 
-# Exécuter la commande de build du frontend
+# Ajouter un tsconfig spécial build pour ignorer les tests
+COPY centre-ui/tsconfig.build.json ./tsconfig.json
+
+# Construire le frontend en utilisant ce tsconfig
 RUN npm run build
 
 # Étape 2 : Construction de l'image pour le backend
@@ -20,25 +23,25 @@ FROM openjdk:17-jdk-slim AS backend-build
 
 WORKDIR /app/centre-api
 
-# Installer Maven dans l'image
+# Installer Maven
 RUN apt-get update && apt-get install -y maven
 
-# Copier le code backend dans le conteneur
+# Copier le backend
 COPY centre-api /app/centre-api
 
-# Copier les fichiers générés du frontend dans le backend
+# Copier le build frontend
 COPY --from=frontend-build /app/centre-ui/dist /app/centre-api/src/main/resources/static
 
-# Installer les dépendances backend et construire le projet
+# Build backend (sans tests)
 RUN mvn clean install -DskipTests
 
-# Étape 3 : Construction de l'image finale pour l'exécution
+# Étape 3 : Image finale pour l'exécution
 FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-# Copier le fichier JAR généré depuis l'étape précédente
+# Copier le JAR généré
 COPY --from=backend-build /app/centre-api/target/centre-api-0.0.1-SNAPSHOT.jar /app/centre-api.jar
 
-# Définir l'entrée pour l'application (par exemple, démarrer l'application backend)
+# Lancer l'application
 CMD ["java", "-jar", "/app/centre-api.jar"]

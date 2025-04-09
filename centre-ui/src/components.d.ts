@@ -11,6 +11,7 @@ declare module 'vue' {
     DsfrAlert: typeof import('@gouvminint/vue-dsfr')['DsfrAlert']
     DsfrButton: typeof import('@gouvminint/vue-dsfr')['DsfrButton']
     DsfrHeader: typeof import('@gouvminint/vue-dsfr')['DsfrHeader']
+    DsfrTile: typeof import('@gouvminint/vue-dsfr')['DsfrTile']
     ReloadPrompt: typeof import('./components/ReloadPrompt.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

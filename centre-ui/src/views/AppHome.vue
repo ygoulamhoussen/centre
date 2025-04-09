@@ -17,70 +17,55 @@
     </section>
 
     <!-- Section des partenaires -->
-    <section class="fr-container fr-mt-10w">
+<!--     <section class="fr-container fr-mt-10w">
       <h2 class="fr-h3">Des partenaires de confiance</h2>
       <div class="fr-grid-row">
         <div class="fr-col-12 fr-col-md-3">
-<!--           <img src="@/assets/finances_publiques_logo.png" alt="Finances Publiques" class="fr-img--fluid" /> -->
+           <img src="@/assets/finances_publiques_logo.png" alt="Finances Publiques" class="fr-img--fluid" />
         </div>
         <div class="fr-col-12 fr-col-md-3">
-<!--           <img src="@/assets/atrium_logo.png" alt="Atrium" class="fr-img--fluid" /> -->
+          <img src="@/assets/atrium_logo.png" alt="Atrium" class="fr-img--fluid" />
         </div>
         <div class="fr-col-12 fr-col-md-3">
-<!--           <img src="@/assets/time2start_logo.png" alt="Time2Start" class="fr-img--fluid" /> -->
+          <img src="@/assets/time2start_logo.png" alt="Time2Start" class="fr-img--fluid" />
         </div>
         <div class="fr-col-12 fr-col-md-3">
-<!--           <img src="@/assets/akoneo_logo.png" alt="Akoneo" class="fr-img--fluid" /> -->
+          <img src="@/assets/akoneo_logo.png" alt="Akoneo" class="fr-img--fluid" />
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Section des offres -->
     <section class="fr-container fr-mt-10w">
       <h2 class="fr-h3">Nos offres</h2>
       <div class="fr-grid-row">
         <div class="fr-col-12 fr-col-md-6">
-          <div class="fr-card">
-            <div class="fr-card__header">
-              <h3 class="fr-card__title">Autonome</h3>
-            </div>
-            <div class="fr-card__body">
-              <p>À partir de 9,99€ /mois HT</p>
-              <ul>
-                <li>Locataires illimités</li>
-                <li>Quittances illimitées</li>
-                <li>Locations illimitées</li>
-                <li>Archivage des documents</li>
-                <li>Catégories personnalisées</li>
-                <li>Accès aux immobilisations</li>
-                <li>Accès au bilan comptable</li>
-                <li>Génération de la liasse fiscale</li>
-                <li>Envoi de la liasse fiscale au centre des impôts</li>
-              </ul>
-              <a href="#essai-gratuit" class="fr-btn fr-btn--primary">Essai gratuit de 30 jours</a>
+          <div class="fr-tile fr-enlarge-link" id="tile-autonome">
+            <div class="fr-tile__body">
+              <div class="fr-tile__content">
+                <h3 class="fr-tile__title">
+                  <a href="#essai-gratuit">Autonome</a>
+                </h3>
+                <p class="fr-tile__desc">À partir de 9,99€ /mois HT</p>
+                <p>
+                  Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.
+                </p>
+              </div>
             </div>
           </div>
         </div>
         <div class="fr-col-12 fr-col-md-6">
-          <div class="fr-card">
-            <div class="fr-card__header">
-              <h3 class="fr-card__title">Supervisé</h3>
-            </div>
-            <div class="fr-card__body">
-              <p>À partir de 19,99€ /mois HT</p>
-              <ul>
-                <li>Locataires illimités</li>
-                <li>Quittances illimitées</li>
-                <li>Locations illimitées</li>
-                <li>Archivage des documents</li>
-                <li>Catégories personnalisées</li>
-                <li>Accès aux immobilisations</li>
-                <li>Accès au bilan comptable</li>
-                <li>Attestation et révision par un expert-comptable</li>
-                <li>Génération de la liasse fiscale</li>
-                <li>Envoi de la liasse fiscale au centre des impôts</li>
-              </ul>
-              <a href="#essai-gratuit" class="fr-btn fr-btn--primary">Essai gratuit de 30 jours</a>
+          <div class="fr-tile fr-enlarge-link" id="tile-supervise">
+            <div class="fr-tile__body">
+              <div class="fr-tile__content">
+                <h3 class="fr-tile__title">
+                  <a href="#essai-gratuit">Supervisé</a>
+                </h3>
+                <p class="fr-tile__desc">À partir de 19,99€ /mois HT</p>
+                <p>
+                  Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, attestation et révision par un expert-comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.
+                </p>
+              </div>
             </div>
           </div>
         </div>

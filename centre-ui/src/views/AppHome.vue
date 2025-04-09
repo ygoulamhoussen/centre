@@ -90,11 +90,7 @@
   </main>
 </template>
 
-<script>
-export default {
-  name: 'HomePage',
-};
-</script>
+
 
 <style scoped>
 /* Ajoutez ici les styles spécifiques à votre page d'accueil */

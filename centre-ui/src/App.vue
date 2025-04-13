@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 import useToaster from './composables/use-toaster'
+import { DsfrFooter } from '@gouvminint/vue-dsfr'
 
 // Configuration de l'en-tête DSFR (qui se rapproche du menu de Tomappart)
 const serviceTitle = 'Tikaz'
@@ -46,10 +47,12 @@ const toaster = useToaster()
     :logo-text="logoText"
     :quick-links="quickLinks"
     operatorImgSrc ="/centre-ui/assets/logo-tikaz.svg"
-  />
+  >
 
-  <!-- Barre de navigation DSFR recréant le menu de Tomappart -->
-  <nav class="fr-nav">
+
+
+    <!-- Barre de navigation DSFR recréant le menu de Tomappart -->
+    <nav class="fr-nav">
     <div class="fr-container">
       <ul class="fr-nav__list">
         <!-- Exemple de liens de navigation principal -->
@@ -66,6 +69,20 @@ const toaster = useToaster()
       </ul>
     </div>
   </nav>
+<!-- <DsfrHeaderMenuLink label="Accueil" to="/" >
+  <DsfrHeaderMenuLinkList navAriaLabel="test"/> 
+</DsfrHeaderMenuLink>
+
+
+
+<DsfrHeaderMenuLink label="Fonctionnalités" to="/fonctionnalites"/>
+<DsfrHeaderMenuLink label="Tarifs" to="/tarifs"/>
+<DsfrHeaderMenuLink label="Mon Compte" to="/"/> -->
+</DsfrHeader>
+
+
+
+
 
   <!-- Contenu principal de l'application -->
   <div class="fr-container fr-mt-3w fr-mt-md-5w fr-mb-5w">
@@ -86,10 +103,8 @@ const toaster = useToaster()
     @close-message="toaster.removeMessage($event)"
   />
 
-  <!-- Footer DSFR -->
-  <footer class="fr-footer">
-    <div class="fr-container">
-      <p>© 2023 Tikaz. Tous droits réservés.</p>
-    </div>
-  </footer>
+  <DsfrFooter>
+    
+  </DsfrFooter>
+
 </template>

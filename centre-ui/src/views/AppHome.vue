@@ -1,30 +1,43 @@
-<script lang="ts" setup>
+<script lang="ts">
+import { defineComponent } from 'vue'
+import useToaster from '@/composables/use-toaster'
 import svgContract from '@gouvfr/dsfr/dist/artwork/pictograms/document/contract.svg'
 import svgDocument from '@gouvfr/dsfr/dist/artwork/pictograms/document/driving-licence.svg'
 
-const offers = [
-  {
-    id: 'tile-autonome',
-    title: 'Autonome',
-    description: 'À partir de 9,99€ /mois HT',
-    details:
-      'Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.',
-    svgPath: svgContract,
-    to: '#essai-gratuit',
+export default defineComponent({
+  name: 'AppHome',
+  data() {
+    return {
+      offers: [
+        {
+          id: 'tile-autonome',
+          title: 'Autonome',
+          description: 'À partir de 9,99€ /mois HT',
+          details:
+            'Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.',
+          svgPath: svgContract,
+          to: '#essai-gratuit',
+        },
+        {
+          id: 'tile-supervise',
+          title: 'Supervisé',
+          description: 'À partir de 19,99€ /mois HT',
+          details:
+            'Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, attestation et révision par un expert-comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.',
+          svgPath: svgDocument,
+          to: '#essai-gratuit',
+        },
+      ]
+    }
   },
-  {
-    id: 'tile-supervise',
-    title: 'Supervisé',
-    description: 'À partir de 19,99€ /mois HT',
-    details:
-      'Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, attestation et révision par un expert-comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.',
-    svgPath: svgDocument,
-    to: '#essai-gratuit',
+  mounted() {
+
   },
-]
+})
 </script>
 
 <template>
+  
   <main>
     <!-- Section de présentation -->
     <section class="fr-container fr-mt-10w">
@@ -33,12 +46,14 @@ const offers = [
         Gérez vos biens en toute sérénité avec des fonctionnalités adaptées aux experts comme aux débutants.
       </p>
       <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col-12 fr-col-md-6">
-          <a href="#decouvrir" class="fr-btn fr-btn--primary">Découvrir Tomappart</a>
-        </div>
-        <div class="fr-col-12 fr-col-md-6">
-          <a href="#video" class="fr-btn fr-btn--secondary">Regarder la vidéo de présentation</a>
-        </div>
+        <DsfrButtonGroup inlineLayoutWhen="always">
+          <DsfrButton variant="primary" href="#decouvrir">
+            Découvrir Tikaz
+          </DsfrButton>
+          <DsfrButton variant="secondary" href="#video">
+            Regarder la vidéo de présentation
+          </DsfrButton>
+        </DsfrButtonGroup>
       </div>
     </section>
 
@@ -85,21 +100,21 @@ const offers = [
     <section class="fr-container fr-mt-10w">
       <h2 class="fr-h3">Une application mobile intuitive</h2>
       <p>
-        Pour plus d'accessibilité, retrouvez toutes vos fonctionnalités à portée de main en téléchargeant l'application Tomappart disponible sur le Google Play et l'Apple Store.
+        Pour plus d'accessibilité, retrouvez toutes vos fonctionnalités à portée de main en téléchargeant l'application Tikaz disponible sur le Google Play et l'Apple Store.
       </p>
       <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col-12 fr-col-md-6">
-          <a href="https://play.google.com/store/apps/details?id=fr.tomapp" class="fr-btn fr-btn--secondary">Télécharger sur Google Play</a>
-        </div>
-        <div class="fr-col-12 fr-col-md-6">
-          <a href="https://apps.apple.com/fr/app/tomappart/id6450775976" class="fr-btn fr-btn--secondary">Télécharger sur l'App Store</a>
-        </div>
+        <DsfrButtonGroup inlineLayoutWhen="always">
+          <DsfrButton variant="secondary" href="https://play.google.com/store/apps/details?id=fr.tomapp">
+            Télécharger sur Google Play
+          </DsfrButton>
+          <DsfrButton variant="secondary" href="https://apps.apple.com/fr/app/tikaz/id6450775976">
+            Télécharger sur l'App Store
+          </DsfrButton>
+        </DsfrButtonGroup>
       </div>
     </section>
   </main>
 </template>
-
-
 
 <style scoped>
 /* Ajoutez ici les styles spécifiques à votre page d'accueil */

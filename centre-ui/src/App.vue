@@ -7,7 +7,7 @@ import { DsfrFooter } from '@gouvminint/vue-dsfr'
 // Configuration de l'en-tête DSFR (qui se rapproche du menu de Tomappart)
 const serviceTitle = 'Tikaz'
 const serviceDescription = ''
-const logoText = ['Ministère', 'de l’intérieur']
+const logoText = ['Application', 'de Yussouf']
 const quickLinks = [
   {
     label: 'Se connecter',

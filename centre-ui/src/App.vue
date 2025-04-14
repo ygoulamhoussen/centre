@@ -36,75 +36,65 @@ function close () {
 
 // Pour la gestion des notifications/toasts
 const toaster = useToaster()
+
+
+const navItems = [
+  {
+    "to": "/",
+    "text": "Acceuil"
+  },
+  {
+    "to": "/fonctionnalites",
+    "text": "Fonctionnalités"
+  },
+  {
+    "to": "/tarifs",
+    "text": "Tarifs"
+  },
+  {
+    "to": "/gestion",
+    "text": "Gestion"
+  },
+
+];
 </script>
 
 <template>
-  <!-- En-tête DSFR avec recherche, logo et liens rapides -->
+  <!-- En-tête DSFR -->
   <DsfrHeader
     v-model="searchQuery"
     :service-title="serviceTitle"
     :service-description="serviceDescription"
     :logo-text="logoText"
     :quick-links="quickLinks"
-    operatorImgSrc ="/centre-ui/assets/logo-tikaz.svg"
+    operatorImgSrc="/centre-ui/assets/logo-tikaz.svg"
   >
-
-
-
-    <!-- Barre de navigation DSFR recréant le menu de Tomappart -->
+    <!-- Barre de navigation DSFR recréant le menu -->
     <nav class="fr-nav">
-    <div class="fr-container">
-      <ul class="fr-nav__list">
-        <!-- Exemple de liens de navigation principal -->
-        <li class="fr-nav__item">
-          <a href="/" class="fr-nav__link">Accueil</a>
-        </li>
-        <li class="fr-nav__item">
-          <a href="/fonctionnalites" class="fr-nav__link">Fonctionnalités</a>
-        </li>
-        <li class="fr-nav__item">
-          <a href="/tarifs" class="fr-nav__link">Tarifs</a>
-        </li>
-        <!-- Vous pouvez ajouter d'autres liens ou des sous-menus ici si besoin -->
-      </ul>
-    </div>
-  </nav>
-<!-- <DsfrHeaderMenuLink label="Accueil" to="/" >
-  <DsfrHeaderMenuLinkList navAriaLabel="test"/> 
-</DsfrHeaderMenuLink>
+      <div class="fr-container">
+        <ul class="fr-nav__list">
 
-
-
-<DsfrHeaderMenuLink label="Fonctionnalités" to="/fonctionnalites"/>
-<DsfrHeaderMenuLink label="Tarifs" to="/tarifs"/>
-<DsfrHeaderMenuLink label="Mon Compte" to="/"/> -->
-</DsfrHeader>
-
-
-
-
+          <DsfrNavigation :navItems="navItems" />
+        </ul>
+      </div>
+    </nav>
+  </DsfrHeader>
 
   <!-- Contenu principal de l'application -->
   <div class="fr-container fr-mt-3w fr-mt-md-5w fr-mb-5w">
     <router-view />
   </div>
 
-  <!-- Composant de notification pour la gestion du service worker -->
+  <!-- Autres composants -->
   <ReloadPrompt
     :offline-ready="offlineReady"
     :need-refresh="needRefresh"
     @close="close()"
     @update-service-worker="updateServiceWorker()"
   />
-
-  <!-- Composant pour afficher les messages / toasts -->
   <AppToaster
     :messages="toaster.messages"
     @close-message="toaster.removeMessage($event)"
   />
-
-  <DsfrFooter>
-    
-  </DsfrFooter>
-
+  <DsfrFooter></DsfrFooter>
 </template>

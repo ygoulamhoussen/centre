@@ -4,6 +4,7 @@ import Home from '../views/AppHome.vue'
 import AboutUs from '../views/AboutUs.vue'
 import Fonctionnalites from '../views/Fonctionnalites.vue'
 import Login from '../views/Login.vue'
+import Gestion from '../views/Gestion.vue' // Ajout de l'import
 
 const MAIN_TITLE = 'Gabarit de démarrage VueDsfr'
 
@@ -27,6 +28,11 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login,
+  },
+  {
+    path: '/gestion',
+    name: 'gestion',
+    component: Gestion, // Nouvelle route pour "Mon Compte"
   },
 ]
 

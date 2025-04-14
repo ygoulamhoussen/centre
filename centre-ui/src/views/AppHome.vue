@@ -1,43 +1,4 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-import useToaster from '@/composables/use-toaster'
-import svgContract from '@gouvfr/dsfr/dist/artwork/pictograms/document/contract.svg'
-import svgDocument from '@gouvfr/dsfr/dist/artwork/pictograms/document/driving-licence.svg'
-
-export default defineComponent({
-  name: 'AppHome',
-  data() {
-    return {
-      offers: [
-        {
-          id: 'tile-autonome',
-          title: 'Autonome',
-          description: 'À partir de 9,99€ /mois HT',
-          details:
-            'Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.',
-          svgPath: svgContract,
-          to: '#essai-gratuit',
-        },
-        {
-          id: 'tile-supervise',
-          title: 'Supervisé',
-          description: 'À partir de 19,99€ /mois HT',
-          details:
-            'Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, attestation et révision par un expert-comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.',
-          svgPath: svgDocument,
-          to: '#essai-gratuit',
-        },
-      ]
-    }
-  },
-  mounted() {
-
-  },
-})
-</script>
-
 <template>
-  
   <main>
     <!-- Section de présentation -->
     <section class="fr-container fr-mt-10w">
@@ -56,46 +17,32 @@ export default defineComponent({
         </DsfrButtonGroup>
       </div>
     </section>
-
-    <!-- Section des partenaires -->
-<!--     <section class="fr-container fr-mt-10w">
-      <h2 class="fr-h3">Des partenaires de confiance</h2>
-      <div class="fr-grid-row">
-        <div class="fr-col-12 fr-col-md-3">
-           <img src="@/assets/finances_publiques_logo.png" alt="Finances Publiques" class="fr-img--fluid" />
-        </div>
-        <div class="fr-col-12 fr-col-md-3">
-          <img src="@/assets/atrium_logo.png" alt="Atrium" class="fr-img--fluid" />
-        </div>
-        <div class="fr-col-12 fr-col-md-3">
-          <img src="@/assets/time2start_logo.png" alt="Time2Start" class="fr-img--fluid" />
-        </div>
-        <div class="fr-col-12 fr-col-md-3">
-          <img src="@/assets/akoneo_logo.png" alt="Akoneo" class="fr-img--fluid" />
-        </div>
-      </div>
-    </section> -->
-
+    
     <!-- Section des offres -->
     <section class="fr-container fr-mt-10w">
       <h2 class="fr-h3">Nos offres</h2>
       <div class="fr-grid-row">
-        <div
-          v-for="offer in offers"
-          :key="offer.id"
-          class="fr-col-12 fr-col-md-6"
-        >
+        <div class="fr-col-12 fr-col-md-6">
           <DsfrTile
-            :title="offer.title"
-            :description="offer.description"
-            :details="offer.details"
-            :svg-path="offer.svgPath"
-            :to="offer.to"
+            title="Autonome"
+            description="À partir de 9,99€ /mois HT"
+            details="Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts."
+            :svg-path="svgContract"
+            to="#essai-gratuit"
+          />
+        </div>
+        <div class="fr-col-12 fr-col-md-6">
+          <DsfrTile
+            title="Supervisé"
+            description="À partir de 19,99€ /mois HT"
+            details="Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, attestation et révision par un expert-comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts."
+            :svg-path="svgDocument"
+            to="#essai-gratuit"
           />
         </div>
       </div>
     </section>
-
+    
     <!-- Section application mobile -->
     <section class="fr-container fr-mt-10w">
       <h2 class="fr-h3">Une application mobile intuitive</h2>
@@ -115,6 +62,22 @@ export default defineComponent({
     </section>
   </main>
 </template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import svgContractImport from '@gouvfr/dsfr/dist/artwork/pictograms/document/contract.svg'
+import svgDocumentImport from '@gouvfr/dsfr/dist/artwork/pictograms/document/driving-licence.svg'
+
+export default defineComponent({
+  name: 'AppHome',
+  data() {
+    return {
+      svgContract: svgContractImport,
+      svgDocument: svgDocumentImport
+    }
+  }
+})
+</script>
 
 <style scoped>
 /* Ajoutez ici les styles spécifiques à votre page d'accueil */

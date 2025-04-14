@@ -11,7 +11,7 @@ const logoText = ['Ministère', 'de l’intérieur']
 const quickLinks = [
   {
     label: 'Se connecter',
-    to: '/',
+    to: '/login',
     icon: 'ri-home-4-line',
     iconAttrs: { color: 'var(--red-marianne-425-625)' },
   },

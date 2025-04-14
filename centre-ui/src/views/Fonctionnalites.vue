@@ -33,6 +33,7 @@ const selectLast = async () => {
     <DsfrTabs
       v-model="activeTab"
       :tab-list-name="tabListName"
+      :tabTitles="tabTitles"
     >
       <template #tab-items>
         <DsfrTabItem

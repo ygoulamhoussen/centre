@@ -1,4 +1,4 @@
-package com.formation.centre.controller;
+/* package com.formation.centre.controller;
 
 import com.formation.centre.model.Formateur;
 import com.formation.centre.model.Utilisateur;
@@ -182,4 +182,4 @@ public class UnifiedController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-}
+} */

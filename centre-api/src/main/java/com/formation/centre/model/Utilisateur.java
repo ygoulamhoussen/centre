@@ -1,38 +1,36 @@
 package com.formation.centre.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
+@Table(name = "utilisateur")
 public class Utilisateur {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
+
     private String nom;
+    private String prenom;
     private String email;
-    private String motDePasse;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(name = "mot_de_passe_hash")
+    private String motDePasseHash;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "utilisateur")
-    private List<Inscription> inscriptions;
+    @Column(name = "cree_le")
+    private LocalDateTime creeLe;
 
-    public enum Role {
-        ADMINISTRATEUR,
-        ETUDIANT,
-        FORMATEUR
-    }
+    @Column(name = "modifie_le")
+    private LocalDateTime modifieLe;
 
-    // Getters and setters
-    public Long getId() {
+    // Getters and Setters
+
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -44,6 +42,14 @@ public class Utilisateur {
         this.nom = nom;
     }
 
+    public String getPrenom() {
+        return prenom;
+    }
+
+    public void setPrenom(String prenom) {
+        this.prenom = prenom;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -52,27 +58,27 @@ public class Utilisateur {
         this.email = email;
     }
 
-    public String getMotDePasse() {
-        return motDePasse;
+    public String getMotDePasseHash() {
+        return motDePasseHash;
     }
 
-    public void setMotDePasse(String motDePasse) {
-        this.motDePasse = motDePasse;
+    public void setMotDePasseHash(String motDePasseHash) {
+        this.motDePasseHash = motDePasseHash;
     }
 
-    public Role getRole() {
-        return role;
+    public LocalDateTime getCreeLe() {
+        return creeLe;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setCreeLe(LocalDateTime creeLe) {
+        this.creeLe = creeLe;
     }
 
-    public List<Inscription> getInscriptions() {
-        return inscriptions;
+    public LocalDateTime getModifieLe() {
+        return modifieLe;
     }
 
-    public void setInscriptions(List<Inscription> inscriptions) {
-        this.inscriptions = inscriptions;
+    public void setModifieLe(LocalDateTime modifieLe) {
+        this.modifieLe = modifieLe;
     }
 }

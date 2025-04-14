@@ -1,14 +1,17 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 
-
-
 const tabListName = 'Liste d’onglet'
 const tabTitles = [
-  { title: 'Tableau de bord', icon: 'ri-checkbox-circle-line', tabId: 'tab-0', panelId: 'tab-content-0' },
-  { title: 'Propriétés', icon: 'ri-checkbox-circle-line', tabId: 'tab-1', panelId: 'tab-content-1' },
-  { title: 'Locataires', icon: 'ri-checkbox-circle-line', tabId: 'tab-2', panelId: 'tab-content-2' },
-  { title: 'Locations', icon: 'ri-checkbox-circle-line', tabId: 'tab-3', panelId: 'tab-content-3' },
+  { title: 'Tableau de bord', icon: 'ri-dashboard-line', tabId: 'tab-0', panelId: 'tab-content-0' },
+  { title: 'Propriétés', icon: 'ri-home-2-line', tabId: 'tab-1', panelId: 'tab-content-1' },
+  { title: 'Locataires', icon: 'ri-user-3-line', tabId: 'tab-2', panelId: 'tab-content-2' },
+  { title: 'Locations', icon: 'ri-key-line', tabId: 'tab-3', panelId: 'tab-content-3' },
+  { title: 'Quittances', icon: 'ri-file-text-line', tabId: 'tab-4', panelId: 'tab-content-4' },
+  { title: 'Immobilisations', icon: 'ri-building-line', tabId: 'tab-5', panelId: 'tab-content-5' },
+  { title: 'Crédits', icon: 'ri-bank-line', tabId: 'tab-6', panelId: 'tab-content-6' },
+  { title: 'Comptabilité', icon: 'ri-calculator-line', tabId: 'tab-7', panelId: 'tab-content-7' },
+  { title: 'Documents', icon: 'ri-attachment-line', tabId: 'tab-8', panelId: 'tab-content-8' }
 ]
 
 const activeTab = ref(0)
@@ -51,39 +54,43 @@ const selectLast = async () => {
           {{ tab.title }}
         </DsfrTabItem>
       </template>
-      <DsfrTabContent
-        panel-id="tab-content-0"
-        tab-id="tab-0"
-      >
-        <div>Contenu 1 avec d'<em>autres composants</em></div>
+
+      <DsfrTabContent panel-id="tab-content-0" tab-id="tab-0">
+        <div>Vue d'ensemble du tableau de bord</div>
       </DsfrTabContent>
 
-      <DsfrTabContent
-        panel-id="tab-content-1"
-        tab-id="tab-1"
-      >
-        <div>Contenu 2 avec d'<strong>autres composants</strong></div>
+      <DsfrTabContent panel-id="tab-content-1" tab-id="tab-1">
+        <div>Gestion des propriétés : ajout, détails, acquisition</div>
       </DsfrTabContent>
 
-      <DsfrTabContent
-        panel-id="tab-content-2"
-        tab-id="tab-2"
-      >
-        <div>Contenu 3 avec d'<em><strong>autres composants</strong></em></div>
+      <DsfrTabContent panel-id="tab-content-2" tab-id="tab-2">
+        <div>Suivi des locataires et de leurs informations</div>
       </DsfrTabContent>
 
-      <DsfrTabContent
-        panel-id="tab-content-3"
-        tab-id="tab-3"
-      >
-        <div>
-          <p>Contenu 4 avec beaucoup de contenus</p>
-          <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Vitae fugit sit et eos a officiis adipisci nulla repellat cupiditate? Assumenda, explicabo ullam laboriosam ex sit corporis enim illum a itaque.</p>
-          <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Quasi animi quis quos consectetur alias delectus recusandae sunt quisquam incidunt provident quidem, at voluptatibus id, molestias et? Temporibus perspiciatis aut voluptates.</p>
-          <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quibusdam obcaecati at delectus iusto possimus! Molestiae, iusto veritatis. Nostrum magni officiis autem, in ullam aliquid, mollitia, commodi architecto vitae omnis vero.</p>
-        </div>
+      <DsfrTabContent panel-id="tab-content-3" tab-id="tab-3">
+        <div>Suivi des baux, loyers, fréquence et échéances</div>
       </DsfrTabContent>
+
+      <DsfrTabContent panel-id="tab-content-4" tab-id="tab-4">
+        <div>Création des quittances et suivi des paiements</div>
+      </DsfrTabContent>
+
+      <DsfrTabContent panel-id="tab-content-5" tab-id="tab-5">
+        <div>Décomposition des biens en immobilisations amortissables</div>
+      </DsfrTabContent>
+
+      <DsfrTabContent panel-id="tab-content-6" tab-id="tab-6">
+        <div>Suivi des crédits immobiliers et échéanciers</div>
+      </DsfrTabContent>
+
+      <DsfrTabContent panel-id="tab-content-7" tab-id="tab-7">
+        <div>Journal comptable, écritures, clôture et bilan fiscal LMNP</div>
+      </DsfrTabContent>
+
+      <DsfrTabContent panel-id="tab-content-8" tab-id="tab-8">
+        <div>Centralisation et gestion des documents liés</div>
+      </DsfrTabContent>
+
     </DsfrTabs>
-
   </div>
 </template>

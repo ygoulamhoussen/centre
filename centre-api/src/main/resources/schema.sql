@@ -1,145 +1,224 @@
--- Supprimer les séquences existantes
-DROP SEQUENCE IF EXISTS etudiant_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS formateur_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS formation_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS inscription_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS salle_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS session_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS utilisateur_id_seq CASCADE;
-
--- Créer les séquences
-CREATE SEQUENCE etudiant_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
-CREATE SEQUENCE formateur_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
-CREATE SEQUENCE formation_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
-CREATE SEQUENCE inscription_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
-CREATE SEQUENCE salle_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
-CREATE SEQUENCE session_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
-CREATE SEQUENCE utilisateur_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
-
--- Supprimer les tables existantes
-DROP TABLE IF EXISTS public.etudiant CASCADE;
-DROP TABLE IF EXISTS public.utilisateur CASCADE;
-DROP TABLE IF EXISTS public.formateur CASCADE;
-DROP TABLE IF EXISTS public.formation CASCADE;
-DROP TABLE IF EXISTS public.inscription CASCADE;
-DROP TABLE IF EXISTS public.salle CASCADE;
-DROP TABLE IF EXISTS public.session CASCADE;
-
--- Créer la table etudiant
-CREATE TABLE IF NOT EXISTS public.etudiant
-(
-    id bigint NOT NULL DEFAULT nextval('etudiant_id_seq'::regclass),
-    email character varying(255) COLLATE pg_catalog."default",
-    nom character varying(255) COLLATE pg_catalog."default",
-    CONSTRAINT etudiant_pkey PRIMARY KEY (id)
-)
-TABLESPACE pg_default;
+DROP TABLE  IF EXISTS inscription;
+DROP TABLE   IF EXISTS utilisateur;
+DROP TABLE   IF EXISTS etudiant;
+DROP TABLE   IF EXISTS session;
+DROP TABLE   IF EXISTS formation;
+DROP TABLE   IF EXISTS formateur;
+DROP TABLE   IF EXISTS salle;
 
 
 
--- Créer la table formateur
-CREATE TABLE IF NOT EXISTS public.formateur
-(
-    id bigint NOT NULL DEFAULT nextval('formateur_id_seq'::regclass),
-    email character varying(255) COLLATE pg_catalog."default",
-    nom character varying(255) COLLATE pg_catalog."default",
-    CONSTRAINT formateur_pkey PRIMARY KEY (id)
-)
-TABLESPACE pg_default;
+-- Script de création du schéma de données LMNP pour PostgreSQL 16
 
+-- ENUMS
+CREATE TYPE type_bien AS ENUM ('Appartement', 'Maison', 'Box', 'Parking');
+CREATE TYPE type_operation AS ENUM ('Recette', 'Charge', 'Achat Immobilisation', 'Amortissement', 'Intérêt Emprunt', 'Assurance Crédit', 'Remboursement Crédit', 'Autre');
+CREATE TYPE code_journal AS ENUM ('AC', 'VE', 'BQ', 'OD', 'AN');
+CREATE TYPE categorie_composition AS ENUM ('Terrain', 'Construction', 'Travaux', 'Mobilier', 'Frais de notaire', 'Frais d''agence', 'Autre');
+CREATE TYPE categorie_immobilisation AS ENUM ('Terrain', 'Structure', 'Façades', 'Toiture', 'Installations électriques', 'Plomberie', 'Chauffage', 'Agencements intérieurs', 'Cuisine équipée', 'Mobilier', 'Ascenseur', 'Autre');
+CREATE TYPE moyen_paiement AS ENUM ('Virement', 'Chèque', 'Espèces', 'Prélèvement', 'Carte bancaire', 'Autre');
+CREATE TYPE statut_quittance AS ENUM ('Payée', 'Partielle', 'Impayée');
+CREATE TYPE type_document AS ENUM ('Facture', 'Quittance', 'Bail', 'Justificatif', 'Contrat de crédit', 'Autre');
+CREATE TYPE frequence_loyer AS ENUM ('Mensuel', 'Trimestriel', 'Annuel');
 
+-- UTILISATEUR
+CREATE TABLE utilisateur (
+    id UUID PRIMARY KEY,
+    nom TEXT,
+    prenom TEXT,
+    email TEXT UNIQUE,
+    mot_de_passe_hash TEXT,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
--- Créer la table formation
-CREATE TABLE IF NOT EXISTS public.formation
-(
-    id bigint NOT NULL DEFAULT nextval('formation_id_seq'::regclass),
-    description character varying(255) COLLATE pg_catalog."default",
-    titre character varying(255) COLLATE pg_catalog."default",
-    formateur_id bigint,
-    CONSTRAINT formation_pkey PRIMARY KEY (id),
-    CONSTRAINT fkdnj87nt2fnhdcd00ryovre4m8 FOREIGN KEY (formateur_id)
-        REFERENCES public.formateur (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-)
-TABLESPACE pg_default;
+-- PROPRIETE
+CREATE TABLE propriete (
+    id UUID PRIMARY KEY,
+    utilisateur_id UUID REFERENCES utilisateur(id),
+    type_bien type_bien,
+    nom TEXT,
+    adresse TEXT,
+    complement_adresse TEXT,
+    code_postal TEXT,
+    ville TEXT,
+    date_acquisition DATE,
+    date_livraison DATE,
+    montant_acquisition DECIMAL,
+    tantieme DECIMAL,
+    frais_notaire DECIMAL,
+    frais_agence DECIMAL,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
+-- COMPOSITION D'ACQUISITION
+CREATE TABLE composition_acquisition (
+    id UUID PRIMARY KEY,
+    propriete_id UUID REFERENCES propriete(id),
+    categorie categorie_composition,
+    montant DECIMAL,
+    description TEXT,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
+-- LOCATAIRE
+CREATE TABLE locataire (
+    id UUID PRIMARY KEY,
+    propriete_id UUID REFERENCES propriete(id),
+    nom TEXT,
+    telephone TEXT,
+    email TEXT,
+    adresse TEXT,
+    complement_adresse TEXT,
+    code_postal TEXT,
+    ville TEXT,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
--- Créer la table salle
-CREATE TABLE IF NOT EXISTS public.salle
-(
-    id bigint NOT NULL DEFAULT nextval('salle_id_seq'::regclass),
-    capacite integer NOT NULL,
-    nom character varying(255) COLLATE pg_catalog."default",
-    CONSTRAINT salle_pkey PRIMARY KEY (id)
-)
-TABLESPACE pg_default;
+-- LOCATION
+CREATE TABLE location (
+    id UUID PRIMARY KEY,
+    propriete_id UUID REFERENCES propriete(id),
+    locataire_id UUID REFERENCES locataire(id),
+    date_debut DATE,
+    date_fin DATE,
+    loyer_mensuel DECIMAL,
+    charges_mensuelles DECIMAL,
+    depot_garantie DECIMAL,
+    frequence_loyer frequence_loyer,
+    jour_echeance INTEGER,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
+-- QUITTANCE
+CREATE TABLE quittance (
+    id UUID PRIMARY KEY,
+    location_id UUID REFERENCES location(id),
+    date_debut DATE,
+    date_fin DATE,
+    date_emission DATE,
+    montant_loyer DECIMAL,
+    montant_charges DECIMAL,
+    montant_total DECIMAL,
+    statut statut_quittance,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
--- Créer la table session
-CREATE TABLE IF NOT EXISTS public.session
-(
-    id bigint NOT NULL DEFAULT nextval('session_id_seq'::regclass),
-    debut timestamp without time zone,
-    fin timestamp without time zone,
-    formateur_id bigint,
-    formation_id bigint,
-    salle_id bigint,
-    CONSTRAINT session_pkey PRIMARY KEY (id),
-    CONSTRAINT fk19wnortskl91nl9d8h4tw7d0x FOREIGN KEY (formateur_id)
-        REFERENCES public.formateur (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    CONSTRAINT fk8dw89p64y5vhkpsj2ig3vq95h FOREIGN KEY (salle_id)
-        REFERENCES public.salle (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    CONSTRAINT fkgxjpjguyud7yk8jb51ygcmay1 FOREIGN KEY (formation_id)
-        REFERENCES public.formation (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-)
-TABLESPACE pg_default;
+-- PAIEMENT
+CREATE TABLE paiement (
+    id UUID PRIMARY KEY,
+    quittance_id UUID REFERENCES quittance(id),
+    date_paiement DATE,
+    montant DECIMAL,
+    moyen_paiement moyen_paiement,
+    reference TEXT,
+    commentaire TEXT,
+    est_valide BOOLEAN,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
+-- IMMOBILISATION
+CREATE TABLE immobilisation (
+    id UUID PRIMARY KEY,
+    propriete_id UUID REFERENCES propriete(id),
+    nom TEXT,
+    categorie categorie_immobilisation,
+    valeur DECIMAL,
+    duree_amortissement INT,
+    date_mise_en_service DATE,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
+-- AMORTISSEMENT
+CREATE TABLE amortissement (
+    id UUID PRIMARY KEY,
+    immobilisation_id UUID REFERENCES immobilisation(id),
+    annee INT,
+    montant_amorti DECIMAL,
+    valeur_residuelle DECIMAL,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
+-- CREDIT
+CREATE TABLE credit (
+    id UUID PRIMARY KEY,
+    propriete_id UUID REFERENCES propriete(id),
+    banque TEXT,
+    montant_emprunte DECIMAL,
+    date_debut DATE,
+    date_fin DATE,
+    duree_mois INT,
+    taux_interet_annuel DECIMAL,
+    mensualite DECIMAL,
+    assurance_mensuelle DECIMAL,
+    frais_dossier DECIMAL,
+    frais_garantie DECIMAL,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
+-- ECHEANCIER DE CREDIT
+CREATE TABLE echeance_credit (
+    id UUID PRIMARY KEY,
+    credit_id UUID REFERENCES credit(id),
+    date_echeance DATE,
+    interet DECIMAL,
+    capital_rembourse DECIMAL,
+    assurance DECIMAL,
+    total_echeance DECIMAL
+);
 
--- Créer la table utilisateur
-CREATE TABLE IF NOT EXISTS public.utilisateur
-(
-    id bigint NOT NULL DEFAULT nextval('utilisateur_id_seq'::regclass),
-    email character varying(255) COLLATE pg_catalog."default",
-    mot_de_passe character varying(255) COLLATE pg_catalog."default",
-    nom character varying(255) COLLATE pg_catalog."default",
-    role character varying(255) COLLATE pg_catalog."default",
-    CONSTRAINT utilisateur_pkey PRIMARY KEY (id)
-)
-TABLESPACE pg_default;
+-- ECRITURE COMPTABLE
+CREATE TABLE ecriture_comptable (
+    id UUID PRIMARY KEY,
+    propriete_id UUID REFERENCES propriete(id),
+    date_ecriture DATE,
+    libelle TEXT,
+    montant DECIMAL,
+    type_operation type_operation,
+    categorie_comptable TEXT,
+    code_journal code_journal,
+    tva DECIMAL,
+    justificatif_url TEXT,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
--- Créer la table inscription
-CREATE TABLE IF NOT EXISTS public.inscription
-(
-    id bigint NOT NULL DEFAULT nextval('inscription_id_seq'::regclass),
-    etudiant_id bigint,
-    session_id bigint,
-    utilisateur_id bigint,
-    CONSTRAINT inscription_pkey PRIMARY KEY (id),
-    CONSTRAINT fk7u3x7n97xw83vfemi95yu7oev FOREIGN KEY (etudiant_id)
-        REFERENCES public.etudiant (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    CONSTRAINT fkb3ckm4ansfumlubaocw95dwep FOREIGN KEY (session_id)
-        REFERENCES public.session (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    CONSTRAINT fkes0mtg0xssltfgqc6p8evlxpy FOREIGN KEY (utilisateur_id)
-        REFERENCES public.utilisateur (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-)
-TABLESPACE pg_default;
+-- CLOTURE D'EXERCICE
+CREATE TABLE cloture_exercice (
+    id UUID PRIMARY KEY,
+    annee_fiscale INT,
+    utilisateur_id UUID REFERENCES utilisateur(id),
+    total_loyers DECIMAL,
+    total_charges DECIMAL,
+    total_amortissements DECIMAL,
+    resultat_comptable DECIMAL,
+    revenu_imposable DECIMAL,
+    date_cloture DATE,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
-
-
+-- DOCUMENTS
+CREATE TABLE document (
+    id UUID PRIMARY KEY,
+    utilisateur_id UUID REFERENCES utilisateur(id),
+    propriete_id UUID REFERENCES propriete(id),
+    locataire_id UUID REFERENCES locataire(id),
+    immobilisation_id UUID REFERENCES immobilisation(id),
+    ecriture_id UUID REFERENCES ecriture_comptable(id),
+    type_document type_document,
+    titre TEXT,
+    url_fichier TEXT,
+    date_document DATE,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);

@@ -10,6 +10,7 @@ declare module 'vue' {
     AppToaster: typeof import('./components/AppToaster.vue')['default']
     DsfrAccordion: typeof import('@gouvminint/vue-dsfr')['DsfrAccordion']
     DsfrAccordionItem: typeof import('@gouvminint/vue-dsfr')['DsfrAccordionItem']
+    DsfrAccordionsGroup: typeof import('@gouvminint/vue-dsfr')['DsfrAccordionsGroup']
     DsfrAlert: typeof import('@gouvminint/vue-dsfr')['DsfrAlert']
     DsfrButton: typeof import('@gouvminint/vue-dsfr')['DsfrButton']
     DsfrButtonGroup: typeof import('@gouvminint/vue-dsfr')['DsfrButtonGroup']

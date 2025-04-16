@@ -5,6 +5,7 @@ import AboutUs from '../views/AboutUs.vue'
 import Fonctionnalites from '../views/Fonctionnalites.vue'
 import Login from '../views/Login.vue'
 import Gestion from '../views/Gestion.vue' // Ajout de l'import
+import ProprieteView from '../views/ProprieteView.vue' // Ajout de l'import
 
 const MAIN_TITLE = 'Gabarit de démarrage VueDsfr'
 
@@ -23,6 +24,11 @@ const routes = [
     path: '/fonctionnalites',
     name: 'Fonctionnalités',
     component: Fonctionnalites,
+  },
+  {
+    path: '/proprieteView',
+    name: 'ProprieteView',
+    component: ProprieteView,
   },
   {
     path: '/login',

@@ -29,6 +29,7 @@ export default defineComponent({
       titleCompta: 'Comptabilité',
       tiles: [
         {
+          to :"ProprieteView",
           title: "Propriétés",
           svgPath: svgGestion,
           description: "Ajoutez et gérez vos biens immobiliers"

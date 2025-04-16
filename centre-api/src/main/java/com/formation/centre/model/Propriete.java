@@ -3,7 +3,7 @@ package com.formation.centre.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -11,55 +11,34 @@ import java.util.UUID;
 public class Propriete {
 
     @Id
+    @GeneratedValue
     private UUID id;
+
+    private String nom;
+    private String adresse;
+    private String complementAdresse;
+    private String codePostal;
+    private String ville;
+
+    @Enumerated(EnumType.STRING)
+    private TypeBien typeBien;
+
+    private LocalDate dateAcquisition;
+    private LocalDate dateLivraison;
+    private BigDecimal montantAcquisition;
+    private BigDecimal tantieme;
+    private BigDecimal fraisNotaire;
+    private BigDecimal fraisAgence;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "utilisateur_id")
     private Utilisateur utilisateur;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type_bien")
-    private TypeBien typeBien;
-
-    private String nom;
-    private String adresse;
-
-    @Column(name = "complement_adresse")
-    private String complementAdresse;
-
-    @Column(name = "code_postal")
-    private String codePostal;
-
-    private String ville;
-
-    @Column(name = "date_acquisition")
-    private LocalDate dateAcquisition;
-
-    @Column(name = "date_livraison")
-    private LocalDate dateLivraison;
-
-    @Column(name = "montant_acquisition")
-    private BigDecimal montantAcquisition;
-
-    private BigDecimal tantieme;
-
-    @Column(name = "frais_notaire")
-    private BigDecimal fraisNotaire;
-
-    @Column(name = "frais_agence")
-    private BigDecimal fraisAgence;
-
-    @Column(name = "cree_le")
-    private LocalDateTime creeLe;
-
-    @Column(name = "modifie_le")
-    private LocalDateTime modifieLe;
+    @OneToMany(mappedBy = "propriete", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CompositionAcquisition> compositions;
 
     public enum TypeBien {
-        Appartement,
-        Maison,
-        Box,
-        Parking
+        APPARTEMENT, MAISON, BOX, PARKING
     }
 
     public UUID getId() {
@@ -68,22 +47,6 @@ public class Propriete {
 
     public void setId(UUID id) {
         this.id = id;
-    }
-
-    public Utilisateur getUtilisateur() {
-        return utilisateur;
-    }
-
-    public void setUtilisateur(Utilisateur utilisateur) {
-        this.utilisateur = utilisateur;
-    }
-
-    public TypeBien getTypeBien() {
-        return typeBien;
-    }
-
-    public void setTypeBien(TypeBien typeBien) {
-        this.typeBien = typeBien;
     }
 
     public String getNom() {
@@ -124,6 +87,14 @@ public class Propriete {
 
     public void setVille(String ville) {
         this.ville = ville;
+    }
+
+    public TypeBien getTypeBien() {
+        return typeBien;
+    }
+
+    public void setTypeBien(TypeBien typeBien) {
+        this.typeBien = typeBien;
     }
 
     public LocalDate getDateAcquisition() {
@@ -174,19 +145,19 @@ public class Propriete {
         this.fraisAgence = fraisAgence;
     }
 
-    public LocalDateTime getCreeLe() {
-        return creeLe;
+    public Utilisateur getUtilisateur() {
+        return utilisateur;
     }
 
-    public void setCreeLe(LocalDateTime creeLe) {
-        this.creeLe = creeLe;
+    public void setUtilisateur(Utilisateur utilisateur) {
+        this.utilisateur = utilisateur;
     }
 
-    public LocalDateTime getModifieLe() {
-        return modifieLe;
+    public List<CompositionAcquisition> getCompositions() {
+        return compositions;
     }
 
-    public void setModifieLe(LocalDateTime modifieLe) {
-        this.modifieLe = modifieLe;
+    public void setCompositions(List<CompositionAcquisition> compositions) {
+        this.compositions = compositions;
     }
 }

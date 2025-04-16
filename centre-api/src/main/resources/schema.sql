@@ -1,25 +1,49 @@
-DROP TABLE  IF EXISTS inscription;
-DROP TABLE   IF EXISTS utilisateur;
-DROP TABLE   IF EXISTS etudiant;
-DROP TABLE   IF EXISTS session;
-DROP TABLE   IF EXISTS formation;
-DROP TABLE   IF EXISTS formateur;
-DROP TABLE   IF EXISTS salle;
 
+-- DROP TABLES EXISTANTS
+-- DROP TABLES dans l'ordre des dépendances inversées
+DROP TABLE IF EXISTS document;
+DROP TABLE IF EXISTS cloture_exercice;
+DROP TABLE IF EXISTS ecriture_comptable;
+DROP TABLE IF EXISTS echeance_credit;
+DROP TABLE IF EXISTS credit;
+DROP TABLE IF EXISTS amortissement;
+DROP TABLE IF EXISTS immobilisation;
+DROP TABLE IF EXISTS paiement;
+DROP TABLE IF EXISTS quittance;
+DROP TABLE IF EXISTS location;
+DROP TABLE IF EXISTS locataire;
+DROP TABLE IF EXISTS composition_acquisition;
+DROP TABLE IF EXISTS propriete;
+DROP TABLE IF EXISTS utilisateur;
 
+DROP TABLE IF EXISTS inscription;
+DROP TABLE IF EXISTS utilisateur;
+DROP TABLE IF EXISTS etudiant;
+DROP TABLE IF EXISTS session;
+DROP TABLE IF EXISTS formation;
+DROP TABLE IF EXISTS formateur;
+DROP TABLE IF EXISTS salle;
 
--- Script de création du schéma de données LMNP pour PostgreSQL 16
+-- TYPES ENUM EN MAJUSCULE
+DROP TYPE IF EXISTS type_bien;
+DROP TYPE IF EXISTS type_operation;
+DROP TYPE IF EXISTS code_journal;
+DROP TYPE IF EXISTS categorie_composition;
+DROP TYPE IF EXISTS categorie_immobilisation;
+DROP TYPE IF EXISTS moyen_paiement;
+DROP TYPE IF EXISTS statut_quittance;
+DROP TYPE IF EXISTS type_document;
+DROP TYPE IF EXISTS frequence_loyer;
 
--- ENUMS
-CREATE TYPE type_bien AS ENUM ('Appartement', 'Maison', 'Box', 'Parking');
-CREATE TYPE type_operation AS ENUM ('Recette', 'Charge', 'Achat Immobilisation', 'Amortissement', 'Intérêt Emprunt', 'Assurance Crédit', 'Remboursement Crédit', 'Autre');
+CREATE TYPE type_bien AS ENUM ('APPARTEMENT', 'MAISON', 'BOX', 'PARKING');
+CREATE TYPE type_operation AS ENUM ('RECETTE', 'CHARGE', 'ACHAT IMMOBILISATION', 'AMORTISSEMENT', 'INTÉRÊT EMPRUNT', 'ASSURANCE CRÉDIT', 'REMBOURSEMENT CRÉDIT', 'AUTRE');
 CREATE TYPE code_journal AS ENUM ('AC', 'VE', 'BQ', 'OD', 'AN');
-CREATE TYPE categorie_composition AS ENUM ('Terrain', 'Construction', 'Travaux', 'Mobilier', 'Frais de notaire', 'Frais d''agence', 'Autre');
-CREATE TYPE categorie_immobilisation AS ENUM ('Terrain', 'Structure', 'Façades', 'Toiture', 'Installations électriques', 'Plomberie', 'Chauffage', 'Agencements intérieurs', 'Cuisine équipée', 'Mobilier', 'Ascenseur', 'Autre');
-CREATE TYPE moyen_paiement AS ENUM ('Virement', 'Chèque', 'Espèces', 'Prélèvement', 'Carte bancaire', 'Autre');
-CREATE TYPE statut_quittance AS ENUM ('Payée', 'Partielle', 'Impayée');
-CREATE TYPE type_document AS ENUM ('Facture', 'Quittance', 'Bail', 'Justificatif', 'Contrat de crédit', 'Autre');
-CREATE TYPE frequence_loyer AS ENUM ('Mensuel', 'Trimestriel', 'Annuel');
+CREATE TYPE categorie_composition AS ENUM ('TERRAIN', 'CONSTRUCTION', 'TRAVAUX', 'MOBILIER', 'FRAIS DE NOTAIRE', 'FRAIS D''AGENCE', 'AUTRE');
+CREATE TYPE categorie_immobilisation AS ENUM ('TERRAIN', 'STRUCTURE', 'FAÇADES', 'TOITURE', 'INSTALLATIONS ÉLECTRIQUES', 'PLOMBERIE', 'CHAUFFAGE', 'AGENCEMENTS INTÉRIEURS', 'CUISINE ÉQUIPÉE', 'MOBILIER', 'ASCENSEUR', 'AUTRE');
+CREATE TYPE moyen_paiement AS ENUM ('VIREMENT', 'CHÈQUE', 'ESPÈCES', 'PRÉLÈVEMENT', 'CARTE BANCAIRE', 'AUTRE');
+CREATE TYPE statut_quittance AS ENUM ('PAYÉE', 'PARTIELLE', 'IMPAYÉE');
+CREATE TYPE type_document AS ENUM ('FACTURE', 'QUITTANCE', 'BAIL', 'JUSTIFICATIF', 'CONTRAT DE CRÉDIT', 'AUTRE');
+CREATE TYPE frequence_loyer AS ENUM ('MENSUEL', 'TRIMESTRIEL', 'ANNUEL');
 
 -- UTILISATEUR
 CREATE TABLE utilisateur (
@@ -165,7 +189,7 @@ CREATE TABLE credit (
     modifie_le TIMESTAMP
 );
 
--- ECHEANCIER DE CREDIT
+-- ECHEANCE DE CREDIT
 CREATE TABLE echeance_credit (
     id UUID PRIMARY KEY,
     credit_id UUID REFERENCES credit(id),

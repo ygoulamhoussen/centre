@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 import useToaster from './composables/use-toaster'
 import { DsfrFooter } from '@gouvminint/vue-dsfr'
+import { useRoute } from 'vue-router'
+import { computed } from 'vue'
 
 //backend
 const backendUrl = import.meta.env.VUE_APP_BACKEND_URL || "http://localhost:8080"; // Pour Vite
@@ -40,6 +42,9 @@ function close () {
 // Pour la gestion des notifications/toasts
 const toaster = useToaster()
 
+const route = useRoute()
+
+const isVerticalMenuLayout = computed(() => route.meta.layout === 'vertical-menu')
 
 const navItems = [
   {
@@ -63,41 +68,84 @@ const navItems = [
 </script>
 
 <template>
-  <!-- En-tête DSFR -->
-  <DsfrHeader
-    v-model="searchQuery"
-    :service-title="serviceTitle"
-    :service-description="serviceDescription"
-    :logo-text="logoText"
-    :quick-links="quickLinks"
-    operatorImgSrc="/centre-ui/assets/logo-tikaz.svg"
-  >
-    <!-- Barre de navigation DSFR recréant le menu -->
-    <nav class="fr-nav">
-      <div class="fr-container">
-        <ul class="fr-nav__list">
-
-          <DsfrNavigation :navItems="navItems" />
+  <template v-if="isVerticalMenuLayout">
+    <div class="vertical-menu-layout">
+      <aside class="vertical-menu">
+        <!-- Exemple de menu vertical -->
+        <ul>
+          <li><router-link to="/gestion">Tableau de bord</router-link></li>
+          <li><router-link to="/ProprieteListView">Mes propriétés</router-link></li>
+          <!-- Ajoute d'autres liens ici -->
         </ul>
-      </div>
-    </nav>
-  </DsfrHeader>
+      </aside>
+      <main class="vertical-main">
+        <router-view />
+      </main>
+    </div>
+  </template>
+  <template v-else>
+    <!-- En-tête DSFR -->
+    <DsfrHeader
+      v-model="searchQuery"
+      :service-title="serviceTitle"
+      :service-description="serviceDescription"
+      :logo-text="logoText"
+      :quick-links="quickLinks"
+      operatorImgSrc="/centre-ui/assets/logo-tikaz.svg"
+    >
+      <!-- Barre de navigation DSFR recréant le menu -->
+      <nav class="fr-nav">
+        <div class="fr-container">
+          <ul class="fr-nav__list">
 
-  <!-- Contenu principal de l'application -->
-  <div class="fr-container fr-mt-3w fr-mt-md-5w fr-mb-5w">
-    <router-view />
-  </div>
+            <DsfrNavigation :navItems="navItems" />
+          </ul>
+        </div>
+      </nav>
+    </DsfrHeader>
 
-  <!-- Autres composants -->
-  <ReloadPrompt
-    :offline-ready="offlineReady"
-    :need-refresh="needRefresh"
-    @close="close()"
-    @update-service-worker="updateServiceWorker()"
-  />
-  <AppToaster
-    :messages="toaster.messages"
-    @close-message="toaster.removeMessage($event)"
-  />
-  <DsfrFooter></DsfrFooter>
+    <!-- Contenu principal de l'application -->
+    <div class="fr-container fr-mt-3w fr-mt-md-5w fr-mb-5w">
+      <router-view />
+    </div>
+
+    <!-- Autres composants -->
+    <ReloadPrompt
+      :offline-ready="offlineReady"
+      :need-refresh="needRefresh"
+      @close="close()"
+      @update-service-worker="updateServiceWorker()"
+    />
+    <AppToaster
+      :messages="toaster.messages"
+      @close-message="toaster.removeMessage($event)"
+    />
+    <DsfrFooter></DsfrFooter>
+  </template>
 </template>
+
+<style scoped>
+.vertical-menu-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.vertical-menu {
+  width: 220px;
+  background: #f6f6f6;
+  padding: 2rem 1rem;
+  border-right: 1px solid #ddd;
+}
+.vertical-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vertical-menu li {
+  margin-bottom: 1.5rem;
+}
+.vertical-main {
+  flex: 1;
+  padding: 2rem;
+  background: #fff;
+}
+</style>

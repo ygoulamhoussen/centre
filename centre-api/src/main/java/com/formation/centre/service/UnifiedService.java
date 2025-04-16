@@ -1,21 +1,23 @@
 package com.formation.centre.service;
 
-import com.formation.centre.dto.ProprieteDTO;
-import com.formation.centre.dto.CompositionAcquisitionDTO;
-import com.formation.centre.model.Propriete;
-import com.formation.centre.model.CompositionAcquisition;
-import com.formation.centre.model.Utilisateur;
-import com.formation.centre.repository.ProprieteRepository;
-import com.formation.centre.repository.UtilisateurRepository;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.formation.centre.dto.CompositionAcquisitionDTO;
+import com.formation.centre.dto.ProprieteDTO;
+import com.formation.centre.model.CompositionAcquisition;
+import com.formation.centre.model.Propriete;
+import com.formation.centre.model.Utilisateur;
+import com.formation.centre.repository.ProprieteRepository;
+import com.formation.centre.repository.UtilisateurRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 @Transactional
@@ -87,7 +89,7 @@ public class UnifiedService {
         dto.setComplementAdresse(entity.getComplementAdresse());
         dto.setCodePostal(entity.getCodePostal());
         dto.setVille(entity.getVille());
-        dto.setTypeBien(entity.getTypeBien().name());
+        dto.setTypeBien(entity.getTypeBien().toString());
         dto.setDateAcquisition(entity.getDateAcquisition() != null ? entity.getDateAcquisition().toString() : null);
         dto.setDateLivraison(entity.getDateLivraison() != null ? entity.getDateLivraison().toString() : null);
         dto.setMontantAcquisition(entity.getMontantAcquisition() != null ? entity.getMontantAcquisition().toPlainString() : null);

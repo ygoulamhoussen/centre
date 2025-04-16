@@ -1,4 +1,3 @@
-
 -- DROP TABLES EXISTANTS
 -- DROP TABLES dans l'ordre des dépendances inversées
 DROP TABLE IF EXISTS document;
@@ -24,27 +23,6 @@ DROP TABLE IF EXISTS formation;
 DROP TABLE IF EXISTS formateur;
 DROP TABLE IF EXISTS salle;
 
--- TYPES ENUM EN MAJUSCULE
-DROP TYPE IF EXISTS type_bien;
-DROP TYPE IF EXISTS type_operation;
-DROP TYPE IF EXISTS code_journal;
-DROP TYPE IF EXISTS categorie_composition;
-DROP TYPE IF EXISTS categorie_immobilisation;
-DROP TYPE IF EXISTS moyen_paiement;
-DROP TYPE IF EXISTS statut_quittance;
-DROP TYPE IF EXISTS type_document;
-DROP TYPE IF EXISTS frequence_loyer;
-
-CREATE TYPE type_bien AS ENUM ('APPARTEMENT', 'MAISON', 'BOX', 'PARKING');
-CREATE TYPE type_operation AS ENUM ('RECETTE', 'CHARGE', 'ACHAT IMMOBILISATION', 'AMORTISSEMENT', 'INTÉRÊT EMPRUNT', 'ASSURANCE CRÉDIT', 'REMBOURSEMENT CRÉDIT', 'AUTRE');
-CREATE TYPE code_journal AS ENUM ('AC', 'VE', 'BQ', 'OD', 'AN');
-CREATE TYPE categorie_composition AS ENUM ('TERRAIN', 'CONSTRUCTION', 'TRAVAUX', 'MOBILIER', 'FRAIS DE NOTAIRE', 'FRAIS D''AGENCE', 'AUTRE');
-CREATE TYPE categorie_immobilisation AS ENUM ('TERRAIN', 'STRUCTURE', 'FAÇADES', 'TOITURE', 'INSTALLATIONS ÉLECTRIQUES', 'PLOMBERIE', 'CHAUFFAGE', 'AGENCEMENTS INTÉRIEURS', 'CUISINE ÉQUIPÉE', 'MOBILIER', 'ASCENSEUR', 'AUTRE');
-CREATE TYPE moyen_paiement AS ENUM ('VIREMENT', 'CHÈQUE', 'ESPÈCES', 'PRÉLÈVEMENT', 'CARTE BANCAIRE', 'AUTRE');
-CREATE TYPE statut_quittance AS ENUM ('PAYÉE', 'PARTIELLE', 'IMPAYÉE');
-CREATE TYPE type_document AS ENUM ('FACTURE', 'QUITTANCE', 'BAIL', 'JUSTIFICATIF', 'CONTRAT DE CRÉDIT', 'AUTRE');
-CREATE TYPE frequence_loyer AS ENUM ('MENSUEL', 'TRIMESTRIEL', 'ANNUEL');
-
 -- UTILISATEUR
 CREATE TABLE utilisateur (
     id UUID PRIMARY KEY,
@@ -60,7 +38,7 @@ CREATE TABLE utilisateur (
 CREATE TABLE propriete (
     id UUID PRIMARY KEY,
     utilisateur_id UUID REFERENCES utilisateur(id),
-    type_bien type_bien,
+    type_bien TEXT,
     nom TEXT,
     adresse TEXT,
     complement_adresse TEXT,
@@ -80,7 +58,7 @@ CREATE TABLE propriete (
 CREATE TABLE composition_acquisition (
     id UUID PRIMARY KEY,
     propriete_id UUID REFERENCES propriete(id),
-    categorie categorie_composition,
+    categorie TEXT,
     montant DECIMAL,
     description TEXT,
     cree_le TIMESTAMP,
@@ -112,7 +90,7 @@ CREATE TABLE location (
     loyer_mensuel DECIMAL,
     charges_mensuelles DECIMAL,
     depot_garantie DECIMAL,
-    frequence_loyer frequence_loyer,
+    frequence_loyer TEXT,
     jour_echeance INTEGER,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
@@ -128,7 +106,7 @@ CREATE TABLE quittance (
     montant_loyer DECIMAL,
     montant_charges DECIMAL,
     montant_total DECIMAL,
-    statut statut_quittance,
+    statut TEXT,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
@@ -139,7 +117,7 @@ CREATE TABLE paiement (
     quittance_id UUID REFERENCES quittance(id),
     date_paiement DATE,
     montant DECIMAL,
-    moyen_paiement moyen_paiement,
+    moyen_paiement TEXT,
     reference TEXT,
     commentaire TEXT,
     est_valide BOOLEAN,
@@ -152,7 +130,7 @@ CREATE TABLE immobilisation (
     id UUID PRIMARY KEY,
     propriete_id UUID REFERENCES propriete(id),
     nom TEXT,
-    categorie categorie_immobilisation,
+    categorie TEXT,
     valeur DECIMAL,
     duree_amortissement INT,
     date_mise_en_service DATE,
@@ -207,9 +185,9 @@ CREATE TABLE ecriture_comptable (
     date_ecriture DATE,
     libelle TEXT,
     montant DECIMAL,
-    type_operation type_operation,
+    type_operation TEXT,
     categorie_comptable TEXT,
-    code_journal code_journal,
+    code_journal TEXT,
     tva DECIMAL,
     justificatif_url TEXT,
     cree_le TIMESTAMP,
@@ -239,7 +217,7 @@ CREATE TABLE document (
     locataire_id UUID REFERENCES locataire(id),
     immobilisation_id UUID REFERENCES immobilisation(id),
     ecriture_id UUID REFERENCES ecriture_comptable(id),
-    type_document type_document,
+    type_document TEXT,
     titre TEXT,
     url_fichier TEXT,
     date_document DATE,

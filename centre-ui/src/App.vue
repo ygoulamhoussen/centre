@@ -4,6 +4,9 @@ import { useRegisterSW } from 'virtual:pwa-register/vue'
 import useToaster from './composables/use-toaster'
 import { DsfrFooter } from '@gouvminint/vue-dsfr'
 
+//backend
+const backendUrl = import.meta.env.VUE_APP_BACKEND_URL || "http://localhost:8080"; // Pour Vite
+
 // Configuration de l'en-tête DSFR (qui se rapproche du menu de Tomappart)
 const serviceTitle = 'Tikaz'
 const serviceDescription = ''

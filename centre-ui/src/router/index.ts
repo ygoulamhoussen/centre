@@ -5,7 +5,11 @@ import AboutUs from '../views/AboutUs.vue'
 import Fonctionnalites from '../views/Fonctionnalites.vue'
 import Login from '../views/Login.vue'
 import Gestion from '../views/Gestion.vue' // Ajout de l'import
-import ProprieteView from '../views/ProprieteView.vue' // Ajout de l'import
+import ProprieteListView from '../views/ProprieteListView.vue' // Ajout de l'import
+import ProprieteEtape1 from '../views/ProprieteEtape1.vue' // Ajout de l'import
+import ProprieteEtape2 from '../views/ProprieteEtape2.vue' // Ajout de l'import
+import ProprieteEtape3 from '../views/ProprieteEtape3.vue' // Ajout de l'import
+import ProprieteEtape4 from '../views/ProprieteEtape4.vue'
 
 const MAIN_TITLE = 'Gabarit de démarrage VueDsfr'
 
@@ -26,9 +30,9 @@ const routes = [
     component: Fonctionnalites,
   },
   {
-    path: '/proprieteView',
-    name: 'ProprieteView',
-    component: ProprieteView,
+    path: '/ProprieteListView',
+    name: 'ProprieteListView',
+    component: ProprieteListView,
   },
   {
     path: '/login',
@@ -39,6 +43,26 @@ const routes = [
     path: '/gestion',
     name: 'gestion',
     component: Gestion, // Nouvelle route pour "Mon Compte"
+  },
+  {
+    path: '/propriete/etape-1',
+    name: 'ProprieteEtape1',
+    component: ProprieteEtape1,
+  },
+  {
+    path: '/propriete/etape-2',
+    name: 'ProprieteEtape2',
+    component: ProprieteEtape2,
+  },
+  {
+    path: '/propriete/etape-3',
+    name: 'ProprieteEtape3',
+    component: ProprieteEtape3,
+  },
+  {
+    path: '/propriete/etape-4',
+    name: 'ProprieteEtape4',
+    component: ProprieteEtape4,
   },
 ]
 

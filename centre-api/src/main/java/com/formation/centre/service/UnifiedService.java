@@ -2,6 +2,7 @@ package com.formation.centre.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.ProprieteDTO;
 import com.formation.centre.model.CompositionAcquisition;
@@ -50,6 +52,10 @@ public class UnifiedService {
         entity.setComplementAdresse(dto.getComplementAdresse());
         entity.setCodePostal(dto.getCodePostal());
         entity.setVille(dto.getVille());
+
+        // Ajout d'un log pour vérifier la valeur reçue
+        System.out.println("TypeBien reçu: " + dto.getTypeBien());
+
         entity.setTypeBien(Propriete.TypeBien.valueOf(dto.getTypeBien()));
         entity.setDateAcquisition(dto.getDateAcquisition() != null ? LocalDate.parse(dto.getDateAcquisition()) : null);
         entity.setDateLivraison(dto.getDateLivraison() != null ? LocalDate.parse(dto.getDateLivraison()) : null);
@@ -79,6 +85,52 @@ public class UnifiedService {
         propriete.setCompositions(compositions);
         Propriete updated = proprieteRepository.save(propriete);
         return toDto(updated);
+    }
+
+    public ProprieteDTO createProprieteWithCompositions(String utilisateurId, Object proprieteObj, Object compositionsObj) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            ProprieteDTO proprieteDTO = mapper.convertValue(proprieteObj, ProprieteDTO.class);
+
+            Utilisateur utilisateur = utilisateurRepository.findById(UUID.fromString(utilisateurId))
+                    .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+
+            Propriete entity = new Propriete();
+            entity.setNom(proprieteDTO.getNom());
+            entity.setAdresse(proprieteDTO.getAdresse());
+            entity.setComplementAdresse(proprieteDTO.getComplementAdresse());
+            entity.setCodePostal(proprieteDTO.getCodePostal());
+            entity.setVille(proprieteDTO.getVille());
+            entity.setTypeBien(Propriete.TypeBien.valueOf(proprieteDTO.getTypeBien()));
+            entity.setDateAcquisition(proprieteDTO.getDateAcquisition() != null ? LocalDate.parse(proprieteDTO.getDateAcquisition()) : null);
+            entity.setDateLivraison(proprieteDTO.getDateLivraison() != null ? LocalDate.parse(proprieteDTO.getDateLivraison()) : null);
+            entity.setMontantAcquisition(proprieteDTO.getMontantAcquisition() != null ? new BigDecimal(proprieteDTO.getMontantAcquisition()) : null);
+            entity.setTantieme(proprieteDTO.getTantieme() != null ? new BigDecimal(proprieteDTO.getTantieme()) : null);
+            entity.setFraisNotaire(proprieteDTO.getFraisNotaire() != null ? new BigDecimal(proprieteDTO.getFraisNotaire()) : null);
+            entity.setFraisAgence(proprieteDTO.getFraisAgence() != null ? new BigDecimal(proprieteDTO.getFraisAgence()) : null);
+            entity.setUtilisateur(utilisateur);
+
+            // Traite les compositions si présentes
+            List<CompositionAcquisition> compositions = new ArrayList<>();
+            if (compositionsObj != null) {
+                List<?> compList = (List<?>) compositionsObj;
+                for (Object compObj : compList) {
+                    CompositionAcquisitionDTO cdto = mapper.convertValue(compObj, CompositionAcquisitionDTO.class);
+                    CompositionAcquisition comp = new CompositionAcquisition();
+                    comp.setCategorie(cdto.getCategorie());
+                    comp.setMontant(new BigDecimal(cdto.getMontant()));
+                    comp.setDescription(cdto.getDescription());
+                    comp.setPropriete(entity);
+                    compositions.add(comp);
+                }
+            }
+            entity.setCompositions(compositions);
+
+            Propriete saved = proprieteRepository.save(entity);
+            return toDto(saved);
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la création de la propriété et des compositions : " + e.getMessage(), e);
+        }
     }
 
     private ProprieteDTO toDto(Propriete entity) {

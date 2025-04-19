@@ -9,18 +9,26 @@ RUN npm install -g pnpm
 # Copier les fichiers package pour installer les dépendances
 COPY centre-ui/pnpm-lock.yaml ./ 
 COPY centre-ui/package.json ./
-# Copier les fichiers de dépendances locaux si besoin (monorepo)
 COPY centre-ui/packages ./packages
 
+# Installer les dépendances
 RUN pnpm install --frozen-lockfile
+
+# Approuver les scripts de build nécessaires (pour éviter les warnings)
+RUN pnpm approve-builds
+
+# Si @iconify/utils est utilisé mais pas installé
+# (Optionnel, à faire si l’erreur persiste malgré le lockfile)
+RUN pnpm add -D @iconify/utils
 
 # Copier le reste du code frontend
 COPY centre-ui/ .
 
-# Ajouter un tsconfig spécial build pour ignorer les tests
+# S'assurer que le tsconfig attendu est là
+# Si tsconfig.app.json est requis, copie-le — sinon, modifie le extends dans tsconfig.json
 COPY centre-ui/tsconfig.build.json ./tsconfig.json
 
-# Construire le frontend en utilisant ce tsconfig
+# Construire le frontend
 RUN pnpm run build
 
 # Étape 2 : Construction de l'image pour le backend

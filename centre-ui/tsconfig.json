@@ -1,4 +1,4 @@
-{
+cd {
   "compilerOptions": {
     "target": "ESNext",
     "jsx": "preserve",

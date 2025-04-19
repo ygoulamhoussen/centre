@@ -289,6 +289,9 @@ importers:
 
   packages/color:
     dependencies:
+      '@sa/color':
+        specifier: 'file:'
+        version: 'link:'
       colord:
         specifier: 2.9.3
         version: 2.9.3
@@ -304,6 +307,9 @@ importers:
 
   packages/materials:
     dependencies:
+      '@sa/materials':
+        specifier: 'file:'
+        version: 'link:'
       simplebar-vue:
         specifier: 2.4.0
         version: 2.4.0(vue@3.5.13(typescript@5.8.2))
@@ -313,6 +319,10 @@ importers:
         version: 0.9.1
 
   packages/scripts:
+    dependencies:
+      '@sa/scripts':
+        specifier: 'file:'
+        version: 'link:'
     devDependencies:
       '@soybeanjs/changelog':
         specifier: 0.3.24
@@ -347,6 +357,9 @@ importers:
 
   packages/utils:
     dependencies:
+      '@sa/utils':
+        specifier: 'file:'
+        version: 'link:'
       colord:
         specifier: 2.9.3
         version: 2.9.3

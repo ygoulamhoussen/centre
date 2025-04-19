@@ -6,26 +6,20 @@ WORKDIR /app/centre-ui
 # Installer pnpm globalement
 RUN npm install -g pnpm
 
-# Copier les fichiers package pour installer les dépendances
-COPY centre-ui/pnpm-lock.yaml ./ 
-COPY centre-ui/package.json ./
+# Copier la configuration du monorepo
+COPY pnpm-workspace.yaml /app/pnpm-workspace.yaml
+
+# Copier les fichiers nécessaires pour installer les dépendances
+COPY centre-ui/pnpm-lock.yaml centre-ui/package.json ./
 COPY centre-ui/packages ./packages
 
-# Installer les dépendances
+# Installer les dépendances sans interactivité
 RUN pnpm install --frozen-lockfile
-
-# Approuver les scripts de build nécessaires (pour éviter les warnings)
-RUN pnpm approve-builds
-
-# Si @iconify/utils est utilisé mais pas installé
-# (Optionnel, à faire si l’erreur persiste malgré le lockfile)
-RUN pnpm add -D @iconify/utils
 
 # Copier le reste du code frontend
 COPY centre-ui/ .
 
-# S'assurer que le tsconfig attendu est là
-# Si tsconfig.app.json est requis, copie-le — sinon, modifie le extends dans tsconfig.json
+# Utiliser un tsconfig spécifique pour le build
 COPY centre-ui/tsconfig.build.json ./tsconfig.json
 
 # Construire le frontend

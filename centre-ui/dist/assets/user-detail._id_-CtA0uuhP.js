@@ -1,0 +1,1 @@
+import{_ as r}from"./look-forward.vue_vue_type_script_setup_true_lang-6NRGc_b2.js";import{_}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c,o as e}from"./index-D_-DzWhp.js";const t={};function n(s,a){const o=r;return e(),c(o)}const p=_(t,[["render",n]]);export{p as default};

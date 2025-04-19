@@ -1,0 +1,1 @@
+import{d as s,b as a,o as r,e as o}from"./index-D_-DzWhp.js";const c={class:"h-full"},n=["src"],i=s({name:"IframePage",__name:"iframe-page",props:{url:{}},setup(t){return(e,l)=>(r(),a("div",c,[o("iframe",{id:"iframePage",class:"size-full",src:e.url},null,8,n)]))}});export{i as _};

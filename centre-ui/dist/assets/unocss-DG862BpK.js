@@ -1,0 +1,1 @@
+import{_ as c}from"./iframe-page.vue_vue_type_script_setup_true_lang-CBxdWDZI.js";import{_ as r}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as s,o as e}from"./index-D_-DzWhp.js";const t={};function n(_,a){const o=c;return e(),s(o,{url:"https://unocss.dev/"})}const i=r(t,[["render",n]]);export{i as default};

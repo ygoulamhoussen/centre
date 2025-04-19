@@ -1,0 +1,1 @@
+import{_ as o}from"./iframe-page.vue_vue_type_script_setup_true_lang-CBxdWDZI.js";import{_ as t}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as r,o as c}from"./index-D_-DzWhp.js";const _={};function n(s,a){const e=o;return c(),r(e,{url:"https://vite.dev/"})}const p=t(_,[["render",n]]);export{p as default};

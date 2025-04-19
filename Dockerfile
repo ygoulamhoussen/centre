@@ -18,7 +18,7 @@ RUN pnpm install --frozen-lockfile
 COPY centre-ui/ .
 
 # Ajouter un tsconfig spécial build pour ignorer les tests
-COPY centre-ui/tsconfig.build.json ./tsconfig.json
+COPY centre-ui/tsconfig.build.json ./tsconfig.build.json
 
 # Construire le frontend en utilisant ce tsconfig
 RUN pnpm run build

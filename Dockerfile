@@ -5,13 +5,13 @@ WORKDIR /app/centre-ui
 
 # Installer pnpm globalement
 RUN npm install -g pnpm
-COPY centre-ui/package.json ./package.json
+# Copier le reste du code frontend
+COPY centre-ui/ .
 
 # Installer les dépendances sans interactivité
 RUN pnpm install --frozen-lockfile
 
-# Copier le reste du code frontend
-COPY centre-ui/ .
+
 
 
 # Construire le frontend

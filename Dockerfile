@@ -15,8 +15,6 @@ RUN pnpm install --frozen-lockfile
 # Copier le reste du code frontend
 COPY centre-ui/ .
 
-# Utiliser un tsconfig spécifique pour le build
-COPY centre-ui/tsconfig.build.json ./tsconfig.json
 
 # Construire le frontend
 RUN pnpm run build

@@ -6,12 +6,8 @@ WORKDIR /app/centre-ui
 # Installer pnpm globalement
 RUN npm install -g pnpm
 
-# Copier la configuration du monorepo
-COPY pnpm-workspace.yaml /app/pnpm-workspace.yaml
 
-# Copier les fichiers nécessaires pour installer les dépendances
-COPY centre-ui/pnpm-lock.yaml centre-ui/package.json ./
-COPY centre-ui/packages ./packages
+
 
 # Installer les dépendances sans interactivité
 RUN pnpm install --frozen-lockfile

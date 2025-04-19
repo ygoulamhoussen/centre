@@ -1,73 +1,52 @@
 <template>
-  <section class="fr-container fr-my-4w">
-    <h1 class="fr-h3">Ajouter une propriété - Étape 4</h1>
-    <form @submit.prevent="enregistrer">
-      <div class="fr-fieldset__element">
-        <fieldset class="fr-fieldset">
-          <legend class="fr-label">Créer une immobilisation comptable ?</legend>
-          <div class="fr-radio-group">
-            <input type="radio" id="immobilisationOui" value="oui" v-model="immobilisation" />
-            <label for="immobilisationOui">Oui</label>
-          </div>
-          <div class="fr-radio-group">
-            <input type="radio" id="immobilisationNon" value="non" v-model="immobilisation" />
-            <label for="immobilisationNon">Non</label>
-          </div>
-        </fieldset>
-      </div>
+  <n-card class="fr-my-4w">
+    <h1>Ajouter une propriété - Étape 4</h1>
+    <n-form @submit.prevent="enregistrer">
+      <n-form-item label="Créer une immobilisation comptable ?">
+        <n-radio-group v-model:value="immobilisation">
+          <n-radio value="oui">Oui</n-radio>
+          <n-radio value="non">Non</n-radio>
+        </n-radio-group>
+      </n-form-item>
       <div v-if="immobilisation === 'oui'" class="fr-mt-4w">
-        <table class="fr-table">
-          <thead>
-            <tr>
-              <th>Catégorie</th>
-              <th>Durée d'amortissement (ans)</th>
-              <th>Quote-part (€)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, idx) in decompositions" :key="row.categorie">
-              <td>{{ row.categorie }}</td>
-              <td>
-                <template v-if="row.categorie === 'Terrains'">
-                  <span>Non amortissable</span>
-                </template>
-                <template v-else>
-                  <input
-                    class="fr-input"
-                    type="number"
-                    min="0"
-                    v-model="row.duree"
-                    :placeholder="'Durée (ans)'"
-                    required
-                  />
-                </template>
-              </td>
-              <td>
-                <input
-                  class="fr-input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  v-model="row.quotePart"
-                  :placeholder="'Quote-part (€)'"
-                  required
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <n-data-table
+          :columns="columns"
+          :data="decompositions"
+          :pagination="false"
+          bordered
+        >
+          <template #duree="{ row }">
+            <span v-if="row.categorie === 'Terrains'">Non amortissable</span>
+            <n-input-number
+              v-else
+              v-model:value="row.duree"
+              min="0"
+              placeholder="Durée (ans)"
+              style="width: 120px"
+            />
+          </template>
+          <template #quotePart="{ row }">
+            <n-input-number
+              v-model:value="row.quotePart"
+              min="0"
+              step="0.01"
+              placeholder="Quote-part (€)"
+              style="width: 120px"
+            />
+          </template>
+        </n-data-table>
       </div>
-      <div class="fr-mt-4w">
-        <DsfrButton type="button" @click="precedent" secondary class="fr-mr-2w">
+      <div style="margin-top: 2rem;">
+        <n-button @click="precedent" secondary style="margin-right: 1rem;">
           Précédent
-        </DsfrButton>
-        <DsfrButton type="submit" :disabled="chargement">
+        </n-button>
+        <n-button type="primary" attr-type="submit" :loading="chargement">
           Enregistrer
-        </DsfrButton>
+        </n-button>
       </div>
-    </form>
+    </n-form>
     <p v-if="erreur" class="error">{{ erreur }}</p>
-  </section>
+  </n-card>
 </template>
 
 <script setup>
@@ -85,7 +64,6 @@ const immobilisation = ref('')
 const chargement = ref(false)
 const erreur = ref('')
 
-// Catégories fixes pour la décomposition
 const decompositions = ref([
   { categorie: 'Terrains', duree: '', quotePart: '' },
   { categorie: 'Gros œuvre', duree: '', quotePart: '' },
@@ -93,6 +71,12 @@ const decompositions = ref([
   { categorie: 'Étanchéité', duree: '', quotePart: '' },
   { categorie: 'IGT et agencement', duree: '', quotePart: '' }
 ])
+
+const columns = [
+  { title: 'Catégorie', key: 'categorie' },
+  { title: "Durée d'amortissement (ans)", key: 'duree', render: 'duree' },
+  { title: 'Quote-part (€)', key: 'quotePart', render: 'quotePart' }
+]
 
 function precedent() {
   router.push('/propriete/etape-3')
@@ -102,7 +86,6 @@ async function enregistrer() {
   chargement.value = true
   erreur.value = ''
   try {
-    // Utilise ici la valeur attendue pour l'utilisateur (exemple : valeur fixe ou depuis un autre store)
     const utilisateurId = '00000000-0000-0000-0000-000000000001'
     const dtoToSend = {
       ...proprieteDTO.value,

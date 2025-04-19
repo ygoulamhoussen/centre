@@ -1,34 +1,30 @@
 <template>
-  <section class="fr-container fr-my-4w">
-    <h1 class="fr-h3">Ajouter une propriété - Étape 2</h1>
+  <n-card class="fr-my-4w">
+    <h1>Ajouter une propriété - Étape 2</h1>
     <p>Adresse du bien</p>
-    <form @submit.prevent="valider">
-      <div class="fr-input-group fr-mb-2w">
-        <label class="fr-label" for="adresse">Adresse</label>
-        <input class="fr-input" id="adresse" v-model="proprieteDTO.adresse" required />
-      </div>
-      <div class="fr-input-group fr-mb-2w">
-        <label class="fr-label" for="complementAdresse">Complément d'adresse</label>
-        <input class="fr-input" id="complementAdresse" v-model="proprieteDTO.complementAdresse" />
-      </div>
-      <div class="fr-input-group fr-mb-2w">
-        <label class="fr-label" for="codePostal">Code postal</label>
-        <input class="fr-input" id="codePostal" v-model="proprieteDTO.codePostal" required />
-      </div>
-      <div class="fr-input-group fr-mb-2w">
-        <label class="fr-label" for="ville">Ville</label>
-        <input class="fr-input" id="ville" v-model="proprieteDTO.ville" required />
-      </div>
-      <div class="fr-mt-4w">
-        <DsfrButton type="button" @click="precedent" secondary class="fr-mr-2w">
+    <n-form @submit.prevent="valider" :model="proprieteDTO">
+      <n-form-item label="Adresse" path="adresse">
+        <n-input v-model:value="proprieteDTO.adresse" required />
+      </n-form-item>
+      <n-form-item label="Complément d'adresse" path="complementAdresse">
+        <n-input v-model:value="proprieteDTO.complementAdresse" />
+      </n-form-item>
+      <n-form-item label="Code postal" path="codePostal">
+        <n-input v-model:value="proprieteDTO.codePostal" required />
+      </n-form-item>
+      <n-form-item label="Ville" path="ville">
+        <n-input v-model:value="proprieteDTO.ville" required />
+      </n-form-item>
+      <div style="margin-top: 2rem;">
+        <n-button @click="precedent" secondary style="margin-right: 1rem;">
           Précédent
-        </DsfrButton>
-        <DsfrButton type="submit">
+        </n-button>
+        <n-button type="primary" attr-type="submit">
           Suivant
-        </DsfrButton>
+        </n-button>
       </div>
-    </form>
-  </section>
+    </n-form>
+  </n-card>
 </template>
 
 <script setup>

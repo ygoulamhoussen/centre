@@ -1,39 +1,33 @@
 <template>
-  <div class="fr-container fr-mt-10w">
-    <h1 class="fr-h1">Connexion</h1>
-    <form @submit.prevent="handleLogin" class="fr-form-group">
-      <div class="fr-input-group">
-        <label for="email" class="fr-label">Email</label>
-        <input
-          id="email"
+  <n-card class="fr-mt-10w" style="max-width: 400px; margin: 0 auto;">
+    <h1>Connexion</h1>
+    <n-form @submit.prevent="handleLogin">
+      <n-form-item label="Email" path="email">
+        <n-input
+          v-model:value="email"
           type="email"
-          v-model="email"
-          class="fr-input"
           placeholder="Votre email"
           required
         />
-      </div>
-      <div class="fr-input-group fr-mt-3w">
-        <label for="password" class="fr-label">Mot de passe</label>
-        <input
-          id="password"
+      </n-form-item>
+      <n-form-item label="Mot de passe" path="password">
+        <n-input
+          v-model:value="password"
           type="password"
-          v-model="password"
-          class="fr-input"
           placeholder="Votre mot de passe"
           required
         />
-      </div>
-      <div class="fr-mt-3w">
-        <DsfrButton type="submit" variant="primary">
+      </n-form-item>
+      <div style="margin-top: 2rem;">
+        <n-button type="primary" attr-type="submit">
           Se connecter
-        </DsfrButton>
+        </n-button>
       </div>
-    </form>
-  </div>
+    </n-form>
+  </n-card>
 </template>
 
-<script lang="ts" setup>
+<script setup>
 import { ref } from 'vue'
 
 const email = ref('')

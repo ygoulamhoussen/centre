@@ -1,47 +1,41 @@
 <template>
-  <section class="fr-container fr-my-4w">
-    <h1 class="fr-h3">Ajouter une propriété - Étape 3</h1>
-
+  <n-card class="fr-my-4w">
+    <h1>Ajouter une propriété - Étape 3</h1>
     <p>Détails de l'acquisition</p>
-    <form @submit.prevent="suivant">
-      <div class="fr-input-group fr-mb-2w">
-        <label class="fr-label" for="dateAcquisition">Date d'acquisition</label>
-        <input class="fr-input" id="dateAcquisition" type="date" v-model="proprieteDTO.dateAcquisition" required />
-      </div>
-      <div class="fr-input-group fr-mb-2w">
-        <label class="fr-label" for="montantAcquisition">Montant d'acquisition (€)</label>
-        <input class="fr-input" id="montantAcquisition" type="number" min="0" step="0.01" v-model="proprieteDTO.montantAcquisition" required />
-      </div>
-      <div class="fr-input-group fr-mb-2w">
-        <label class="fr-label" for="fraisNotaire">Frais de notaire (€)</label>
-        <input class="fr-input" id="fraisNotaire" type="number" min="0" step="0.01" v-model="proprieteDTO.fraisNotaire" />
-      </div>
-      <div class="fr-input-group fr-mb-2w">
-        <label class="fr-label" for="fraisAgence">Frais d'agence (€)</label>
-        <input class="fr-input" id="fraisAgence" type="number" min="0" step="0.01" v-model="proprieteDTO.fraisAgence" />
-      </div>
-      <div class="fr-input-group fr-mb-2w">
-        <label class="fr-label" for="tantieme">Tantième</label>
-        <input class="fr-input" id="tantieme" type="number" min="0" step="1" v-model="proprieteDTO.tantieme" />
-      </div>
-      <div class="fr-mt-4w">
-        <DsfrButton type="button" @click="precedent" secondary class="fr-mr-2w">
+    <n-form @submit.prevent="suivant" :model="proprieteDTO">
+      <n-form-item label="Date d'acquisition" path="dateAcquisition">
+        <n-date-picker v-model:value="dateAcquisitionModel" type="date" clearable />
+      </n-form-item>
+      <n-form-item label="Montant d'acquisition (€)" path="montantAcquisition">
+        <n-input-number v-model:value="proprieteDTO.montantAcquisition" min="0" step="0.01" required />
+      </n-form-item>
+      <n-form-item label="Frais de notaire (€)" path="fraisNotaire">
+        <n-input-number v-model:value="proprieteDTO.fraisNotaire" min="0" step="0.01" />
+      </n-form-item>
+      <n-form-item label="Frais d'agence (€)" path="fraisAgence">
+        <n-input-number v-model:value="proprieteDTO.fraisAgence" min="0" step="0.01" />
+      </n-form-item>
+      <n-form-item label="Tantième" path="tantieme">
+        <n-input-number v-model:value="proprieteDTO.tantieme" min="0" step="1" />
+      </n-form-item>
+      <div style="margin-top: 2rem;">
+        <n-button @click="precedent" secondary style="margin-right: 1rem;">
           Précédent
-        </DsfrButton>
-        <DsfrButton type="submit">
+        </n-button>
+        <n-button type="primary" attr-type="submit">
           Suivant
-        </DsfrButton>
+        </n-button>
       </div>
-    </form>
+    </n-form>
     <p v-if="erreur" class="error">{{ erreur }}</p>
-  </section>
+  </n-card>
 </template>
 
 <script setup>
 import { useUnifiedStore } from '@/stores/unifiedStore'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const store = useUnifiedStore()
 const { proprieteDTO } = storeToRefs(store)
@@ -56,6 +50,25 @@ function precedent() {
 function suivant() {
   router.push('/propriete/etape-4')
 }
+
+// Computed pour gérer la conversion string <-> timestamp pour le date-picker
+const dateAcquisitionModel = computed({
+  get() {
+    const val = proprieteDTO.value.dateAcquisition
+    if (typeof val === 'number') return val
+    if (typeof val === 'string') {
+      const d = new Date(val)
+      return isNaN(d.getTime()) ? null : d.getTime()
+    }
+    if (val instanceof Date) return isNaN(val.getTime()) ? null : val.getTime()
+    return null
+  },
+  set(ts) {
+    // Stocker en ISO string ou null dans le store (ou adaptez selon votre backend)
+    proprieteDTO.value.dateAcquisition = ts ? new Date(ts).toISOString().slice(0, 10) : null
+  }
+})
+
 </script>
 
 <style scoped>

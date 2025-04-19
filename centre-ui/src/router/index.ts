@@ -33,7 +33,7 @@ const routes = [
     path: '/ProprieteListView',
     name: 'ProprieteListView',
     component: ProprieteListView,
-    meta: { layout: 'vertical-menu' }, // Ajout du meta
+    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
   },
   {
     path: '/login',
@@ -44,31 +44,31 @@ const routes = [
     path: '/gestion',
     name: 'gestion',
     component: Gestion, // Nouvelle route pour "Mon Compte"
-    meta: { layout: 'vertical-menu' }, // Ajout du meta
+    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
   },
   {
     path: '/propriete/etape-1',
     name: 'ProprieteEtape1',
     component: ProprieteEtape1,
-    meta: { layout: 'vertical-menu' }, // Ajout du meta
+    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
   },
   {
     path: '/propriete/etape-2',
     name: 'ProprieteEtape2',
     component: ProprieteEtape2,
-    meta: { layout: 'vertical-menu' }, // Ajout du meta
+    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
   },
   {
     path: '/propriete/etape-3',
     name: 'ProprieteEtape3',
     component: ProprieteEtape3,
-    meta: { layout: 'vertical-menu' }, // Ajout du meta
+    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
   },
   {
     path: '/propriete/etape-4',
     name: 'ProprieteEtape4',
     component: ProprieteEtape4,
-    meta: { layout: 'vertical-menu' }, // Ajout du meta
+    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
   },
 ]
 

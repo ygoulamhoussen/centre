@@ -1,25 +1,22 @@
 <template>
-  <section class="fr-container fr-my-4w">
-    <h1 class="fr-h3">Mes propriétés</h1>
-
-    <div class="fr-mb-4w">
-      <DsfrButton icon="ri-add-line" @click="demarrerCreation">
+  <n-card class="fr-my-4w">
+    <h1>Mes propriétés</h1>
+    <div style="margin-bottom: 2rem;">
+      <n-button type="primary" @click="demarrerCreation">
         Ajouter une propriété
-      </DsfrButton>
+      </n-button>
     </div>
-
-    <ul v-if="proprietes.length > 0" class="fr-list">
-      <li v-for="propriete in proprietes" :key="propriete.id" class="fr-card fr-card--sm fr-mb-2w">
-        <div class="fr-card__body">
-          <h4 class="fr-card__title">{{ propriete.nom }}</h4>
+    <n-list v-if="proprietes.length > 0">
+      <n-list-item v-for="propriete in proprietes" :key="propriete.id">
+        <n-card>
+          <h4>{{ propriete.nom }}</h4>
           <p>{{ propriete.adresse }}, {{ propriete.ville }}</p>
           <p><strong>Type:</strong> {{ propriete.typeBien }}</p>
-        </div>
-      </li>
-    </ul>
-
+        </n-card>
+      </n-list-item>
+    </n-list>
     <p v-else>Aucune propriété enregistrée.</p>
-  </section>
+  </n-card>
 </template>
 
 <script>

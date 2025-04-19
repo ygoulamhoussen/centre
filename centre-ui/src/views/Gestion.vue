@@ -1,78 +1,87 @@
 <template>
-  <DsfrAccordionsGroup v-model="activeAccordion">
-    <DsfrAccordion id="accordion-gestion" :title="titleGestion">
-      <DsfrTiles :horizontal="false" :tiles="tiles" />
-    </DsfrAccordion>
-    <DsfrAccordion id="accordion-compta" :title="titleCompta">
-      <DsfrTiles :horizontal="false" :tiles="tilesCompta" />
-    </DsfrAccordion>
-  </DsfrAccordionsGroup>
+  <div>
+    <h2>{{ titleGestion }}</h2>
+    <n-grid :cols="2" x-gap="16" y-gap="16">
+      <n-grid-item v-for="tile in tiles" :key="tile.title">
+        <n-card :title="tile.title" hoverable>
+          <template #cover>
+            <n-icon size="48">
+              <component :is="tile.icon" />
+            </n-icon>
+          </template>
+          <div>{{ tile.description }}</div>
+
+        </n-card>
+      </n-grid-item>
+    </n-grid>
+    <h2 class="mt-6">{{ titleCompta }}</h2>
+    <n-grid :cols="2" x-gap="16" y-gap="16">
+      <n-grid-item v-for="tile in tilesCompta" :key="tile.title">
+        <n-card :title="tile.title" hoverable>
+          <template #cover>
+            <n-icon size="48">
+              <component :is="tile.icon" />
+            </n-icon>
+          </template>
+          <div>{{ tile.description }}</div>
+        </n-card>
+      </n-grid-item>
+    </n-grid>
+  </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
-import { DsfrAccordion, DsfrAccordionsGroup, DsfrTiles } from '@gouvminint/vue-dsfr'
-import svgGestion from '@gouvfr/dsfr/dist/artwork/pictograms/document/driving-licence.svg'
-import svgCompta from '@gouvfr/dsfr/dist/artwork/pictograms/document/driving-licence.svg'
+<script setup lang="ts">
+import { ref } from 'vue'
+import { NGrid, NGridItem, NCard, NButton, NIcon } from 'naive-ui'
+// Import d'icônes Naive UI adaptées
+import { HomeOutline, PeopleOutline, DocumentTextOutline, ReceiptOutline, CashOutline, BriefcaseOutline, FileTrayFullOutline, FolderOpenOutline } from '@vicons/ionicons5'
 
-export default defineComponent({
-  name: 'Gestion',
-  components: {
-    DsfrAccordion,
-    DsfrAccordionsGroup,
-    DsfrTiles
+const activeAccordion = ref(['gestion'])
+const titleGestion = 'Gestion locative'
+const titleCompta = 'Comptabilité'
+const tiles = [
+  {
+    to: "ProprieteListView",
+    title: "Propriétés",
+    icon: HomeOutline,
+    description: "Ajoutez et gérez vos biens immobiliers"
   },
-  data() {
-    return {
-      activeAccordion: 0,
-      titleGestion: 'Gestion locative',
-      titleCompta: 'Comptabilité',
-      tiles: [
-        {
-          to :"ProprieteListView",
-          title: "Propriétés",
-          svgPath: svgGestion,
-          description: "Ajoutez et gérez vos biens immobiliers"
-        },
-        {
-          title: "Locataires",
-          svgPath: svgGestion,
-          description: "Suivez les informations de vos locataires"
-        },
-        {
-          title: "Locations",
-          svgPath: svgGestion,
-          description: "Gérez les baux, loyers et échéances"
-        },
-        {
-          title: "Quittances",
-          svgPath: svgGestion,
-          description: "Créez et suivez les quittances de loyer"
-        }
-      ],
-      tilesCompta: [
-        {
-          title: "Immobilisations",
-          svgPath: svgCompta,
-          description: "Décomposez et amortissez vos biens"
-        },
-        {
-          title: "Crédits immobiliers",
-          svgPath: svgCompta,
-          description: "Suivez vos emprunts et échéanciers"
-        },
-        {
-          title: "Comptabilité",
-          svgPath: svgCompta,
-          description: "Journal, écritures et clôture de l’exercice"
-        },
-        {
-          title: "Documents",
-          svgPath: svgCompta,
-          description: "Stockez et classez vos justificatifs"
-        }
-      ]
-    }
+  {
+    title: "Locataires",
+    icon: PeopleOutline,
+    description: "Suivez les informations de vos locataires"
+  },
+  {
+    title: "Locations",
+    icon: DocumentTextOutline,
+    description: "Gérez les baux, loyers et échéances"
+  },
+  {
+    title: "Quittances",
+    icon: ReceiptOutline,
+    description: "Créez et suivez les quittances de loyer"
   }
-})
+]
+const tilesCompta = [
+  {
+    title: "Immobilisations",
+    icon: BriefcaseOutline,
+    description: "Décomposez et amortissez vos biens"
+  },
+  {
+    title: "Crédits immobiliers",
+    icon: CashOutline,
+    description: "Suivez vos emprunts et échéanciers"
+  },
+  {
+    title: "Comptabilité",
+    icon: FileTrayFullOutline,
+    description: "Journal, écritures et clôture de l’exercice"
+  },
+  {
+    title: "Documents",
+    icon: FolderOpenOutline,
+    description: "Stockez et classez vos justificatifs"
+  }
+]
 </script>

@@ -1,6 +1,6 @@
 <template>
-  <section class="fr-container fr-my-4w">
-    <h1 class="fr-h3">Ajouter une propriété - Étape 1</h1>
+  <n-card class="fr-my-4w">
+    <h1>Ajouter une propriété - Étape 1</h1>
     <p>Quel est le type de bien&nbsp;?</p>
     <div class="fr-grid-row fr-grid-row--gutters">
       <div
@@ -8,35 +8,34 @@
         :key="type.value"
         class="fr-col-12 fr-col-md-4 fr-mb-2w"
       >
-        <DsfrButton
-          :secondary="proprieteDTO.typeBien !== type.value"
-          :primary="proprieteDTO.typeBien === type.value"
+        <n-button
+          :type="proprieteDTO.typeBien === type.value ? 'primary' : 'default'"
           @click="choisirType(type.value)"
-          class="fr-mr-1w"
+          style="margin-right: 1rem; margin-bottom: 1rem; width: 100%;"
         >
           {{ type.label }}
-        </DsfrButton>
+        </n-button>
       </div>
     </div>
-    <div class="fr-input-group fr-mt-4w">
-      <label class="fr-label" for="nomPropriete">Nom de la propriété</label>
-      <input
-        class="fr-input"
-        id="nomPropriete"
-        v-model="proprieteDTO.nom"
-        required
-        placeholder="Ex : Résidence Les Lilas, Parking centre-ville..."
-      />
-    </div>
-    <div class="fr-mt-4w">
-      <DsfrButton
-        :disabled="!proprieteDTO.typeBien || !proprieteDTO.nom"
-        @click="valider"
-      >
-        Suivant
-      </DsfrButton>
-    </div>
-  </section>
+    <n-form :model="proprieteDTO" style="margin-top: 2rem;">
+      <n-form-item label="Nom de la propriété" path="nom">
+        <n-input
+          v-model:value="proprieteDTO.nom"
+          required
+          placeholder="Ex : Résidence Les Lilas, Parking centre-ville..."
+        />
+      </n-form-item>
+      <div style="margin-top: 2rem;">
+        <n-button
+          type="primary"
+          :disabled="!proprieteDTO.typeBien || !proprieteDTO.nom"
+          @click="valider"
+        >
+          Suivant
+        </n-button>
+      </div>
+    </n-form>
+  </n-card>
 </template>
 
 <script setup>
@@ -56,7 +55,6 @@ const { proprieteDTO } = storeToRefs(store)
 const router = useRouter()
 
 function choisirType(type) {
-  // On stocke bien la valeur enum attendue par le backend
   store.updateProprieteField('typeBien', type)
 }
 

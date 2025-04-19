@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPersistedstate from 'pinia-plugin-persistedstate'
+import naive from 'naive-ui'
 
 import App from './App.vue'
 import router from './router'
@@ -26,4 +27,5 @@ app.config.globalProperties.$backendUrl = import.meta.env.VITE_BACKEND_URL || 'h
 app
   .use(pinia)
   .use(router)
+  .use(naive) // Ajout de Naive UI
   .mount('#app')

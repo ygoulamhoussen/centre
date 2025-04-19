@@ -1,82 +1,51 @@
 <template>
-  <main>
-    <!-- Section de présentation -->
-    <section class="fr-container fr-mt-10w">
-      <h1 class="fr-h1">La gestion locative et comptable simplifiée des investisseurs en SCI et en LMNP</h1>
-      <p>
-        Gérez vos biens en toute sérénité avec des fonctionnalités adaptées aux experts comme aux débutants.
-      </p>
-      <div class="fr-grid-row fr-grid-row--center">
-        <DsfrButtonGroup inlineLayoutWhen="always">
-          <DsfrButton variant="primary" href="#decouvrir">
-            Découvrir Tikaz
-          </DsfrButton>
-          <DsfrButton variant="secondary" href="#video">
-            Regarder la vidéo de présentation
-          </DsfrButton>
-        </DsfrButtonGroup>
-      </div>
-    </section>
-    
-    <!-- Section des offres -->
-    <section class="fr-container fr-mt-10w">
-      <h2 class="fr-h3">Nos offres</h2>
-      <div class="fr-grid-row">
-        <div class="fr-col-12 fr-col-md-6">
-          <DsfrTile
-            title="Autonome"
-            description="À partir de 9,99€ /mois HT"
-            details="Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts."
-            :svg-path="svgContract"
-            to="#essai-gratuit"
-          />
+  <n-card class="fr-mt-10w">
+    <h1>La gestion locative et comptable simplifiée des investisseurs en SCI et en LMNP</h1>
+    <p>
+      Gérez vos biens en toute sérénité avec des fonctionnalités adaptées aux experts comme aux débutants.
+    </p>
+    <div style="margin-bottom: 2rem;">
+      <n-button type="primary" style="margin-right: 1rem;" href="#decouvrir">
+        Découvrir Tikaz
+      </n-button>
+      <n-button type="default" href="#video">
+        Regarder la vidéo de présentation
+      </n-button>
+    </div>
+    <h2>Nos offres</h2>
+    <div style="display: flex; gap: 2rem;">
+      <n-card style="flex: 1;">
+        <h3>Autonome</h3>
+        <div>À partir de 9,99€ /mois HT</div>
+        <div>
+          Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.
         </div>
-        <div class="fr-col-12 fr-col-md-6">
-          <DsfrTile
-            title="Supervisé"
-            description="À partir de 19,99€ /mois HT"
-            details="Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, attestation et révision par un expert-comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts."
-            :svg-path="svgDocument"
-            to="#essai-gratuit"
-          />
+      </n-card>
+      <n-card style="flex: 1;">
+        <h3>Supervisé</h3>
+        <div>À partir de 19,99€ /mois HT</div>
+        <div>
+          Locataires illimités, quittances illimitées, locations illimitées, archivage des documents, catégories personnalisées, accès aux immobilisations, accès au bilan comptable, attestation et révision par un expert-comptable, génération de la liasse fiscale, envoi de la liasse fiscale au centre des impôts.
         </div>
-      </div>
-    </section>
-    
-    <!-- Section application mobile -->
-    <section class="fr-container fr-mt-10w">
-      <h2 class="fr-h3">Une application mobile intuitive</h2>
-      <p>
-        Pour plus d'accessibilité, retrouvez toutes vos fonctionnalités à portée de main en téléchargeant l'application Tikaz disponible sur le Google Play et l'Apple Store.
-      </p>
-      <div class="fr-grid-row fr-grid-row--center">
-        <DsfrButtonGroup inlineLayoutWhen="always">
-          <DsfrButton variant="secondary" href="https://play.google.com/store/apps/details?id=fr.tomapp">
-            Télécharger sur Google Play
-          </DsfrButton>
-          <DsfrButton variant="secondary" href="https://apps.apple.com/fr/app/tikaz/id6450775976">
-            Télécharger sur l'App Store
-          </DsfrButton>
-        </DsfrButtonGroup>
-      </div>
-    </section>
-  </main>
+      </n-card>
+    </div>
+    <h2 style="margin-top: 2rem;">Une application mobile intuitive</h2>
+    <p>
+      Pour plus d'accessibilité, retrouvez toutes vos fonctionnalités à portée de main en téléchargeant l'application Tikaz disponible sur le Google Play et l'Apple Store.
+    </p>
+    <div>
+      <n-button type="default" style="margin-right: 1rem;" href="https://play.google.com/store/apps/details?id=fr.tomapp">
+        Télécharger sur Google Play
+      </n-button>
+      <n-button type="default" href="https://apps.apple.com/fr/app/tikaz/id6450775976">
+        Télécharger sur l'App Store
+      </n-button>
+    </div>
+  </n-card>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
-import svgContractImport from '@gouvfr/dsfr/dist/artwork/pictograms/document/contract.svg'
-import svgDocumentImport from '@gouvfr/dsfr/dist/artwork/pictograms/document/driving-licence.svg'
-
-export default defineComponent({
-  name: 'AppHome',
-  data() {
-    return {
-      svgContract: svgContractImport,
-      svgDocument: svgDocumentImport
-    }
-  }
-})
+<script setup>
+// ...existing code can be removed, plus d'import DSFR...
 </script>
 
 <style scoped>

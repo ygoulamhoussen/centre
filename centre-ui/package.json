@@ -50,11 +50,11 @@
     "@antv/g6": "5.0.44",
     "@better-scroll/core": "2.5.1",
     "@iconify/vue": "4.3.0",
-    "@sa/axios": "workspace:*",
-    "@sa/color": "workspace:*",
-    "@sa/hooks": "workspace:*",
-    "@sa/materials": "workspace:*",
-    "@sa/utils": "workspace:*",
+    "@sa/axios": "file:../packages/axios",
+    "@sa/color": "file:../packages/color",
+    "@sa/hooks": "file:../packages/hooks",
+    "@sa/materials": "file:../packages/materials",
+    "@sa/utils": "file:../packages/utils",
     "@visactor/vchart": "1.13.7",
     "@visactor/vchart-theme": "1.12.2",
     "@visactor/vtable-editors": "1.17.2",
@@ -88,6 +88,7 @@
     "vue-draggable-plus": "0.6.0",
     "vue-i18n": "11.1.2",
     "vue-json-pretty": "2.4.0",
+    "vue-naive-admin": "file:",
     "vue-pdf-embed": "2.1.2",
     "vue-router": "4.5.0",
     "vue3-google-map": "0.21.1",
@@ -100,7 +101,7 @@
     "@commitlint/cli": "19.8.0",
     "@commitlint/config-conventional": "19.8.0",
     "@iconify/json": "2.2.319",
-    "@sa/scripts": "workspace:*",
+    "@sa/scripts": "file:../packages/scripts",
     "@types/d3": "7.4.3",
     "@types/dagre": "0.7.52",
     "@types/html-minifier-terser": "7.0.2",
@@ -135,8 +136,8 @@
     "vue-tsc": "2.2.8"
   },
   "simple-git-hooks": {
-    "commit-msg": "pnpm commit",
-    "pre-commit": "pnpm typecheck && pnpm lint-staged"
+    "commit-msg": "npm run commit",
+    "pre-commit": "npm run typecheck && npx lint-staged"
   },
   "lint-staged": {
     "*": "eslint --fix"

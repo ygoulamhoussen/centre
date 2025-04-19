@@ -3,21 +3,25 @@ FROM node:18 AS frontend-build
 
 WORKDIR /app/centre-ui
 
+# Installer pnpm globalement
+RUN npm install -g pnpm
+
 # Copier les fichiers package pour installer les dépendances
-COPY centre-ui/package*.json ./
+COPY centre-ui/pnpm-lock.yaml ./ 
+COPY centre-ui/package.json ./
+# Copier les fichiers de dépendances locaux si besoin (monorepo)
+COPY centre-ui/packages ./packages
 
-RUN npm install --legacy-peer-deps
-
+RUN pnpm install --frozen-lockfile
 
 # Copier le reste du code frontend
 COPY centre-ui/ .
-
 
 # Ajouter un tsconfig spécial build pour ignorer les tests
 COPY centre-ui/tsconfig.build.json ./tsconfig.json
 
 # Construire le frontend en utilisant ce tsconfig
-RUN npm run build
+RUN pnpm run build
 
 # Étape 2 : Construction de l'image pour le backend
 FROM openjdk:17-jdk-slim AS backend-build

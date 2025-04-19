@@ -5,9 +5,7 @@ WORKDIR /app/centre-ui
 
 # Installer pnpm globalement
 RUN npm install -g pnpm
-
-
-
+COPY centre-ui/package.json ./package.json
 
 # Installer les dépendances sans interactivité
 RUN pnpm install --frozen-lockfile

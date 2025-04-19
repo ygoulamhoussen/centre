@@ -1,91 +1,51 @@
 import process from 'node:process'
-import { URL, fileURLToPath } from 'node:url'
+import { fileURLToPath } from 'node:url'
+import { defineConfig, loadEnv } from 'vite'
+import { createViteProxy, getBuildInfo, include } from './build/config'
+import { setupVitePlugins } from './build/plugins'
 
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import VueDevTools from 'vite-plugin-vue-devtools'
-import { VitePWA } from 'vite-plugin-pwa'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import {
-  vueDsfrAutoimportPreset,
-  vueDsfrComponentResolver,
-} from '@gouvminint/vue-dsfr'
+export default defineConfig((configEnv) => {
+  const viteEnv = loadEnv(configEnv.mode, process.cwd()) as unknown as Env.ImportMeta
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(),
-    vueJsx(),
-    VueDevTools(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'safari-pinned-tab.svg'],
-      workbox: {
-        maximumFileSizeToCacheInBytes: 3000000 // Pour le CSS du DSFR :-/
-      },
-      manifest: {
-        name: 'Dummy app',
-        short_name: 'Dummy',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
-        icons: [
-          {
-            src: '/android-chrome-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: '/android-chrome-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-        ],
-        display: 'standalone',
-      },
-    }),
-    AutoImport({
-      include: [
-        /\.[tj]sx?$/,
-        /\.vue$/,
-        /\.vue\?vue/,
-      ],
-      imports: [
-        // @ts-expect-error TS2322
-        'vue',
-        // @ts-expect-error TS2322
-        'vue-router',
-        // @ts-expect-error TS2322
-        'pinia',
-        // @ts-expect-error TS2322
-        'vitest',
-        // @ts-expect-error TS2322
-        vueDsfrAutoimportPreset,
-      ],
-      vueTemplate: true,
-      dts: './src/auto-imports.d.ts',
-      eslintrc: {
-        enabled: true,
-        filepath: './.eslintrc-auto-import.json',
-        globalsPropValue: true,
-      },
-    }),
-    Components({
-      extensions: ['vue'],
-      dirs: ['src/components'], // Autoimport de vos composants qui sont dans le dossier `src/components`
-      include: [/\.vue$/, /\.vue\?vue/],
-      dts: './src/components.d.ts',
-      resolvers: [
-        vueDsfrComponentResolver, // Autoimport des composants de VueDsfr dans les templates
-      ],
-    }),
-  ],
-  base: process.env.BASE_URL || '/',
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+  const { desc, time, version } = getBuildInfo()
+
+  const enableProxy = configEnv.command === 'serve' && !configEnv.isPreview
+
+  return {
+    base: viteEnv.VITE_BASE_URL,
+    define: {
+      BUILD_TIME: JSON.stringify(time),
+      BUILD_DESC: JSON.stringify(desc),
     },
-    dedupe: ['vue'],
-  },
+    plugins: setupVitePlugins(viteEnv, time, version),
+    resolve: {
+      alias: {
+        '~': fileURLToPath(new URL('./', import.meta.url)),
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler',
+          additionalData: '@use "@/assets/scss/global.scss" as *;',
+        },
+      },
+    },
+    server: {
+      host: '0.0.0.0',
+      port: viteEnv.VITE_SERVER_PORT,
+      open: true,
+      proxy: createViteProxy(viteEnv, enableProxy),
+      warmup: { clientFiles: ['./index.html', './src/{pages,components}/*'] },
+    },
+    build: {
+      sourcemap: viteEnv.VITE_SOURCE_MAP === 'Y',
+      commonjsOptions: { ignoreTryCatch: false },
+      reportCompressedSize: false,
+    },
+    preview: { port: viteEnv.VITE_PREVIEW_PORT },
+    optimizeDeps: { include },
+    worker: { format: 'es' },
+  }
 })

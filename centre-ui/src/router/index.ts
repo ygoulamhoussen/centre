@@ -1,85 +1,32 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import type { App } from 'vue'
+import type { RouterHistory } from 'vue-router'
+import { setupLayouts } from 'virtual:generated-layouts'
+import {
+  createMemoryHistory,
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
 
-import Home from '../views/AppHome.vue'
-import AboutUs from '../views/AboutUs.vue'
-import Fonctionnalites from '../views/Fonctionnalites.vue'
-import Login from '../views/Login.vue'
-import Gestion from '../views/Gestion.vue' // Ajout de l'import
-import ProprieteListView from '../views/ProprieteListView.vue' // Ajout de l'import
-import ProprieteEtape1 from '../views/ProprieteEtape1.vue' // Ajout de l'import
-import ProprieteEtape2 from '../views/ProprieteEtape2.vue' // Ajout de l'import
-import ProprieteEtape3 from '../views/ProprieteEtape3.vue' // Ajout de l'import
-import ProprieteEtape4 from '../views/ProprieteEtape4.vue'
+} from 'vue-router'
+import { routes } from 'vue-router/auto-routes'
+import { createRouterGuard } from './guard'
 
-const MAIN_TITLE = 'Gabarit de démarrage VueDsfr'
+const { VITE_ROUTER_HISTORY_MODE = 'history', VITE_BASE_URL } = import.meta.env
 
-const routes = [
-  {
-    path: '/',
-    name: 'Home',
-    component: Home,
-  },
-  {
-    path: '/a-propos',
-    name: 'About',
-    component: AboutUs,
-  },
-  {
-    path: '/fonctionnalites',
-    name: 'Fonctionnalités',
-    component: Fonctionnalites,
-  },
-  {
-    path: '/ProprieteListView',
-    name: 'ProprieteListView',
-    component: ProprieteListView,
-    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: Login,
-  },
-  {
-    path: '/gestion',
-    name: 'gestion',
-    component: Gestion, // Nouvelle route pour "Mon Compte"
-    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
-  },
-  {
-    path: '/propriete/etape-1',
-    name: 'ProprieteEtape1',
-    component: ProprieteEtape1,
-    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
-  },
-  {
-    path: '/propriete/etape-2',
-    name: 'ProprieteEtape2',
-    component: ProprieteEtape2,
-    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
-  },
-  {
-    path: '/propriete/etape-3',
-    name: 'ProprieteEtape3',
-    component: ProprieteEtape3,
-    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
-  },
-  {
-    path: '/propriete/etape-4',
-    name: 'ProprieteEtape4',
-    component: ProprieteEtape4,
-    meta: { layout: 'custom-menu' }, // Remplacer par custom-menu
-  },
-]
+const historyCreatorMap: Record<Env.RouterHistoryMode, (base?: string) => RouterHistory> = {
+  hash: createWebHashHistory,
+  history: createWebHistory,
+  memory: createMemoryHistory,
+}
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env?.BASE_URL || ''),
-  routes,
+export const router = createRouter({
+  history: historyCreatorMap[VITE_ROUTER_HISTORY_MODE](VITE_BASE_URL),
+  routes: setupLayouts(routes),
 })
 
-router.beforeEach((to) => { // Cf. https://github.com/vueuse/head pour des transformations avancées de Head
-  const specificTitle = to.meta.title ? `${to.meta.title} - ` : ''
-  document.title = `${specificTitle}${MAIN_TITLE}`
-})
-
-export default router
+/** Setup Vue Router */
+export async function setupRouter(app: App) {
+  app.use(router)
+  createRouterGuard(router)
+  await router.isReady()
+}

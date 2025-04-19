@@ -1,1 +1,0 @@
-import{d as a,b as n,o,e as s,r as t,Y as l}from"./index-D_-DzWhp.js";const r={class:"w-full flex-y-center justify-between"},i={class:"pr-8px text-base-text"},d=a({name:"SettingItem",__name:"setting-item",props:{label:{}},setup(p){return(e,c)=>(o(),n("div",r,[s("div",null,[s("span",i,l(e.label),1),t(e.$slots,"suffix")]),t(e.$slots,"default")]))}});export{d as _};

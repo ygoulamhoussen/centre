@@ -1,1 +1,0 @@
-import{_ as e}from"./iframe-page.vue_vue_type_script_setup_true_lang-CBxdWDZI.js";import{_ as c}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as t,o as n}from"./index-D_-DzWhp.js";const r={};function s(a,_){const o=e;return n(),t(o,{url:"https://www.naiveui.com/en-US/os-theme/docs/introduction"})}const p=c(r,[["render",s]]);export{p as default};

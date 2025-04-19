@@ -1,1 +1,0 @@
-import{d as t,b as n,o,r as a}from"./index-D_-DzWhp.js";const r={class:"bg-container text-base-text transition-300"},_=t({name:"DarkModeContainer",__name:"dark-mode-container",setup(s){return(e,c)=>(o(),n("div",r,[a(e.$slots,"default")]))}});export{_};

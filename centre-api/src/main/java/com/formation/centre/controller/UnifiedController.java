@@ -47,4 +47,6 @@ public class UnifiedController {
     public ResponseEntity<ProprieteDTO> addCompositionsToPropriete(@PathVariable String proprieteId, @RequestBody List<CompositionAcquisitionDTO> compositions) {
         return ResponseEntity.ok(unifiedService.addCompositionsToPropriete(proprieteId, compositions));
     }
+
+
 }

@@ -1,8 +1,12 @@
 package com.formation.centre.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "utilisateur")
@@ -11,6 +15,7 @@ public class Utilisateur {
     @Id
     private UUID id;
 
+    private String userName; // ← ajouté : identifiant de connexion
     private String nom;
     private String prenom;
     private String email;
@@ -24,7 +29,7 @@ public class Utilisateur {
     @Column(name = "modifie_le")
     private LocalDateTime modifieLe;
 
-    // Getters and Setters
+    // Getters et Setters
 
     public UUID getId() {
         return id;
@@ -32,6 +37,14 @@ public class Utilisateur {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getNom() {

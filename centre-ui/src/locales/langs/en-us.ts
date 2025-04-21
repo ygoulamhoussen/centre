@@ -1,6 +1,6 @@
 const local: App.I18n.Schema = {
   system: {
-    title: 'VueNaiveAdmin',
+    title: 'ZotKaz',
     updateTitle: 'System Version Update Notification',
     updateContent: 'A new version of the system has been detected. Do you want to refresh the page immediately?',
     updateConfirm: 'Refresh immediately',
@@ -130,7 +130,8 @@ const local: App.I18n.Schema = {
     '/403': 'No Permission',
     '/404': 'Page Not Found',
     '/500': 'Server Error',
-    '/home': 'Home',
+    '/home': 'Acceuil',
+    '/propriete': 'Propriété',
     '/document': 'Document',
     '/document/naive': 'Naive UI Document',
     '/document/unocss': 'UnoCSS Document',

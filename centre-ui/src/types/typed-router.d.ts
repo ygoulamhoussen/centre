@@ -77,6 +77,7 @@ declare module 'vue-router/auto-routes' {
     '/plugin/tables/vtable': RouteRecordInfo<'/plugin/tables/vtable', '/plugin/tables/vtable', Record<never, never>, Record<never, never>>,
     '/plugin/typeit': RouteRecordInfo<'/plugin/typeit', '/plugin/typeit', Record<never, never>, Record<never, never>>,
     '/plugin/video': RouteRecordInfo<'/plugin/video', '/plugin/video', Record<never, never>, Record<never, never>>,
+    '/propriete': RouteRecordInfo<'/propriete', '/propriete', Record<never, never>, Record<never, never>>,
     '/user-center': RouteRecordInfo<'/user-center', '/user-center', Record<never, never>, Record<never, never>>,
   }
 }

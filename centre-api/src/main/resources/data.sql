@@ -1,10 +1,12 @@
 -- Jeux de données pour LMNP - PostgreSQL
 
 -- Utilisateurs
-INSERT INTO utilisateur (id, nom, prenom, email, mot_de_passe_hash, cree_le, modifie_le) VALUES
-('00000000-0000-0000-0000-000000000001', 'Dupont', 'Jean', 'jean.dupont@example.com', 'hash1', now(), now()),
-('00000000-0000-0000-0000-000000000002', 'Martin', 'Claire', 'claire.martin@example.com', 'hash2', now(), now()),
-('00000000-0000-0000-0000-000000000003', 'Martin', 'Claire', 'Soybean', '123456', now(), now());
+INSERT INTO utilisateur (id, user_name, nom, prenom, email, mot_de_passe_hash, cree_le, modifie_le) VALUES
+('00000000-0000-0000-0000-000000000001', 'jdupont', 'Dupont', 'Jean', 'jean.dupont@example.com', 'hash1', now(), now()),
+('00000000-0000-0000-0000-000000000002', 'cmartin', 'Martin', 'Claire', 'claire.martin@example.com', 'hash2', now(), now()),
+('00000000-0000-0000-0000-000000000003', 'Soybean', 'Martin', 'Claire', 'soybean@example.com', '$2a$10$q2ObuUCf3xqjlH0gAvdZd.g9tC2kRz0Z01nlnhUp7u82FcbQQRCbO
+', now(), now());
+
 
 -- Propriétés
 INSERT INTO propriete (id, utilisateur_id, type_bien, nom, adresse, complement_adresse, code_postal, ville,

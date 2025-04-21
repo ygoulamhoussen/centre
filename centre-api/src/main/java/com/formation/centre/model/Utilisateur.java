@@ -15,6 +15,7 @@ public class Utilisateur {
     @Id
     private UUID id;
 
+    @Column(name = "user_name", unique = true)
     private String userName; // ← ajouté : identifiant de connexion
     private String nom;
     private String prenom;

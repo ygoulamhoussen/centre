@@ -19,7 +19,7 @@ const proprietes = ref<any[]>([])
 async function fetchProprietes() {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000001`
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000001`
     )
     const data = await response.json()
     proprietes.value = data
@@ -30,7 +30,7 @@ async function fetchProprietes() {
 }
 
 function demarrerCreation() {
-  router.push('/propriete/etape-1')
+  router.push('/propriete_workflow/etape-1')
 }
 
 onMounted(() => {

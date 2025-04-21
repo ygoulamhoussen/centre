@@ -76,6 +76,9 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
       }
     }
     else {
+        const msg = error?.response?.data?.msg || $t('common.error')
+        window.$message?.error(msg)
+      
       resetStore()
     }
 

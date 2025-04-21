@@ -26,6 +26,7 @@ DROP TABLE IF EXISTS salle;
 -- UTILISATEUR
 CREATE TABLE utilisateur (
     id UUID PRIMARY KEY,
+    user_name TEXT UNIQUE, -- ← ajouté
     nom TEXT,
     prenom TEXT,
     email TEXT UNIQUE,

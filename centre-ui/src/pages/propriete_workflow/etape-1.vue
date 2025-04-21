@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { NButton, NInput, NGrid, NGi, useMessage } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useMessage } from 'naive-ui'
+import { ref } from 'vue'
 
 definePage({
   meta: {
@@ -39,40 +39,36 @@ function valider() {
 </script>
 
 <template>
-  <NSpace vertical :size="24">
-    <h1 class="text-xl font-bold">Ajouter une propriété - Étape 1</h1>
+  <n-space vertical :size="24">
+    <n-h1>Ajouter une propriété - Étape 1</n-h1>
+    <n-text strong class="block">Quel est le type de bien&nbsp;?</n-text>
+    <n-grid cols="1 s:1 m:2 l:4" x-gap="12" y-gap="12">
+      <n-gi v-for="type in typesBien" :key="type.value">
+        <n-button
+          block
+          :type="proprieteDTO.typeBien === type.value ? 'primary' : 'default'"
+          @click="choisirType(type.value)"
+        >
+          {{ type.label }}
+        </n-button>
+      </n-gi>
+    </n-grid>
 
-    <div>
-      <p class="mb-2">Quel est le type de bien&nbsp;?</p>
-      <NGrid cols="1 s:1 m:2 l:4" x-gap="12" y-gap="12">
-        <NGi v-for="type in typesBien" :key="type.value">
-          <NButton
-            block
-            :type="proprieteDTO.typeBien === type.value ? 'primary' : 'default'"
-            @click="choisirType(type.value)"
-          >
-            {{ type.label }}
-          </NButton>
-        </NGi>
-      </NGrid>
-    </div>
+    <n-form :model="proprieteDTO" label-placement="top">
+      <n-form-item label="Nom de la propriété" path="nom">
+        <n-input
+          v-model:value="proprieteDTO.nom"
+          placeholder="Ex : Résidence Les Lilas, Parking centre-ville..."
+        />
+      </n-form-item>
+    </n-form>
 
-    <div>
-      <label class="block mb-1">Nom de la propriété</label>
-      <NInput
-        v-model:value="proprieteDTO.nom"
-        placeholder="Ex : Résidence Les Lilas, Parking centre-ville..."
-      />
-    </div>
-
-    <div>
-      <NButton
-        type="primary"
-        @click="valider"
-        :disabled="!proprieteDTO.typeBien || !proprieteDTO.nom"
-      >
-        Suivant
-      </NButton>
-    </div>
-  </NSpace>
+    <n-button
+      type="primary"
+      @click="valider"
+      :disabled="!proprieteDTO.typeBien || !proprieteDTO.nom"
+    >
+      Suivant
+    </n-button>
+  </n-space>
 </template>

@@ -3,12 +3,26 @@ import { useUnifiedStore } from '@/store/unifiedStore'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { NButton, NRadioGroup, NRadio, NInputNumber, NInput, NGrid, NGi, useMessage } from 'naive-ui'
+import {
+  NH1,
+  NText,
+  NSpace,
+  NForm,
+  NFormItem,
+  NButton,
+  NRadioGroup,
+  NRadio,
+  NInputNumber,
+  NGrid,
+  NGi,
+  useMessage
+} from 'naive-ui'
 
 definePage({
   meta: {
     title: 'Ajouter une propriété - Étape 4',
     hideInMenu: true,
+    activeMenu: '/propriete'
   },
 })
 
@@ -45,14 +59,14 @@ async function enregistrer() {
 
     const compositions = immobilisation.value === 'oui'
       ? decompositions.value
-        .filter(row => row.quotePart && (row.categorie === 'Terrains' || row.duree))
-        .map(row => ({
-          categorie: row.categorie,
-          montant: row.quotePart,
-          description: row.categorie === 'Terrains'
-            ? 'Non amortissable'
-            : `Amortissement sur ${row.duree} ans`
-        }))
+          .filter(row => row.quotePart && (row.categorie === 'Terrains' || row.duree))
+          .map(row => ({
+            categorie: row.categorie,
+            montant: row.quotePart,
+            description: row.categorie === 'Terrains'
+              ? 'Non amortissable'
+              : `Amortissement sur ${row.duree} ans`
+          }))
       : []
 
     const payload = {
@@ -60,11 +74,14 @@ async function enregistrer() {
       compositions
     }
 
-    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/createProprieteWithCompositions/${utilisateurId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
+    const response = await fetch(
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createProprieteWithCompositions/${utilisateurId}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }
+    )
 
     if (!response.ok) throw new Error('Erreur lors de la création de la propriété.')
 
@@ -79,44 +96,47 @@ async function enregistrer() {
 </script>
 
 <template>
-  <NSpace vertical :size="24">
-    <h1 class="text-xl font-bold">Ajouter une propriété - Étape 4</h1>
+  <n-space vertical :size="24">
+    <n-h1>Ajouter une propriété - Étape 4</n-h1>
 
-    <div>
-      <span class="block font-medium mb-2">Créer une immobilisation comptable ?</span>
-      <NRadioGroup v-model:value="immobilisation" name="immobilisation">
-        <NRadio value="oui">Oui</NRadio>
-        <NRadio value="non">Non</NRadio>
-      </NRadioGroup>
-    </div>
+    <n-form label-placement="top">
+      <n-form-item label="Créer une immobilisation comptable ?">
+        <n-radio-group v-model:value="immobilisation" name="immobilisation">
+          <n-radio value="oui">Oui</n-radio>
+          <n-radio value="non">Non</n-radio>
+        </n-radio-group>
+      </n-form-item>
 
-    <div v-if="immobilisation === 'oui'">
-      <NGrid cols="3" x-gap="16" y-gap="12">
-        <NGi v-for="(row, idx) in decompositions" :key="row.categorie">
-          <div class="p-2 border rounded-md">
-            <p class="font-semibold">{{ row.categorie }}</p>
-            <div v-if="row.categorie !== 'Terrains'">
-              <label class="block text-sm mb-1">Durée (ans)</label>
-              <NInputNumber v-model:value="row.duree" min="0" />
-            </div>
-            <label class="block text-sm mt-2 mb-1">Quote-part (€)</label>
-            <NInputNumber v-model:value="row.quotePart" min="0" step="0.01" />
-          </div>
-        </NGi>
-      </NGrid>
-    </div>
+      <template v-if="immobilisation === 'oui'">
+        <n-text depth="3">Répartition par composantes</n-text>
+        <n-grid cols="1 s:1 m:2 l:3" x-gap="16" y-gap="16">
+          <n-gi v-for="row in decompositions" :key="row.categorie">
+            <n-space vertical class="p-4 border rounded-md">
+              <n-text strong>{{ row.categorie }}</n-text>
 
-    <div class="flex justify-end gap-3">
-      <NButton @click="precedent">Précédent</NButton>
-      <NButton type="primary" @click="enregistrer" :loading="chargement">
-        Enregistrer
-      </NButton>
-    </div>
-  </NSpace>
+              <n-form-item v-if="row.categorie !== 'Terrains'" label="Durée (ans)">
+                <n-input-number v-model:value="row.duree" min="0" />
+              </n-form-item>
+
+              <n-form-item label="Quote-part (€)">
+                <n-input-number v-model:value="row.quotePart" min="0" step="0.01" />
+              </n-form-item>
+            </n-space>
+          </n-gi>
+        </n-grid>
+      </template>
+
+      <n-space justify="end" :size="16">
+        <n-button @click="precedent">Précédent</n-button>
+        <n-button type="primary" @click="enregistrer" :loading="chargement">Enregistrer</n-button>
+      </n-space>
+    </n-form>
+  </n-space>
 </template>
 
 <style scoped>
-p {
-  margin-bottom: 0.5rem;
+.border {
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
 }
 </style>

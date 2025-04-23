@@ -12,19 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.formation.centre.dto.CompositionAcquisitionDTO;
-import com.formation.centre.dto.LocataireDTO;
-import com.formation.centre.dto.LocationDTO;
-import com.formation.centre.dto.ProprieteDTO;
-import com.formation.centre.model.CompositionAcquisition;
-import com.formation.centre.model.Locataire;
-import com.formation.centre.model.Location;
-import com.formation.centre.model.Propriete;
-import com.formation.centre.model.Utilisateur;
-import com.formation.centre.repository.LocataireRepository;
-import com.formation.centre.repository.LocationRepository;
-import com.formation.centre.repository.ProprieteRepository;
-import com.formation.centre.repository.UtilisateurRepository;
+import com.formation.centre.dto.*;
+import com.formation.centre.model.*;
+import com.formation.centre.repository.*;
 
 import jakarta.transaction.Transactional;
 
@@ -44,8 +34,182 @@ public class UnifiedService {
     @Autowired
     private UtilisateurRepository utilisateurRepository;
 
+    @Autowired
+    private QuittanceRepository quittanceRepository;
 
-    
+    @Autowired
+    private PaiementRepository paiementRepository;
+
+    @Autowired
+    private CreditRepository creditRepository;
+
+    public List<QuittanceDTO> getQuittancesByUtilisateur(String utilisateurId) {
+        UUID userId = UUID.fromString(utilisateurId);
+        return quittanceRepository.findByLocation_Propriete_Utilisateur_Id(userId).stream()
+            .map(this::toDto)
+            .collect(Collectors.toList());
+    }
+
+    public QuittanceDTO createQuittance(QuittanceDTO dto) {
+        Quittance q = new Quittance();
+        q.setId(UUID.randomUUID());
+        q.setLocation(locationRepository.findById(UUID.fromString(dto.getLocationId())).orElseThrow());
+        q.setDateDebut(LocalDate.parse(dto.getDateDebut()));
+        q.setDateFin(LocalDate.parse(dto.getDateFin()));
+        q.setDateEmission(LocalDate.parse(dto.getDateEmission()));
+        q.setMontantLoyer(new BigDecimal(dto.getMontantLoyer()));
+        q.setMontantCharges(new BigDecimal(dto.getMontantCharges()));
+        q.setMontantTotal(new BigDecimal(dto.getMontantTotal()));
+        q.setStatut(Quittance.StatutQuittance.valueOf(dto.getStatut()));
+        q.setCreeLe(LocalDateTime.now());
+        q.setModifieLe(LocalDateTime.now());
+        return toDto(quittanceRepository.save(q));
+    }
+
+    public QuittanceDTO updateQuittance(String id, QuittanceDTO dto) {
+        Quittance q = quittanceRepository.findById(UUID.fromString(id)).orElseThrow();
+        q.setDateDebut(LocalDate.parse(dto.getDateDebut()));
+        q.setDateFin(LocalDate.parse(dto.getDateFin()));
+        q.setDateEmission(LocalDate.parse(dto.getDateEmission()));
+        q.setMontantLoyer(new BigDecimal(dto.getMontantLoyer()));
+        q.setMontantCharges(new BigDecimal(dto.getMontantCharges()));
+        q.setMontantTotal(new BigDecimal(dto.getMontantTotal()));
+        q.setStatut(Quittance.StatutQuittance.valueOf(dto.getStatut()));
+        q.setModifieLe(LocalDateTime.now());
+        return toDto(quittanceRepository.save(q));
+    }
+
+    public void deleteQuittance(String id) {
+        quittanceRepository.deleteById(UUID.fromString(id));
+    }
+
+    public List<PaiementDTO> getPaiementsByUtilisateur(String utilisateurId) {
+        UUID userId = UUID.fromString(utilisateurId);
+        return paiementRepository.findByQuittance_Location_Propriete_Utilisateur_Id(userId).stream()
+            .map(this::toDto)
+            .collect(Collectors.toList());
+    }
+
+    public PaiementDTO createPaiement(PaiementDTO dto) {
+        Paiement p = new Paiement();
+        p.setId(UUID.randomUUID());
+        p.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElseThrow());
+        p.setDatePaiement(LocalDate.parse(dto.getDatePaiement()));
+        p.setMontant(new BigDecimal(dto.getMontant()));
+        p.setMoyenPaiement(Paiement.MoyenPaiement.valueOf(dto.getMoyenPaiement()));
+        p.setReference(dto.getReference());
+        p.setCommentaire(dto.getCommentaire());
+        p.setEstValide(Boolean.parseBoolean(dto.getEstValide()));
+        p.setCreeLe(LocalDateTime.now());
+        p.setModifieLe(LocalDateTime.now());
+        return toDto(paiementRepository.save(p));
+    }
+
+    public PaiementDTO updatePaiement(String id, PaiementDTO dto) {
+        Paiement p = paiementRepository.findById(UUID.fromString(id)).orElseThrow();
+        p.setDatePaiement(LocalDate.parse(dto.getDatePaiement()));
+        p.setMontant(new BigDecimal(dto.getMontant()));
+        p.setMoyenPaiement(Paiement.MoyenPaiement.valueOf(dto.getMoyenPaiement()));
+        p.setReference(dto.getReference());
+        p.setCommentaire(dto.getCommentaire());
+        p.setEstValide(Boolean.parseBoolean(dto.getEstValide()));
+        p.setModifieLe(LocalDateTime.now());
+        return toDto(paiementRepository.save(p));
+    }
+
+    public void deletePaiement(String id) {
+        paiementRepository.deleteById(UUID.fromString(id));
+    }
+
+    public List<CreditDTO> getCreditsByUtilisateur(String utilisateurId) {
+        UUID userId = UUID.fromString(utilisateurId);
+        return creditRepository.findByPropriete_Utilisateur_Id(userId).stream()
+            .map(this::toDto)
+            .collect(Collectors.toList());
+    }
+
+    public CreditDTO createCredit(CreditDTO dto) {
+        Credit c = new Credit();
+        c.setId(UUID.randomUUID());
+        c.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+        c.setBanque(dto.getBanque());
+        c.setMontantEmprunte(new BigDecimal(dto.getMontantEmprunte()));
+        c.setDateDebut(LocalDate.parse(dto.getDateDebut()));
+        c.setDateFin(LocalDate.parse(dto.getDateFin()));
+        c.setDureeMois(Integer.parseInt(dto.getDureeMois()));
+        c.setTauxInteretAnnuel(new BigDecimal(dto.getTauxInteretAnnuel()));
+        c.setMensualite(new BigDecimal(dto.getMensualite()));
+        c.setAssuranceMensuelle(new BigDecimal(dto.getAssuranceMensuelle()));
+        c.setFraisDossier(new BigDecimal(dto.getFraisDossier()));
+        c.setFraisGarantie(new BigDecimal(dto.getFraisGarantie()));
+        c.setCreeLe(LocalDateTime.now());
+        c.setModifieLe(LocalDateTime.now());
+        return toDto(creditRepository.save(c));
+    }
+
+    public CreditDTO updateCredit(String id, CreditDTO dto) {
+        Credit c = creditRepository.findById(UUID.fromString(id)).orElseThrow();
+        c.setBanque(dto.getBanque());
+        c.setMontantEmprunte(new BigDecimal(dto.getMontantEmprunte()));
+        c.setDateDebut(LocalDate.parse(dto.getDateDebut()));
+        c.setDateFin(LocalDate.parse(dto.getDateFin()));
+        c.setDureeMois(Integer.parseInt(dto.getDureeMois()));
+        c.setTauxInteretAnnuel(new BigDecimal(dto.getTauxInteretAnnuel()));
+        c.setMensualite(new BigDecimal(dto.getMensualite()));
+        c.setAssuranceMensuelle(new BigDecimal(dto.getAssuranceMensuelle()));
+        c.setFraisDossier(new BigDecimal(dto.getFraisDossier()));
+        c.setFraisGarantie(new BigDecimal(dto.getFraisGarantie()));
+        c.setModifieLe(LocalDateTime.now());
+        return toDto(creditRepository.save(c));
+    }
+
+    public void deleteCredit(String id) {
+        creditRepository.deleteById(UUID.fromString(id));
+    }
+
+    private QuittanceDTO toDto(Quittance q) {
+        QuittanceDTO dto = new QuittanceDTO();
+        dto.setId(q.getId().toString());
+        dto.setLocationId(q.getLocation().getId().toString());
+        dto.setDateDebut(q.getDateDebut().toString());
+        dto.setDateFin(q.getDateFin().toString());
+        dto.setDateEmission(q.getDateEmission().toString());
+        dto.setMontantLoyer(q.getMontantLoyer().toPlainString());
+        dto.setMontantCharges(q.getMontantCharges().toPlainString());
+        dto.setMontantTotal(q.getMontantTotal().toPlainString());
+        dto.setStatut(q.getStatut().toString());
+        return dto;
+    }
+
+    private PaiementDTO toDto(Paiement p) {
+        PaiementDTO dto = new PaiementDTO();
+        dto.setId(p.getId().toString());
+        dto.setQuittanceId(p.getQuittance().getId().toString());
+        dto.setDatePaiement(p.getDatePaiement().toString());
+        dto.setMontant(p.getMontant().toPlainString());
+        dto.setMoyenPaiement(p.getMoyenPaiement().toString());
+        dto.setReference(p.getReference());
+        dto.setCommentaire(p.getCommentaire());
+        dto.setEstValide(p.getEstValide().toString());
+        return dto;
+    }
+
+    private CreditDTO toDto(Credit c) {
+        CreditDTO dto = new CreditDTO();
+        dto.setId(c.getId().toString());
+        dto.setProprieteId(c.getPropriete().getId().toString());
+        dto.setBanque(c.getBanque());
+        dto.setMontantEmprunte(c.getMontantEmprunte().toPlainString());
+        dto.setDateDebut(c.getDateDebut().toString());
+        dto.setDateFin(c.getDateFin().toString());
+        dto.setDureeMois(c.getDureeMois().toString());
+        dto.setTauxInteretAnnuel(c.getTauxInteretAnnuel().toPlainString());
+        dto.setMensualite(c.getMensualite().toPlainString());
+        dto.setAssuranceMensuelle(c.getAssuranceMensuelle().toPlainString());
+        dto.setFraisDossier(c.getFraisDossier().toPlainString());
+        dto.setFraisGarantie(c.getFraisGarantie().toPlainString());
+        return dto;
+    }
     public LocationDTO createLocation(LocationDTO dto) {
         Location location = new Location();
         location.setId(UUID.randomUUID());

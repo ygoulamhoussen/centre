@@ -1,8 +1,6 @@
 package com.formation.centre.controller;
 
-import com.formation.centre.dto.LocataireDTO;
-import com.formation.centre.dto.ProprieteDTO;
-import com.formation.centre.dto.LocationDTO;
+import com.formation.centre.dto.*;
 import com.formation.centre.service.UnifiedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +26,17 @@ public class UnifiedController {
         return ResponseEntity.ok(unifiedService.createPropriete(utilisateurId, dto));
     }
 
+    @PutMapping("/updatePropriete")
+    public ResponseEntity<ProprieteDTO> updatePropriete(@RequestBody ProprieteDTO dto) {
+        return ResponseEntity.ok(unifiedService.updatePropriete(dto.getId(), dto));
+    }
+
+    @DeleteMapping("/deletePropriete/{proprieteId}")
+    public ResponseEntity<Void> deletePropriete(@PathVariable String proprieteId) {
+        unifiedService.deletePropriete(proprieteId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/createProprieteWithCompositions/{utilisateurId}")
     public ResponseEntity<ProprieteDTO> createProprieteWithCompositions(
             @PathVariable String utilisateurId,
@@ -38,7 +47,7 @@ public class UnifiedController {
     }
 
     @PostMapping("/addCompositionsToPropriete/{proprieteId}")
-    public ResponseEntity<ProprieteDTO> addCompositionsToPropriete(@PathVariable String proprieteId, @RequestBody List<com.formation.centre.dto.CompositionAcquisitionDTO> compositions) {
+    public ResponseEntity<ProprieteDTO> addCompositionsToPropriete(@PathVariable String proprieteId, @RequestBody List<CompositionAcquisitionDTO> compositions) {
         return ResponseEntity.ok(unifiedService.addCompositionsToPropriete(proprieteId, compositions));
     }
 
@@ -82,5 +91,68 @@ public class UnifiedController {
     @GetMapping("/getLocationsByUtilisateur/{utilisateurId}")
     public ResponseEntity<List<LocationDTO>> getLocations(@PathVariable String utilisateurId) {
         return ResponseEntity.ok(unifiedService.getLocationsByUtilisateur(utilisateurId));
+    }
+
+    @GetMapping("/getQuittancesByUtilisateur/{utilisateurId}")
+    public ResponseEntity<List<QuittanceDTO>> getQuittances(@PathVariable String utilisateurId) {
+        return ResponseEntity.ok(unifiedService.getQuittancesByUtilisateur(utilisateurId));
+    }
+
+    @PostMapping("/createQuittance")
+    public ResponseEntity<QuittanceDTO> createQuittance(@RequestBody QuittanceDTO dto) {
+        return ResponseEntity.ok(unifiedService.createQuittance(dto));
+    }
+
+    @PutMapping("/updateQuittance")
+    public ResponseEntity<QuittanceDTO> updateQuittance(@RequestBody QuittanceDTO dto) {
+        return ResponseEntity.ok(unifiedService.updateQuittance(dto.getId(), dto));
+    }
+
+    @DeleteMapping("/deleteQuittance/{quittanceId}")
+    public ResponseEntity<Void> deleteQuittance(@PathVariable String quittanceId) {
+        unifiedService.deleteQuittance(quittanceId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/getPaiementsByUtilisateur/{utilisateurId}")
+    public ResponseEntity<List<PaiementDTO>> getPaiements(@PathVariable String utilisateurId) {
+        return ResponseEntity.ok(unifiedService.getPaiementsByUtilisateur(utilisateurId));
+    }
+
+    @PostMapping("/createPaiement")
+    public ResponseEntity<PaiementDTO> createPaiement(@RequestBody PaiementDTO dto) {
+        return ResponseEntity.ok(unifiedService.createPaiement(dto));
+    }
+
+    @PutMapping("/updatePaiement")
+    public ResponseEntity<PaiementDTO> updatePaiement(@RequestBody PaiementDTO dto) {
+        return ResponseEntity.ok(unifiedService.updatePaiement(dto.getId(), dto));
+    }
+
+    @DeleteMapping("/deletePaiement/{paiementId}")
+    public ResponseEntity<Void> deletePaiement(@PathVariable String paiementId) {
+        unifiedService.deletePaiement(paiementId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/getCreditsByUtilisateur/{utilisateurId}")
+    public ResponseEntity<List<CreditDTO>> getCredits(@PathVariable String utilisateurId) {
+        return ResponseEntity.ok(unifiedService.getCreditsByUtilisateur(utilisateurId));
+    }
+
+    @PostMapping("/createCredit")
+    public ResponseEntity<CreditDTO> createCredit(@RequestBody CreditDTO dto) {
+        return ResponseEntity.ok(unifiedService.createCredit(dto));
+    }
+
+    @PutMapping("/updateCredit")
+    public ResponseEntity<CreditDTO> updateCredit(@RequestBody CreditDTO dto) {
+        return ResponseEntity.ok(unifiedService.updateCredit(dto.getId(), dto));
+    }
+
+    @DeleteMapping("/deleteCredit/{creditId}")
+    public ResponseEntity<Void> deleteCredit(@PathVariable String creditId) {
+        unifiedService.deleteCredit(creditId);
+        return ResponseEntity.noContent().build();
     }
 } 

@@ -1,20 +1,15 @@
 package com.formation.centre.controller;
 
-import java.util.List;
-import java.util.Map;
-
+import com.formation.centre.dto.LocataireDTO;
+import com.formation.centre.dto.ProprieteDTO;
+import com.formation.centre.dto.LocationDTO;
+import com.formation.centre.service.UnifiedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.formation.centre.dto.CompositionAcquisitionDTO;
-import com.formation.centre.dto.ProprieteDTO;
-import com.formation.centre.service.UnifiedService;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -37,16 +32,55 @@ public class UnifiedController {
     public ResponseEntity<ProprieteDTO> createProprieteWithCompositions(
             @PathVariable String utilisateurId,
             @RequestBody Map<String, Object> payload) {
-        // payload doit contenir propriete (ProprieteDTO) et compositions (List<CompositionAcquisitionDTO>)
         Object proprieteObj = payload.get("propriete");
         Object compositionsObj = payload.get("compositions");
         return ResponseEntity.ok(unifiedService.createProprieteWithCompositions(utilisateurId, proprieteObj, compositionsObj));
     }
 
     @PostMapping("/addCompositionsToPropriete/{proprieteId}")
-    public ResponseEntity<ProprieteDTO> addCompositionsToPropriete(@PathVariable String proprieteId, @RequestBody List<CompositionAcquisitionDTO> compositions) {
+    public ResponseEntity<ProprieteDTO> addCompositionsToPropriete(@PathVariable String proprieteId, @RequestBody List<com.formation.centre.dto.CompositionAcquisitionDTO> compositions) {
         return ResponseEntity.ok(unifiedService.addCompositionsToPropriete(proprieteId, compositions));
     }
 
+    @PostMapping("/createLocataire")
+    public ResponseEntity<LocataireDTO> createLocataire(@RequestBody LocataireDTO dto) {
+        return ResponseEntity.ok(unifiedService.creerLocataire(dto.getUtilisateurId(), dto));
+    }
 
-}
+    @GetMapping("/getLocatairesByUtilisateur/{utilisateurId}")
+    public ResponseEntity<List<LocataireDTO>> getLocataires(@PathVariable String utilisateurId) {
+        return ResponseEntity.ok(unifiedService.getLocatairesByUtilisateur(utilisateurId));
+    }
+
+    @PutMapping("/updateLocataire")
+    public ResponseEntity<LocataireDTO> updateLocataire(@RequestBody LocataireDTO dto) {
+        return ResponseEntity.ok(unifiedService.updateLocataire(dto.getId(), dto));
+    }
+
+    @DeleteMapping("/deleteLocataire/{locataireId}")
+    public ResponseEntity<Void> deleteLocataire(@PathVariable String locataireId) {
+        unifiedService.deleteLocataire(locataireId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/createLocation")
+    public ResponseEntity<LocationDTO> createLocation(@RequestBody LocationDTO dto) {
+        return ResponseEntity.ok(unifiedService.createLocation(dto));
+    }
+
+    @PutMapping("/updateLocation")
+    public ResponseEntity<LocationDTO> updateLocation(@RequestBody LocationDTO dto) {
+        return ResponseEntity.ok(unifiedService.updateLocation(dto.getId(), dto));
+    }
+
+    @DeleteMapping("/deleteLocation/{locationId}")
+    public ResponseEntity<Void> deleteLocation(@PathVariable String locationId) {
+        unifiedService.deleteLocation(locationId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/getLocationsByUtilisateur/{utilisateurId}")
+    public ResponseEntity<List<LocationDTO>> getLocations(@PathVariable String utilisateurId) {
+        return ResponseEntity.ok(unifiedService.getLocationsByUtilisateur(utilisateurId));
+    }
+} 

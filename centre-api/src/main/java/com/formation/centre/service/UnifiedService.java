@@ -2,6 +2,7 @@ package com.formation.centre.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -12,10 +13,16 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
+import com.formation.centre.dto.LocataireDTO;
+import com.formation.centre.dto.LocationDTO;
 import com.formation.centre.dto.ProprieteDTO;
 import com.formation.centre.model.CompositionAcquisition;
+import com.formation.centre.model.Locataire;
+import com.formation.centre.model.Location;
 import com.formation.centre.model.Propriete;
 import com.formation.centre.model.Utilisateur;
+import com.formation.centre.repository.LocataireRepository;
+import com.formation.centre.repository.LocationRepository;
 import com.formation.centre.repository.ProprieteRepository;
 import com.formation.centre.repository.UtilisateurRepository;
 
@@ -26,11 +33,80 @@ import jakarta.transaction.Transactional;
 public class UnifiedService {
 
     @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
     private ProprieteRepository proprieteRepository;
+
+    @Autowired
+    private LocataireRepository locataireRepository;
 
     @Autowired
     private UtilisateurRepository utilisateurRepository;
 
+
+    
+    public LocationDTO createLocation(LocationDTO dto) {
+        Location location = new Location();
+        location.setId(UUID.randomUUID());
+        location.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+        location.setLocataire(locataireRepository.findById(UUID.fromString(dto.getLocataireId())).orElseThrow());
+        location.setDateDebut(LocalDate.parse(dto.getDateDebut()));
+        location.setDateFin(dto.getDateFin() != null ? LocalDate.parse(dto.getDateFin()) : null);
+        location.setLoyerMensuel(new BigDecimal(dto.getLoyerMensuel()));
+        location.setChargesMensuelles(new BigDecimal(dto.getChargesMensuelles()));
+        location.setDepotGarantie(new BigDecimal(dto.getDepotGarantie()));
+        location.setFrequenceLoyer(Location.FrequenceLoyer.valueOf(dto.getFrequenceLoyer()));
+        location.setJourEcheance(Integer.parseInt(dto.getJourEcheance()));
+        location.setCreeLe(LocalDateTime.now());
+        location.setModifieLe(LocalDateTime.now());
+
+        locationRepository.save(location);
+        return toDTO(location);
+    }
+
+    public LocationDTO updateLocation(String id, LocationDTO dto) {
+        Location location = locationRepository.findById(UUID.fromString(id)).orElseThrow();
+        location.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+        location.setLocataire(locataireRepository.findById(UUID.fromString(dto.getLocataireId())).orElseThrow());
+        location.setDateDebut(LocalDate.parse(dto.getDateDebut()));
+        location.setDateFin(dto.getDateFin() != null ? LocalDate.parse(dto.getDateFin()) : null);
+        location.setLoyerMensuel(new BigDecimal(dto.getLoyerMensuel()));
+        location.setChargesMensuelles(new BigDecimal(dto.getChargesMensuelles()));
+        location.setDepotGarantie(new BigDecimal(dto.getDepotGarantie()));
+        location.setFrequenceLoyer(Location.FrequenceLoyer.valueOf(dto.getFrequenceLoyer()));
+        location.setJourEcheance(Integer.parseInt(dto.getJourEcheance()));
+        location.setModifieLe(LocalDateTime.now());
+
+        locationRepository.save(location);
+        return toDTO(location);
+    }
+
+    public void deleteLocation(String id) {
+        locationRepository.deleteById(UUID.fromString(id));
+    }
+
+    public List<LocationDTO> getLocationsByUtilisateur(String utilisateurId) {
+        return locationRepository.findByPropriete_Utilisateur_Id(UUID.fromString(utilisateurId)).stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+    }
+    
+
+    private LocationDTO toDTO(Location entity) {
+        LocationDTO dto = new LocationDTO();
+        dto.setId(entity.getId().toString());
+        dto.setProprieteId(entity.getPropriete().getId().toString());
+        dto.setLocataireId(entity.getLocataire().getId().toString());
+        dto.setDateDebut(entity.getDateDebut().toString());
+        dto.setDateFin(entity.getDateFin() != null ? entity.getDateFin().toString() : null);
+        dto.setLoyerMensuel(entity.getLoyerMensuel().toPlainString());
+        dto.setChargesMensuelles(entity.getChargesMensuelles().toPlainString());
+        dto.setDepotGarantie(entity.getDepotGarantie().toPlainString());
+        dto.setFrequenceLoyer(entity.getFrequenceLoyer().toString());
+        dto.setJourEcheance(entity.getJourEcheance().toString());
+        return dto;
+    }
     public List<ProprieteDTO> getProprietesByUtilisateur(String utilisateurId) {
         UUID userId = UUID.fromString(utilisateurId);
         Utilisateur utilisateur = utilisateurRepository.findById(userId)
@@ -40,6 +116,53 @@ public class UnifiedService {
                 .filter(p -> p.getUtilisateur().getId().equals(userId))
                 .map(this::toDto)
                 .collect(Collectors.toList());
+    }
+
+
+    public ProprieteDTO updatePropriete(String proprieteId, ProprieteDTO dto) {
+        Propriete propriete = proprieteRepository.findById(UUID.fromString(proprieteId))
+                .orElseThrow(() -> new IllegalArgumentException("Propriété introuvable"));
+
+        propriete.setNom(dto.getNom());
+        propriete.setAdresse(dto.getAdresse());
+        propriete.setComplementAdresse(dto.getComplementAdresse());
+        propriete.setCodePostal(dto.getCodePostal());
+        propriete.setVille(dto.getVille());
+        propriete.setTypeBien(Propriete.TypeBien.valueOf(dto.getTypeBien()));
+        propriete.setDateAcquisition(dto.getDateAcquisition() != null ? LocalDate.parse(dto.getDateAcquisition()) : null);
+        propriete.setDateLivraison(dto.getDateLivraison() != null ? LocalDate.parse(dto.getDateLivraison()) : null);
+        propriete.setMontantAcquisition(dto.getMontantAcquisition() != null ? new BigDecimal(dto.getMontantAcquisition()) : null);
+        propriete.setTantieme(dto.getTantieme() != null ? new BigDecimal(dto.getTantieme()) : null);
+        propriete.setFraisNotaire(dto.getFraisNotaire() != null ? new BigDecimal(dto.getFraisNotaire()) : null);
+        propriete.setFraisAgence(dto.getFraisAgence() != null ? new BigDecimal(dto.getFraisAgence()) : null);
+
+        // Mise à jour des compositions si présentes dans le DTO
+        if (dto.getCompositions() != null) {
+            List<CompositionAcquisition> updatedCompositions = dto.getCompositions().stream().map(cdto -> {
+                CompositionAcquisition comp;
+                if (cdto.getId() != null) {
+                    comp = proprieteRepository.findCompositionById(UUID.fromString(cdto.getId()))
+                            .orElse(new CompositionAcquisition());
+                } else {
+                    comp = new CompositionAcquisition();
+                    comp.setId(UUID.randomUUID());
+                    comp.setPropriete(propriete);
+                }
+                comp.setCategorie(cdto.getCategorie());
+                comp.setMontant(new BigDecimal(cdto.getMontant()));
+                comp.setDescription(cdto.getDescription());
+                return comp;
+            }).collect(Collectors.toList());
+            propriete.setCompositions(updatedCompositions);
+        }
+
+        return toDto(proprieteRepository.save(propriete));
+    }
+
+    public void deletePropriete(String proprieteId) {
+        Propriete propriete = proprieteRepository.findById(UUID.fromString(proprieteId))
+                .orElseThrow(() -> new IllegalArgumentException("Propriété introuvable"));
+        proprieteRepository.delete(propriete);
     }
 
     public ProprieteDTO createPropriete(String utilisateurId, ProprieteDTO dto) {
@@ -133,6 +256,7 @@ public class UnifiedService {
         }
     }
 
+
     private ProprieteDTO toDto(Propriete entity) {
         ProprieteDTO dto = new ProprieteDTO();
         dto.setId(entity.getId().toString());
@@ -165,4 +289,64 @@ public class UnifiedService {
 
         return dto;
     }
+
+
+    public List<LocataireDTO> getLocatairesByUtilisateur(String utilisateurId) {
+        return locataireRepository.findByUtilisateur_Id(UUID.fromString(utilisateurId)).stream()
+            .map(this::toDto)
+            .collect(Collectors.toList());
+    }
+
+    public LocataireDTO creerLocataire(String utilisateurId, LocataireDTO dto) {
+        Locataire loc = new Locataire();
+        loc.setId(UUID.randomUUID());
+        loc.setUtilisateur(utilisateurRepository.findById(UUID.fromString(utilisateurId)).orElseThrow());
+        loc.setNom(dto.getNom());
+        loc.setTelephone(dto.getTelephone());
+        loc.setEmail(dto.getEmail());
+        loc.setAdresse(dto.getAdresse());
+        loc.setComplementAdresse(dto.getComplementAdresse());
+        loc.setCodePostal(dto.getCodePostal());
+        loc.setVille(dto.getVille());
+
+        Locataire saved = locataireRepository.save(loc);
+        return toDto(saved);
+    }
+
+    public LocataireDTO updateLocataire(String locataireId, LocataireDTO dto) {
+        Locataire loc = locataireRepository.findById(UUID.fromString(locataireId))
+            .orElseThrow(() -> new IllegalArgumentException("Locataire introuvable"));
+
+        loc.setNom(dto.getNom());
+        loc.setTelephone(dto.getTelephone());
+        loc.setEmail(dto.getEmail());
+        loc.setAdresse(dto.getAdresse());
+        loc.setComplementAdresse(dto.getComplementAdresse());
+        loc.setCodePostal(dto.getCodePostal());
+        loc.setVille(dto.getVille());
+
+        Locataire saved = locataireRepository.save(loc);
+        return toDto(saved);
+    }
+
+    public void deleteLocataire(String locataireId) {
+        locataireRepository.deleteById(UUID.fromString(locataireId));
+    }
+
+    private LocataireDTO toDto(Locataire loc) {
+        LocataireDTO dto = new LocataireDTO();
+        dto.setId(loc.getId().toString());
+        dto.setUtilisateurId(loc.getUtilisateur().getId().toString());
+        dto.setNom(loc.getNom());
+        dto.setTelephone(loc.getTelephone());
+        dto.setEmail(loc.getEmail());
+        dto.setAdresse(loc.getAdresse());
+        dto.setComplementAdresse(loc.getComplementAdresse());
+        dto.setCodePostal(loc.getCodePostal());
+        dto.setVille(loc.getVille());
+        return dto;
+    }
+
+
+
 }

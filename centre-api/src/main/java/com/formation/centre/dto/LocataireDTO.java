@@ -2,7 +2,7 @@ package com.formation.centre.dto;
 
 public class LocataireDTO {
     private String id;
-    private String proprieteId;
+    private String utilisateurId;
     private String nom;
     private String telephone;
     private String email;
@@ -21,12 +21,12 @@ public class LocataireDTO {
         this.id = id;
     }
 
-    public String getProprieteId() {
-        return proprieteId;
+    public String getUtilisateurId() {
+        return utilisateurId;
     }
 
-    public void setProprieteId(String proprieteId) {
-        this.proprieteId = proprieteId;
+    public void setUtilisateurId(String utilisateurId) {
+        this.utilisateurId = utilisateurId;
     }
 
     public String getNom() {

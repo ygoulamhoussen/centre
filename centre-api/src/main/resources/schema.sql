@@ -69,7 +69,7 @@ CREATE TABLE composition_acquisition (
 -- LOCATAIRE
 CREATE TABLE locataire (
     id UUID PRIMARY KEY,
-    propriete_id UUID REFERENCES propriete(id),
+    utilisateur_id UUID REFERENCES utilisateur(id), -- association directe avec l'utilisateur
     nom TEXT,
     telephone TEXT,
     email TEXT,

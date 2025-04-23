@@ -1,8 +1,14 @@
 package com.formation.centre.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "locataire")
@@ -11,9 +17,9 @@ public class Locataire {
     @Id
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "propriete_id")
-    private Propriete propriete;
+    @ManyToOne
+    @JoinColumn(name = "utilisateur_id")
+    private Utilisateur utilisateur;
 
     private String nom;
     private String telephone;
@@ -25,7 +31,6 @@ public class Locataire {
 
     @Column(name = "code_postal")
     private String codePostal;
-
     private String ville;
 
     @Column(name = "cree_le")
@@ -34,7 +39,7 @@ public class Locataire {
     @Column(name = "modifie_le")
     private LocalDateTime modifieLe;
 
-    // Getters and Setters
+    // Getters et setters
 
     public UUID getId() {
         return id;
@@ -44,12 +49,12 @@ public class Locataire {
         this.id = id;
     }
 
-    public Propriete getPropriete() {
-        return propriete;
+    public Utilisateur getUtilisateur() {
+        return utilisateur;
     }
 
-    public void setPropriete(Propriete propriete) {
-        this.propriete = propriete;
+    public void setUtilisateur(Utilisateur utilisateur) {
+        this.utilisateur = utilisateur;
     }
 
     public String getNom() {

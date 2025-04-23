@@ -67,9 +67,10 @@ CREATE TABLE composition_acquisition (
 );
 
 -- LOCATAIRE
+-- LOCATAIRE
 CREATE TABLE locataire (
     id UUID PRIMARY KEY,
-    utilisateur_id UUID REFERENCES utilisateur(id), -- association directe avec l'utilisateur
+    utilisateur_id UUID REFERENCES utilisateur(id), -- ← C'est cette ligne qui manque
     nom TEXT,
     telephone TEXT,
     email TEXT,
@@ -80,6 +81,7 @@ CREATE TABLE locataire (
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
+
 
 -- LOCATION
 CREATE TABLE location (

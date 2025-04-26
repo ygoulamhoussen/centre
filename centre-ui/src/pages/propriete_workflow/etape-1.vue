@@ -9,6 +9,7 @@ definePage({
   meta: {
     title: 'Ajouter une propriété - Étape 1',
     hideInMenu: true,
+    activeMenu: '/propriete',
   },
 })
 
@@ -39,8 +40,16 @@ function valider() {
 </script>
 
 <template>
-  <n-space vertical :size="24">
+<n-space vertical :size="24">
     <n-h1>Ajouter une propriété - Étape 1</n-h1>
+    <n-form :model="proprieteDTO" label-placement="top">
+      <n-form-item label="Nom de la propriété" path="nom">
+        <n-input
+          v-model:value="proprieteDTO.nom"
+          placeholder="Ex : Résidence Les Lilas, Parking centre-ville..."
+        />
+      </n-form-item>
+    </n-form>
     <n-text strong class="block">Quel est le type de bien&nbsp;?</n-text>
     <n-grid cols="1 s:1 m:2 l:4" x-gap="12" y-gap="12">
       <n-gi v-for="type in typesBien" :key="type.value">
@@ -54,14 +63,7 @@ function valider() {
       </n-gi>
     </n-grid>
 
-    <n-form :model="proprieteDTO" label-placement="top">
-      <n-form-item label="Nom de la propriété" path="nom">
-        <n-input
-          v-model:value="proprieteDTO.nom"
-          placeholder="Ex : Résidence Les Lilas, Parking centre-ville..."
-        />
-      </n-form-item>
-    </n-form>
+
 
     <n-button
       type="primary"

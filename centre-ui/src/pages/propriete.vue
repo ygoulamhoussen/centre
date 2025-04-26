@@ -1,7 +1,21 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { Box24Regular, Building24Regular, Home24Regular, VehicleCar24Regular } from '@vicons/fluent'
+
+
+// Importation des icônes depuis @vicons/fluent
+
+import {
+  NButton,
+  NCard,
+  NEmpty,
+  NGi,
+  NGrid,
+  NPopconfirm,
+  NSpace,
+  useMessage,
+} from 'naive-ui'
 import { onMounted, ref } from 'vue'
-import { useMessage } from 'naive-ui'
+import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
@@ -13,7 +27,6 @@ definePage({
 
 const router = useRouter()
 const message = useMessage()
-
 const proprietes = ref<any[]>([])
 
 async function fetchProprietes() {
@@ -23,14 +36,45 @@ async function fetchProprietes() {
     )
     const data = await response.json()
     proprietes.value = data
-  } catch (error) {
+  }
+ catch (error) {
     console.error('Erreur lors du chargement des propriétés :', error)
     message.error('Impossible de charger les propriétés')
   }
 }
 
+async function supprimerPropriete(id: string) {
+  try {
+    await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deletePropriete/${id}`, {
+      method: 'DELETE',
+    })
+    message.success('Propriété supprimée')
+    await fetchProprietes()
+  }
+ catch (error) {
+    console.error('Erreur lors de la suppression :', error)
+    message.error('Erreur lors de la suppression')
+  }
+}
+
 function demarrerCreation() {
   router.push('/propriete_workflow/etape-1')
+}
+
+// Fonction pour obtenir l'icône en fonction du type de bien
+function getIconComponent(typeBien: string) {
+  switch (typeBien.toUpperCase()) {
+    case 'APPARTEMENT':
+      return Building24Regular
+    case 'MAISON':
+      return Home24Regular
+    case 'PARKING':
+      return VehicleCar24Regular
+    case 'BOX':
+      return Box24Regular
+    default:
+      return Home24Regular
+  }
 }
 
 onMounted(() => {
@@ -50,8 +94,30 @@ onMounted(() => {
     <NGrid cols="1 s:1 m:2 l:3" x-gap="16" y-gap="16" v-if="proprietes.length > 0">
       <NGi v-for="propriete in proprietes" :key="propriete.id">
         <NCard :title="propriete.nom" size="small">
-          <p>{{ propriete.adresse }}, {{ propriete.ville }}</p>
-          <p><strong>Type:</strong> {{ propriete.typeBien }}</p>
+          <div class="mb-2 flex items-center gap-3">
+            <n-icon :component="getIconComponent(propriete.typeBien)" size="40" :depth="1" />
+            <div>
+              <p>{{ propriete.adresse }}, {{ propriete.ville }}</p>
+              <p><strong>Type :</strong> {{ propriete.typeBien }}</p>
+            </div>
+          </div>
+
+          <template #footer>
+            <div class="flex justify-end">
+              <NPopconfirm
+                @positive-click="() => supprimerPropriete(propriete.id)"
+                positive-text="Supprimer"
+                negative-text="Annuler"
+              >
+                <template #trigger>
+                  <NButton size="small" type="error" ghost>
+                    Supprimer
+                  </NButton>
+                </template>
+                Êtes-vous sûr de vouloir supprimer cette propriété ?
+              </NPopconfirm>
+            </div>
+          </template>
         </NCard>
       </NGi>
     </NGrid>

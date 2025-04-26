@@ -1,52 +1,44 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { ref } from 'vue'
-import { useMessage } from 'naive-ui'
 import { useUnifiedStore } from '@/store/unifiedStore'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
+import { NSpace, NButton, NInput, NForm, NFormItem, useMessage } from 'naive-ui'
 
 definePage({
   meta: {
     title: 'Ajouter un locataire - Étape 1',
     hideInMenu: true,
+    activeMenu: '/locataire',
   },
 })
 
-const router = useRouter()
-const message = useMessage()
-
 const store = useUnifiedStore()
 const { locataireDTO } = storeToRefs(store)
+const router = useRouter()
 
 function suivant() {
   if (!locataireDTO.value.nom || !locataireDTO.value.telephone || !locataireDTO.value.email) {
-    message.warning('Veuillez remplir tous les champs.')
+    useMessage().warning('Veuillez remplir tous les champs obligatoires.')
     return
   }
-
-  router.push('/locataire_workflow/etape-2') // À adapter selon ta structure
+  router.push('/locataire_workflow/etape-2')
 }
 </script>
 
 <template>
   <NSpace vertical :size="24">
     <h1 class="text-xl font-bold">Ajouter un locataire - Étape 1</h1>
-
-    <div>
-      <label class="block mb-1">Nom du locataire</label>
-      <NInput v-model:value="locataireDTO.nom" placeholder="Ex : Jean Dupont" />
-    </div>
-
-    <div>
-      <label class="block mb-1">Téléphone</label>
-      <NInput v-model:value="locataireDTO.telephone" placeholder="Ex : 0601020304" />
-    </div>
-
-    <div>
-      <label class="block mb-1">Email</label>
-      <NInput v-model:value="locataireDTO.email" placeholder="Ex : jean.dupont@email.com" />
-    </div>
-
+    <NForm>
+      <NFormItem label="Nom complet *">
+        <NInput v-model:value="locataireDTO.nom" placeholder="Nom du locataire" />
+      </NFormItem>
+      <NFormItem label="Téléphone *">
+        <NInput v-model:value="locataireDTO.telephone" placeholder="Numéro de téléphone" />
+      </NFormItem>
+      <NFormItem label="Email *">
+        <NInput v-model:value="locataireDTO.email" placeholder="Adresse email" />
+      </NFormItem>
+    </NForm>
     <div class="flex justify-end">
       <NButton type="primary" @click="suivant">Suivant</NButton>
     </div>

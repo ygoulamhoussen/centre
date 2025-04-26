@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { onMounted, ref } from 'vue'
-import { useMessage, NButton, NCard, NSpace, NEmpty, NGrid, NGi } from 'naive-ui'
+import { useMessage, NButton, NCard, NSpace, NEmpty, NGrid, NGi, NPopconfirm } from 'naive-ui'
 
 definePage({
   meta: {
@@ -25,6 +25,19 @@ async function fetchLocataires() {
   } catch (error) {
     console.error('Erreur lors du chargement des locataires :', error)
     message.error('Impossible de charger les locataires')
+  }
+}
+
+async function supprimerLocataire(id: string) {
+  try {
+    await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteLocataire/${id}`, {
+      method: 'DELETE'
+    })
+    message.success('Locataire supprimé')
+    await fetchLocataires()
+  } catch (error) {
+    console.error('Erreur lors de la suppression du locataire :', error)
+    message.error('Erreur lors de la suppression')
   }
 }
 
@@ -52,6 +65,23 @@ onMounted(() => {
           <p><strong>Email :</strong> {{ locataire.email }}</p>
           <p><strong>Téléphone :</strong> {{ locataire.telephone }}</p>
           <p>{{ locataire.adresse }}, {{ locataire.ville }}</p>
+
+          <template #footer>
+            <div class="flex justify-end">
+              <NPopconfirm
+                @positive-click="() => supprimerLocataire(locataire.id)"
+                negative-text="Annuler"
+                positive-text="Supprimer"
+              >
+                <template #trigger>
+                  <NButton size="small" type="error" ghost>
+                    Supprimer
+                  </NButton>
+                </template>
+                Êtes-vous sûr de vouloir supprimer ce locataire ?
+              </NPopconfirm>
+            </div>
+          </template>
         </NCard>
       </NGi>
     </NGrid>

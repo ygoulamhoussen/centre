@@ -3,7 +3,7 @@ import { useUnifiedStore } from '@/store/unifiedStore'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
-import { NSpace, NButton, useMessage } from 'naive-ui'
+import { useMessage, NSpace, NButton, NForm, NFormItem, NText } from 'naive-ui'
 
 definePage({
   meta: {
@@ -17,35 +17,23 @@ const store = useUnifiedStore()
 const { locataireDTO } = storeToRefs(store)
 const router = useRouter()
 const message = useMessage()
-
 const chargement = ref(false)
 
 async function enregistrer() {
+  chargement.value = true
   try {
-    chargement.value = true
-
-    const utilisateurId = locataireDTO.value.utilisateurId || '00000000-0000-0000-0000-000000000001' // À adapter
-
+    const utilisateurId = '00000000-0000-0000-0000-000000000001'
     const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/createLocataire`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...locataireDTO.value,
-        utilisateurId
-      })
+      body: JSON.stringify({ ...locataireDTO.value, utilisateurId })
     })
-
-    if (!response.ok) {
-      const err = await response.text()
-      throw new Error(err)
-    }
-
+    if (!response.ok) throw new Error('Erreur lors de la création du locataire')
+    message.success('Locataire enregistré avec succès !')
     store.resetLocataireDTO()
-    message.success('Locataire enregistré avec succès.')
-    router.push('/locataire') // Redirige vers la liste des locataires
-
+    router.push('/locataire')
   } catch (e: any) {
-    message.error(e.message || 'Erreur lors de l’enregistrement.')
+    message.error(e.message || 'Erreur inconnue')
   } finally {
     chargement.value = false
   }
@@ -60,21 +48,37 @@ function precedent() {
   <NSpace vertical :size="24">
     <h1 class="text-xl font-bold">Ajouter un locataire - Étape 3</h1>
 
-    <p class="text-gray-500">Valider les informations saisies avant l’enregistrement.</p>
+    <NForm label-placement="top" :show-require-mark="false">
+      <NFormItem label="Nom complet">
+        <NText>{{ locataireDTO.nom }}</NText>
+      </NFormItem>
+      <NFormItem label="Téléphone">
+        <NText>{{ locataireDTO.telephone }}</NText>
+      </NFormItem>
+      <NFormItem label="Email">
+        <NText>{{ locataireDTO.email }}</NText>
+      </NFormItem>
+      <NFormItem label="Adresse">
+        <NText>{{ locataireDTO.adresse }}</NText>
+      </NFormItem>
+      <NFormItem label="Complément d'adresse">
+        <NText>{{ locataireDTO.complementAdresse }}</NText>
+      </NFormItem>
+      <NFormItem label="Code postal">
+        <NText>{{ locataireDTO.codePostal }}</NText>
+      </NFormItem>
+      <NFormItem label="Ville">
+        <NText>{{ locataireDTO.ville }}</NText>
+      </NFormItem>
+    </NForm>
 
-    <ul class="pl-4 list-disc text-sm">
-      <li><strong>Nom :</strong> {{ locataireDTO.nom }}</li>
-      <li><strong>Téléphone :</strong> {{ locataireDTO.telephone }}</li>
-      <li><strong>Email :</strong> {{ locataireDTO.email }}</li>
-      <li><strong>Adresse :</strong> {{ locataireDTO.adresse }}</li>
-      <li><strong>Complément :</strong> {{ locataireDTO.complementAdresse }}</li>
-      <li><strong>Code Postal :</strong> {{ locataireDTO.codePostal }}</li>
-      <li><strong>Ville :</strong> {{ locataireDTO.ville }}</li>
-    </ul>
-
-    <div class="flex justify-between pt-4">
+    <div class="flex justify-end gap-3">
       <NButton @click="precedent">Précédent</NButton>
-      <NButton type="primary" :loading="chargement" @click="enregistrer">Enregistrer</NButton>
+      <NButton type="primary" @click="enregistrer" :loading="chargement">
+        Enregistrer
+      </NButton>
     </div>
   </NSpace>
 </template>
+
+<style scoped></style>

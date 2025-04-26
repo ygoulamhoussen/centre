@@ -7,6 +7,7 @@ definePage({
   meta: {
     title: 'Ajouter une propriété - Étape 2',
     hideInMenu: true,
+    activeMenu: '/propriete',
   },
 })
 

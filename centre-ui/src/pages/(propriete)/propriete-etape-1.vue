@@ -35,7 +35,7 @@ function valider() {
     return
   }
 
-  router.push('/propriete_workflow/etape-2')
+  router.push('/propriete-etape-2')
 }
 </script>
 

@@ -21,7 +21,7 @@ function suivant() {
     useMessage().warning('Veuillez remplir tous les champs obligatoires.')
     return
   }
-  router.push('/locataire_workflow/etape-2')
+  router.push('/locataire-etape-2')
 }
 </script>
 

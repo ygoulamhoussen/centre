@@ -33,7 +33,7 @@ const message = useMessage()
 const erreur = ref('')
 
 function precedent() {
-  router.push('/propriete_workflow/etape-2')
+  router.push('/propriete-etape-2')
 }
 
 function suivant() {
@@ -42,7 +42,7 @@ function suivant() {
     return
   }
 
-  router.push('/propriete_workflow/etape-4')
+  router.push('/propriete-etape-4')
 }
 </script>
 

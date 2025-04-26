@@ -17,11 +17,11 @@ const { locataireDTO } = storeToRefs(store)
 const router = useRouter()
 
 function precedent() {
-  router.push('/locataire_workflow/etape-1')
+  router.push('/locataire-etape-1')
 }
 
 function suivant() {
-  router.push('/locataire_workflow/etape-3')
+  router.push('/locataire-etape-3')
 }
 </script>
 

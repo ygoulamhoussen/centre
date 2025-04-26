@@ -43,7 +43,7 @@ const decompositions = ref([
 ])
 
 function precedent() {
-  router.push('/propriete_workflow/etape-3')
+  router.push('/propriete-etape-3')
 }
 
 async function enregistrer() {

@@ -40,7 +40,7 @@ async function enregistrer() {
 }
 
 function precedent() {
-  router.push('/locataire_workflow/etape-2')
+  router.push('/locataire-etape-2')
 }
 </script>
 

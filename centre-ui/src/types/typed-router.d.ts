@@ -19,6 +19,14 @@ declare module 'vue-router/auto-routes' {
    */
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
+    '/(locataire)/locataire-etape-1': RouteRecordInfo<'/(locataire)/locataire-etape-1', '/locataire-etape-1', Record<never, never>, Record<never, never>>,
+    '/(locataire)/locataire-etape-2': RouteRecordInfo<'/(locataire)/locataire-etape-2', '/locataire-etape-2', Record<never, never>, Record<never, never>>,
+    '/(locataire)/locataire-etape-3': RouteRecordInfo<'/(locataire)/locataire-etape-3', '/locataire-etape-3', Record<never, never>, Record<never, never>>,
+    '/(propriete)/': RouteRecordInfo<'/(propriete)/', '/', Record<never, never>, Record<never, never>>,
+    '/(propriete)/propriete-etape-1': RouteRecordInfo<'/(propriete)/propriete-etape-1', '/propriete-etape-1', Record<never, never>, Record<never, never>>,
+    '/(propriete)/propriete-etape-2': RouteRecordInfo<'/(propriete)/propriete-etape-2', '/propriete-etape-2', Record<never, never>, Record<never, never>>,
+    '/(propriete)/propriete-etape-3': RouteRecordInfo<'/(propriete)/propriete-etape-3', '/propriete-etape-3', Record<never, never>, Record<never, never>>,
+    '/(propriete)/propriete-etape-4': RouteRecordInfo<'/(propriete)/propriete-etape-4', '/propriete-etape-4', Record<never, never>, Record<never, never>>,
     '/[...all]': RouteRecordInfo<'/[...all]', '/:all(.*)', { all: ParamValue<true> }, { all: ParamValue<false> }>,
     '/403': RouteRecordInfo<'/403', '/403', Record<never, never>, Record<never, never>>,
     '/404': RouteRecordInfo<'/404', '/404', Record<never, never>, Record<never, never>>,
@@ -35,9 +43,6 @@ declare module 'vue-router/auto-routes' {
     '/function/hide-child/two': RouteRecordInfo<'/function/hide-child/two', '/function/hide-child/two', Record<never, never>, Record<never, never>>,
     '/home': RouteRecordInfo<'/home', '/home', Record<never, never>, Record<never, never>>,
     '/locataire': RouteRecordInfo<'/locataire', '/locataire', Record<never, never>, Record<never, never>>,
-    '/locataire_workflow/etape-1': RouteRecordInfo<'/locataire_workflow/etape-1', '/locataire_workflow/etape-1', Record<never, never>, Record<never, never>>,
-    '/locataire_workflow/etape-2': RouteRecordInfo<'/locataire_workflow/etape-2', '/locataire_workflow/etape-2', Record<never, never>, Record<never, never>>,
-    '/locataire_workflow/etape-3': RouteRecordInfo<'/locataire_workflow/etape-3', '/locataire_workflow/etape-3', Record<never, never>, Record<never, never>>,
     '/login': RouteRecordInfo<'/login', '/login/:module(pwd-login|code-login|register|reset-pwd)?', Record<never, never>, Record<never, never>>,
     '/manage': RouteRecordInfo<'/manage', '/manage', Record<never, never>, Record<never, never>>,
     '/manage/role': RouteRecordInfo<'/manage/role', '/manage/role', Record<never, never>, Record<never, never>>,
@@ -81,11 +86,6 @@ declare module 'vue-router/auto-routes' {
     '/plugin/typeit': RouteRecordInfo<'/plugin/typeit', '/plugin/typeit', Record<never, never>, Record<never, never>>,
     '/plugin/video': RouteRecordInfo<'/plugin/video', '/plugin/video', Record<never, never>, Record<never, never>>,
     '/propriete': RouteRecordInfo<'/propriete', '/propriete', Record<never, never>, Record<never, never>>,
-    '/propriete_workflow/': RouteRecordInfo<'/propriete_workflow/', '/propriete_workflow', Record<never, never>, Record<never, never>>,
-    '/propriete_workflow/etape-1': RouteRecordInfo<'/propriete_workflow/etape-1', '/propriete_workflow/etape-1', Record<never, never>, Record<never, never>>,
-    '/propriete_workflow/etape-2': RouteRecordInfo<'/propriete_workflow/etape-2', '/propriete_workflow/etape-2', Record<never, never>, Record<never, never>>,
-    '/propriete_workflow/etape-3': RouteRecordInfo<'/propriete_workflow/etape-3', '/propriete_workflow/etape-3', Record<never, never>, Record<never, never>>,
-    '/propriete_workflow/etape-4': RouteRecordInfo<'/propriete_workflow/etape-4', '/propriete_workflow/etape-4', Record<never, never>, Record<never, never>>,
     '/user-center': RouteRecordInfo<'/user-center', '/user-center', Record<never, never>, Record<never, never>>,
   }
 }

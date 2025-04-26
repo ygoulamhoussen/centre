@@ -44,7 +44,7 @@ async function supprimerLocataire(id: string) {
 }
 
 function demarrerCreation() {
-  router.push('/locataire_workflow/etape-1')
+  router.push('/locataire-etape-1')
 }
 
 onMounted(() => {

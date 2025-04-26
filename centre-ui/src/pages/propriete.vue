@@ -58,7 +58,7 @@ async function supprimerPropriete(id: string) {
 }
 
 function demarrerCreation() {
-  router.push('/propriete_workflow/etape-1')
+  router.push('/propriete-etape-1')
 }
 
 // Fonction pour obtenir l'icône en fonction du type de bien

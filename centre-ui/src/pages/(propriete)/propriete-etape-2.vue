@@ -16,11 +16,11 @@ const { proprieteDTO } = storeToRefs(store)
 const router = useRouter()
 
 function precedent() {
-  router.push('/propriete_workflow/etape-1')
+  router.push('/propriete-etape-1')
 }
 
 function valider() {
-  router.push('/propriete_workflow/etape-3')
+  router.push('/propriete-etape-3')
 }
 </script>
 

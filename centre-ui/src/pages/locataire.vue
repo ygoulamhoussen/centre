@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { NButton, NCard, NEmpty, NGi, NGrid, NPopconfirm, NSpace, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
-import { useMessage, NButton, NCard, NSpace, NEmpty, NGrid, NGi, NPopconfirm } from 'naive-ui'
+import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
@@ -18,11 +18,12 @@ const locataires = ref<any[]>([])
 async function fetchLocataires() {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocatairesByUtilisateur/00000000-0000-0000-0000-000000000001`
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocatairesByUtilisateur/00000000-0000-0000-0000-000000000001`,
     )
     const data = await response.json()
     locataires.value = data
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Erreur lors du chargement des locataires :', error)
     message.error('Impossible de charger les locataires')
   }
@@ -31,11 +32,12 @@ async function fetchLocataires() {
 async function supprimerLocataire(id: string) {
   try {
     await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteLocataire/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     })
     message.success('Locataire supprimé')
     await fetchLocataires()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Erreur lors de la suppression du locataire :', error)
     message.error('Erreur lors de la suppression')
   }

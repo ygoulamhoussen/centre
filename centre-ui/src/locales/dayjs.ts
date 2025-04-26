@@ -12,6 +12,7 @@ export function setDayjsLocale(lang: App.I18n.LangType = 'vi-VN') {
   const localMap = {
     'vi-VN': 'vi',
     'en-US': 'en',
+    'fr': 'fr',
   } satisfies Record<App.I18n.LangType, string>
 
   const l = lang || localStg.get('lang') || 'vi-VN'

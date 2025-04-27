@@ -60,7 +60,6 @@ onMounted(() => {
       <NGi v-for="location in locations" :key="location.id">
         <NCard :title="location.proprieteNom">
           <p><strong>Locataire:</strong> {{ location.locataireNom }}</p>
-          <p><strong>Propriété:</strong> {{ location.proprieteNom }}</p>
           <p><strong>Loyer:</strong> {{ location.loyerMensuel }} €</p>
           <template #footer>
             <div class="flex justify-end">

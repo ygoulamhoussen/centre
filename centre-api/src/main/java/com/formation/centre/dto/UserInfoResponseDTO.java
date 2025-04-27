@@ -1,39 +1,33 @@
+// src/main/java/com/formation/centre/dto/UserInfoResponseDTO.java
 package com.formation.centre.dto;
 
 import java.util.List;
 
 public class UserInfoResponseDTO {
+    private String userId;
     private String userName;
     private String email;
     private List<String> roles;
 
-    public UserInfoResponseDTO(String userName, String email, List<String> roles) {
+    public UserInfoResponseDTO() {}
+
+    public UserInfoResponseDTO(String userId, String userName, String email, List<String> roles) {
+        this.userId   = userId;
         this.userName = userName;
-        this.email = email;
-        this.roles = roles;
+        this.email    = email;
+        this.roles    = roles;
     }
 
-    public String getUserName() {
-        return userName;
-    }
+    // ----- Getters & Setters -----
+    public String getUserId()       { return userId; }
+    public void setUserId(String id){ this.userId = id; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getUserName()         { return userName; }
+    public void setUserName(String u)   { this.userName = u; }
 
-    public List<String> getRoles() {
-        return roles;
-    }
+    public String getEmail()            { return email; }
+    public void setEmail(String e)      { this.email = e; }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
-    }
+    public List<String> getRoles()      { return roles; }
+    public void setRoles(List<String> r){ this.roles = r; }
 }

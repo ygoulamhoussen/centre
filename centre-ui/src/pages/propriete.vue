@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { Box24Regular, Building24Regular, Home24Regular, VehicleCar24Regular } from '@vicons/fluent'
-
-
+import { useAuthStore } from '@/store/modules/auth'
 // Importation des icônes depuis @vicons/fluent
 
+import { Box24Regular, Building24Regular, Home24Regular, VehicleCar24Regular } from '@vicons/fluent'
 import {
   NButton,
   NCard,
   NEmpty,
   NGi,
   NGrid,
+  NIcon,
   NPopconfirm,
   NSpace,
   useMessage,
@@ -27,22 +27,25 @@ definePage({
 
 const router = useRouter()
 const message = useMessage()
+const authStore = useAuthStore()
 const proprietes = ref<any[]>([])
 
+// Récupération des propriétés
 async function fetchProprietes() {
   try {
+    const userId = authStore.userInfo.userId
     const response = await fetch(
-      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000001`
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/${userId}`
     )
     const data = await response.json()
     proprietes.value = data
-  }
- catch (error) {
+  } catch (error) {
     console.error('Erreur lors du chargement des propriétés :', error)
     message.error('Impossible de charger les propriétés')
   }
 }
 
+// Suppression d'une propriété
 async function supprimerPropriete(id: string) {
   try {
     await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deletePropriete/${id}`, {
@@ -50,18 +53,18 @@ async function supprimerPropriete(id: string) {
     })
     message.success('Propriété supprimée')
     await fetchProprietes()
-  }
- catch (error) {
+  } catch (error) {
     console.error('Erreur lors de la suppression :', error)
     message.error('Erreur lors de la suppression')
   }
 }
 
+// Navigation vers la création
 function demarrerCreation() {
   router.push('/propriete-etape-1')
 }
 
-// Fonction pour obtenir l'icône en fonction du type de bien
+// Retourne le composant icône adapté au type de bien
 function getIconComponent(typeBien: string) {
   switch (typeBien.toUpperCase()) {
     case 'APPARTEMENT':
@@ -86,16 +89,16 @@ onMounted(() => {
   <NSpace vertical :size="24">
     <div class="flex items-center justify-between">
       <h1 class="text-xl font-bold">Mes propriétés</h1>
-      <NButton type="primary" icon="ri-add-line" @click="demarrerCreation">
+      <NButton type="primary" @click="demarrerCreation">
         Ajouter une propriété
       </NButton>
     </div>
 
-    <NGrid cols="1 s:1 m:2 l:3" x-gap="16" y-gap="16" v-if="proprietes.length > 0">
+    <NGrid cols="1 s:1 m:2 l:3" x-gap="16" y-gap="16" v-if="proprietes.length">
       <NGi v-for="propriete in proprietes" :key="propriete.id">
         <NCard :title="propriete.nom" size="small">
           <div class="mb-2 flex items-center gap-3">
-            <n-icon :component="getIconComponent(propriete.typeBien)" size="40" :depth="1" />
+            <NIcon :component="getIconComponent(propriete.typeBien)" size="40" :depth="1" />
             <div>
               <p>{{ propriete.adresse }}, {{ propriete.ville }}</p>
               <p><strong>Type :</strong> {{ propriete.typeBien }}</p>

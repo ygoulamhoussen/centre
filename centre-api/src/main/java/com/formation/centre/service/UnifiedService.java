@@ -12,9 +12,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.formation.centre.dto.*;
-import com.formation.centre.model.*;
-import com.formation.centre.repository.*;
+import com.formation.centre.dto.CompositionAcquisitionDTO;
+import com.formation.centre.dto.CreditDTO;
+import com.formation.centre.dto.LocataireDTO;
+import com.formation.centre.dto.LocationDTO;
+import com.formation.centre.dto.PaiementDTO;
+import com.formation.centre.dto.ProprieteDTO;
+import com.formation.centre.dto.QuittanceDTO;
+import com.formation.centre.model.CompositionAcquisition;
+import com.formation.centre.model.Credit;
+import com.formation.centre.model.Locataire;
+import com.formation.centre.model.Location;
+import com.formation.centre.model.Paiement;
+import com.formation.centre.model.Propriete;
+import com.formation.centre.model.Quittance;
+import com.formation.centre.model.Utilisateur;
+import com.formation.centre.repository.CreditRepository;
+import com.formation.centre.repository.LocataireRepository;
+import com.formation.centre.repository.LocationRepository;
+import com.formation.centre.repository.PaiementRepository;
+import com.formation.centre.repository.ProprieteRepository;
+import com.formation.centre.repository.QuittanceRepository;
+import com.formation.centre.repository.UtilisateurRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -257,20 +276,24 @@ public class UnifiedService {
     }
     
 
-    private LocationDTO toDTO(Location entity) {
+    private LocationDTO toDTO(Location loc) {
         LocationDTO dto = new LocationDTO();
-        dto.setId(entity.getId().toString());
-        dto.setProprieteId(entity.getPropriete().getId().toString());
-        dto.setLocataireId(entity.getLocataire().getId().toString());
-        dto.setDateDebut(entity.getDateDebut().toString());
-        dto.setDateFin(entity.getDateFin() != null ? entity.getDateFin().toString() : null);
-        dto.setLoyerMensuel(entity.getLoyerMensuel().toPlainString());
-        dto.setChargesMensuelles(entity.getChargesMensuelles().toPlainString());
-        dto.setDepotGarantie(entity.getDepotGarantie().toPlainString());
-        dto.setFrequenceLoyer(entity.getFrequenceLoyer().toString());
-        dto.setJourEcheance(entity.getJourEcheance().toString());
+        dto.setId(loc.getId().toString());
+        dto.setProprieteId(loc.getPropriete().getId().toString());
+        dto.setProprieteNom(loc.getPropriete().getNom());
+        dto.setLocataireId(loc.getLocataire().getId().toString());
+        dto.setLocataireNom(loc.getLocataire().getNom());
+        dto.setLocatairePrenom("");
+        dto.setDateDebut(loc.getDateDebut().toString());
+        dto.setDateFin(loc.getDateFin() != null ? loc.getDateFin().toString() : null);
+        dto.setLoyerMensuel(loc.getLoyerMensuel().toPlainString());
+        dto.setChargesMensuelles(loc.getChargesMensuelles().toPlainString());
+        dto.setDepotGarantie(loc.getDepotGarantie().toPlainString());
+        dto.setFrequenceLoyer(loc.getFrequenceLoyer().toString());
+        dto.setJourEcheance(Integer.toString(loc.getJourEcheance()));
         return dto;
     }
+
     public List<ProprieteDTO> getProprietesByUtilisateur(String utilisateurId) {
         UUID userId = UUID.fromString(utilisateurId);
         Utilisateur utilisateur = utilisateurRepository.findById(userId)

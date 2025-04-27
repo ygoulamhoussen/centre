@@ -1,119 +1,118 @@
-// src/stores/unifiedStore.ts
 import { defineStore } from 'pinia'
 
 export const useUnifiedStore = defineStore('unified', {
   state: () => ({
     proprieteDTO: {
-      id: '',
-      nom: '',
-      typeBien: '',
-      adresse: '',
-      complementAdresse: '',
-      codePostal: '',
-      ville: '',
-      dateAcquisition: null,
-      dateLivraison: null,
-      montantAcquisition: '',
-      tantieme: '',
-      fraisNotaire: '',
-      fraisAgence: '',
-      compositions: []
+      id: null as string | null,
+      nom: null as string | null,
+      typeBien: null as string | null,
+      adresse: null as string | null,
+      complementAdresse: null as string | null,
+      codePostal: null as string | null,
+      ville: null as string | null,
+      dateAcquisition: null as string | null,
+      dateLivraison: null as string | null,
+      montantAcquisition: null as string | null,
+      tantieme: null as string | null,
+      fraisNotaire: null as string | null,
+      fraisAgence: null as string | null,
+      compositions: [] as any[]
     },
     locataireDTO: {
-      id: '',
-      utilisateurId: '',
-      nom: '',
-      telephone: '',
-      email: '',
-      adresse: '',
-      complementAdresse: '',
-      codePostal: '',
-      ville: ''
+      id: null as string | null,
+      utilisateurId: null as string | null,
+      nom: null as string | null,
+      telephone: null as string | null,
+      email: null as string | null,
+      adresse: null as string | null,
+      complementAdresse: null as string | null,
+      codePostal: null as string | null,
+      ville: null as string | null
     },
     locationDTO: {
-      id: '',
-      proprieteId: '',
-      locataireId: '',
-      dateDebut: '',
-      dateFin: '',
-      loyerMensuel: '',
-      chargesMensuelles: '',
-      depotGarantie: '',
-      frequenceLoyer: '',
-      jourEcheance: ''
+      id: null as string | null,
+      proprieteId: null as string | null,
+      locataireId: null as string | null,
+      dateDebut: null as string | null,
+      dateFin: null as string | null,
+      loyerMensuel: null as string | null,
+      chargesMensuelles: null as string | null,
+      depotGarantie: null as string | null,
+      frequenceLoyer: null as string | null,
+      jourEcheance: null as string | null
     },
     quittanceDTO: {
-      id: '',
-      locationId: '',
-      dateDebut: '',
-      dateFin: '',
-      dateEmission: '',
-      montantLoyer: '',
-      montantCharges: '',
-      montantTotal: '',
-      statut: ''
+      id: null as string | null,
+      locationId: null as string | null,
+      dateDebut: null as string | null,
+      dateFin: null as string | null,
+      dateEmission: null as string | null,
+      montantLoyer: null as string | null,
+      montantCharges: null as string | null,
+      montantTotal: null as string | null,
+      statut: null as string | null
     },
     paiementDTO: {
-      id: '',
-      quittanceId: '',
-      datePaiement: '',
-      montant: '',
-      moyenPaiement: '',
-      reference: '',
-      commentaire: '',
-      estValide: false
+      id: null as string | null,
+      quittanceId: null as string | null,
+      datePaiement: null as string | null,
+      montant: null as string | null,
+      moyenPaiement: null as string | null,
+      reference: null as string | null,
+      commentaire: null as string | null,
+      estValide: false as boolean
     },
     creditDTO: {
-      id: '',
-      proprieteId: '',
-      banque: '',
-      montantEmprunte: '',
-      dateDebut: '',
-      dateFin: '',
-      dureeMois: '',
-      tauxInteretAnnuel: '',
-      mensualite: '',
-      assuranceMensuelle: '',
-      fraisDossier: '',
-      fraisGarantie: ''
+      id: null as string | null,
+      proprieteId: null as string | null,
+      banque: null as string | null,
+      montantEmprunte: null as string | null,
+      dateDebut: null as string | null,
+      dateFin: null as string | null,
+      dureeMois: null as string | null,
+      tauxInteretAnnuel: null as string | null,
+      mensualite: null as string | null,
+      assuranceMensuelle: null as string | null,
+      fraisDossier: null as string | null,
+      fraisGarantie: null as string | null
     }
   }),
 
   actions: {
-    updateProprieteField (field: string, value: any) {
-      this.proprieteDTO[field] = value
+    updateProprieteField(field: string, value: any) {
+      (this.proprieteDTO as any)[field] = value
     },
-    resetProprieteDTO () {
+    resetProprieteDTO() {
       Object.assign(this.proprieteDTO, this.$state.proprieteDTO)
     },
-    updateLocataireField (field: string, value: any) {
-      this.locataireDTO[field] = value
+    updateLocataireField(field: string, value: any) {
+      (this.locataireDTO as any)[field] = value
     },
-    resetLocataireDTO () {
+    resetLocataireDTO() {
       Object.assign(this.locataireDTO, this.$state.locataireDTO)
     },
-    updateLocationField (field: string, value: any) {
-      this.locationDTO[field] = value
+    updateLocationField(field: string, value: any) {
+      (this.locationDTO as any)[field] = value
     },
-    resetLocationDTO () {
+    resetLocationDTO() {
       Object.assign(this.locationDTO, this.$state.locationDTO)
     },
-    updateQuittanceField (field: string, value: any) {
-      this.quittanceDTO[field] = value
+    updateQuittanceField(field: string, value: any) {
+      (this.quittanceDTO as any)[field] = value
     },
-    resetQuittanceDTO () {
+    resetQuittanceDTO() {
       Object.assign(this.quittanceDTO, this.$state.quittanceDTO)
     },
-    updatePaiementField (field: string, value: any) {
-      this.paiementDTO[field] = value
+    updatePaiementField(field: string, value: any) {
+      (this.paiementDTO as any)[field] = value
     },
-    resetPaiementDTO () {
+    resetPaiementDTO() {
       Object.assign(this.paiementDTO, this.$state.paiementDTO)
     },
-    updateCreditField (field: string, value: any) {
-      this.creditDTO[field] = value
+    updateCreditField(field: string, value: any) {
+      (this.creditDTO as any)[field] = value
     },
-    resetCreditDTO () {
+    resetCreditDTO() {
       Object.assign(this.creditDTO, this.$state.creditDTO)
     }
   }

@@ -40,14 +40,18 @@ public class AuthService {
         return new LoginResponseDTO(token, refreshToken);
     }
 
-    public UserInfoResponseDTO getInfosUtilisateur(String userName) {
-        Utilisateur utilisateur = utilisateurRepository.findByUserName(userName)
-            .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+// src/main/java/com/formation/centre/service/AuthService.java
+public UserInfoResponseDTO getInfosUtilisateur(String userName) {
+    Utilisateur u = utilisateurRepository
+        .findByUserName(userName)
+        .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
-        return new UserInfoResponseDTO(
-            utilisateur.getUserName(),
-            utilisateur.getEmail(),
-            List.of("admin") // à adapter si tu ajoutes les rôles plus tard
-        );
-    }
+    return new UserInfoResponseDTO(
+        u.getId().toString(),
+        u.getUserName(),
+        u.getEmail(),
+        List.of("admin")  // ou récupère vraiment ses rôles
+    );
+}
+
 }

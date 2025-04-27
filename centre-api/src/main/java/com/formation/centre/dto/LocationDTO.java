@@ -1,9 +1,16 @@
 package com.formation.centre.dto;
 
+/**
+ * Data Transfer Object pour les locations,
+ * inclut les noms pour affichage
+ */
 public class LocationDTO {
     private String id;
     private String proprieteId;
+    private String proprieteNom;
     private String locataireId;
+    private String locataireNom;
+    private String locatairePrenom;
     private String dateDebut;
     private String dateFin;
     private String loyerMensuel;
@@ -30,12 +37,36 @@ public class LocationDTO {
         this.proprieteId = proprieteId;
     }
 
+    public String getProprieteNom() {
+        return proprieteNom;
+    }
+
+    public void setProprieteNom(String proprieteNom) {
+        this.proprieteNom = proprieteNom;
+    }
+
     public String getLocataireId() {
         return locataireId;
     }
 
     public void setLocataireId(String locataireId) {
         this.locataireId = locataireId;
+    }
+
+    public String getLocataireNom() {
+        return locataireNom;
+    }
+
+    public void setLocataireNom(String locataireNom) {
+        this.locataireNom = locataireNom;
+    }
+
+    public String getLocatairePrenom() {
+        return locatairePrenom;
+    }
+
+    public void setLocatairePrenom(String locatairePrenom) {
+        this.locatairePrenom = locatairePrenom;
     }
 
     public String getDateDebut() {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAuthStore } from '@/store/modules/auth' // adapte si ton chemin est différent
 import { NButton, NCard, NEmpty, NGi, NGrid, NPopconfirm, NSpace, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -14,11 +15,14 @@ definePage({
 const router = useRouter()
 const message = useMessage()
 const locataires = ref<any[]>([])
+const authStore = useAuthStore()
+const utilisateurId = authStore.userInfo.userId // 👈 récupération de l'ID connecté
+
 
 async function fetchLocataires() {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocatairesByUtilisateur/00000000-0000-0000-0000-000000000001`,
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocatairesByUtilisateur/${utilisateurId}`,
     )
     const data = await response.json()
     locataires.value = data
@@ -54,10 +58,11 @@ onMounted(() => {
 
 <template>
   <NSpace vertical :size="24">
+
     <div class="flex items-center justify-between">
       <h1 class="text-xl font-bold">Mes locataires</h1>
       <NButton type="primary" icon="ri-add-line" @click="demarrerCreation">
-        Ajouter un locataire
+        Ajouter un locataire     <span class="text-16px font-medium"></span>
       </NButton>
     </div>
 

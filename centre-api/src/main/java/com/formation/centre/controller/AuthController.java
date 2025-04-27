@@ -49,18 +49,11 @@ public class AuthController {
 
     @GetMapping("/getUserInfo")
     public ResponseEntity<ApiResponse<UserInfoResponseDTO>> getInfosUtilisateur(
-            @RequestHeader("Authorization") String authorization
-    ) {
-        try {
-            String token = authorization.replace("Bearer ", "");
-            String userName = jwtService.extraireUserNameDepuisToken(token);
+            @RequestHeader("Authorization") String authHeader) {
 
-            UserInfoResponseDTO dto = authService.getInfosUtilisateur(userName);
-            ApiResponse<UserInfoResponseDTO> response = new ApiResponse<>("0000", "Succès", dto);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(new ApiResponse<>("401", e.getMessage(), null));
-        }
+        String token = authHeader.replaceFirst("^Bearer ", "");
+        String userName = jwtService.extraireUserNameDepuisToken(token);
+        UserInfoResponseDTO dto = authService.getInfosUtilisateur(userName);
+        return ResponseEntity.ok(new ApiResponse<>("0000", "Succès", dto));
     }
 }

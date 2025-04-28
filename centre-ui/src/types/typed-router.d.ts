@@ -19,6 +19,9 @@ declare module 'vue-router/auto-routes' {
    */
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
+    '/(locataire)/locataire-etape-1': RouteRecordInfo<'/(locataire)/locataire-etape-1', '/locataire-etape-1', Record<never, never>, Record<never, never>>,
+    '/(locataire)/locataire-etape-2': RouteRecordInfo<'/(locataire)/locataire-etape-2', '/locataire-etape-2', Record<never, never>, Record<never, never>>,
+    '/(locataire)/locataire-etape-3': RouteRecordInfo<'/(locataire)/locataire-etape-3', '/locataire-etape-3', Record<never, never>, Record<never, never>>,
     '/(location)/location-etape-1': RouteRecordInfo<'/(location)/location-etape-1', '/location-etape-1', Record<never, never>, Record<never, never>>,
     '/(location)/location-etape-2': RouteRecordInfo<'/(location)/location-etape-2', '/location-etape-2', Record<never, never>, Record<never, never>>,
     '/(location)/location-etape-3': RouteRecordInfo<'/(location)/location-etape-3', '/location-etape-3', Record<never, never>, Record<never, never>>,
@@ -27,9 +30,6 @@ declare module 'vue-router/auto-routes' {
     '/(propriete)/propriete-etape-2': RouteRecordInfo<'/(propriete)/propriete-etape-2', '/propriete-etape-2', Record<never, never>, Record<never, never>>,
     '/(propriete)/propriete-etape-3': RouteRecordInfo<'/(propriete)/propriete-etape-3', '/propriete-etape-3', Record<never, never>, Record<never, never>>,
     '/(propriete)/propriete-etape-4': RouteRecordInfo<'/(propriete)/propriete-etape-4', '/propriete-etape-4', Record<never, never>, Record<never, never>>,
-    '/(locataire)/locataire-etape-1': RouteRecordInfo<'/(locataire)/locataire-etape-1', '/locataire-etape-1', Record<never, never>, Record<never, never>>,
-    '/(locataire)/locataire-etape-2': RouteRecordInfo<'/(locataire)/locataire-etape-2', '/locataire-etape-2', Record<never, never>, Record<never, never>>,
-    '/(locataire)/locataire-etape-3': RouteRecordInfo<'/(locataire)/locataire-etape-3', '/locataire-etape-3', Record<never, never>, Record<never, never>>,
     '/[...all]': RouteRecordInfo<'/[...all]', '/:all(.*)', { all: ParamValue<true> }, { all: ParamValue<false> }>,
     '/403': RouteRecordInfo<'/403', '/403', Record<never, never>, Record<never, never>>,
     '/404': RouteRecordInfo<'/404', '/404', Record<never, never>, Record<never, never>>,

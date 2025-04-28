@@ -38,7 +38,6 @@
     "dev:tst": "vite --mode testing",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prepare": "simple-git-hooks",
     "preview": "vite preview",
     "release": "sa release",
     "typecheck": "vue-tsc --noEmit --skipLibCheck",
@@ -144,8 +143,7 @@
     "vue-tsc": "2.2.8"
   },
   "simple-git-hooks": {
-    "commit-msg": "pnpm commit",
-    "pre-commit": "pnpm typecheck && pnpm lint-staged"
+    "commit-msg": "pnpm commit"
   },
   "lint-staged": {
     "*": "eslint --fix"

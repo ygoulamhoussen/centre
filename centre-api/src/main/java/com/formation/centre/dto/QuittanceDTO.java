@@ -6,10 +6,13 @@ public class QuittanceDTO {
     private String dateDebut;
     private String dateFin;
     private String dateEmission;
+    private String dateEcheance;
     private String montantLoyer;
     private String montantCharges;
     private String montantTotal;
     private String statut;
+    private Boolean inclureCaution;
+    private String depotGarantie;   // ← nouveau
 
     // Getters & Setters
 
@@ -83,5 +86,29 @@ public class QuittanceDTO {
 
     public void setStatut(String statut) {
         this.statut = statut;
+    }
+
+    public String getDateEcheance() {
+        return dateEcheance;
+    }
+
+    public void setDateEcheance(String dateEcheance) {
+        this.dateEcheance = dateEcheance;
+    }
+
+    public Boolean getInclureCaution() {
+        return inclureCaution;
+    }
+
+    public void setInclureCaution(Boolean inclureCaution) {
+        this.inclureCaution = inclureCaution;
+    }
+
+    public String getDepotGarantie() {
+        return depotGarantie;
+    }
+
+    public void setDepotGarantie(String depotGarantie) {
+        this.depotGarantie = depotGarantie;
     }
 }

@@ -1,10 +1,19 @@
 package com.formation.centre.model;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "quittance")
@@ -26,14 +35,23 @@ public class Quittance {
     @Column(name = "date_emission")
     private LocalDate dateEmission;
 
+    @Column(name = "date_echeance")  // ← nouvelle colonne
+    private LocalDate dateEcheance;
+
+    @Column(name = "inclure_caution") // ← nouvelle colonne
+    private Boolean inclureCaution = Boolean.FALSE;
+
+    @Column(name = "depot_garantie")       // ← nouveau champ
+    private BigDecimal depotGarantie;
+
     @Column(name = "montant_loyer")
     private BigDecimal montantLoyer;
 
     @Column(name = "montant_charges")
     private BigDecimal montantCharges;
 
-    @Column(name = "montant_total")
-    private BigDecimal montantTotal;
+    @Column(name = "montant_caution")
+    private BigDecimal montantCaution;
 
     @Enumerated(EnumType.STRING)
     private StatutQuittance statut;
@@ -44,10 +62,53 @@ public class Quittance {
     @Column(name = "modifie_le")
     private LocalDateTime modifieLe;
 
+    @Column(name = "montant_total")
+    private BigDecimal montantTotal;
+
+    public BigDecimal getMontantCaution() {
+        return montantCaution;
+    }
+
+    public void setMontantCaution(BigDecimal montantCaution) {
+        this.montantCaution = montantCaution;
+    }
+
+    public BigDecimal getDepotGarantie() {
+        return depotGarantie;
+    }
+
+    public void setDepotGarantie(BigDecimal depotGarantie) {
+        this.depotGarantie = depotGarantie;
+    }
+
+    public Boolean getInclureCaution() {
+        return inclureCaution;
+    }
+
+    public void setInclureCaution(Boolean inclureCaution) {
+        this.inclureCaution = inclureCaution;
+    }
+
+    public LocalDate getDateEcheance() {
+        return dateEcheance;
+    }
+
+    public void setDateEcheance(LocalDate dateEcheance) {
+        this.dateEcheance = dateEcheance;
+    }
+
+    public BigDecimal getMontantTotal() {
+        return montantTotal;
+    }
+
+    public void setMontantTotal(BigDecimal montantTotal) {
+        this.montantTotal = montantTotal;
+    }
+
     public enum StatutQuittance {
-        Payee,
-        Partielle,
-        Impayee
+        PAYEE,
+        PARTIELLE,
+        IMPAYEE
     }
 
     // Getters & Setters
@@ -108,13 +169,6 @@ public class Quittance {
         this.montantCharges = montantCharges;
     }
 
-    public BigDecimal getMontantTotal() {
-        return montantTotal;
-    }
-
-    public void setMontantTotal(BigDecimal montantTotal) {
-        this.montantTotal = montantTotal;
-    }
 
     public StatutQuittance getStatut() {
         return statut;

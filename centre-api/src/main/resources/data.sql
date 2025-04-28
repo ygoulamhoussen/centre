@@ -4,7 +4,8 @@
 INSERT INTO utilisateur (id, user_name, nom, prenom, email, mot_de_passe_hash, cree_le, modifie_le) VALUES
 ('00000000-0000-0000-0000-000000000001', 'jdupont', 'Dupont', 'Jean', 'jean.dupont@example.com', 'hash1', now(), now()),
 ('00000000-0000-0000-0000-000000000002', 'cmartin', 'Martin', 'Claire', 'claire.martin@example.com', 'hash2', now(), now()),
-('00000000-0000-0000-0000-000000000003', 'Yussouf', 'Martin', 'Claire', 'soybean@example.com', '123456', now(), now());
+('00000000-0000-0000-0000-000000000003', 'Yussouf', 'Martin', 'Claire', 'yussouf.goulamhoussen@gmail.com', '123456', now(), now()),
+('00000000-0000-0000-0000-000000000004', 'Taha', 'Martin', 'Claire', 'taha.goulamhoussen@gmail.com', '123456', now(), now());
 
 -- Propriétés
 INSERT INTO propriete (id, utilisateur_id, type_bien, nom, adresse, complement_adresse, code_postal, ville,
@@ -37,7 +38,7 @@ INSERT INTO credit (id, propriete_id, banque, montant_emprunte, date_debut, date
 
 -- QUITTANCE
 INSERT INTO quittance (id, location_id, date_debut, date_fin, date_emission, montant_loyer, montant_charges, montant_total, statut, cree_le, modifie_le) VALUES
-('40000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '2024-04-01', '2024-04-30', '2024-04-01', 900.00, 100.00, 1000.00, 'PAYÉE', NOW(), NOW());
+('40000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '2024-04-01', '2024-04-30', '2024-04-01', 900.00, 100.00, 1000.00, 'PAYEE', NOW(), NOW());
 
 -- PAIEMENT
 INSERT INTO paiement (id, quittance_id, date_paiement, montant, moyen_paiement, reference, commentaire, est_valide, cree_le, modifie_le) VALUES

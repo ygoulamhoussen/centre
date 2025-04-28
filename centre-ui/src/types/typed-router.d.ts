@@ -30,6 +30,9 @@ declare module 'vue-router/auto-routes' {
     '/(propriete)/propriete-etape-2': RouteRecordInfo<'/(propriete)/propriete-etape-2', '/propriete-etape-2', Record<never, never>, Record<never, never>>,
     '/(propriete)/propriete-etape-3': RouteRecordInfo<'/(propriete)/propriete-etape-3', '/propriete-etape-3', Record<never, never>, Record<never, never>>,
     '/(propriete)/propriete-etape-4': RouteRecordInfo<'/(propriete)/propriete-etape-4', '/propriete-etape-4', Record<never, never>, Record<never, never>>,
+    '/(quittance)/quittance-etape-1': RouteRecordInfo<'/(quittance)/quittance-etape-1', '/quittance-etape-1', Record<never, never>, Record<never, never>>,
+    '/(quittance)/quittance-etape-2': RouteRecordInfo<'/(quittance)/quittance-etape-2', '/quittance-etape-2', Record<never, never>, Record<never, never>>,
+    '/(quittance)/quittance-etape-3': RouteRecordInfo<'/(quittance)/quittance-etape-3', '/quittance-etape-3', Record<never, never>, Record<never, never>>,
     '/[...all]': RouteRecordInfo<'/[...all]', '/:all(.*)', { all: ParamValue<true> }, { all: ParamValue<false> }>,
     '/403': RouteRecordInfo<'/403', '/403', Record<never, never>, Record<never, never>>,
     '/404': RouteRecordInfo<'/404', '/404', Record<never, never>, Record<never, never>>,
@@ -90,6 +93,7 @@ declare module 'vue-router/auto-routes' {
     '/plugin/typeit': RouteRecordInfo<'/plugin/typeit', '/plugin/typeit', Record<never, never>, Record<never, never>>,
     '/plugin/video': RouteRecordInfo<'/plugin/video', '/plugin/video', Record<never, never>, Record<never, never>>,
     '/propriete': RouteRecordInfo<'/propriete', '/propriete', Record<never, never>, Record<never, never>>,
+    '/quittance': RouteRecordInfo<'/quittance', '/quittance', Record<never, never>, Record<never, never>>,
     '/user-center': RouteRecordInfo<'/user-center', '/user-center', Record<never, never>, Record<never, never>>,
   }
 }

@@ -142,9 +142,7 @@
     "vite-plugin-vue-layouts-next": "0.0.7",
     "vue-tsc": "2.2.8"
   },
-  "simple-git-hooks": {
-    "commit-msg": "pnpm commit"
-  },
+
   "lint-staged": {
     "*": "eslint --fix"
   },

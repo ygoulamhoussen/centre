@@ -9,15 +9,15 @@ INSERT INTO utilisateur (id, user_name, nom, prenom, email, mot_de_passe_hash, c
 -- Propriétés
 INSERT INTO propriete (id, utilisateur_id, type_bien, nom, adresse, complement_adresse, code_postal, ville,
     date_acquisition, date_livraison, montant_acquisition, tantieme, frais_notaire, frais_agence, cree_le, modifie_le) VALUES
-('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'APPARTEMENT', 'Studio Paris 15e',
+('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'APPARTEMENT', 'Studio Paris 15e',
     '10 rue de Vaugirard', '', '75015', 'Paris', '2022-06-15', '2022-07-01', 220000, 100, 15000, 8000, now(), now()),
-('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', 'MAISON', 'Maison Bordeaux',
+('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'MAISON', 'Maison Bordeaux',
     '15 avenue des Vins', '', '33000', 'Bordeaux', '2023-01-10', '2023-03-01', 350000, 100, 25000, 12000, now(), now());
 
 -- LOCATAIRES (mise à jour : utilisateur_id au lieu de propriete_id)
 INSERT INTO locataire (id, utilisateur_id, nom, telephone, email, adresse, complement_adresse, code_postal, ville, cree_le, modifie_le) VALUES
-('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'Alice Laurent', '0601010101', 'alice@example.com', '1 rue des Lilas', '', '75015', 'Paris', now(), now()),
-('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', 'Marc Durant', '0602020202', 'marc@example.com', '2 rue des Vignes', '', '33000', 'Bordeaux', now(), now());
+('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'Alice Laurent', '0601010101', 'alice@example.com', '1 rue des Lilas', '', '75015', 'Paris', now(), now()),
+('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'Marc Durant', '0602020202', 'marc@example.com', '2 rue des Vignes', '', '33000', 'Bordeaux', now(), now());
 
 -- Location
 INSERT INTO location (id, propriete_id, locataire_id, date_debut, date_fin, loyer_mensuel, charges_mensuelles, depot_garantie, frequence_loyer, jour_echeance, cree_le, modifie_le) VALUES

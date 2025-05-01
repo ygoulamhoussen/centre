@@ -6,6 +6,15 @@ import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+definePage({
+  meta: {
+    title: 'Ajouter une quittance - Étape 1',
+    hideInMenu: true,
+    activeMenu: '/quittance',
+  },
+})
+
+
 const router = useRouter()
 const message = useMessage()
 const store = useUnifiedStore()

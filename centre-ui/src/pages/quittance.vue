@@ -10,6 +10,14 @@ const quittances = ref<any[]>([])
 const authStore = useAuthStore()
 const userId = authStore.userInfo.userId
 
+definePage({
+  meta: {
+    title: 'Mes quittances',
+    icon: 'mdi:account-group',
+    order: 5,
+  },
+})
+
 async function fetchQuittances() {
   try {
     const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getQuittancesByUtilisateur/${userId}`)
@@ -25,7 +33,8 @@ async function supprimerQuittance(id: string) {
     await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteQuittance/${id}`, { method: 'DELETE' })
     message.success('Quittance supprimée')
     fetchQuittances()
-  } catch (e) {
+  }
+ catch (e) {
     console.error(e)
     message.error('Erreur lors de la suppression')
   }
@@ -48,10 +57,10 @@ onMounted(() => fetchQuittances())
     <NGrid cols="1 s:1 m:2 l:3" x-gap="16" y-gap="16" v-if="quittances.length">
       <NGi v-for="q in quittances" :key="q.id">
         <NCard :title="`Quittance ${q.id}`">
-          <p><strong>Période :</strong> {{ q.dateDebut }} - {{ q.dateFin }}</p>
-          <p><strong>Loyer :</strong> {{ q.montantLoyer }} €</p>
-          <p><strong>Charges :</strong> {{ q.montantCharges }} €</p>
-          <p><strong>Total :</strong> {{ q.montantTotal }} €</p>
+          <p><strong>Période :</strong> {{ q.dateDebut }} - {{ q.dateFin }}</p>
+          <p><strong>Loyer :</strong> {{ q.montantLoyer }} €</p>
+          <p><strong>Charges :</strong> {{ q.montantCharges }} €</p>
+          <p><strong>Total :</strong> {{ q.montantTotal }} €</p>
           <template #footer>
             <div class="flex justify-end">
               <NPopconfirm

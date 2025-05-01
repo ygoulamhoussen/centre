@@ -21,7 +21,7 @@ import {
 
 definePage({
   meta: {
-    title: 'Ajouter une propriété - Étape 4',
+    title: 'Ajouter une propriété – Étape 4',
     hideInMenu: true,
     activeMenu: '/propriete'
   }
@@ -33,15 +33,15 @@ const authStore = useAuthStore()
 const router = useRouter()
 const message = useMessage()
 
-const immobilisation = ref('')
+const immobilisation = ref<'oui'|'non'>('non')
 const chargement = ref(false)
 
 const decompositions = ref([
-  { categorie: 'Terrains', duree: null, quotePart: null },
-  { categorie: 'Gros œuvre', duree: null, quotePart: null },
-  { categorie: 'Façades', duree: null, quotePart: null },
-  { categorie: 'Étanchéité', duree: null, quotePart: null },
-  { categorie: 'IGT et agencement', duree: null, quotePart: null }
+  { categorie: 'Terrains', duree: null as number|null, quotePart: null as number|null },
+  { categorie: 'Gros œuvre', duree: null as number|null, quotePart: null as number|null },
+  { categorie: 'Façades', duree: null as number|null, quotePart: null as number|null },
+  { categorie: 'Étanchéité', duree: null as number|null, quotePart: null as number|null },
+  { categorie: 'IGT et agencement', duree: null as number|null, quotePart: null as number|null }
 ])
 
 function precedent() {
@@ -52,34 +52,42 @@ async function enregistrer() {
   chargement.value = true
   try {
     const utilisateurId = authStore.userInfo.userId
+    // On reconstruit le DTO principal
     const dtoToSend = {
       ...proprieteDTO.value,
       dateAcquisition: proprieteDTO.value.dateAcquisition || null,
       dateLivraison: proprieteDTO.value.dateLivraison || null
     }
+    // On génère le tableau des compositions si besoin
     const compositions = immobilisation.value === 'oui'
       ? decompositions.value
-          .filter(row => row.quotePart && (row.categorie === 'Terrains' || row.duree))
-          .map(row => ({
-            categorie: row.categorie,
-            montant: row.quotePart,
-            description: row.categorie === 'Terrains'
+          .filter(r => r.quotePart != null && (r.categorie === 'Terrains' || r.duree != null))
+          .map(r => ({
+            categorie: r.categorie,
+            montant: r.quotePart!,
+            description: r.categorie === 'Terrains'
               ? 'Non amortissable'
-              : `Amortissement sur ${row.duree} ans`
+              : `Amortissement sur ${r.duree} ans`
           }))
       : []
 
-    const payload = { propriete: dtoToSend, compositions }
+    // On envoie tout dans un seul objet
+    const payload = {
+      ...dtoToSend,
+      compositions
+    }
 
     const response = await fetch(
-      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createProprieteWithCompositions/${utilisateurId}`,
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createPropriete/${utilisateurId}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       }
     )
-    if (!response.ok) throw new Error('Erreur lors de la création de la propriété.')
+    if (!response.ok) {
+      throw new Error('Erreur lors de la sauvegarde de la propriété.')
+    }
 
     store.resetProprieteDTO()
     router.push('/propriete')
@@ -97,7 +105,7 @@ async function enregistrer() {
 
     <NForm label-placement="top">
       <NFormItem label="Créer une immobilisation comptable ?">
-        <NRadioGroup v-model:value="immobilisation" name="immobilisation">
+        <NRadioGroup v-model:value="immobilisation">
           <NRadio value="oui">Oui</NRadio>
           <NRadio value="non">Non</NRadio>
         </NRadioGroup>
@@ -109,14 +117,12 @@ async function enregistrer() {
           <NGi v-for="row in decompositions" :key="row.categorie">
             <NSpace vertical class="p-4 border rounded-md">
               <NText strong>{{ row.categorie }}</NText>
-
               <NFormItem
                 v-if="row.categorie !== 'Terrains'"
                 label="Durée (ans)"
               >
                 <NInputNumber v-model:value="row.duree" min="0" />
               </NFormItem>
-
               <NFormItem label="Quote-part (€)">
                 <NInputNumber v-model:value="row.quotePart" min="0" step="0.01" />
               </NFormItem>

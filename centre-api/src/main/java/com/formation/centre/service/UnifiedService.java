@@ -41,400 +41,15 @@ import jakarta.transaction.Transactional;
 @Transactional
 public class UnifiedService {
 
-    @Autowired
-    private LocationRepository locationRepository;
+    @Autowired private UtilisateurRepository utilisateurRepository;
+    @Autowired private ProprieteRepository proprieteRepository;
+    @Autowired private LocataireRepository locataireRepository;
+    @Autowired private LocationRepository locationRepository;
+    @Autowired private QuittanceRepository quittanceRepository;
+    @Autowired private PaiementRepository paiementRepository;
+    @Autowired private CreditRepository creditRepository;
 
-    @Autowired
-    private ProprieteRepository proprieteRepository;
-
-    @Autowired
-    private LocataireRepository locataireRepository;
-
-    @Autowired
-    private UtilisateurRepository utilisateurRepository;
-
-    @Autowired
-    private QuittanceRepository quittanceRepository;
-
-    @Autowired
-    private PaiementRepository paiementRepository;
-
-    @Autowired
-    private CreditRepository creditRepository;
-
-    public List<QuittanceDTO> getQuittancesByUtilisateur(String utilisateurId) {
-        UUID userId = UUID.fromString(utilisateurId);
-        return quittanceRepository.findByLocation_Propriete_Utilisateur_Id(userId).stream()
-            .map(this::toDto)
-            .collect(Collectors.toList());
-    }
-
-
-/*     public QuittanceDTO createQuittance(String locationId, QuittanceDTO dto) {
-        Quittance q = new Quittance();
-        q.setId(UUID.randomUUID());
-        q.setLocation(locationRepository.findById(UUID.fromString(dto.getLocationId())).orElseThrow());
-        q.setDateDebut(LocalDate.parse(dto.getDateDebut()));
-        q.setDateFin(dto.getDateFin() != null ? LocalDate.parse(dto.getDateFin()) : null);
-        q.setDateEmission(LocalDate.parse(dto.getDateEmission()));
-        q.setDateEcheance(dto.getDateEcheance() != null ? LocalDate.parse(dto.getDateEcheance()) : null);
-        q.setMontantLoyer(new BigDecimal(dto.getMontantLoyer()));
-        q.setMontantCharges(new BigDecimal(dto.getMontantCharges()));
-        q.setMontantTotal(new BigDecimal(dto.getMontantTotal()));
-        q.setStatut(Quittance.StatutQuittance.valueOf(dto.getStatut()));
-        q.setInclureCaution(dto.getInclureCaution());
-        q.setDepotGarantie(
-          dto.getDepotGarantie() != null 
-            ? new BigDecimal(dto.getDepotGarantie()) 
-            : BigDecimal.ZERO
-        );  // ← prise en compte du dépôt
-        q.setCreeLe(LocalDateTime.now());
-        q.setModifieLe(LocalDateTime.now());
-        Quittance saved = quittanceRepository.save(q);
-        return toDto(saved);
-    } */
-/*     public QuittanceDTO createQuittance(QuittanceDTO dto) {
-        Quittance q = new Quittance();
-        q.setId(UUID.randomUUID());
-        q.setLocation(locationRepository.findById(UUID.fromString(dto.getLocationId())).orElseThrow());
-        q.setDateDebut(LocalDate.parse(dto.getDateDebut()));
-        q.setDateFin(LocalDate.parse(dto.getDateFin()));
-        //q.setDateEmission(LocalDate.parse(dto.getDateEmission()));
-        q.setMontantLoyer(new BigDecimal(dto.getMontantLoyer()));
-        q.setMontantCharges(new BigDecimal(dto.getMontantCharges()));
-        //q.setMontantTotal(new BigDecimal(dto.getMontantTotal()));
-        q.setStatut(Quittance.StatutQuittance.valueOf(dto.getStatut()));
-        q.setCreeLe(LocalDateTime.now());
-        q.setModifieLe(LocalDateTime.now());
-        return toDto(quittanceRepository.save(q));
-    } */
-
-
-    public QuittanceDTO saveQuittance(QuittanceDTO dto) {
-        Quittance q;
-        LocalDateTime now = LocalDateTime.now();
-
-        if (dto.getId() == null || dto.getId().isEmpty()) {
-            // création
-            q = new Quittance();
-            q.setId(UUID.randomUUID());
-            q.setCreeLe(now);
-        } else {
-            // mise à jour
-            q = quittanceRepository.findById(UUID.fromString(dto.getId()))
-                    .orElseThrow(() -> new IllegalArgumentException("Quittance introuvable"));
-        }
-
-        // champs communs create & update
-        q.setLocation(locationRepository
-            .findById(UUID.fromString(dto.getLocationId()))
-            .orElseThrow());
-        q.setDateDebut(LocalDate.parse(dto.getDateDebut()));
-        q.setDateFin(dto.getDateFin() != null ? LocalDate.parse(dto.getDateFin()) : null);
-        q.setDateEmission(LocalDate.parse(dto.getDateEmission()));
-        q.setDateEcheance(dto.getDateEcheance() != null
-            ? LocalDate.parse(dto.getDateEcheance())
-            : null);
-        q.setMontantLoyer(new BigDecimal(dto.getMontantLoyer()));
-        q.setMontantCharges(new BigDecimal(dto.getMontantCharges()));
-        q.setMontantTotal(new BigDecimal(dto.getMontantTotal()));
-        q.setStatut(Quittance.StatutQuittance.valueOf(dto.getStatut()));
-        q.setInclureCaution(dto.getInclureCaution());
-        q.setDepotGarantie(dto.getDepotGarantie() != null
-            ? new BigDecimal(dto.getDepotGarantie())
-            : BigDecimal.ZERO);
-
-        // date de modification à jour
-        q.setModifieLe(now);
-
-        Quittance saved = quittanceRepository.save(q);
-        return toDto(saved);
-    }
-
-    
-/*     public QuittanceDTO updateQuittance(String id, QuittanceDTO dto) {
-        Quittance q = quittanceRepository.findById(UUID.fromString(id)).orElseThrow();
-        q.setDateDebut(LocalDate.parse(dto.getDateDebut()));
-        q.setDateFin(LocalDate.parse(dto.getDateFin()));
-        q.setDateEmission(LocalDate.parse(dto.getDateEmission()));
-        q.setMontantLoyer(new BigDecimal(dto.getMontantLoyer()));
-        q.setMontantCharges(new BigDecimal(dto.getMontantCharges()));
-        q.setMontantTotal(new BigDecimal(dto.getMontantTotal()));
-        q.setStatut(Quittance.StatutQuittance.valueOf(dto.getStatut()));
-        q.setModifieLe(LocalDateTime.now());
-        q.setDepotGarantie(
-            dto.getDepotGarantie() != null 
-              ? new BigDecimal(dto.getDepotGarantie()) 
-              : BigDecimal.ZERO
-          );  // ← prise en compte du dépôt
-        return toDto(quittanceRepository.save(q));
-    } */
-
-    public void deleteQuittance(String id) {
-        quittanceRepository.deleteById(UUID.fromString(id));
-    }
-
-    public List<PaiementDTO> getPaiementsByUtilisateur(String utilisateurId) {
-        UUID userId = UUID.fromString(utilisateurId);
-        return paiementRepository.findByQuittance_Location_Propriete_Utilisateur_Id(userId).stream()
-            .map(this::toDto)
-            .collect(Collectors.toList());
-    }
-
-    public PaiementDTO savePaiementDTO(PaiementDTO dto) {   
-        Paiement p;
-        LocalDateTime now = LocalDateTime.now();
-
-        if (dto.getId() == null || dto.getId().isEmpty()) {
-            // création
-            p = new Paiement();
-            p.setId(UUID.randomUUID());
-            p.setCreeLe(now);
-        } else {
-            // mise à jour
-            p = paiementRepository.findById(UUID.fromString(dto.getId()))
-                    .orElseThrow(() -> new IllegalArgumentException("Paiement introuvable"));
-        }
-
-        // champs communs create & update
-        p.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElseThrow());
-        p.setDatePaiement(LocalDate.parse(dto.getDatePaiement()));
-        p.setMontant(new BigDecimal(dto.getMontant()));
-        p.setMoyenPaiement(Paiement.MoyenPaiement.valueOf(dto.getMoyenPaiement()));
-        p.setReference(dto.getReference());
-        p.setCommentaire(dto.getCommentaire());
-        p.setEstValide(Boolean.parseBoolean(dto.getEstValide()));
-
-        // date de modification à jour
-        p.setModifieLe(now);
-
-        return toDto(paiementRepository.save(p));
-    }
-        
-/*     public PaiementDTO createPaiement(PaiementDTO dto) {
-        Paiement p = new Paiement();
-        p.setId(UUID.randomUUID());
-        p.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElseThrow());
-        p.setDatePaiement(LocalDate.parse(dto.getDatePaiement()));
-        p.setMontant(new BigDecimal(dto.getMontant()));
-        p.setMoyenPaiement(Paiement.MoyenPaiement.valueOf(dto.getMoyenPaiement()));
-        p.setReference(dto.getReference());
-        p.setCommentaire(dto.getCommentaire());
-        p.setEstValide(Boolean.parseBoolean(dto.getEstValide()));
-        p.setCreeLe(LocalDateTime.now());
-        p.setModifieLe(LocalDateTime.now());
-        return toDto(paiementRepository.save(p));
-    }
-
-    public PaiementDTO updatePaiement(String id, PaiementDTO dto) {
-        Paiement p = paiementRepository.findById(UUID.fromString(id)).orElseThrow();
-        p.setDatePaiement(LocalDate.parse(dto.getDatePaiement()));
-        p.setMontant(new BigDecimal(dto.getMontant()));
-        p.setMoyenPaiement(Paiement.MoyenPaiement.valueOf(dto.getMoyenPaiement()));
-        p.setReference(dto.getReference());
-        p.setCommentaire(dto.getCommentaire());
-        p.setEstValide(Boolean.parseBoolean(dto.getEstValide()));
-        p.setModifieLe(LocalDateTime.now());
-        return toDto(paiementRepository.save(p));
-    } */
-
-    public void deletePaiement(String id) {
-        paiementRepository.deleteById(UUID.fromString(id));
-    }
-
-    public List<CreditDTO> getCreditsByUtilisateur(String utilisateurId) {
-        UUID userId = UUID.fromString(utilisateurId);
-        return creditRepository.findByPropriete_Utilisateur_Id(userId).stream()
-            .map(this::toDto)
-            .collect(Collectors.toList());
-    }
-
-    public CreditDTO createCredit(CreditDTO dto) {
-        Credit c = new Credit();
-        c.setId(UUID.randomUUID());
-        c.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
-        c.setBanque(dto.getBanque());
-        c.setMontantEmprunte(new BigDecimal(dto.getMontantEmprunte()));
-        c.setDateDebut(LocalDate.parse(dto.getDateDebut()));
-        c.setDateFin(LocalDate.parse(dto.getDateFin()));
-        c.setDureeMois(Integer.parseInt(dto.getDureeMois()));
-        c.setTauxInteretAnnuel(new BigDecimal(dto.getTauxInteretAnnuel()));
-        c.setMensualite(new BigDecimal(dto.getMensualite()));
-        c.setAssuranceMensuelle(new BigDecimal(dto.getAssuranceMensuelle()));
-        c.setFraisDossier(new BigDecimal(dto.getFraisDossier()));
-        c.setFraisGarantie(new BigDecimal(dto.getFraisGarantie()));
-        c.setCreeLe(LocalDateTime.now());
-        c.setModifieLe(LocalDateTime.now());
-        return toDto(creditRepository.save(c));
-    }
-
-    public CreditDTO updateCredit(String id, CreditDTO dto) {
-        Credit c = creditRepository.findById(UUID.fromString(id)).orElseThrow();
-        c.setBanque(dto.getBanque());
-        c.setMontantEmprunte(new BigDecimal(dto.getMontantEmprunte()));
-        c.setDateDebut(LocalDate.parse(dto.getDateDebut()));
-        c.setDateFin(LocalDate.parse(dto.getDateFin()));
-        c.setDureeMois(Integer.parseInt(dto.getDureeMois()));
-        c.setTauxInteretAnnuel(new BigDecimal(dto.getTauxInteretAnnuel()));
-        c.setMensualite(new BigDecimal(dto.getMensualite()));
-        c.setAssuranceMensuelle(new BigDecimal(dto.getAssuranceMensuelle()));
-        c.setFraisDossier(new BigDecimal(dto.getFraisDossier()));
-        c.setFraisGarantie(new BigDecimal(dto.getFraisGarantie()));
-        c.setModifieLe(LocalDateTime.now());
-        return toDto(creditRepository.save(c));
-    }
-
-    public void deleteCredit(String id) {
-        creditRepository.deleteById(UUID.fromString(id));
-    }
-
-    private QuittanceDTO toDto(Quittance q) {
-        QuittanceDTO dto = new QuittanceDTO();
-        dto.setId(q.getId().toString());
-        dto.setLocationId(q.getLocation().getId().toString());
-        dto.setDateDebut(q.getDateDebut().toString());
-        dto.setDateFin(q.getDateFin().toString());
-        //dto.setDateEmission(q.getDateEmission().toString());
-        dto.setDateEcheance(q.getDateEcheance() != null ? q.getDateEcheance().toString() : null);
-        dto.setMontantLoyer(q.getMontantLoyer().toPlainString());
-        dto.setMontantCharges(q.getMontantCharges().toPlainString());
-        //dto.setMontantTotal(q.getMontantTotal().toPlainString());
-        dto.setStatut(q.getStatut().toString());
-        dto.setInclureCaution(q.getInclureCaution());
-        dto.setDepotGarantie(
-            q.getDepotGarantie() != null 
-              ? q.getDepotGarantie().toPlainString() 
-              : null
-        );
-        return dto;
-    }
-
-    private PaiementDTO toDto(Paiement p) {
-        PaiementDTO dto = new PaiementDTO();
-        dto.setId(p.getId().toString());
-        dto.setQuittanceId(p.getQuittance().getId().toString());
-        dto.setDatePaiement(p.getDatePaiement().toString());
-        dto.setMontant(p.getMontant().toPlainString());
-        dto.setMoyenPaiement(p.getMoyenPaiement().toString());
-        dto.setReference(p.getReference());
-        dto.setCommentaire(p.getCommentaire());
-        dto.setEstValide(p.getEstValide().toString());
-        return dto;
-    }
-
-    private CreditDTO toDto(Credit c) {
-        CreditDTO dto = new CreditDTO();
-        dto.setId(c.getId().toString());
-        dto.setProprieteId(c.getPropriete().getId().toString());
-        dto.setBanque(c.getBanque());
-        dto.setMontantEmprunte(c.getMontantEmprunte().toPlainString());
-        dto.setDateDebut(c.getDateDebut().toString());
-        dto.setDateFin(c.getDateFin().toString());
-        dto.setDureeMois(c.getDureeMois().toString());
-        dto.setTauxInteretAnnuel(c.getTauxInteretAnnuel().toPlainString());
-        dto.setMensualite(c.getMensualite().toPlainString());
-        dto.setAssuranceMensuelle(c.getAssuranceMensuelle().toPlainString());
-        dto.setFraisDossier(c.getFraisDossier().toPlainString());
-        dto.setFraisGarantie(c.getFraisGarantie().toPlainString());
-        return dto;
-    }
-
-    public LocationDTO saveLocation(LocationDTO dto) {
-        Location location;
-        LocalDateTime now = LocalDateTime.now();
-
-        if (dto.getId() == null || dto.getId().isEmpty()) {
-            // création
-            location = new Location();
-            location.setId(UUID.randomUUID());
-            location.setCreeLe(now);
-        } else {
-            // mise à jour
-            location = locationRepository.findById(UUID.fromString(dto.getId()))
-                    .orElseThrow(() -> new IllegalArgumentException("Location introuvable"));
-        }
-
-        // champs communs create & update
-        location.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
-        location.setLocataire(locataireRepository.findById(UUID.fromString(dto.getLocataireId())).orElseThrow());
-        location.setDateDebut(LocalDate.parse(dto.getDateDebut()));
-        location.setDateFin(dto.getDateFin() != null ? LocalDate.parse(dto.getDateFin()) : null);
-        location.setLoyerMensuel(new BigDecimal(dto.getLoyerMensuel()));
-        location.setChargesMensuelles(new BigDecimal(dto.getChargesMensuelles()));
-        location.setDepotGarantie(new BigDecimal(dto.getDepotGarantie()));
-        location.setFrequenceLoyer(Location.FrequenceLoyer.valueOf(dto.getFrequenceLoyer()));
-        location.setJourEcheance(Integer.parseInt(dto.getJourEcheance()));
-
-        // date de modification à jour
-        location.setModifieLe(now);
-
-        return toDTO(locationRepository.save(location));
-    }
-/*     public LocationDTO createLocation(LocationDTO dto) {
-        Location location = new Location();
-        location.setId(UUID.randomUUID());
-        location.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
-        location.setLocataire(locataireRepository.findById(UUID.fromString(dto.getLocataireId())).orElseThrow());
-        location.setDateDebut(LocalDate.parse(dto.getDateDebut()));
-        location.setDateFin(dto.getDateFin() != null ? LocalDate.parse(dto.getDateFin()) : null);
-        location.setLoyerMensuel(new BigDecimal(dto.getLoyerMensuel()));
-        location.setChargesMensuelles(new BigDecimal(dto.getChargesMensuelles()));
-        location.setDepotGarantie(new BigDecimal(dto.getDepotGarantie()));
-        location.setFrequenceLoyer(Location.FrequenceLoyer.valueOf(dto.getFrequenceLoyer()));
-        location.setJourEcheance(Integer.parseInt(dto.getJourEcheance()));
-        location.setCreeLe(LocalDateTime.now());
-        location.setModifieLe(LocalDateTime.now());
-
-        locationRepository.save(location);
-        return toDTO(location);
-    } */
-
-/*     public LocationDTO updateLocation(String id, LocationDTO dto) {
-        Location location = locationRepository.findById(UUID.fromString(id)).orElseThrow();
-        location.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
-        location.setLocataire(locataireRepository.findById(UUID.fromString(dto.getLocataireId())).orElseThrow());
-        location.setDateDebut(LocalDate.parse(dto.getDateDebut()));
-        location.setDateFin(dto.getDateFin() != null ? LocalDate.parse(dto.getDateFin()) : null);
-        location.setLoyerMensuel(new BigDecimal(dto.getLoyerMensuel()));
-        location.setChargesMensuelles(new BigDecimal(dto.getChargesMensuelles()));
-        location.setDepotGarantie(new BigDecimal(dto.getDepotGarantie()));
-        location.setFrequenceLoyer(Location.FrequenceLoyer.valueOf(dto.getFrequenceLoyer()));
-        location.setJourEcheance(Integer.parseInt(dto.getJourEcheance()));
-        location.setModifieLe(LocalDateTime.now());
-
-        locationRepository.save(location);
-        return toDTO(location);
-    } */
-
-    public void deleteLocation(String id) {
-        locationRepository.deleteById(UUID.fromString(id));
-    }
-
-    public List<LocationDTO> getLocationsByUtilisateur(String utilisateurId) {
-        return locationRepository.findByPropriete_Utilisateur_Id(UUID.fromString(utilisateurId)).stream()
-            .map(this::toDTO)
-            .collect(Collectors.toList());
-    }
-    
-
-    private LocationDTO toDTO(Location loc) {
-        LocationDTO dto = new LocationDTO();
-        dto.setId(loc.getId().toString());
-        dto.setProprieteId(loc.getPropriete().getId().toString());
-        dto.setProprieteNom(loc.getPropriete().getNom());
-        dto.setLocataireId(loc.getLocataire().getId().toString());
-        dto.setLocataireNom(loc.getLocataire().getNom());
-        dto.setLocatairePrenom("");
-        dto.setDateDebut(loc.getDateDebut().toString());
-        dto.setDateFin(loc.getDateFin() != null ? loc.getDateFin().toString() : null);
-        dto.setLoyerMensuel(loc.getLoyerMensuel().toPlainString());
-        dto.setChargesMensuelles(loc.getChargesMensuelles().toPlainString());
-        dto.setDepotGarantie(loc.getDepotGarantie().toPlainString());
-        dto.setFrequenceLoyer(loc.getFrequenceLoyer().toString());
-        dto.setJourEcheance(Integer.toString(loc.getJourEcheance()));
-        return dto;
-    }
-
+    // --- PROPRIETE ---
     public List<ProprieteDTO> getProprietesByUtilisateur(String utilisateurId) {
         UUID userId = UUID.fromString(utilisateurId);
         Utilisateur utilisateur = utilisateurRepository.findById(userId)
@@ -445,106 +60,12 @@ public class UnifiedService {
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
+    
 
-
-
-
-    public ProprieteDTO updatePropriete(String proprieteId, ProprieteDTO dto) {
-        Propriete propriete = proprieteRepository.findById(UUID.fromString(proprieteId))
-                .orElseThrow(() -> new IllegalArgumentException("Propriété introuvable"));
-
-        propriete.setNom(dto.getNom());
-        propriete.setAdresse(dto.getAdresse());
-        propriete.setComplementAdresse(dto.getComplementAdresse());
-        propriete.setCodePostal(dto.getCodePostal());
-        propriete.setVille(dto.getVille());
-        propriete.setTypeBien(Propriete.TypeBien.valueOf(dto.getTypeBien()));
-        propriete.setDateAcquisition(dto.getDateAcquisition() != null ? LocalDate.parse(dto.getDateAcquisition()) : null);
-        propriete.setDateLivraison(dto.getDateLivraison() != null ? LocalDate.parse(dto.getDateLivraison()) : null);
-        propriete.setMontantAcquisition(dto.getMontantAcquisition() != null ? new BigDecimal(dto.getMontantAcquisition()) : null);
-        propriete.setTantieme(dto.getTantieme() != null ? new BigDecimal(dto.getTantieme()) : null);
-        propriete.setFraisNotaire(dto.getFraisNotaire() != null ? new BigDecimal(dto.getFraisNotaire()) : null);
-        propriete.setFraisAgence(dto.getFraisAgence() != null ? new BigDecimal(dto.getFraisAgence()) : null);
-
-        // Mise à jour des compositions si présentes dans le DTO
-        if (dto.getCompositions() != null) {
-            List<CompositionAcquisition> updatedCompositions = dto.getCompositions().stream().map(cdto -> {
-                CompositionAcquisition comp;
-                if (cdto.getId() != null) {
-                    comp = proprieteRepository.findCompositionById(UUID.fromString(cdto.getId()))
-                            .orElse(new CompositionAcquisition());
-                } else {
-                    comp = new CompositionAcquisition();
-                    comp.setId(UUID.randomUUID());
-                    comp.setPropriete(propriete);
-                }
-                comp.setCategorie(cdto.getCategorie());
-                comp.setMontant(new BigDecimal(cdto.getMontant()));
-                comp.setDescription(cdto.getDescription());
-                return comp;
-            }).collect(Collectors.toList());
-            propriete.setCompositions(updatedCompositions);
-        }
-
-        return toDto(proprieteRepository.save(propriete));
-    }
-
-    public void deletePropriete(String proprieteId) {
-        Propriete propriete = proprieteRepository.findById(UUID.fromString(proprieteId))
-                .orElseThrow(() -> new IllegalArgumentException("Propriété introuvable"));
-        proprieteRepository.delete(propriete);
-    }
-
-    public ProprieteDTO createPropriete(String utilisateurId, ProprieteDTO dto) {
-        Utilisateur utilisateur = utilisateurRepository.findById(UUID.fromString(utilisateurId))
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
-
-        Propriete entity = new Propriete();
-        entity.setNom(dto.getNom());
-        entity.setAdresse(dto.getAdresse());
-        entity.setComplementAdresse(dto.getComplementAdresse());
-        entity.setCodePostal(dto.getCodePostal());
-        entity.setVille(dto.getVille());
-
-        // Ajout d'un log pour vérifier la valeur reçue
-        System.out.println("TypeBien reçu: " + dto.getTypeBien());
-
-        entity.setTypeBien(Propriete.TypeBien.valueOf(dto.getTypeBien()));
-        entity.setDateAcquisition(dto.getDateAcquisition() != null ? LocalDate.parse(dto.getDateAcquisition()) : null);
-        entity.setDateLivraison(dto.getDateLivraison() != null ? LocalDate.parse(dto.getDateLivraison()) : null);
-        entity.setMontantAcquisition(dto.getMontantAcquisition() != null ? new BigDecimal(dto.getMontantAcquisition()) : null);
-        entity.setTantieme(dto.getTantieme() != null ? new BigDecimal(dto.getTantieme()) : null);
-        entity.setFraisNotaire(dto.getFraisNotaire() != null ? new BigDecimal(dto.getFraisNotaire()) : null);
-        entity.setFraisAgence(dto.getFraisAgence() != null ? new BigDecimal(dto.getFraisAgence()) : null);
-        entity.setUtilisateur(utilisateur);
-
-        Propriete saved = proprieteRepository.save(entity);
-        return toDto(saved);
-    }
-
-    public ProprieteDTO addCompositionsToPropriete(String proprieteId, List<CompositionAcquisitionDTO> compositionsDTO) {
-        Propriete propriete = proprieteRepository.findById(UUID.fromString(proprieteId))
-                .orElseThrow(() -> new IllegalArgumentException("Propriété introuvable"));
-
-        List<CompositionAcquisition> compositions = compositionsDTO.stream().map(cdto -> {
-            CompositionAcquisition comp = new CompositionAcquisition();
-            comp.setCategorie(cdto.getCategorie());
-            comp.setMontant(new BigDecimal(cdto.getMontant()));
-            comp.setDescription(cdto.getDescription());
-            comp.setPropriete(propriete);
-            return comp;
-        }).collect(Collectors.toList());
-
-        propriete.setCompositions(compositions);
-        Propriete updated = proprieteRepository.save(propriete);
-        return toDto(updated);
-    }
-
-    public ProprieteDTO createProprieteWithCompositions(String utilisateurId, Object proprieteObj, Object compositionsObj) {
+    public ProprieteDTO saveProprietebis(String utilisateurId, ProprieteDTO proprieteDTO) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            ProprieteDTO proprieteDTO = mapper.convertValue(proprieteObj, ProprieteDTO.class);
 
+            ObjectMapper mapper = new ObjectMapper();
             Utilisateur utilisateur = utilisateurRepository.findById(UUID.fromString(utilisateurId))
                     .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
 
@@ -565,8 +86,8 @@ public class UnifiedService {
 
             // Traite les compositions si présentes
             List<CompositionAcquisition> compositions = new ArrayList<>();
-            if (compositionsObj != null) {
-                List<?> compList = (List<?>) compositionsObj;
+            if (proprieteDTO.getCompositions() != null) {
+                List<?> compList = (List<?>) proprieteDTO.getCompositions();
                 for (Object compObj : compList) {
                     CompositionAcquisitionDTO cdto = mapper.convertValue(compObj, CompositionAcquisitionDTO.class);
                     CompositionAcquisition comp = new CompositionAcquisition();
@@ -587,126 +108,359 @@ public class UnifiedService {
     }
 
 
-    private ProprieteDTO toDto(Propriete entity) {
-        ProprieteDTO dto = new ProprieteDTO();
-        dto.setId(entity.getId().toString());
-        dto.setNom(entity.getNom());
-        dto.setAdresse(entity.getAdresse());
-        dto.setComplementAdresse(entity.getComplementAdresse());
-        dto.setCodePostal(entity.getCodePostal());
-        dto.setVille(entity.getVille());
-        dto.setTypeBien(entity.getTypeBien().toString());
-        dto.setDateAcquisition(entity.getDateAcquisition() != null ? entity.getDateAcquisition().toString() : null);
-        dto.setDateLivraison(entity.getDateLivraison() != null ? entity.getDateLivraison().toString() : null);
-        dto.setMontantAcquisition(entity.getMontantAcquisition() != null ? entity.getMontantAcquisition().toPlainString() : null);
-        dto.setTantieme(entity.getTantieme() != null ? entity.getTantieme().toPlainString() : null);
-        dto.setFraisNotaire(entity.getFraisNotaire() != null ? entity.getFraisNotaire().toPlainString() : null);
-        dto.setFraisAgence(entity.getFraisAgence() != null ? entity.getFraisAgence().toPlainString() : null);
+    public ProprieteDTO savePropriete(String utilisateurId, ProprieteDTO dto) {
+        Utilisateur user = utilisateurRepository.findById(UUID.fromString(utilisateurId))
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+        Propriete p;
+        if (dto.getId() != null && !dto.getId().isEmpty()) {
+            p = proprieteRepository.findById(UUID.fromString(dto.getId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Propriété introuvable"));
+        } else {
+            p = new Propriete();
+            //p.setId(UUID.randomUUID());
+            p.setUtilisateur(user);
+            //p.setCreeLe(LocalDateTime.now());
+        }
+        p.setNom(dto.getNom());
+        p.setAdresse(dto.getAdresse());
+        p.setComplementAdresse(dto.getComplementAdresse());
+        p.setCodePostal(dto.getCodePostal());
+        p.setVille(dto.getVille());
+        p.setTypeBien(Propriete.TypeBien.valueOf(dto.getTypeBien()));
+        p.setDateAcquisition(dto.getDateAcquisition() != null ? LocalDate.parse(dto.getDateAcquisition()) : null);
+        p.setDateLivraison(dto.getDateLivraison() != null ? LocalDate.parse(dto.getDateLivraison()) : null);
+        p.setMontantAcquisition(dto.getMontantAcquisition() != null ? new BigDecimal(dto.getMontantAcquisition()) : null);
+        p.setTantieme(dto.getTantieme() != null ? new BigDecimal(dto.getTantieme()) : null);
+        p.setFraisNotaire(dto.getFraisNotaire() != null ? new BigDecimal(dto.getFraisNotaire()) : null);
+        p.setFraisAgence(dto.getFraisAgence() != null ? new BigDecimal(dto.getFraisAgence()) : null);
+        //p.setModifieLe(LocalDateTime.now());
 
-        // Ne retourne les compositions que si elles existent
-        if (entity.getCompositions() != null) {
-            List<CompositionAcquisitionDTO> compositions = entity.getCompositions().stream().map(c -> {
-                CompositionAcquisitionDTO cdto = new CompositionAcquisitionDTO();
-                cdto.setId(c.getId().toString());
-                cdto.setProprieteId(entity.getId().toString());
-                cdto.setCategorie(c.getCategorie());
-                cdto.setMontant(c.getMontant().toPlainString());
-                cdto.setDescription(c.getDescription());
-                return cdto;
+        // compositions
+        if (dto.getCompositions() != null && !dto.getCompositions().isEmpty()) {
+            List<CompositionAcquisition> comps = dto.getCompositions().stream().map(cdto -> {
+                CompositionAcquisition c;
+                if (cdto.getId() != null) {
+                    c = p.getCompositions().stream()
+                         .filter(existing -> existing.getId().toString().equals(cdto.getId()))
+                         .findFirst()
+                         .orElse(new CompositionAcquisition());
+                } else {
+                    c = new CompositionAcquisition();
+                    c.setPropriete(p);
+                }
+                c.setCategorie(cdto.getCategorie());
+                c.setMontant(new BigDecimal(cdto.getMontant()));
+                c.setDescription(cdto.getDescription());
+                return c;
             }).collect(Collectors.toList());
-            dto.setCompositions(compositions);
+            p.setCompositions(comps);
         }
 
+        Propriete saved = proprieteRepository.save(p);
+        return toDto(saved);
+    }
+
+    public void deletePropriete(String proprieteId) {
+        proprieteRepository.deleteById(UUID.fromString(proprieteId));
+    }
+
+    private ProprieteDTO toDto(Propriete p) {
+        ProprieteDTO dto = new ProprieteDTO();
+        dto.setId(p.getId().toString());
+        dto.setNom(p.getNom());
+        dto.setAdresse(p.getAdresse());
+        dto.setComplementAdresse(p.getComplementAdresse());
+        dto.setCodePostal(p.getCodePostal());
+        dto.setVille(p.getVille());
+        dto.setTypeBien(p.getTypeBien().toString());
+        dto.setDateAcquisition(p.getDateAcquisition() != null ? p.getDateAcquisition().toString() : null);
+        dto.setDateLivraison(p.getDateLivraison() != null ? p.getDateLivraison().toString() : null);
+        dto.setMontantAcquisition(p.getMontantAcquisition()!=null? p.getMontantAcquisition().toPlainString():null);
+        dto.setTantieme(p.getTantieme()!=null? p.getTantieme().toPlainString():null);
+        dto.setFraisNotaire(p.getFraisNotaire()!=null? p.getFraisNotaire().toPlainString():null);
+        dto.setFraisAgence(p.getFraisAgence()!=null? p.getFraisAgence().toPlainString():null);
+        if (p.getCompositions()!=null) {
+            dto.setCompositions(p.getCompositions().stream().map(c -> {
+                CompositionAcquisitionDTO cd = new CompositionAcquisitionDTO();
+                cd.setId(c.getId().toString());
+                cd.setCategorie(c.getCategorie());
+                cd.setMontant(c.getMontant().toPlainString());
+                cd.setDescription(c.getDescription());
+                return cd;
+            }).collect(Collectors.toList()));
+        }
         return dto;
     }
 
-
+    // --- LOCATAIRE ---
     public List<LocataireDTO> getLocatairesByUtilisateur(String utilisateurId) {
-        return locataireRepository.findByUtilisateur_Id(UUID.fromString(utilisateurId)).stream()
-            .map(this::toDto)
-            .collect(Collectors.toList());
+        UUID uid = UUID.fromString(utilisateurId);
+        return locataireRepository.findByUtilisateur_Id(uid)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
-
-    public LocataireDTO saveLocataire(LocataireDTO dto) {
-        Locataire loc;
-        LocalDateTime now = LocalDateTime.now();
-
-        if (dto.getId() == null || dto.getId().isEmpty()) {
-            // création
-            loc = new Locataire();
-            loc.setId(UUID.randomUUID());
-            loc.setCreeLe(now);
-        } else {
-            // mise à jour
-            loc = locataireRepository.findById(UUID.fromString(dto.getId()))
+    public LocataireDTO saveLocataire(String utilisateurId, LocataireDTO dto) {
+        Utilisateur user = utilisateurRepository.findById(UUID.fromString(utilisateurId))
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+        Locataire l;
+        if (dto.getId()!=null && !dto.getId().isEmpty()) {
+            l = locataireRepository.findById(UUID.fromString(dto.getId()))
                     .orElseThrow(() -> new IllegalArgumentException("Locataire introuvable"));
+        } else {
+            l = new Locataire();
+            l.setId(UUID.randomUUID());
+            l.setUtilisateur(user);
+            l.setCreeLe(LocalDateTime.now());
         }
+        l.setNom(dto.getNom());
+        l.setTelephone(dto.getTelephone());
+        l.setEmail(dto.getEmail());
+        l.setAdresse(dto.getAdresse());
+        l.setComplementAdresse(dto.getComplementAdresse());
+        l.setCodePostal(dto.getCodePostal());
+        l.setVille(dto.getVille());
+        l.setModifieLe(LocalDateTime.now());
 
-        // champs communs create & update
-        loc.setNom(dto.getNom());
-        loc.setTelephone(dto.getTelephone());
-        loc.setEmail(dto.getEmail());
-        loc.setAdresse(dto.getAdresse());
-        loc.setComplementAdresse(dto.getComplementAdresse());
-        loc.setCodePostal(dto.getCodePostal());
-        loc.setVille(dto.getVille());
-
-        // date de modification à jour
-        loc.setModifieLe(now);
-
-        return toDto(locataireRepository.save(loc));
-    }
-/*     public LocataireDTO creerLocataire(String utilisateurId, LocataireDTO dto) {
-        Locataire loc = new Locataire();
-        loc.setId(UUID.randomUUID());
-        loc.setUtilisateur(utilisateurRepository.findById(UUID.fromString(utilisateurId)).orElseThrow());
-        loc.setNom(dto.getNom());
-        loc.setTelephone(dto.getTelephone());
-        loc.setEmail(dto.getEmail());
-        loc.setAdresse(dto.getAdresse());
-        loc.setComplementAdresse(dto.getComplementAdresse());
-        loc.setCodePostal(dto.getCodePostal());
-        loc.setVille(dto.getVille());
-
-        Locataire saved = locataireRepository.save(loc);
-        return toDto(saved);
-    } */
-
-/*     public LocataireDTO updateLocataire(String locataireId, LocataireDTO dto) {
-        Locataire loc = locataireRepository.findById(UUID.fromString(locataireId))
-            .orElseThrow(() -> new IllegalArgumentException("Locataire introuvable"));
-
-        loc.setNom(dto.getNom());
-        loc.setTelephone(dto.getTelephone());
-        loc.setEmail(dto.getEmail());
-        loc.setAdresse(dto.getAdresse());
-        loc.setComplementAdresse(dto.getComplementAdresse());
-        loc.setCodePostal(dto.getCodePostal());
-        loc.setVille(dto.getVille());
-
-        Locataire saved = locataireRepository.save(loc);
+        Locataire saved = locataireRepository.save(l);
         return toDto(saved);
     }
 
     public void deleteLocataire(String locataireId) {
         locataireRepository.deleteById(UUID.fromString(locataireId));
-    } */
+    }
 
-    private LocataireDTO toDto(Locataire loc) {
+    private LocataireDTO toDto(Locataire l) {
         LocataireDTO dto = new LocataireDTO();
+        dto.setId(l.getId().toString());
+        dto.setNom(l.getNom());
+        dto.setTelephone(l.getTelephone());
+        dto.setEmail(l.getEmail());
+        dto.setAdresse(l.getAdresse());
+        dto.setComplementAdresse(l.getComplementAdresse());
+        dto.setCodePostal(l.getCodePostal());
+        dto.setVille(l.getVille());
+        return dto;
+    }
+
+    // --- LOCATION ---
+    public List<LocationDTO> getLocationsByUtilisateur(String utilisateurId) {
+        UUID uid = UUID.fromString(utilisateurId);
+        return locationRepository.findByPropriete_Utilisateur_Id(uid)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public LocationDTO saveLocation(LocationDTO dto) {
+        Location loc;
+        if (dto.getId()!=null && !dto.getId().isEmpty()) {
+            loc = locationRepository.findById(UUID.fromString(dto.getId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Location introuvable"));
+        } else {
+            loc = new Location();
+            loc.setId(UUID.randomUUID());
+            loc.setCreeLe(LocalDateTime.now());
+        }
+        loc.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+        loc.setLocataire(locataireRepository.findById(UUID.fromString(dto.getLocataireId())).orElseThrow());
+        loc.setDateDebut(LocalDate.parse(dto.getDateDebut()));
+        loc.setDateFin(dto.getDateFin()!=null? LocalDate.parse(dto.getDateFin()):null);
+        loc.setLoyerMensuel(new BigDecimal(dto.getLoyerMensuel()));
+        loc.setChargesMensuelles(new BigDecimal(dto.getChargesMensuelles()));
+        loc.setDepotGarantie(new BigDecimal(dto.getDepotGarantie()));
+        loc.setFrequenceLoyer(Location.FrequenceLoyer.valueOf(dto.getFrequenceLoyer()));
+        loc.setJourEcheance(Integer.parseInt(dto.getJourEcheance()));
+        loc.setModifieLe(LocalDateTime.now());
+
+        Location saved = locationRepository.save(loc);
+        return toDto(saved);
+    }
+
+    public void deleteLocation(String id) {
+        locationRepository.deleteById(UUID.fromString(id));
+    }
+
+    private LocationDTO toDto(Location loc) {
+        LocationDTO dto = new LocationDTO();
         dto.setId(loc.getId().toString());
-        dto.setUtilisateurId(loc.getUtilisateur().getId().toString());
-        dto.setNom(loc.getNom());
-        dto.setTelephone(loc.getTelephone());
-        dto.setEmail(loc.getEmail());
-        dto.setAdresse(loc.getAdresse());
-        dto.setComplementAdresse(loc.getComplementAdresse());
-        dto.setCodePostal(loc.getCodePostal());
-        dto.setVille(loc.getVille());
+        dto.setProprieteId(loc.getPropriete().getId().toString());
+        dto.setProprieteNom(loc.getPropriete().getNom());
+        dto.setLocataireId(loc.getLocataire().getId().toString());
+        dto.setLocataireNom(loc.getLocataire().getNom());
+        dto.setLocatairePrenom("");
+        dto.setDateDebut(loc.getDateDebut().toString());
+        dto.setDateFin(loc.getDateFin() != null ? loc.getDateFin().toString() : null);
+        dto.setLoyerMensuel(loc.getLoyerMensuel().toPlainString());
+        dto.setChargesMensuelles(loc.getChargesMensuelles().toPlainString());
+        dto.setDepotGarantie(loc.getDepotGarantie().toPlainString());
+        dto.setFrequenceLoyer(loc.getFrequenceLoyer().toString());
+        dto.setJourEcheance(Integer.toString(loc.getJourEcheance()));
         return dto;
     }
 
 
+    // --- QUITTANCE ---
+    public List<QuittanceDTO> getQuittancesByUtilisateur(String utilisateurId) {
+        UUID uid = UUID.fromString(utilisateurId);
+        return quittanceRepository.findByLocation_Propriete_Utilisateur_Id(uid)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
 
+    public QuittanceDTO saveQuittance(QuittanceDTO dto) {
+        Quittance q;
+        if (dto.getId()!=null && !dto.getId().isEmpty()) {
+            q = quittanceRepository.findById(UUID.fromString(dto.getId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Quittance introuvable"));
+        } else {
+            q = new Quittance();
+            q.setId(UUID.randomUUID());
+            q.setCreeLe(LocalDateTime.now());
+        }
+        q.setLocation(locationRepository.findById(UUID.fromString(dto.getLocationId())).orElseThrow());
+        q.setDateDebut(LocalDate.parse(dto.getDateDebut()));
+        q.setDateFin(dto.getDateFin()!=null?LocalDate.parse(dto.getDateFin()):null);
+        //q.setDateEmission(LocalDate.parse(dto.getDateEmission()));
+        q.setDateEcheance(dto.getDateEcheance()!=null?LocalDate.parse(dto.getDateEcheance()):null);
+        q.setMontantLoyer(new BigDecimal(dto.getMontantLoyer()));
+        q.setMontantCharges(new BigDecimal(dto.getMontantCharges()));
+        //q.setMontantTotal(new BigDecimal(dto.getMontantTotal()));
+        q.setStatut(Quittance.StatutQuittance.valueOf(dto.getStatut()));
+        q.setInclureCaution(dto.getInclureCaution());
+        q.setDepotGarantie(dto.getDepotGarantie()!=null? new BigDecimal(dto.getDepotGarantie()):BigDecimal.ZERO);
+        q.setModifieLe(LocalDateTime.now());
+
+        Quittance saved = quittanceRepository.save(q);
+        return toDto(saved);
+    }
+
+    public void deleteQuittance(String id) {
+        quittanceRepository.deleteById(UUID.fromString(id));
+    }
+
+    private QuittanceDTO toDto(Quittance q) {
+        QuittanceDTO dto = new QuittanceDTO();
+        dto.setId(q.getId().toString());
+        dto.setLocationId(q.getLocation().getId().toString());
+        dto.setDateDebut(q.getDateDebut().toString());
+        dto.setDateFin(q.getDateFin()!=null?q.getDateFin().toString():null);
+        //dto.setDateEmission(q.getDateEmission().toString());
+        dto.setDateEcheance(q.getDateEcheance()!=null?q.getDateEcheance().toString():null);
+        dto.setMontantLoyer(q.getMontantLoyer().toPlainString());
+        dto.setMontantCharges(q.getMontantCharges().toPlainString());
+        //dto.setMontantTotal(q.getMontantTotal().toPlainString());
+        dto.setStatut(q.getStatut().toString());
+        dto.setInclureCaution(q.getInclureCaution());
+        dto.setDepotGarantie(q.getDepotGarantie()!=null?q.getDepotGarantie().toPlainString():null);
+        return dto;
+    }
+
+    // --- PAIEMENT ---
+    public List<PaiementDTO> getPaiementsByUtilisateur(String utilisateurId) {
+        UUID uid = UUID.fromString(utilisateurId);
+        return paiementRepository.findByQuittance_Location_Propriete_Utilisateur_Id(uid)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public PaiementDTO savePaiement(PaiementDTO dto) {
+        Paiement p;
+        if (dto.getId()!=null && !dto.getId().isEmpty()) {
+            p = paiementRepository.findById(UUID.fromString(dto.getId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Paiement introuvable"));
+        } else {
+            p = new Paiement();
+            p.setId(UUID.randomUUID());
+            p.setCreeLe(LocalDateTime.now());
+        }
+        p.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElseThrow());
+        p.setDatePaiement(LocalDate.parse(dto.getDatePaiement()));
+        p.setMontant(new BigDecimal(dto.getMontant()));
+        p.setMoyenPaiement(Paiement.MoyenPaiement.valueOf(dto.getMoyenPaiement()));
+        p.setReference(dto.getReference());
+        p.setCommentaire(dto.getCommentaire());
+        p.setEstValide(Boolean.valueOf(dto.getEstValide()));
+        p.setModifieLe(LocalDateTime.now());
+
+        Paiement saved = paiementRepository.save(p);
+        return toDto(saved);
+    }
+
+    public void deletePaiement(String id) {
+        paiementRepository.deleteById(UUID.fromString(id));
+    }
+
+    private PaiementDTO toDto(Paiement p) {
+        PaiementDTO dto = new PaiementDTO();
+        dto.setId(p.getId().toString());
+        dto.setQuittanceId(p.getQuittance().getId().toString());
+        dto.setDatePaiement(p.getDatePaiement().toString());
+        dto.setMontant(p.getMontant().toPlainString());
+        dto.setMoyenPaiement(p.getMoyenPaiement().toString());
+        dto.setReference(p.getReference());
+        dto.setCommentaire(p.getCommentaire());
+        dto.setEstValide(p.getEstValide().toString());
+        return dto;
+    }
+
+    // --- CREDIT ---
+    public List<CreditDTO> getCreditsByUtilisateur(String utilisateurId) {
+        UUID uid = UUID.fromString(utilisateurId);
+        return creditRepository.findByPropriete_Utilisateur_Id(uid)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public CreditDTO saveCredit(CreditDTO dto) {
+        Credit c;
+        if (dto.getId()!=null && !dto.getId().isEmpty()) {
+            c = creditRepository.findById(UUID.fromString(dto.getId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Crédit introuvable"));
+        } else {
+            c = new Credit();
+            c.setId(UUID.randomUUID());
+            c.setCreeLe(LocalDateTime.now());
+        }
+        c.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+        c.setBanque(dto.getBanque());
+        c.setMontantEmprunte(new BigDecimal(dto.getMontantEmprunte()));
+        c.setDateDebut(LocalDate.parse(dto.getDateDebut()));
+        c.setDateFin(LocalDate.parse(dto.getDateFin()));
+        c.setDureeMois(Integer.parseInt(dto.getDureeMois()));
+        c.setTauxInteretAnnuel(new BigDecimal(dto.getTauxInteretAnnuel()));
+        c.setMensualite(new BigDecimal(dto.getMensualite()));
+        c.setAssuranceMensuelle(new BigDecimal(dto.getAssuranceMensuelle()));
+        c.setFraisDossier(new BigDecimal(dto.getFraisDossier()));
+        c.setFraisGarantie(new BigDecimal(dto.getFraisGarantie()));
+        c.setModifieLe(LocalDateTime.now());
+
+        Credit saved = creditRepository.save(c);
+        return toDto(saved);
+    }
+
+    public void deleteCredit(String id) {
+        creditRepository.deleteById(UUID.fromString(id));
+    }
+
+    private CreditDTO toDto(Credit c) {
+        CreditDTO dto = new CreditDTO();
+        dto.setId(c.getId().toString());
+        dto.setProprieteId(c.getPropriete().getId().toString());
+        dto.setBanque(c.getBanque());
+        dto.setMontantEmprunte(c.getMontantEmprunte().toPlainString());
+        dto.setDateDebut(c.getDateDebut().toString());
+        dto.setDateFin(c.getDateFin().toString());
+        dto.setDureeMois(c.getDureeMois().toString());
+        dto.setTauxInteretAnnuel(c.getTauxInteretAnnuel().toPlainString());
+        dto.setMensualite(c.getMensualite().toPlainString());
+        dto.setAssuranceMensuelle(c.getAssuranceMensuelle().toPlainString());
+        dto.setFraisDossier(c.getFraisDossier().toPlainString());
+        dto.setFraisGarantie(c.getFraisGarantie().toPlainString());
+        return dto;
+    }
 }

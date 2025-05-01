@@ -18,4 +18,6 @@ public interface ProprieteRepository extends JpaRepository<Propriete, UUID> {
     default CompositionAcquisition saveComposition(CompositionAcquisition composition) {
         return composition;
     }
+
+    public Object findByUtilisateur_Id(UUID uid);
 }

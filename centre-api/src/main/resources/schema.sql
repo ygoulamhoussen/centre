@@ -232,4 +232,5 @@ CREATE TABLE document (
 ALTER TABLE quittance
   ADD COLUMN date_echeance DATE,
   ADD COLUMN depot_garantie DECIMAL,
+  ADD COLUMN montant_caution DECIMAL,
   ADD COLUMN inclure_caution BOOLEAN NOT NULL DEFAULT FALSE;

@@ -19,12 +19,12 @@ declare module 'vue-router/auto-routes' {
    */
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
-    '/(location)/location-etape-1': RouteRecordInfo<'/(location)/location-etape-1', '/location-etape-1', Record<never, never>, Record<never, never>>,
-    '/(location)/location-etape-2': RouteRecordInfo<'/(location)/location-etape-2', '/location-etape-2', Record<never, never>, Record<never, never>>,
-    '/(location)/location-etape-3': RouteRecordInfo<'/(location)/location-etape-3', '/location-etape-3', Record<never, never>, Record<never, never>>,
     '/(locataire)/locataire-etape-1': RouteRecordInfo<'/(locataire)/locataire-etape-1', '/locataire-etape-1', Record<never, never>, Record<never, never>>,
     '/(locataire)/locataire-etape-2': RouteRecordInfo<'/(locataire)/locataire-etape-2', '/locataire-etape-2', Record<never, never>, Record<never, never>>,
     '/(locataire)/locataire-etape-3': RouteRecordInfo<'/(locataire)/locataire-etape-3', '/locataire-etape-3', Record<never, never>, Record<never, never>>,
+    '/(location)/location-etape-1': RouteRecordInfo<'/(location)/location-etape-1', '/location-etape-1', Record<never, never>, Record<never, never>>,
+    '/(location)/location-etape-2': RouteRecordInfo<'/(location)/location-etape-2', '/location-etape-2', Record<never, never>, Record<never, never>>,
+    '/(location)/location-etape-3': RouteRecordInfo<'/(location)/location-etape-3', '/location-etape-3', Record<never, never>, Record<never, never>>,
     '/(quittance)/quittance-etape-1': RouteRecordInfo<'/(quittance)/quittance-etape-1', '/quittance-etape-1', Record<never, never>, Record<never, never>>,
     '/(quittance)/quittance-etape-2': RouteRecordInfo<'/(quittance)/quittance-etape-2', '/quittance-etape-2', Record<never, never>, Record<never, never>>,
     '/(quittance)/quittance-etape-3': RouteRecordInfo<'/(quittance)/quittance-etape-3', '/quittance-etape-3', Record<never, never>, Record<never, never>>,

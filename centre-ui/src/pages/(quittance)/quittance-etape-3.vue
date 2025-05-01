@@ -26,9 +26,31 @@ const router = useRouter()
 const message = useMessage()
 const loading = ref(false)
 
+const pdfSrc = ref<string | undefined>()
+
+async function genererPdfPreview() {
+  try {
+    const res = await fetch(
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/generateQuittancePdf/${quittanceDTO.value.id}`,
+      { method: 'GET' }
+    )
+
+    if (!res.ok) throw new Error('Erreur lors de la génération du PDF')
+
+    const blob = await res.blob()
+    pdfSrc.value = URL.createObjectURL(blob)
+  } catch (err) {
+    message.error('Impossible de charger la prévisualisation PDF')
+    console.error(err)
+  }
+}
+
+
 function precedent() {
   router.back()
 }
+
+
 
 async function enregistrer() {
   loading.value = true
@@ -56,6 +78,7 @@ async function enregistrer() {
     loading.value = false
   }
 }
+
 </script>
 
 <template>

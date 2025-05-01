@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -173,4 +177,16 @@ public class UnifiedController {
         unifiedService.deleteCredit(creditId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/generateQuittancePdf/{quittanceId}")
+public ResponseEntity<byte[]> generateQuittancePdf(@PathVariable String quittanceId) {
+    byte[] pdfBytes = unifiedService.generateQuittancePdf(quittanceId);
+    
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_PDF);
+    headers.setContentDisposition(ContentDisposition.inline().filename("quittance.pdf").build());
+
+    return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+}
+
 } 

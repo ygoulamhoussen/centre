@@ -1,5 +1,6 @@
 package com.formation.centre.service;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +35,9 @@ import com.formation.centre.repository.PaiementRepository;
 import com.formation.centre.repository.ProprieteRepository;
 import com.formation.centre.repository.QuittanceRepository;
 import com.formation.centre.repository.UtilisateurRepository;
+import com.lowagie.text.Document;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfWriter;
 
 import jakarta.transaction.Transactional;
 
@@ -463,4 +467,29 @@ public class UnifiedService {
         dto.setFraisGarantie(c.getFraisGarantie().toPlainString());
         return dto;
     }
+
+
+    public byte[] generateQuittancePdf(String quittanceId) {
+        Quittance quittance = quittanceRepository.findById(UUID.fromString(quittanceId))
+            .orElseThrow(() -> new RuntimeException("Quittance non trouvée"));
+    
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Document document = new Document();
+            PdfWriter.getInstance(document, outputStream);
+            document.open();
+    
+            document.add(new Paragraph("Quittance de loyer"));
+            document.add(new Paragraph("Date d'émission : " + quittance.getDateEmission()));
+            document.add(new Paragraph("Période : " + quittance.getDateDebut() + " au " + quittance.getDateFin()));
+            document.add(new Paragraph("Montant total : " + quittance.getMontantTotal() + " €"));
+            document.add(new Paragraph("Statut : " + quittance.getStatut()));
+    
+            document.close();
+    
+            return outputStream.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur de génération PDF : " + e.getMessage(), e);
+        }
+    }
+    
 }

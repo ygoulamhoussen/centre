@@ -60,7 +60,7 @@ const bgColor = computed(() => {
           <h3 class="text-28px text-primary font-500 lt-sm:text-22px">
             {{ $t('system.title') }}
           </h3>
-          <div class="i-flex-col">
+<!--           <div class="i-flex-col">
             <ThemeSchemaSwitch
               :theme-schema="themeStore.themeScheme"
               :show-tooltip="false"
@@ -74,7 +74,7 @@ const bgColor = computed(() => {
               :show-tooltip="false"
               @change-lang="appStore.changeLocale"
             />
-          </div>
+          </div> -->
         </header>
         <main class="pt-24px">
           <h3 class="text-18px text-primary font-medium">

@@ -44,6 +44,26 @@ function demarrerCreation() {
   router.push('/quittance-etape-1')
 }
 
+async function telechargerQuittance(id: string) {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/generateQuittancePdf/${id}`, {
+      method: 'GET'
+    })
+    const blob = await res.blob()
+    const url = window.URL.createObjectURL(blob)
+
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `quittance-${id}.pdf`
+    link.click()
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    console.error(e)
+    message.error("Erreur lors du téléchargement du PDF")
+  }
+}
+
+
 onMounted(() => fetchQuittances())
 </script>
 
@@ -74,6 +94,11 @@ onMounted(() => fetchQuittances())
                 Confirmer la suppression ?
               </NPopconfirm>
             </div>
+            <div >
+            <NButton size="small" type="primary" ghost @click="telechargerQuittance(q.id)">
+  Télécharger
+</NButton>
+</div>
           </template>
         </NCard>
       </NGi>

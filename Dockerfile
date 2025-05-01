@@ -9,7 +9,7 @@ RUN npm install -g pnpm
 COPY centre-ui/ .
 
 # Installer les dépendances sans interactivité
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 
 

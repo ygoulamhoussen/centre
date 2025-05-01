@@ -6,7 +6,7 @@ import {
   NDescriptions,
   NDescriptionsItem,
   NSpace,
-  useMessage
+  useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
@@ -15,7 +15,7 @@ import { useRouter } from 'vue-router'
 definePage({
   meta: {
     title: 'Nouvelle quittance – Récapitulatif',
-    hideInMenu: true
+    hideInMenu: true,
   }
 })
 
@@ -32,14 +32,15 @@ async function genererPdfPreview() {
   try {
     const res = await fetch(
       `${import.meta.env.VITE_SERVICE_BASE_URL}/api/generateQuittancePdf/${quittanceDTO.value.id}`,
-      { method: 'GET' }
+      { method: 'GET' },
     )
 
     if (!res.ok) throw new Error('Erreur lors de la génération du PDF')
 
     const blob = await res.blob()
     pdfSrc.value = URL.createObjectURL(blob)
-  } catch (err) {
+  }
+  catch (err) {
     message.error('Impossible de charger la prévisualisation PDF')
     console.error(err)
   }

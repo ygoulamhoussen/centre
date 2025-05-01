@@ -1,8 +1,10 @@
 <script setup lang="ts">
 definePage({
   meta: {
-    order: 8,
+    icon: 'material-symbols:filter-list-off',
+    order: 2,
   },
+  redirect: '/function/hide-child/one',
 })
 </script>
 

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
+import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
     title: 'Ajouter une propriété - Étape 1',
-    hideInMenu: true,
+
     activeMenu: '/propriete',
   },
 })

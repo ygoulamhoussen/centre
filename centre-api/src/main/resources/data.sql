@@ -7,6 +7,18 @@ INSERT INTO utilisateur (id, user_name, nom, prenom, email, mot_de_passe_hash, c
 ('00000000-0000-0000-0000-000000000003', 'Yussouf', 'Martin', 'Claire', 'yussouf.goulamhoussen@gmail.com', '123456', now(), now()),
 ('00000000-0000-0000-0000-000000000004', 'Taha', 'Martin', 'Claire', 'taha.goulamhoussen@gmail.com', '123456', now(), now());
 
+
+-- Création des rôles
+INSERT INTO role (id, name) VALUES
+('80000000-0000-0000-0000-000000000001', 'USER'),
+('80000000-0000-0000-0000-000000000002', 'ADMIN');
+
+-- Association utilisateur ↔ rôle
+INSERT INTO utilisateur_role (utilisateur_id, role_id) VALUES
+('00000000-0000-0000-0000-000000000003', '80000000-0000-0000-0000-000000000001'), -- Yussouf → USER
+('00000000-0000-0000-0000-000000000004', '80000000-0000-0000-0000-000000000002'); -- Taha → ADMIN
+
+
 -- Propriétés
 INSERT INTO propriete (id, utilisateur_id, type_bien, nom, adresse, complement_adresse, code_postal, ville,
     date_acquisition, date_livraison, montant_acquisition, tantieme, frais_notaire, frais_agence, cree_le, modifie_le) VALUES

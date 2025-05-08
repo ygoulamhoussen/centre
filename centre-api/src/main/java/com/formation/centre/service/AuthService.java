@@ -1,6 +1,5 @@
 package com.formation.centre.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +49,7 @@ public UserInfoResponseDTO getInfosUtilisateur(String userName) {
         u.getId().toString(),
         u.getUserName(),
         u.getEmail(),
-        List.of("admin")  // ou récupère vraiment ses rôles
+        u.getRoles().stream().map(r -> r.getName()).toList()
     );
 }
 

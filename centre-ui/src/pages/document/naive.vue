@@ -3,7 +3,8 @@ definePage({
   meta: {
     order: 6,
     icon: 'logos:naiveui',
-  },
+    role: 'admin',
+    },
 })
 </script>
 

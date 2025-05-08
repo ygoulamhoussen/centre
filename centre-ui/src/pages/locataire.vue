@@ -9,6 +9,7 @@ definePage({
     title: 'Mes locataires',
     icon: 'mdi:account-group',
     order: 3,
+    roles: ['ADMIN', 'R_USER'], // 👈 adapte les rôles selon tes besoins
   },
 })
 

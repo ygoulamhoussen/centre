@@ -13,15 +13,15 @@ DROP TABLE IF EXISTS location;
 DROP TABLE IF EXISTS locataire;
 DROP TABLE IF EXISTS composition_acquisition;
 DROP TABLE IF EXISTS propriete;
+
+DROP TABLE IF EXISTS utilisateur_role;
+DROP TABLE IF EXISTS utilisateur_roles;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS role;
+
 DROP TABLE IF EXISTS utilisateur;
 
-DROP TABLE IF EXISTS inscription;
-DROP TABLE IF EXISTS utilisateur;
-DROP TABLE IF EXISTS etudiant;
-DROP TABLE IF EXISTS session;
-DROP TABLE IF EXISTS formation;
-DROP TABLE IF EXISTS formateur;
-DROP TABLE IF EXISTS salle;
+
 
 -- UTILISATEUR
 CREATE TABLE utilisateur (
@@ -33,6 +33,17 @@ CREATE TABLE utilisateur (
     mot_de_passe_hash TEXT,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
+);
+
+CREATE TABLE role (
+  id UUID PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE utilisateur_role (
+  utilisateur_id UUID REFERENCES utilisateur(id),
+  role_id UUID REFERENCES role(id),
+  PRIMARY KEY (utilisateur_id, role_id)
 );
 
 -- PROPRIETE

@@ -6,6 +6,7 @@ definePage({
   meta: {
     icon: 'fluent:book-information-24-regular',
     order: 10,
+    roles: ['ADMIN'],
   },
 })
 

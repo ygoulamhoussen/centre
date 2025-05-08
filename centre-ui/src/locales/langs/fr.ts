@@ -1,6 +1,6 @@
 const local: App.I18n.Schema = {
   system: {
-    title: 'DodoNest',
+    title: 'Zimmo',
     updateTitle: 'Notification de mise à jour du système',
     updateContent: 'Une nouvelle version du système a été détectée. Voulez-vous rafraîchir la page immédiatement ?',
     updateConfirm: 'Rafraîchir immédiatement',

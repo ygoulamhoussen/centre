@@ -16,7 +16,9 @@ definePage({
   meta: {
     title: 'Nouvelle quittance – Récapitulatif',
     hideInMenu: true,
-  }
+    activeMenu: '/quittance',
+    roles: ['USER', 'ADMIN'],
+  },
 })
 
 const store = useUnifiedStore()

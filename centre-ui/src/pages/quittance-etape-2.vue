@@ -17,6 +17,15 @@ import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+definePage({
+  meta: {
+    title: 'Ajouter une quittance - Étape 2',
+    hideInMenu: true,
+    activeMenu: '/quittance',
+    roles: ['USER', 'ADMIN'],
+  },
+})
+
 const store = useUnifiedStore()
 const { quittanceDTO } = storeToRefs(store)
 const router = useRouter()

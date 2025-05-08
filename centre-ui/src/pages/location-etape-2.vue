@@ -7,7 +7,8 @@ import { storeToRefs } from 'pinia'
 definePage({
   meta: {
     title: 'Nouvelle location - Étape 2',
-    hideInMenu: true
+    hideInMenu: true,
+    activeMenu: '/location',
   }
 })
 

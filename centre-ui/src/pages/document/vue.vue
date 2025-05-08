@@ -4,6 +4,7 @@ definePage({
     order: 3,
     icon: 'logos:vue',
     href: 'https://vuejs.org/',
+    roles: ['ADMIN'],
   },
 })
 </script>

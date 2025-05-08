@@ -8,7 +8,7 @@ import { useRouter } from 'vue-router'
 definePage({
   meta: {
     title: 'Ajouter une propriété - Étape 1',
-
+    hideInMenu: true,
     activeMenu: '/propriete',
   },
 })

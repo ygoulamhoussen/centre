@@ -11,6 +11,7 @@ definePage({
     title: 'Ajouter une quittance - Étape 1',
     hideInMenu: true,
     activeMenu: '/quittance',
+    roles: ['USER', 'ADMIN'],
   },
 })
 

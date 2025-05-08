@@ -3,6 +3,7 @@ definePage({
   meta: {
     order: 5,
     icon: 'logos:unocss',
+    roles: ['ADMIN'],
   },
 })
 </script>

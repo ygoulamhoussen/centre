@@ -2,7 +2,7 @@
 definePage({
   meta: {
     hideInMenu: true,
-    roles: ['R_ADMIN'],
+    roles: ['ADMIN'],
     activeMenu: '/manage/user',
   },
   props: true,

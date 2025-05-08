@@ -12,7 +12,7 @@ definePage({
   meta: {
     icon: 'carbon:user-role',
     order: 2,
-    roles: ['R_SUPER'],
+    roles: ['ADMIN'],
   },
 })
 

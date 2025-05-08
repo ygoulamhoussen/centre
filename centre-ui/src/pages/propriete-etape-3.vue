@@ -22,6 +22,7 @@ definePage({
     title: 'Ajouter une propriété - Étape 3',
     hideInMenu: true,
     activeMenu: '/propriete',
+    
   },
 })
 

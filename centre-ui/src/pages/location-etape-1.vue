@@ -9,7 +9,8 @@ import { useRouter } from 'vue-router'
 definePage({
   meta: {
     title: 'Nouvelle location - Étape 1',
-    hideInMenu: true
+    hideInMenu: true,
+    activeMenu: '/location',
   }
 })
 
@@ -54,7 +55,7 @@ onMounted(() => {
 <template>
   <NSpace vertical :size="24">
     <NH1>Nouvelle location - Étape 1</NH1>
-{{ utilisateurId }}
+
     <NForm label-placement="top">
       <NFormItem label="Propriété">
         <NSelect

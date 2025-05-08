@@ -12,7 +12,7 @@ definePage({
   meta: {
     icon: 'ic:round-manage-accounts',
     order: 1,
-    roles: ['R_ADMIN'],
+    roles: ['ADMIN'],
   },
 })
 

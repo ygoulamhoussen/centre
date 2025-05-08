@@ -1,22 +1,23 @@
 <script setup lang="ts">
-import { useUnifiedStore } from '@/store/unifiedStore'
 import { useAuthStore } from '@/store/modules/auth'
-import { useRouter } from 'vue-router'
+import { useUnifiedStore } from '@/store/unifiedStore'
 import {
-  NSpace,
-  NH1,
   NButton,
   NDescriptions,
   NDescriptionsItem,
-  useMessage
+  NH1,
+  NSpace,
+  useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
     title: 'Nouvelle location - Récapitulatif',
-    hideInMenu: true
+    hideInMenu: true,
+    activeMenu: '/location',
   }
 })
 

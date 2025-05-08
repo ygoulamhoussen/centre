@@ -3,6 +3,7 @@ definePage({
   meta: {
     order: 4,
     icon: 'logos:vitejs',
+    roles: ['ADMIN'],
   },
 })
 </script>

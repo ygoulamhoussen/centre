@@ -1,16 +1,32 @@
 package com.formation.centre.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 @Entity
 @Table(name = "document")
-public class Document {
+public class DocumentEntity {
 
     @Id
     private UUID id;
+    
+    @Lob
+    @Column(name = "contenu")
+    //mapping pour le type 
+    private String contenu;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "utilisateur_id")
@@ -49,6 +65,14 @@ public class Document {
 
     @Column(name = "modifie_le")
     private LocalDateTime modifieLe;
+
+    public String getContenu() {
+        return contenu;
+    }
+
+    public void setContenu(String contenu) {
+        this.contenu = contenu;
+    }
 
     public enum TypeDocument {
         Facture, Quittance, Bail, Justificatif, ContratDeCredit, Autre

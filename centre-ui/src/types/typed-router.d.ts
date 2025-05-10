@@ -42,6 +42,8 @@ declare module 'vue-router/auto-routes' {
     '/manage/role': RouteRecordInfo<'/manage/role', '/manage/role', Record<never, never>, Record<never, never>>,
     '/manage/user': RouteRecordInfo<'/manage/user', '/manage/user', Record<never, never>, Record<never, never>>,
     '/manage/user-detail.[id]': RouteRecordInfo<'/manage/user-detail.[id]', '/manage/user-detail/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    '/pieces': RouteRecordInfo<'/pieces', '/pieces', Record<never, never>, Record<never, never>>,
+    '/pieces-ajout': RouteRecordInfo<'/pieces-ajout', '/pieces-ajout', Record<never, never>, Record<never, never>>,
     '/plugin': RouteRecordInfo<'/plugin', '/plugin', Record<never, never>, Record<never, never>>,
     '/plugin/audio': RouteRecordInfo<'/plugin/audio', '/plugin/audio', Record<never, never>, Record<never, never>>,
     '/plugin/charts': RouteRecordInfo<'/plugin/charts', '/plugin/charts', Record<never, never>, Record<never, never>>,

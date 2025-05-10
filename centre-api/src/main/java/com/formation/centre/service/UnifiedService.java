@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.CreditDTO;
+import com.formation.centre.dto.DocumentDTO;
 import com.formation.centre.dto.LocataireDTO;
 import com.formation.centre.dto.LocationDTO;
 import com.formation.centre.dto.PaiementDTO;
@@ -22,6 +23,7 @@ import com.formation.centre.dto.ProprieteDTO;
 import com.formation.centre.dto.QuittanceDTO;
 import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Credit;
+import com.formation.centre.model.DocumentEntity;
 import com.formation.centre.model.Locataire;
 import com.formation.centre.model.Location;
 import com.formation.centre.model.Paiement;
@@ -29,6 +31,7 @@ import com.formation.centre.model.Propriete;
 import com.formation.centre.model.Quittance;
 import com.formation.centre.model.Utilisateur;
 import com.formation.centre.repository.CreditRepository;
+import com.formation.centre.repository.DocumentEntityRepository;
 import com.formation.centre.repository.LocataireRepository;
 import com.formation.centre.repository.LocationRepository;
 import com.formation.centre.repository.PaiementRepository;
@@ -52,6 +55,9 @@ public class UnifiedService {
     @Autowired private QuittanceRepository quittanceRepository;
     @Autowired private PaiementRepository paiementRepository;
     @Autowired private CreditRepository creditRepository;
+    @Autowired private DocumentEntityRepository documentEntityRepository;
+
+
 
     // --- PROPRIETE ---
     public List<ProprieteDTO> getProprietesByUtilisateur(String utilisateurId) {
@@ -491,5 +497,70 @@ public class UnifiedService {
             throw new RuntimeException("Erreur de génération PDF : " + e.getMessage(), e);
         }
     }
+
+    public DocumentDTO saveDocument(String fichier, String utilisateurId, String proprieteId, String locataireId, String typeDocument, String titre, String dateDocument) {
+
+        DocumentEntity doc = new DocumentEntity();
+        doc.setId(UUID.randomUUID());
+        doc.setUtilisateur(utilisateurRepository.findById(UUID.fromString(utilisateurId)).orElseThrow());
+        if (proprieteId != null) {
+            doc.setPropriete(proprieteRepository.findById(UUID.fromString(proprieteId)).orElse(null));
+        }
+        if (locataireId != null) {
+            doc.setLocataire(locataireRepository.findById(UUID.fromString(locataireId)).orElse(null));
+        }
+        doc.setTypeDocument(DocumentEntity.TypeDocument.valueOf(typeDocument));
+        doc.setTitre(titre);
+        doc.setDateDocument(LocalDate.parse(dateDocument));
+        doc.setContenu(fichier);
+        doc.setCreeLe(LocalDateTime.now());
+        doc.setModifieLe(LocalDateTime.now());
+
+        documentEntityRepository.save(doc);
+        return toDTO(doc);
+
+}
+
+
+private DocumentDTO toDTO(DocumentEntity document) {
+    DocumentDTO dto = new DocumentDTO();
+    dto.setId(document.getId().toString());
+    dto.setTitre(document.getTitre());
+    dto.setTypeDocument(document.getTypeDocument().name());
+    dto.setDateDocument(document.getDateDocument() != null ? document.getDateDocument().toString() : null);
+
+    if (document.getUtilisateur() != null) {
+        dto.setUtilisateurId(document.getUtilisateur().getId().toString());
+    }
+    if (document.getPropriete() != null) {
+        dto.setProprieteId(document.getPropriete().getId().toString());
+    }
+    if (document.getLocataire() != null) {
+        dto.setLocataireId(document.getLocataire().getId().toString());
+    }
+
+    // Le contenu est optionnel dans le DTO, on le met uniquement si nécessaire
+    //encoder le contenu de document en base64  
+    //String encodedContent = Base64.getEncoder().encodeToString(document.getContenu());
+
+     dto.setContenu(document.getContenu());
+
+    return dto;
+}
+
+
+
+public DocumentDTO getDocumentById(String id) {
+    DocumentEntity doc = documentEntityRepository.findById(UUID.fromString(id))
+        .orElseThrow(() -> new RuntimeException("Document introuvable"));
+    return toDTO(doc);
+}
+
+public List<DocumentDTO> getDocumentsByUtilisateur(String utilisateurId) {
+    UUID userId = UUID.fromString(utilisateurId);
+    return documentEntityRepository.findByUtilisateur_Id(userId).stream()
+        .map(this::toDTO)
+        .collect(Collectors.toList());
+}
     
 }

@@ -11,6 +11,7 @@ public class DocumentDTO {
     private String titre;
     private String urlFichier;
     private String dateDocument;
+    private String contenu; // pour les téléchargements si besoin
 
     // Getters & Setters
 
@@ -92,5 +93,13 @@ public class DocumentDTO {
 
     public void setDateDocument(String dateDocument) {
         this.dateDocument = dateDocument;
+    }
+
+    public String getContenu() {
+        return contenu;
+    }
+
+    public void setContenu(String contenu) {
+        this.contenu = contenu;
     }
 }

@@ -136,6 +136,7 @@ const local: App.I18n.Schema = {
     '/locataire': 'Locataires',
     '/quittance': 'Quittances',
     '/location': 'Locations',
+    '/pieces': 'Documents',
     '/document': 'Documentation',
     '/document/naive': 'Document Naive UI',
     '/document/unocss': 'Document UnoCSS',

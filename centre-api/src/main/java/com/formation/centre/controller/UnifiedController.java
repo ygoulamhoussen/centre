@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.CreditDTO;
+import com.formation.centre.dto.DocumentDTO;
 import com.formation.centre.dto.LocataireDTO;
 import com.formation.centre.dto.LocationDTO;
 import com.formation.centre.dto.PaiementDTO;
@@ -188,5 +189,32 @@ public ResponseEntity<byte[]> generateQuittancePdf(@PathVariable String quittanc
 
     return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
 }
+
+@PostMapping("/uploadDocument")
+public DocumentDTO uploadDocument(@RequestBody DocumentDTO dto) {
+//byte[] data = Base64.getDecoder().decode(dto.getContenu());
+    return unifiedService.saveDocument(dto.getContenu(), dto.getUtilisateurId(), dto.getProprieteId(), dto.getLocataireId(), dto.getTypeDocument(), dto.getTitre(), dto.getDateDocument());
+}
+
+@GetMapping("/downloadDocument/{id}")
+public ResponseEntity<String> downloadDocument(@PathVariable String id) {
+    DocumentDTO dto = unifiedService.getDocumentById(id);
+    if (dto.getContenu() == null) {
+        return ResponseEntity.notFound().build();
+    }
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+    headers.setContentDisposition(ContentDisposition.attachment().filename(dto.getTitre() != null ? dto.getTitre() : "document.bin").build());
+
+    return new ResponseEntity<>(dto.getContenu(), headers, HttpStatus.OK);
+}
+
+@GetMapping("/getDocumentsByUtilisateur/{utilisateurId}")
+public ResponseEntity<List<DocumentDTO>> getDocumentsByUtilisateur(@PathVariable String utilisateurId) {
+    return ResponseEntity.ok(unifiedService.getDocumentsByUtilisateur(utilisateurId));
+}
+
+
 
 } 

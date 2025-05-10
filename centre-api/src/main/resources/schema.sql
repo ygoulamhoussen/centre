@@ -233,11 +233,14 @@ CREATE TABLE document (
     ecriture_id UUID REFERENCES ecriture_comptable(id),
     type_document TEXT,
     titre TEXT,
+    nom_fichier TEXT,
     url_fichier TEXT,
+    contenu TEXT, -- stockage binaire du fichier
     date_document DATE,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
+
 
 
 ALTER TABLE quittance

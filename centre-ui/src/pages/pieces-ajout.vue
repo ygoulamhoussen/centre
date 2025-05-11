@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { NButton, NText, useMessage } from 'naive-ui'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+
 definePage({
   meta: {
     title: 'Mes documents - ajout',
@@ -17,11 +18,12 @@ const router = useRouter()
 const message = useMessage()
 
 const form = ref({
-  titre: '',
   typeDocument: '',
   dateDocument: null,
-  contenu: null as number[] | null,
-  nomFichier: '',
+  contenu: null as string | null,
+  titre: '',
+  proprieteId: null as string | null,
+  locataireId: null as string | null,
 })
 
 const typeOptions = [
@@ -33,21 +35,34 @@ const typeOptions = [
   { label: 'Autre', value: 'Autre' },
 ]
 
+const proprietes = ref<any[]>([])
+const locataires = ref<any[]>([])
+
+async function fetchOptions() {
+  const userId = authStore.userInfo.userId
+  try {
+    const propRes = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/${userId}`)
+    proprietes.value = await propRes.json()
+
+    const locRes = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocatairesByUtilisateur/${userId}`)
+    locataires.value = await locRes.json()
+  } catch (e) {
+    message.error('Erreur lors du chargement des données.')
+  }
+}
+
 function handleFileUpload(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
-  if (!file)
-    return
+  if (!file) return
 
   const reader = new FileReader()
   reader.onload = () => {
     const result = reader.result as string
-    // Vérifie que c'est bien une Data URL
     if (result.startsWith('data:')) {
       const base64String = result.split(',')[1]
       form.value.contenu = base64String
-      form.value.nomFichier = file.name
-    }
- else {
+      form.value.titre = file.name
+    } else {
       console.error('Format inattendu pour le fichier')
     }
   }
@@ -55,6 +70,26 @@ function handleFileUpload(event: Event) {
 }
 
 async function submit() {
+  if (!form.value.typeDocument) {
+    message.error('Veuillez sélectionner un type de document.')
+    return
+  }
+
+    if (!form.value.dateDocument) {
+    message.error('Veuillez saisir une date.')
+    return
+  }
+
+  if (!form.value.contenu) {
+    message.error('Veuillez sélectionner un fichier.')
+    return
+  }
+
+  if (!form.value.proprieteId && !form.value.locataireId) {
+    message.error('Veuillez associer le document à une propriété ou un locataire.')
+    return
+  }
+
   const payload = {
     ...form.value,
     utilisateurId: authStore.userInfo.userId,
@@ -74,14 +109,12 @@ async function submit() {
   message.success('Document enregistré !')
   router.push('/pieces')
 }
+
+onMounted(fetchOptions)
 </script>
 
 <template>
   <n-form label-placement="top">
-    <n-form-item label="Titre">
-      <n-input v-model:value="form.titre" />
-    </n-form-item>
-
     <n-form-item label="Type de document">
       <n-select v-model:value="form.typeDocument" :options="typeOptions" />
     </n-form-item>
@@ -90,10 +123,26 @@ async function submit() {
       <n-date-picker v-model:formatted-value="form.dateDocument" type="date" value-format="yyyy-MM-dd" />
     </n-form-item>
 
+    <n-form-item label="Propriété associée (obligatoire si pas de locataire)">
+      <n-select
+        v-model:value="form.proprieteId"
+        :options="proprietes.map(p => ({ label: p.nom, value: p.id }))"
+        clearable
+      />
+    </n-form-item>
+
+    <n-form-item label="Locataire associé (obligatoire si pas de propriété)">
+      <n-select
+        v-model:value="form.locataireId"
+        :options="locataires.map(l => ({ label: l.nom, value: l.id }))"
+        clearable
+      />
+    </n-form-item>
+
     <n-form-item label="Fichier">
-      <input type="file" @change="handleFileUpload" >
-      <div v-if="form.nomFichier" class="mt-2 text-sm">
-        <NText type="info">Fichier sélectionné : {{ form.nomFichier }}</NText>
+      <input type="file" @change="handleFileUpload" />
+      <div v-if="form.titre" class="mt-2 text-sm">
+        <NText type="info">Fichier sélectionné : {{ form.titre }}</NText>
       </div>
     </n-form-item>
 

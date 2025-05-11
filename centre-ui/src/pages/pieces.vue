@@ -50,11 +50,25 @@ async function telecharger(documentId: string, nom: string) {
       bytes[i] = binary.charCodeAt(i)
     }
 
-    // Crée un blob et télécharge
-    const blob = new Blob([bytes], { type: 'application/pdf' })
+    // Devine le type MIME en fonction de l’extension
+    const extension = nom.split('.').pop()?.toLowerCase() || ''
+    const mimeTypes: Record<string, string> = {
+      pdf: 'application/pdf',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      doc: 'application/msword',
+      txt: 'text/plain',
+      csv: 'text/csv'
+    }
+
+    const mimeType = mimeTypes[extension] || 'application/octet-stream'
+
+    const blob = new Blob([bytes], { type: mimeType })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = nom.endsWith('.pdf') ? nom : `${nom}.pdf`
+    link.download = nom
     document.body.appendChild(link)
     link.click()
     link.remove()
@@ -64,6 +78,7 @@ async function telecharger(documentId: string, nom: string) {
     message.error('Impossible de télécharger le document')
   }
 }
+
 
 
 const columns = [

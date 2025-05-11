@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
-// Importation des icônes depuis @vicons/fluent
-
+import { useUnifiedStore } from '@/store/unifiedStore'
 import { Box24Regular, Building24Regular, Home24Regular, VehicleCar24Regular } from '@vicons/fluent'
 import {
   NButton,
@@ -12,7 +11,7 @@ import {
   NIcon,
   NPopconfirm,
   NSpace,
-  useMessage,
+  useMessage
 } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -22,34 +21,32 @@ definePage({
     title: 'Mes propriétés',
     icon: 'mdi:home-city',
     order: 2,
-  },
+  }
 })
 
 const router = useRouter()
 const message = useMessage()
 const authStore = useAuthStore()
 const proprietes = ref<any[]>([])
+const store = useUnifiedStore()
 
-// Récupération des propriétés
 async function fetchProprietes() {
   try {
     const userId = authStore.userInfo.userId
     const response = await fetch(
       `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/${userId}`
     )
-    const data = await response.json()
-    proprietes.value = data
+    proprietes.value = await response.json()
   } catch (error) {
     console.error('Erreur lors du chargement des propriétés :', error)
     message.error('Impossible de charger les propriétés')
   }
 }
 
-// Suppression d'une propriété
 async function supprimerPropriete(id: string) {
   try {
     await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deletePropriete/${id}`, {
-      method: 'DELETE',
+      method: 'DELETE'
     })
     message.success('Propriété supprimée')
     await fetchProprietes()
@@ -59,12 +56,15 @@ async function supprimerPropriete(id: string) {
   }
 }
 
-// Navigation vers la création
 function demarrerCreation() {
   router.push('/propriete-etape-1')
 }
 
-// Retourne le composant icône adapté au type de bien
+function allerAuDetail(id: string) {
+  store.setSelectedProprieteId(id)
+  router.push('/propriete-detail')
+}
+
 function getIconComponent(typeBien: string) {
   switch (typeBien.toUpperCase()) {
     case 'APPARTEMENT':
@@ -80,9 +80,7 @@ function getIconComponent(typeBien: string) {
   }
 }
 
-onMounted(() => {
-  fetchProprietes()
-})
+onMounted(fetchProprietes)
 </script>
 
 <template>
@@ -96,7 +94,13 @@ onMounted(() => {
 
     <NGrid cols="1 s:1 m:2 l:3" x-gap="16" y-gap="16" v-if="proprietes.length">
       <NGi v-for="propriete in proprietes" :key="propriete.id">
-        <NCard :title="propriete.nom" size="small">
+        <NCard
+          class="hoverable-card"
+          :title="propriete.nom"
+          size="small"
+          content-style="cursor: pointer;"
+          @click="allerAuDetail(propriete.id)"
+        >
           <div class="mb-2 flex items-center gap-3">
             <NIcon :component="getIconComponent(propriete.typeBien)" size="40" :depth="1" />
             <div>
@@ -106,7 +110,7 @@ onMounted(() => {
           </div>
 
           <template #footer>
-            <div class="flex justify-end">
+            <div class="flex justify-end" @click.stop>
               <NPopconfirm
                 @positive-click="() => supprimerPropriete(propriete.id)"
                 positive-text="Supprimer"
@@ -129,4 +133,25 @@ onMounted(() => {
   </NSpace>
 </template>
 
-<style scoped></style>
+<style scoped>
+.hoverable-card {
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s,
+    background-color 0.2s;
+  border-radius: 8px;
+}
+.hoverable-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  background-color: #f9f9f9;
+  border: 1px solid #409eff;
+}
+.flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+</style>

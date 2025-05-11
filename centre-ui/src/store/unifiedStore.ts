@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 
 export const useUnifiedStore = defineStore('unified', {
   state: () => ({
+    selectedProprieteId: null as string | null,
+
     proprieteDTO: {
       id: null as string | null,
       nom: null as string | null,
@@ -79,6 +81,9 @@ export const useUnifiedStore = defineStore('unified', {
   }),
 
   actions: {
+    setSelectedProprieteId(id: string | null) {
+      this.selectedProprieteId = id
+    },
     updateProprieteField(field: string, value: any) {
       (this.proprieteDTO as any)[field] = value
     },

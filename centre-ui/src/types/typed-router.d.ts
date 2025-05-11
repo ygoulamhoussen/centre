@@ -76,6 +76,7 @@ declare module 'vue-router/auto-routes' {
     '/plugin/typeit': RouteRecordInfo<'/plugin/typeit', '/plugin/typeit', Record<never, never>, Record<never, never>>,
     '/plugin/video': RouteRecordInfo<'/plugin/video', '/plugin/video', Record<never, never>, Record<never, never>>,
     '/propriete': RouteRecordInfo<'/propriete', '/propriete', Record<never, never>, Record<never, never>>,
+    '/propriete-detail': RouteRecordInfo<'/propriete-detail', '/propriete-detail', Record<never, never>, Record<never, never>>,
     '/propriete-etape-1': RouteRecordInfo<'/propriete-etape-1', '/propriete-etape-1', Record<never, never>, Record<never, never>>,
     '/propriete-etape-2': RouteRecordInfo<'/propriete-etape-2', '/propriete-etape-2', Record<never, never>, Record<never, never>>,
     '/propriete-etape-3': RouteRecordInfo<'/propriete-etape-3', '/propriete-etape-3', Record<never, never>, Record<never, never>>,

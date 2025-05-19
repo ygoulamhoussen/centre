@@ -2,6 +2,7 @@ package com.formation.centre.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
@@ -20,11 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.CreditDTO;
+import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
 import com.formation.centre.dto.LocataireDTO;
+import com.formation.centre.dto.LocataireDetailDTO;
 import com.formation.centre.dto.LocationDTO;
+import com.formation.centre.dto.LocationDetailDTO;
 import com.formation.centre.dto.PaiementDTO;
 import com.formation.centre.dto.ProprieteDTO;
+import com.formation.centre.dto.ProprieteDetailDTO;
 import com.formation.centre.dto.QuittanceDTO;
 import com.formation.centre.service.UnifiedService;
 
@@ -215,6 +220,29 @@ public ResponseEntity<List<DocumentDTO>> getDocumentsByUtilisateur(@PathVariable
     return ResponseEntity.ok(unifiedService.getDocumentsByUtilisateur(utilisateurId));
 }
 
+@GetMapping("/dashboard/{utilisateurId}")
+public DashboardDTO getDashboard(@PathVariable String utilisateurId) {
+    return unifiedService.getDashboard(utilisateurId);
+}
+
+@GetMapping("/getLocationDetail/{id}")
+public ResponseEntity<LocationDetailDTO> getLocationDetail(@PathVariable String id) {
+    return ResponseEntity.ok(unifiedService.getLocationDetail(id));
+}
+
+@GetMapping("/getLocataireDetails/{locataireId}")
+public LocataireDetailDTO getLocataireDetails(@PathVariable UUID locataireId) {
+    return unifiedService.getLocataireDetails(locataireId);
+}
+
+
+
+@GetMapping("/getProprieteDetails/{proprieteId}")
+public ProprieteDetailDTO getProprieteDetails(@PathVariable UUID proprieteId) { 
+
+        return unifiedService.getProprieteDetail(proprieteId);
+
+}
 
 
 } 

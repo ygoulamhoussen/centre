@@ -36,12 +36,12 @@ const gap = computed(() => (appStore.isMobile ? 0 : 16))
       </NGi>
     </NGrid>
     <NGrid :x-gap="gap" :y-gap="16" responsive="screen" item-responsive>
-      <NGi span="24 s:24 m:14">
+<!--       <NGi span="24 s:24 m:14">
         <ProjectNews />
-      </NGi>
-      <NGi span="24 s:24 m:10">
+      </NGi> -->
+<!--       <NGi span="24 s:24 m:10">
         <CreativityBanner />
-      </NGi>
+      </NGi> -->
     </NGrid>
   </NSpace>
 </template>

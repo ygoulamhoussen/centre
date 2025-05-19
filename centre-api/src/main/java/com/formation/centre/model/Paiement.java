@@ -1,10 +1,17 @@
 package com.formation.centre.model;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "paiement")
@@ -22,9 +29,9 @@ public class Paiement {
 
     private BigDecimal montant;
 
-    @Enumerated(EnumType.STRING)
+
     @Column(name = "moyen_paiement")
-    private MoyenPaiement moyenPaiement;
+    private String moyenPaiement;
 
     private String reference;
     private String commentaire;
@@ -37,6 +44,14 @@ public class Paiement {
 
     @Column(name = "modifie_le")
     private LocalDateTime modifieLe;
+
+    public String getMoyenPaiement() {
+        return moyenPaiement;
+    }
+
+    public void setMoyenPaiement(String moyenPaiement) {
+        this.moyenPaiement = moyenPaiement;
+    }
 
     public enum MoyenPaiement {
         Virement, Cheque, Especes, Prelevement, CarteBancaire, Autre
@@ -76,13 +91,7 @@ public class Paiement {
         this.montant = montant;
     }
 
-    public MoyenPaiement getMoyenPaiement() {
-        return moyenPaiement;
-    }
-
-    public void setMoyenPaiement(MoyenPaiement moyenPaiement) {
-        this.moyenPaiement = moyenPaiement;
-    }
+  
 
     public String getReference() {
         return reference;

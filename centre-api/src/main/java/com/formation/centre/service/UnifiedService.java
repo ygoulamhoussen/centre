@@ -4,8 +4,12 @@ import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -15,11 +19,15 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.CreditDTO;
+import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
 import com.formation.centre.dto.LocataireDTO;
+import com.formation.centre.dto.LocataireDetailDTO;
 import com.formation.centre.dto.LocationDTO;
+import com.formation.centre.dto.LocationDetailDTO;
 import com.formation.centre.dto.PaiementDTO;
 import com.formation.centre.dto.ProprieteDTO;
+import com.formation.centre.dto.ProprieteDetailDTO;
 import com.formation.centre.dto.QuittanceDTO;
 import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Credit;
@@ -67,7 +75,7 @@ public class UnifiedService {
 
         return proprieteRepository.findAll().stream()
                 .filter(p -> p.getUtilisateur().getId().equals(userId))
-                .map(this::toDto)
+                .map(this::toDTO)
                 .collect(Collectors.toList());
     }
     
@@ -111,7 +119,7 @@ public class UnifiedService {
             entity.setCompositions(compositions);
 
             Propriete saved = proprieteRepository.save(entity);
-            return toDto(saved);
+            return toDTO(saved);
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de la création de la propriété et des compositions : " + e.getMessage(), e);
         }
@@ -167,14 +175,14 @@ public class UnifiedService {
         }
 
         Propriete saved = proprieteRepository.save(p);
-        return toDto(saved);
+        return toDTO(saved);
     }
 
     public void deletePropriete(String proprieteId) {
         proprieteRepository.deleteById(UUID.fromString(proprieteId));
     }
 
-    private ProprieteDTO toDto(Propriete p) {
+    private ProprieteDTO toDTO(Propriete p) {
         ProprieteDTO dto = new ProprieteDTO();
         dto.setId(p.getId().toString());
         dto.setNom(p.getNom());
@@ -280,7 +288,7 @@ public class UnifiedService {
         loc.setLoyerMensuel(new BigDecimal(dto.getLoyerMensuel()));
         loc.setChargesMensuelles(new BigDecimal(dto.getChargesMensuelles()));
         loc.setDepotGarantie(new BigDecimal(dto.getDepotGarantie()));
-        loc.setFrequenceLoyer(Location.FrequenceLoyer.valueOf(dto.getFrequenceLoyer()));
+        loc.setFrequenceLoyer(dto.getFrequenceLoyer());
         loc.setJourEcheance(Integer.parseInt(dto.getJourEcheance()));
         loc.setModifieLe(LocalDateTime.now());
 
@@ -305,7 +313,7 @@ public class UnifiedService {
         dto.setLoyerMensuel(loc.getLoyerMensuel().toPlainString());
         dto.setChargesMensuelles(loc.getChargesMensuelles().toPlainString());
         dto.setDepotGarantie(loc.getDepotGarantie().toPlainString());
-        dto.setFrequenceLoyer(loc.getFrequenceLoyer().toString());
+        dto.setFrequenceLoyer(loc.getFrequenceLoyer());
         dto.setJourEcheance(Integer.toString(loc.getJourEcheance()));
         return dto;
     }
@@ -390,7 +398,7 @@ public class UnifiedService {
         p.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElseThrow());
         p.setDatePaiement(LocalDate.parse(dto.getDatePaiement()));
         p.setMontant(new BigDecimal(dto.getMontant()));
-        p.setMoyenPaiement(Paiement.MoyenPaiement.valueOf(dto.getMoyenPaiement()));
+        p.setMoyenPaiement(dto.getMoyenPaiement());
         p.setReference(dto.getReference());
         p.setCommentaire(dto.getCommentaire());
         p.setEstValide(Boolean.valueOf(dto.getEstValide()));
@@ -563,4 +571,184 @@ public List<DocumentDTO> getDocumentsByUtilisateur(String utilisateurId) {
         .collect(Collectors.toList());
 }
     
+public CompositionAcquisitionDTO toDTO(CompositionAcquisition c) {
+    CompositionAcquisitionDTO dto = new CompositionAcquisitionDTO();
+    dto.setId(c.getId().toString());
+    dto.setCategorie(c.getCategorie());
+    dto.setMontant(c.getMontant().toPlainString());
+    dto.setDescription(c.getDescription());
+    return dto;
 }
+
+
+
+public ProprieteDetailDTO getProprieteDetail(UUID proprieteId) {
+    Propriete propriete = proprieteRepository.findById(proprieteId)
+        .orElseThrow(() -> new RuntimeException("Propriété non trouvée"));
+
+    List<CompositionAcquisitionDTO> compositions = propriete.getCompositions().stream()
+        .map(this::toDTO)
+        .toList();
+
+    List<DocumentDTO> documents = documentEntityRepository.findByPropriete_Id(proprieteId).stream()
+        .map(this::toDTO)
+        .toList();
+
+    return new ProprieteDetailDTO(
+        toDTO(propriete),
+        compositions,
+        documents
+    );
+}
+
+public DashboardDTO getDashboard(String id) {
+    UUID utilisateurId = UUID.fromString(id);
+    List<Propriete> proprietes = proprieteRepository.findByUtilisateur_Id(utilisateurId);
+    List<Location> locations = locationRepository.findByPropriete_Utilisateur_Id(utilisateurId);
+    List<Quittance> quittances = quittanceRepository.findByLocation_Propriete_Utilisateur_Id(utilisateurId);
+    List<Paiement> paiements = paiementRepository.findByQuittance_Location_Propriete_Utilisateur_Id(utilisateurId);
+
+    long totalBiens = proprietes.size();
+
+    // Répartition par type
+    Map<String, Long> repartitionParType = proprietes.stream()
+        .collect(Collectors.groupingBy(
+            p -> p.getTypeBien().toString(),
+            Collectors.counting()
+        ));
+
+    // Taux d'occupation = nb locations actives / nb propriétés
+    long nbLocationsActives = locations.stream()
+        .filter(loc -> loc.getDateFin() == null || loc.getDateFin().isAfter(LocalDate.now()))
+        .count();
+    double tauxOccupation = totalBiens == 0 ? 0.0 : (double) nbLocationsActives / totalBiens;
+
+    // Alerte impayé = quittances non soldées
+    List<Quittance> impayes = quittances.stream()
+        .filter(q -> "IMPAYEE".equals(q.getStatut()) || "PARTIELLE".equals(q.getStatut()))
+        .toList();
+
+    // Total des loyers perçus ce mois-ci
+    LocalDate premierJourMois = LocalDate.now().withDayOfMonth(1);
+    LocalDate dernierJourMois = premierJourMois.with(TemporalAdjusters.lastDayOfMonth());
+    BigDecimal totalLoyersPerçus = paiements.stream()
+        .filter(p -> {
+            LocalDate dp = p.getDatePaiement();
+            return dp != null && !dp.isBefore(premierJourMois) && !dp.isAfter(dernierJourMois);
+        })
+        .map(Paiement::getMontant)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    // Répartition des loyers perçus mois par mois
+    Map<String, BigDecimal> loyersMensuels = paiements.stream()
+        .filter(p -> p.getDatePaiement() != null && p.getMontant() != null)
+        .collect(Collectors.groupingBy(
+            p -> p.getDatePaiement().format(DateTimeFormatter.ofPattern("yyyy-MM")),
+            TreeMap::new, // pour les trier dans l’ordre chronologique
+            Collectors.reducing(BigDecimal.ZERO, Paiement::getMontant, BigDecimal::add)
+        ));
+
+    DashboardDTO dto = new DashboardDTO();
+    dto.setNombreBiens(totalBiens);
+    dto.setRepartitionParType(repartitionParType);
+    dto.setTauxOccupation(tauxOccupation);
+    dto.setNombreImpayes(impayes.size());
+    dto.setTotalLoyersPerçus(totalLoyersPerçus);
+    dto.setLoyersMensuels(loyersMensuels);
+
+    return dto;
+}
+
+
+
+public LocataireDetailDTO getLocataireDetail(String locataireId) {
+    Locataire locataire = locataireRepository.findById(UUID.fromString(locataireId))
+        .orElseThrow(() -> new RuntimeException("Locataire introuvable"));
+
+    // Documents liés
+    List<DocumentDTO> documents = documentEntityRepository.findByLocataire_Id(locataire.getId()).stream()
+        .map(this::toDTO)
+        .collect(Collectors.toList());
+
+    // Construction DTO
+    LocataireDetailDTO dto = new LocataireDetailDTO();
+    dto.setId(locataire.getId().toString());
+    dto.setNom(locataire.getNom());
+    dto.setTelephone(locataire.getTelephone());
+    dto.setEmail(locataire.getEmail());
+    dto.setAdresse(locataire.getAdresse());
+    dto.setComplementAdresse(locataire.getComplementAdresse());
+    dto.setCodePostal(locataire.getCodePostal());
+    dto.setVille(locataire.getVille());
+    dto.setDocuments(documents);
+
+    return dto;
+}
+
+@Transactional
+public LocationDetailDTO getLocationDetail(String locationId) {
+    Location location = locationRepository.findById(UUID.fromString(locationId))
+        .orElseThrow(() -> new IllegalArgumentException("Location non trouvée"));
+
+    LocationDetailDTO dto = new LocationDetailDTO();
+    dto.setId(location.getId().toString());
+    dto.setDateDebut(location.getDateDebut() != null ? location.getDateDebut().toString() : null);
+    dto.setDateFin(location.getDateFin() != null ? location.getDateFin().toString() : null);
+    dto.setFrequenceLoyer(location.getFrequenceLoyer());
+    dto.setJourEcheance(location.getJourEcheance() != null ? location.getJourEcheance().toString() : null);
+    dto.setLoyerMensuel(location.getLoyerMensuel() != null ? location.getLoyerMensuel().toString() : null);
+    dto.setChargesMensuelles(location.getChargesMensuelles() != null ? location.getChargesMensuelles().toString() : null);
+    dto.setDepotGarantie(location.getDepotGarantie() != null ? location.getDepotGarantie().toString() : null);
+
+    dto.setLocataire(toDTO(location.getLocataire()));
+    dto.setPropriete(toDTO(location.getPropriete()));
+
+    return dto;
+}
+
+
+public LocataireDTO toDTO(Locataire locataire) {
+    if (locataire == null) return null;
+
+    LocataireDTO dto = new LocataireDTO();
+    dto.setId(locataire.getId().toString());
+    dto.setUtilisateurId(locataire.getUtilisateur() != null ? locataire.getUtilisateur().getId().toString() : null);
+    dto.setNom(locataire.getNom());
+    dto.setTelephone(locataire.getTelephone());
+    dto.setEmail(locataire.getEmail());
+    dto.setAdresse(locataire.getAdresse());
+    dto.setComplementAdresse(locataire.getComplementAdresse());
+    dto.setCodePostal(locataire.getCodePostal());
+    dto.setVille(locataire.getVille());
+
+    return dto;
+}
+
+public LocataireDetailDTO getLocataireDetails(UUID locataireId) {
+    Locataire locataire = locataireRepository.findById(locataireId)
+        .orElseThrow(() -> new RuntimeException("Locataire non trouvé"));
+
+    LocataireDTO locataireDTO = toDTO(locataire);
+    List<DocumentDTO> documents = documentEntityRepository.findByLocataire_Id(locataireId).stream()
+        .map(this::toDTO)
+        .toList();
+
+    LocataireDetailDTO detailDTO = new LocataireDetailDTO();
+    detailDTO.setId(locataireDTO.getId());
+    detailDTO.setNom(locataireDTO.getNom());
+    detailDTO.setTelephone(locataireDTO.getTelephone());
+    detailDTO.setEmail(locataireDTO.getEmail());
+    detailDTO.setAdresse(locataireDTO.getAdresse());
+    detailDTO.setComplementAdresse(locataireDTO.getComplementAdresse());
+    detailDTO.setCodePostal(locataireDTO.getCodePostal());
+    detailDTO.setVille(locataireDTO.getVille());
+    detailDTO.setDocuments(documents);
+    return detailDTO;
+}
+
+    }
+
+
+
+
+

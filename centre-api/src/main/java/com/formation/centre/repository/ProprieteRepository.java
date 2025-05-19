@@ -1,5 +1,6 @@
 package com.formation.centre.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,5 +20,5 @@ public interface ProprieteRepository extends JpaRepository<Propriete, UUID> {
         return composition;
     }
 
-    public Object findByUtilisateur_Id(UUID uid);
+    public List<Propriete> findByUtilisateur_Id(UUID uid);
 }

@@ -7,8 +7,6 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -45,9 +43,9 @@ public class Location {
     @Column(name = "depot_garantie")
     private BigDecimal depotGarantie;
 
-    @Enumerated(EnumType.STRING)
+
     @Column(name = "frequence_loyer")
-    private FrequenceLoyer frequenceLoyer;
+    private String frequenceLoyer;
 
     @Column(name = "jour_echeance")
     private Integer jourEcheance;
@@ -58,9 +56,7 @@ public class Location {
     @Column(name = "modifie_le")
     private LocalDateTime modifieLe;
 
-    public enum FrequenceLoyer {
-        MENSUEL, TRIMESTRIEL, ANNUEL
-    }
+  
 
     // Getters & Setters
 
@@ -128,13 +124,7 @@ public class Location {
         this.depotGarantie = depotGarantie;
     }
 
-    public FrequenceLoyer getFrequenceLoyer() {
-        return frequenceLoyer;
-    }
 
-    public void setFrequenceLoyer(FrequenceLoyer frequenceLoyer) {
-        this.frequenceLoyer = frequenceLoyer;
-    }
 
     public Integer getJourEcheance() {
         return jourEcheance;
@@ -158,5 +148,13 @@ public class Location {
 
     public void setModifieLe(LocalDateTime modifieLe) {
         this.modifieLe = modifieLe;
+    }
+
+    public String getFrequenceLoyer() {
+        return frequenceLoyer;
+    }
+
+    public void setFrequenceLoyer(String frequenceLoyer) {
+        this.frequenceLoyer = frequenceLoyer;
     }
 }

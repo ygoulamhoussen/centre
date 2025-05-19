@@ -13,6 +13,8 @@ public class DocumentDTO {
     private String dateDocument;
     private String contenu; // pour les téléchargements si besoin
 
+
+
     // Getters & Setters
 
     public String getId() {

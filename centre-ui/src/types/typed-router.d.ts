@@ -30,6 +30,7 @@ declare module 'vue-router/auto-routes' {
     '/document/vue': RouteRecordInfo<'/document/vue', '/document/vue', Record<never, never>, Record<never, never>>,
     '/home': RouteRecordInfo<'/home', '/home', Record<never, never>, Record<never, never>>,
     '/locataire': RouteRecordInfo<'/locataire', '/locataire', Record<never, never>, Record<never, never>>,
+    '/locataire-detail.[id]': RouteRecordInfo<'/locataire-detail.[id]', '/locataire-detail/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/locataire-etape-1': RouteRecordInfo<'/locataire-etape-1', '/locataire-etape-1', Record<never, never>, Record<never, never>>,
     '/locataire-etape-2': RouteRecordInfo<'/locataire-etape-2', '/locataire-etape-2', Record<never, never>, Record<never, never>>,
     '/locataire-etape-3': RouteRecordInfo<'/locataire-etape-3', '/locataire-etape-3', Record<never, never>, Record<never, never>>,

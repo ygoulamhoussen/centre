@@ -22,6 +22,14 @@ import {
 import { h, onMounted, ref } from 'vue'
 // import { useRouter } from 'vue-router'  // Will be used later
 
+
+definePage({
+  meta: {
+    title: 'Details propriete',
+    hideInMenu: true,
+    activeMenu: '/propriete',
+  },
+})
 const store = useUnifiedStore()
 const message = useMessage()
 // const _router = useRouter() // Will be used later
@@ -250,6 +258,10 @@ function formatDate(dateString: string | null | undefined) {
 onMounted(() => {
   fetchProprieteDetails()
 })
+
+function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMenu: string } }) {
+  throw new Error('Function not implemented.')
+}
 </script>
 
 <template>

@@ -75,7 +75,15 @@ onMounted(() => {
           <p>{{ locataire.adresse }}, {{ locataire.ville }}</p>
 
           <template #footer>
-            <div class="flex justify-end">
+            <div class="flex justify-end gap-2">
+              <NButton
+                size="small"
+                type="primary"
+                ghost
+                @click="$router.push(`/locataire-detail/${locataire.id}`)"
+              >
+                Voir détails
+              </NButton>
               <NPopconfirm
                 @positive-click="() => supprimerLocataire(locataire.id)"
                 negative-text="Annuler"

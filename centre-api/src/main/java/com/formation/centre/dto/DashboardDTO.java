@@ -8,7 +8,15 @@ public class DashboardDTO {
     private Map<String, Long> repartitionParType;
     private double tauxOccupation;
     private int nombreImpayes;
-    private BigDecimal totalLoyersPerçus;
+    private BigDecimal totalLoyersPercus;
+    public BigDecimal getTotalLoyersPercus() {
+        return totalLoyersPercus;
+    }
+
+    public void setTotalLoyersPercus(BigDecimal totalLoyersPercus) {
+        this.totalLoyersPercus = totalLoyersPercus;
+    }
+
     private Map<String, BigDecimal> loyersMensuels; // ← Nouveau champ
 
     // Getters et Setters
@@ -45,14 +53,7 @@ public class DashboardDTO {
         this.nombreImpayes = nombreImpayes;
     }
 
-    public BigDecimal getTotalLoyersPerçus() {
-        return totalLoyersPerçus;
-    }
-
-    public void setTotalLoyersPerçus(BigDecimal totalLoyersPerçus) {
-        this.totalLoyersPerçus = totalLoyersPerçus;
-    }
-
+    
     public Map<String, BigDecimal> getLoyersMensuels() {
         return loyersMensuels;
     }

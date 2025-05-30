@@ -653,7 +653,7 @@ public DashboardDTO getDashboard(String id) {
     dto.setRepartitionParType(repartitionParType);
     dto.setTauxOccupation(tauxOccupation);
     dto.setNombreImpayes(impayes.size());
-    dto.setTotalLoyersPerçus(totalLoyersPerçus);
+    dto.setTotalLoyersPercus(totalLoyersPerçus);
     dto.setLoyersMensuels(loyersMensuels);
 
     return dto;

@@ -381,7 +381,7 @@ public class UnifiedService {
         UUID uid = UUID.fromString(utilisateurId);
         return paiementRepository.findByQuittance_Location_Propriete_Utilisateur_Id(uid)
                 .stream()
-                .map(this::toDto)
+                .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
@@ -405,14 +405,14 @@ public class UnifiedService {
         p.setModifieLe(LocalDateTime.now());
 
         Paiement saved = paiementRepository.save(p);
-        return toDto(saved);
+        return toDTO(saved);
     }
 
     public void deletePaiement(String id) {
         paiementRepository.deleteById(UUID.fromString(id));
     }
 
-    private PaiementDTO toDto(Paiement p) {
+    private PaiementDTO toDTO(Paiement p) {
         PaiementDTO dto = new PaiementDTO();
         dto.setId(p.getId().toString());
         dto.setQuittanceId(p.getQuittance().getId().toString());
@@ -424,6 +424,8 @@ public class UnifiedService {
         dto.setEstValide(p.getEstValide().toString());
         return dto;
     }
+
+
 
     // --- CREDIT ---
     public List<CreditDTO> getCreditsByUtilisateur(String utilisateurId) {

@@ -174,11 +174,6 @@ public ResponseEntity<?> savePropriete(
         return ResponseEntity.ok(unifiedService.savePaiement(dto));
     }
 
-    @DeleteMapping("/deletePaiement/{paiementId}")
-    public ResponseEntity<Void> deletePaiement(@PathVariable String paiementId) {
-        unifiedService.deletePaiement(paiementId);
-        return ResponseEntity.noContent().build();
-    }
 
     @GetMapping("/getCreditsByUtilisateur/{utilisateurId}")
     public ResponseEntity<List<CreditDTO>> getCredits(@PathVariable String utilisateurId) {
@@ -256,10 +251,33 @@ public LocataireDetailDTO getLocataireDetails(@PathVariable UUID locataireId) {
 
 @GetMapping("/getProprieteDetails/{proprieteId}")
 public ProprieteDetailDTO getProprieteDetails(@PathVariable UUID proprieteId) { 
-
         return unifiedService.getProprieteDetail(proprieteId);
-
 }
 
+// --- PAIEMENTS ---
+
+@GetMapping("/getPaiementsByUtilisateur/{utilisateurId}")
+public ResponseEntity<List<PaiementDTO>> getPaiementsByUtilisateur(@PathVariable String utilisateurId) {
+    return ResponseEntity.ok(unifiedService.getPaiementsByUtilisateur(utilisateurId));
+}
+
+@GetMapping("/getPaiement/{id}")
+public ResponseEntity<PaiementDTO> getPaiement(@PathVariable String id) {
+    return ResponseEntity.ok(unifiedService.getPaiementsByUtilisateur(id).stream()
+        .filter(p -> p.getId().equals(id))
+        .findFirst()
+        .orElseThrow(() -> new RuntimeException("Paiement non trouvé avec l'ID: " + id)));
+}
+
+@PostMapping("/savePaiement")
+public ResponseEntity<PaiementDTO> savePaiement(@RequestBody PaiementDTO paiementDTO) {
+    return ResponseEntity.ok(unifiedService.savePaiement(paiementDTO));
+}
+
+@DeleteMapping("/deletePaiement/{id}")
+public ResponseEntity<Void> deletePaiement(@PathVariable String id) {
+    unifiedService.deletePaiement(id);
+    return ResponseEntity.ok().build();
+}
 
 } 

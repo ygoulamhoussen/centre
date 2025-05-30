@@ -75,4 +75,5 @@ public class PaiementDTO {
     public void setEstValide(String estValide) {
         this.estValide = estValide;
     }
+
 }

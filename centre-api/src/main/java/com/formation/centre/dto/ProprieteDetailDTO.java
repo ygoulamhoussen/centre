@@ -8,8 +8,10 @@ public class ProprieteDetailDTO {
     private List<CompositionAcquisitionDTO> compositions;
     private List<DocumentDTO> documents;
 
-    public ProprieteDetailDTO(ProprieteDTO toDTO, List<CompositionAcquisitionDTO> compositions, List<DocumentDTO> documents) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public ProprieteDetailDTO(ProprieteDTO propriete, List<CompositionAcquisitionDTO> compositions, List<DocumentDTO> documents) {
+        this.propriete = propriete;
+        this.compositions = compositions;
+        this.documents = documents;
     }
 
     // Getters et setters

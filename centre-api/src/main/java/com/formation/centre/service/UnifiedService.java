@@ -746,6 +746,9 @@ public LocataireDetailDTO getLocataireDetails(UUID locataireId) {
     return detailDTO;
 }
 
+
+
+
     }
 
 

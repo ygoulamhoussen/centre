@@ -159,10 +159,6 @@ public ResponseEntity<?> savePropriete(
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/getPaiementsByUtilisateur/{utilisateurId}")
-    public ResponseEntity<List<PaiementDTO>> getPaiements(@PathVariable String utilisateurId) {
-        return ResponseEntity.ok(unifiedService.getPaiementsByUtilisateur(utilisateurId));
-    }
 
     @PostMapping("/createPaiement")
     public ResponseEntity<PaiementDTO> createPaiement(@RequestBody PaiementDTO dto) {

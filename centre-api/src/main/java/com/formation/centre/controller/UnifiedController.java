@@ -118,9 +118,8 @@ public class UnifiedController {
     }
 
     @DeleteMapping("/deletePropriete/{proprieteId}")
-    public ResponseEntity<Void> deletePropriete(@PathVariable String proprieteId) {
-        unifiedService.deletePropriete(proprieteId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deletePropriete(@PathVariable String proprieteId) {
+        return unifiedService.deletePropriete(proprieteId);
     }
     
     @PostMapping("/createComposition")

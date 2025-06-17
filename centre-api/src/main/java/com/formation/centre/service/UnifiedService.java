@@ -15,7 +15,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
@@ -51,10 +54,8 @@ import com.lowagie.text.Document;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.pdf.PdfWriter;
 
-import jakarta.transaction.Transactional;
 
 @Service
-@Transactional
 public class UnifiedService {
 
     @Autowired private UtilisateurRepository utilisateurRepository;
@@ -69,6 +70,43 @@ public class UnifiedService {
 
 
     // --- PROPRIETE ---
+
+    @Transactional
+    public ResponseEntity<?> deletePropriete(String proprieteIdStr) {
+        try {
+            UUID proprieteId = UUID.fromString(proprieteIdStr);
+            
+            // Vérifier s'il existe des locations liées
+            boolean hasLocations = locationRepository.existsByProprieteId(proprieteId);
+            if (hasLocations) {
+                List<Location> locations = locationRepository.findByProprieteId(proprieteId);
+                List<String> locationsInfo = locations.stream()
+                    .map(l -> "Location #" + l.getId() + " (du " + l.getDateDebut() + ")")
+                    .collect(Collectors.toList());
+                
+                return ResponseEntity.badRequest()
+                    .body(Map.of(
+                        "message", "Impossible de supprimer cette propriété car elle est liée à des locations existantes.",
+                        "locations", locationsInfo
+                    ));
+            }
+            
+            // Si pas de locations, on peut supprimer la propriété
+            proprieteRepository.deleteById(proprieteId);
+            return ResponseEntity.noContent().build();
+            
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("message", "ID de propriété invalide", "details", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                    "message", "Erreur lors de la suppression de la propriété",
+                    "details", e.getMessage()
+                ));
+        }
+    }
+    
     public List<ProprieteDTO> getProprietesByUtilisateur(String utilisateurId) {
         UUID userId = UUID.fromString(utilisateurId);
         Utilisateur utilisateur = utilisateurRepository.findById(userId)
@@ -207,9 +245,9 @@ public class UnifiedService {
         return toDTO(saved);
     }
 
-    public void deletePropriete(String proprieteId) {
+/*     public void deletePropriete(String proprieteId) {
         proprieteRepository.deleteById(UUID.fromString(proprieteId));
-    }
+    } */
     
 
 

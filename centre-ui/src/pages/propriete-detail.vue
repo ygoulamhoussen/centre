@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
+import { useAuthStore } from '@/store/modules/auth'
 import { useRouter } from 'vue-router'
 import {
   NButton,
@@ -111,14 +112,35 @@ const _compositionColumns = [
 // Méthodes
 async function supprimerPropriete(id: string) {
   try {
-    await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deletePropriete/${id}`, {
-      method: 'DELETE'
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deletePropriete/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include'
     })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      if (response.status === 400 && errorData.message) {
+        // Afficher le message d'erreur spécifique du serveur
+        message.error(errorData.message)
+        if (errorData.locations) {
+          // Afficher la liste des locations liées si disponible
+          const locationsList = errorData.locations.join('\n')
+          message.error(`Locations liées :\n${locationsList}`, { duration: 10000 })
+        }
+      } else {
+        throw new Error(errorData.message || 'Erreur lors de la suppression')
+      }
+      return
+    }
+
     message.success('Propriété supprimée avec succès')
     router.push('/propriete')
   } catch (error) {
     console.error('Erreur lors de la suppression :', error)
-    message.error('Erreur lors de la suppression de la propriété')
+    message.error(error instanceof Error ? error.message : 'Erreur lors de la suppression de la propriété')
   }
 }
 
@@ -227,51 +249,101 @@ async function saveComposition() {
       calculerMontant()
     }
     
-    const method = compositionForm.value.id ? 'PUT' : 'POST'
-    const url = compositionForm.value.id
-      ? `${import.meta.env.VITE_SERVICE_BASE_URL}/api/updateComposition/${compositionForm.value.id}`
-      : `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createComposition`
-
-    const response = await fetch(url, {
-      method,
+    // Préparer la composition
+    const compositionToSave = {
+      id: compositionForm.value.id || undefined,
+      categorie: compositionForm.value.categorie,
+      montant: compositionForm.value.montant.toString(),
+      description: compositionForm.value.description,
+    };
+    
+    // Récupérer la propriété actuelle
+    const propriete = { ...proprieteDetail.value.propriete };
+    
+    // Mettre à jour ou ajouter la composition
+    if (compositionForm.value.id) {
+      // Mise à jour d'une composition existante
+      const index = propriete.compositions.findIndex((c: any) => c.id === compositionForm.value.id);
+      if (index !== -1) {
+        propriete.compositions[index] = {
+          ...propriete.compositions[index],
+          ...compositionToSave
+        };
+      }
+    } else {
+      // Ajout d'une nouvelle composition
+      if (!propriete.compositions) {
+        propriete.compositions = [];
+      }
+      propriete.compositions.push({
+        ...compositionToSave,
+        id: '' // L'ID sera généré par le backend
+      });
+    }
+    
+    // Mettre à jour la propriété avec les nouvelles compositions
+    const authStore = useAuthStore();
+    const userId = authStore.userInfo.userId;
+    
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/updatePropriete/${userId}`, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        ...compositionForm.value,
-        proprieteId: store.selectedProprieteId,
-      }),
-    })
+      body: JSON.stringify(propriete),
+    });
 
-    if (!response.ok) throw new Error('Erreur lors de la sauvegarde')
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || 'Erreur lors de la mise à jour de la propriété');
+    }
 
-    message.success('Composition enregistrée avec succès')
-    showCompositionModal.value = false
-    fetchProprieteDetails()
+    message.success('Composition enregistrée avec succès');
+    showCompositionModal.value = false;
+    await fetchProprieteDetails();
   } catch (error) {
-    console.error('Erreur:', error)
-    message.error('Erreur lors de la sauvegarde de la composition')
+    console.error('Erreur:', error);
+    message.error(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde de la composition');
   } finally {
-    saving.value = false
+    saving.value = false;
   }
 }
 
 async function deleteComposition(id: string) {
   try {
-    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteComposition/${id}`, {
-      method: 'DELETE',
-    })
+    if (!proprieteDetail.value?.propriete) return;
+    
+    // Créer une copie de la propriété
+    const propriete = { ...proprieteDetail.value.propriete };
+    
+    // Filtrer pour supprimer la composition
+    if (propriete.compositions) {
+      propriete.compositions = propriete.compositions.filter((c: any) => c.id !== id);
+      
+      // Mettre à jour la propriété
+      const authStore = useAuthStore();
+      const userId = authStore.userInfo.userId;
+      
+      const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/updatePropriete/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(propriete),
+      });
 
-    if (!response.ok)
-      throw new Error('Erreur lors de la suppression')
-
-    // Recharger les données
-    await fetchProprieteDetails()
-    message.success('Composition supprimée avec succès')
-  }
-  catch (error) {
-    message.error('Erreur lors de la suppression de la composition')
-    console.error(error)
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Erreur lors de la suppression de la composition');
+      }
+      
+      // Recharger les données
+      await fetchProprieteDetails();
+      message.success('Composition supprimée avec succès');
+    }
+  } catch (error) {
+    console.error('Erreur lors de la suppression :', error);
+    message.error(error instanceof Error ? error.message : 'Erreur lors de la suppression de la composition');
   }
 }
 

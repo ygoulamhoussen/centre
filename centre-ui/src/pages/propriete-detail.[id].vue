@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
 import { useAuthStore } from '@/store/modules/auth'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   NButton,
   NCard,
@@ -19,9 +19,18 @@ import {
   NSpin,
   NTabPane,
   NTabs,
+  NIcon,
   useMessage,
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
+import { 
+  Edit24Filled,
+  Delete24Filled,
+  Add24Filled,
+  Save24Filled,
+  Dismiss24Filled,
+  ArrowLeft24Filled
+} from '@vicons/fluent'
 // import { useRouter } from 'vue-router'  // Will be used later
 
 
@@ -32,9 +41,10 @@ definePage({
     activeMenu: '/propriete',
   },
 })
+const route = useRoute()
+const router = useRouter()
 const store = useUnifiedStore()
 const message = useMessage()
-const router = useRouter()
 
 // États
 const loading = ref(true)
@@ -42,6 +52,9 @@ const saving = ref(false)
 const editingInfos = ref(false)
 const showCompositionModal = ref(false)
 const proprieteDetail = ref<any | null>(null)
+
+// Récupérer l'ID de la propriété depuis les paramètres de route
+const proprieteId = route.params.id as string
 
 // Formulaires
 const editForm = ref({
@@ -147,45 +160,69 @@ async function supprimerPropriete(id: string) {
 async function fetchProprieteDetails() {
   try {
     loading.value = true
-    const id = store.selectedProprieteId
-    if (!id) {
-      throw new Error('Aucune propriété sélectionnée')
+    console.log('Chargement des détails de la propriété ID:', proprieteId)
+    const url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprieteDetails/${proprieteId}`
+    console.log('URL de l\'API:', url)
+    
+    const response = await fetch(url)
+    console.log('Réponse reçue. Statut:', response.status)
+    
+    const responseText = await response.text()
+    console.log('Réponse brute:', responseText)
+    
+    if (!response.ok) {
+      console.error('Erreur de réponse. Contenu:', responseText)
+      throw new Error(`Erreur HTTP: ${response.status}`)
     }
-
-    const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprieteDetails/${id}`)
-    if (!res.ok) {
-      throw new Error('Propriété introuvable')
+    
+    // Essayer de parser le JSON
+    try {
+      const data = JSON.parse(responseText)
+      console.log('Données JSON parsées:', data)
+      proprieteDetail.value = data
+    } catch (parseError) {
+      console.error('Erreur lors de l\'analyse JSON:', parseError)
+      throw new Error(`Réponse du serveur invalide (pas du JSON): ${responseText.substring(0, 200)}...`)
     }
-    proprieteDetail.value = await res.json()
-  }
-  catch (error) {
-    message.error('Erreur de chargement de la propriété')
-    console.error(error)
-  }
-  finally {
+  } catch (error) {
+    console.error('Erreur lors du chargement de la propriété:', error)
+    message.error('Erreur de chargement de la propriété: ' + (error instanceof Error ? error.message : String(error)))
+  } finally {
     loading.value = false
   }
 }
 
 function startEditing(section?: string) {
   if (section === 'infos' && proprieteDetail.value?.propriete) {
-    editForm.value = { ...proprieteDetail.value.propriete }
+    const propriete = proprieteDetail.value.propriete
+    // S'assurer que les champs numériques sont correctement typés
+    editForm.value = {
+      ...propriete,
+      montantAcquisition: Number(propriete.montantAcquisition) || 0,
+      tantieme: Number(propriete.tantieme) || 0,
+      fraisNotaire: Number(propriete.fraisNotaire) || 0,
+      fraisAgence: Number(propriete.fraisAgence) || 0,
+    }
     editingInfos.value = true
   }
-  // Ajouter d'autres sections si nécessaire
 }
 
 async function savePropriete() {
   try {
     saving.value = true
-    const userId = 'user-id' // À remplacer par l'ID de l'utilisateur connecté
+    const authStore = useAuthStore()
+    const userId = authStore.userInfo?.userId || ''
+    
+    if (!userId) {
+      throw new Error('Utilisateur non connecté')
+    }
 
-    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/savePropriete`, {
-      method: 'POST',
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/updatePropriete/${userId}`, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': userId,
       },
+      credentials: 'include',
       body: JSON.stringify(editForm.value),
     })
 
@@ -376,34 +413,49 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
 
 <template>
   <div class="propriete-detail">
-    <NH1>Détails de la propriété</NH1>
+    <div class="page-header">
+      <NButton text @click="$router.push('/propriete')" class="back-button">
+        <NIcon :component="ArrowLeft24Filled" size="20" />
+      </NButton>
+      <NH1>Détails de la propriété</NH1>
+    </div>
 
     <NSpin :show="loading">
       <NTabs v-if="proprieteDetail" type="line" animated>
         <!-- Onglet Informations -->
         <NTabPane name="infos" tab="Informations">
           <div v-if="!editingInfos" class="action-buttons">
-            <NButton type="primary" @click="startEditing('infos')" class="mr-2">
+            <NButton type="primary" @click="startEditing('infos')" class="action-button" ghost>
+              <template #icon>
+                <NIcon :component="Edit24Filled" />
+              </template>
               Modifier
             </NButton>
             <NPopconfirm
               @positive-click="() => supprimerPropriete(proprieteDetail.propriete.id)"
-              positive-text="Supprimer"
-              negative-text="Annuler"
             >
               <template #trigger>
-                <NButton type="error" ghost>
-                  Supprimer la propriété
+                <NButton type="error" ghost class="action-button">
+                  <template #icon>
+                    <NIcon :component="Delete24Filled" />
+                  </template>
+                  Supprimer
                 </NButton>
               </template>
-              Êtes-vous sûr de vouloir supprimer cette propriété ? Cette action est irréversible.
+              Êtes-vous sûr de vouloir supprimer cette propriété ?
             </NPopconfirm>
           </div>
           <div v-else class="action-buttons">
-            <NButton type="primary" :loading="saving" @click="savePropriete">
+            <NButton type="primary" :loading="saving" @click="savePropriete" class="action-button">
+              <template #icon>
+                <NIcon :component="Save24Filled" />
+              </template>
               Enregistrer
             </NButton>
-            <NButton class="ml-2" @click="cancelEditing">
+            <NButton class="action-button ml-2" @click="cancelEditing">
+              <template #icon>
+                <NIcon :component="Dismiss24Filled" />
+              </template>
               Annuler
             </NButton>
           </div>
@@ -460,51 +512,81 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
           </div>
 
           <NForm v-else class="edit-form">
-            <NFormItem label="Nom">
-              <NInput v-model:value="editForm.nom" />
-            </NFormItem>
+            <div class="info-grid">
+              <div class="info-label">
+                Nom :
+              </div>
+              <div class="info-value">
+                <NInput v-model:value="editForm.nom" />
+              </div>
 
-            <NFormItem label="Adresse">
-              <NInput v-model:value="editForm.adresse" />
-            </NFormItem>
+              <div class="info-label">
+                Adresse :
+              </div>
+              <div class="info-value">
+                <NInput v-model:value="editForm.adresse" />
+              </div>
 
-            <NFormItem label="Ville">
-              <NInput v-model:value="editForm.ville" />
-            </NFormItem>
+              <div class="info-label">
+                Code postal :
+              </div>
+              <div class="info-value">
+                <NInput v-model:value="editForm.codePostal" />
+              </div>
 
-            <NFormItem label="Code postal">
-              <NInput v-model:value="editForm.codePostal" />
-            </NFormItem>
+              <div class="info-label">
+                Ville :
+              </div>
+              <div class="info-value">
+                <NInput v-model:value="editForm.ville" />
+              </div>
 
-            <NFormItem label="Type de bien">
-              <NSelect
-                v-model:value="editForm.typeBien"
-                :options="[
-                  { label: 'Appartement', value: 'APPARTEMENT' },
-                  { label: 'Maison', value: 'MAISON' },
-                  { label: 'Local commercial', value: 'LOCAL_COMMERCIAL' },
-                ]"
-              />
-            </NFormItem>
+              <div class="info-label">
+                Type :
+              </div>
+              <div class="info-value">
+                <NSelect
+                  v-model:value="editForm.typeBien"
+                  :options="[
+                    { label: 'Appartement', value: 'APPARTEMENT' },
+                    { label: 'Maison', value: 'MAISON' },
+                    { label: 'Local commercial', value: 'LOCAL_COMMERCIAL' },
+                  ]"
+                  style="width: 100%"
+                />
+              </div>
 
-            <NFormItem label="Montant d'acquisition">
-              <NInputNumber v-model:value="editForm.montantAcquisition" />
-            </NFormItem>
+              <div class="info-label">
+                Montant acquisition :
+              </div>
+              <div class="info-value">
+                <NInputNumber v-model:value="editForm.montantAcquisition" style="width: 100%" />
+              </div>
 
-            <NFormItem label="Date d'acquisition">
-              <NDatePicker v-model:formatted-value="editForm.dateAcquisition" value-format="yyyy-MM-dd" />
-            </NFormItem>
+              <div class="info-label">
+                Date acquisition :
+              </div>
+              <div class="info-value">
+                <NDatePicker v-model:value="editForm.dateAcquisition" style="width: 100%" />
+              </div>
 
-            <NFormItem label="Tantième">
-              <NInputNumber v-model:value="editForm.tantieme" />
-            </NFormItem>
+              <div class="info-label">
+                Tantième :
+              </div>
+              <div class="info-value">
+                <NInputNumber v-model:value="editForm.tantieme" style="width: 100%" />
+              </div>
+            </div>
           </NForm>
         </NTabPane>
 
         <!-- Onglet Compositions -->
         <NTabPane name="compositions" tab="Compositions">
           <div class="action-buttons">
-            <NButton type="primary" @click="addComposition">
+            <NButton type="primary" @click="addComposition" class="action-button">
+              <template #icon>
+                <NIcon :component="Add24Filled" />
+              </template>
               Ajouter une composition
             </NButton>
           </div>
@@ -524,16 +606,22 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
               {
                 key: 'actions',
                 title: 'Actions',
-                render: (row: any) => h('div', { class: 'actions' }, [
+                render: (row: any) => h('div', { class: 'table-actions' }, [
                   h(NButton, {
                     size: 'small',
+                    text: true,
                     onClick: () => editComposition(row),
-                  }, 'Modifier'),
+                    title: 'Modifier',
+                    class: 'action-icon',
+                    style: { marginRight: '8px' }
+                  }, () => h(NIcon, { component: Edit24Filled, size: 18 })),
                   h(NButton, {
                     size: 'small',
-                    type: 'error',
+                    text: true,
                     onClick: () => deleteComposition(row.id),
-                  }, 'Supprimer'),
+                    title: 'Supprimer',
+                    class: 'action-icon error',
+                  }, () => h(NIcon, { component: Delete24Filled, size: 18 }))
                 ]),
               },
             ]"
@@ -613,22 +701,108 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
 </template>
 
 <style scoped>
+/* Styles de base pour les champs de formulaire */
+.info-value {
+  width: 100%;
+}
+
+/* Tous les champs de saisie prennent 100% de la largeur */
+.info-value :deep(.n-input),
+.info-value :deep(.n-input-number),
+.info-value :deep(.n-date-picker),
+.info-value :deep(.n-select) {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+/* Pour les éléments internes des champs */
+.info-value :deep(.n-input__input),
+.info-value :deep(.n-input-number-input),
+.info-value :deep(.n-base-selection) {
+  width: 100% !important;
+}
+
+/* Ajustement pour le sélecteur de date */
+.info-value :deep(.n-date-picker) {
+  width: 100%;
+}
+
+/* Pour les petits écrans */
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-label {
+    text-align: left;
+  }
+}
+
 .propriete-detail {
   padding: 20px;
   width: 100%;
   margin: 0;
 }
 
-.page-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.back-button {
+  margin-right: 12px;
+  color: var(--n-text-color);
+  transition: color 0.2s;
+}
+
+.back-button:hover {
+  color: var(--n-text-color-hover);
 }
 
 .action-buttons {
   margin-bottom: 20px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.action-icon {
+  font-size: 18px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  color: var(--n-text-color);
+}
+
+.action-icon:hover {
+  background-color: var(--n-color-hover);
+}
+
+.action-icon.error {
+  color: var(--n-color-error);
+}
+
+.action-icon.error:hover {
+  background-color: var(--n-color-error-hover);
+  color: white;
+}
+
+.page-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .info-grid {

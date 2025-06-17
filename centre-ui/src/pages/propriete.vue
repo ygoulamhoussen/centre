@@ -64,8 +64,7 @@ function demarrerCreation() {
 }
 
 function allerAuDetail(id: string) {
-  store.setSelectedProprieteId(id)
-  router.push('/propriete-detail')
+  router.push(`/propriete-detail/${id}`)
 }
 
 function getIconComponent(typeBien: string) {

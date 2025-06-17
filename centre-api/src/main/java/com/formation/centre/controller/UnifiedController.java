@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,6 +44,12 @@ import com.formation.centre.service.UnifiedService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+@CrossOrigin(
+    origins = {"http://localhost:9135", "http://localhost:8080"},
+    allowedHeaders = "*",
+    exposedHeaders = "x-user-id",
+    allowCredentials = "true"
+)
 @RestController
 @RequestMapping("/api")
 public class UnifiedController {

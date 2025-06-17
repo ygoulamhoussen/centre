@@ -31,10 +31,26 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*");
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173","https://centre-2vhd.onrender.com","http://localhost:9135"));
+        // Utiliser des origines spécifiques au lieu de "*" quand allowCredentials est true
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",
+            "http://localhost:8080",
+            "http://localhost:5173",
+            "https://centre-2vhd.onrender.com",
+            "http://localhost:9135"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers","apifoxtoken","x-request-id"));
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type", 
+            "X-Requested-With", 
+            "Accept", 
+            "Origin", 
+            "Access-Control-Request-Method", 
+            "Access-Control-Request-Headers",
+            "apifoxtoken",
+            "x-request-id"
+        ));
         configuration.setExposedHeaders(Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);

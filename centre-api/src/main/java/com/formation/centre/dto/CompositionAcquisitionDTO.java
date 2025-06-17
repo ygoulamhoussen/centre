@@ -1,5 +1,7 @@
 package com.formation.centre.dto;
 
+import com.formation.centre.model.CompositionAcquisition;
+
 public class CompositionAcquisitionDTO {
     private String id;
     private String proprieteId;
@@ -47,5 +49,19 @@ public class CompositionAcquisitionDTO {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+    
+    // Méthode utilitaire pour créer un DTO à partir d'une entité
+    public static CompositionAcquisitionDTO fromEntity(CompositionAcquisition entity) {
+        if (entity == null) {
+            return null;
+        }
+        CompositionAcquisitionDTO dto = new CompositionAcquisitionDTO();
+        dto.setId(entity.getId() != null ? entity.getId().toString() : null);
+        dto.setProprieteId(entity.getPropriete() != null ? entity.getPropriete().getId().toString() : null);
+        dto.setCategorie(entity.getCategorie());
+        dto.setMontant(entity.getMontant() != null ? entity.getMontant().toPlainString() : null);
+        dto.setDescription(entity.getDescription());
+        return dto;
     }
 }

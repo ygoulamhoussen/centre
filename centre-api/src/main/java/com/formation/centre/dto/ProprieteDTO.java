@@ -1,5 +1,6 @@
 package com.formation.centre.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProprieteDTO {
@@ -125,6 +126,9 @@ public class ProprieteDTO {
     }
 
     public List<CompositionAcquisitionDTO> getCompositions() {
+        if (compositions == null) {
+            compositions = new ArrayList<>();
+        }
         return compositions;
     }
 

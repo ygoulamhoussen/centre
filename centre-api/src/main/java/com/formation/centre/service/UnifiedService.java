@@ -9,6 +9,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -129,16 +130,23 @@ public class UnifiedService {
     public ProprieteDTO savePropriete(String utilisateurId, ProprieteDTO dto) {
         Utilisateur user = utilisateurRepository.findById(UUID.fromString(utilisateurId))
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+        
         Propriete p;
         if (dto.getId() != null && !dto.getId().isEmpty()) {
             p = proprieteRepository.findById(UUID.fromString(dto.getId()))
                     .orElseThrow(() -> new IllegalArgumentException("Propriété introuvable"));
+            
+            // Vérifier que l'utilisateur est bien le propriétaire
+            if (!p.getUtilisateur().getId().equals(user.getId())) {
+                throw new IllegalArgumentException("Non autorisé à modifier cette propriété");
+            }
         } else {
             p = new Propriete();
-            //p.setId(UUID.randomUUID());
             p.setUtilisateur(user);
-            //p.setCreeLe(LocalDateTime.now());
+            p.setCompositions(new ArrayList<>());
         }
+        
+        // Mise à jour des champs de base
         p.setNom(dto.getNom());
         p.setAdresse(dto.getAdresse());
         p.setComplementAdresse(dto.getComplementAdresse());
@@ -151,27 +159,48 @@ public class UnifiedService {
         p.setTantieme(dto.getTantieme() != null ? new BigDecimal(dto.getTantieme()) : null);
         p.setFraisNotaire(dto.getFraisNotaire() != null ? new BigDecimal(dto.getFraisNotaire()) : null);
         p.setFraisAgence(dto.getFraisAgence() != null ? new BigDecimal(dto.getFraisAgence()) : null);
-        //p.setModifieLe(LocalDateTime.now());
 
-        // compositions
-        if (dto.getCompositions() != null && !dto.getCompositions().isEmpty()) {
-            List<CompositionAcquisition> comps = dto.getCompositions().stream().map(cdto -> {
+        // Gestion des compositions
+        if (dto.getCompositions() != null) {
+            // Initialiser la liste des compositions si nécessaire
+            if (p.getCompositions() == null) {
+                p.setCompositions(new ArrayList<>());
+            }
+            
+            // Créer une copie de la liste pour itération
+            List<CompositionAcquisition> compositionsExistantes = new ArrayList<>(p.getCompositions());
+            
+            // Supprimer les compositions qui ne sont plus dans le DTO
+            compositionsExistantes.stream()
+                .filter(existante -> dto.getCompositions().stream()
+                    .noneMatch(cdto -> cdto.getId() != null && cdto.getId().equals(existante.getId().toString())))
+                .forEach(compoASupprimer -> p.getCompositions().remove(compoASupprimer));
+
+            // Ajouter ou mettre à jour les compositions
+            for (CompositionAcquisitionDTO cdto : dto.getCompositions()) {
                 CompositionAcquisition c;
-                if (cdto.getId() != null) {
+                if (cdto.getId() != null && !cdto.getId().isEmpty()) {
                     c = p.getCompositions().stream()
-                         .filter(existing -> existing.getId().toString().equals(cdto.getId()))
-                         .findFirst()
-                         .orElse(new CompositionAcquisition());
+                        .filter(comp -> comp.getId().toString().equals(cdto.getId()))
+                        .findFirst()
+                        .orElse(new CompositionAcquisition());
+                    
+                    if (!p.getCompositions().contains(c)) {
+                        c.setPropriete(p);
+                        p.getCompositions().add(c);
+                    }
                 } else {
                     c = new CompositionAcquisition();
                     c.setPropriete(p);
+                    p.getCompositions().add(c);
                 }
                 c.setCategorie(cdto.getCategorie());
                 c.setMontant(new BigDecimal(cdto.getMontant()));
                 c.setDescription(cdto.getDescription());
-                return c;
-            }).collect(Collectors.toList());
-            p.setCompositions(comps);
+            }
+        } else {
+            // Si aucune composition n'est fournie, on vide la liste
+            p.setCompositions(new ArrayList<>());
         }
 
         Propriete saved = proprieteRepository.save(p);
@@ -181,31 +210,36 @@ public class UnifiedService {
     public void deletePropriete(String proprieteId) {
         proprieteRepository.deleteById(UUID.fromString(proprieteId));
     }
+    
+
 
     private ProprieteDTO toDTO(Propriete p) {
+        if (p == null) {
+            return null;
+        }
+        
         ProprieteDTO dto = new ProprieteDTO();
-        dto.setId(p.getId().toString());
+        dto.setId(p.getId() != null ? p.getId().toString() : null);
         dto.setNom(p.getNom());
         dto.setAdresse(p.getAdresse());
         dto.setComplementAdresse(p.getComplementAdresse());
         dto.setCodePostal(p.getCodePostal());
         dto.setVille(p.getVille());
-        dto.setTypeBien(p.getTypeBien().toString());
+        dto.setTypeBien(p.getTypeBien() != null ? p.getTypeBien().toString() : null);
         dto.setDateAcquisition(p.getDateAcquisition() != null ? p.getDateAcquisition().toString() : null);
         dto.setDateLivraison(p.getDateLivraison() != null ? p.getDateLivraison().toString() : null);
-        dto.setMontantAcquisition(p.getMontantAcquisition()!=null? p.getMontantAcquisition().toPlainString():null);
-        dto.setTantieme(p.getTantieme()!=null? p.getTantieme().toPlainString():null);
-        dto.setFraisNotaire(p.getFraisNotaire()!=null? p.getFraisNotaire().toPlainString():null);
-        dto.setFraisAgence(p.getFraisAgence()!=null? p.getFraisAgence().toPlainString():null);
-        if (p.getCompositions()!=null) {
-            dto.setCompositions(p.getCompositions().stream().map(c -> {
-                CompositionAcquisitionDTO cd = new CompositionAcquisitionDTO();
-                cd.setId(c.getId().toString());
-                cd.setCategorie(c.getCategorie());
-                cd.setMontant(c.getMontant().toPlainString());
-                cd.setDescription(c.getDescription());
-                return cd;
-            }).collect(Collectors.toList()));
+        dto.setMontantAcquisition(p.getMontantAcquisition() != null ? p.getMontantAcquisition().toPlainString() : null);
+        dto.setTantieme(p.getTantieme() != null ? p.getTantieme().toPlainString() : null);
+        dto.setFraisNotaire(p.getFraisNotaire() != null ? p.getFraisNotaire().toPlainString() : null);
+        dto.setFraisAgence(p.getFraisAgence() != null ? p.getFraisAgence().toPlainString() : null);
+        
+        // Conversion des compositions
+        if (p.getCompositions() != null) {
+            List<CompositionAcquisitionDTO> compositionsDTO = p.getCompositions().stream()
+                .map(CompositionAcquisitionDTO::fromEntity)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+            dto.setCompositions(compositionsDTO);
         }
         return dto;
     }

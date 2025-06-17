@@ -88,7 +88,22 @@ export const useUnifiedStore = defineStore('unified', {
       (this.proprieteDTO as any)[field] = value
     },
     resetProprieteDTO() {
-      Object.assign(this.proprieteDTO, this.$state.proprieteDTO)
+      this.proprieteDTO = {
+        id: null,
+        nom: null,
+        typeBien: null,
+        adresse: null,
+        complementAdresse: null,
+        codePostal: null,
+        ville: null,
+        dateAcquisition: null,
+        dateLivraison: null,
+        montantAcquisition: null,
+        tantieme: null,
+        fraisNotaire: null,
+        fraisAgence: null,
+        compositions: []
+      }
     },
     updateLocataireField(field: string, value: any) {
       (this.locataireDTO as any)[field] = value

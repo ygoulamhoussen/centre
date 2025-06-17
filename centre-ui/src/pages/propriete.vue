@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
+import { storeToRefs } from 'pinia'
 import { Box24Regular, Building24Regular, Home24Regular, VehicleCar24Regular } from '@vicons/fluent'
 import {
   NButton,
@@ -57,6 +58,8 @@ async function supprimerPropriete(id: string) {
 }
 
 function demarrerCreation() {
+  // Réinitialiser le DTO de la propriété
+  store.resetProprieteDTO()
   router.push('/propriete-etape-1')
 }
 
@@ -108,23 +111,6 @@ onMounted(fetchProprietes)
               <p><strong>Type :</strong> {{ propriete.typeBien }}</p>
             </div>
           </div>
-
-          <template #footer>
-            <div class="flex justify-end" @click.stop>
-              <NPopconfirm
-                @positive-click="() => supprimerPropriete(propriete.id)"
-                positive-text="Supprimer"
-                negative-text="Annuler"
-              >
-                <template #trigger>
-                  <NButton size="small" type="error" ghost>
-                    Supprimer
-                  </NButton>
-                </template>
-                Êtes-vous sûr de vouloir supprimer cette propriété ?
-              </NPopconfirm>
-            </div>
-          </template>
         </NCard>
       </NGi>
     </NGrid>

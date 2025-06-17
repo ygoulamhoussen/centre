@@ -1,5 +1,7 @@
 package com.formation.centre.controller;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -16,11 +18,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
@@ -32,11 +36,36 @@ import com.formation.centre.dto.PaiementDTO;
 import com.formation.centre.dto.ProprieteDTO;
 import com.formation.centre.dto.ProprieteDetailDTO;
 import com.formation.centre.dto.QuittanceDTO;
+import com.formation.centre.model.CompositionAcquisition;
+import com.formation.centre.model.Propriete;
+import com.formation.centre.repository.ProprieteRepository;
 import com.formation.centre.service.UnifiedService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api")
 public class UnifiedController {
+
+    @Autowired
+    private RequestMappingHandlerMapping requestMappingHandlerMapping;
+    
+    @Autowired
+    private ProprieteRepository proprieteRepository;
+
+    @RequestMapping(value = "/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> handleAll(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+        System.out.println("\n=== REQUÊTE NON GÉRÉE DÉTECTÉE ===");
+        System.out.println("Méthode: " + method);
+        System.out.println("URL: " + path);
+        System.out.println("Headers: " + request.getHeaderNames());
+        System.out.println("=== FIN REQUÊTE NON GÉRÉE ===\n");
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body("Endpoint non trouvé: " + method + " " + path);
+    }
 
     @Autowired
     private UnifiedService unifiedService;
@@ -46,39 +75,107 @@ public class UnifiedController {
         return ResponseEntity.ok(unifiedService.getProprietesByUtilisateur(utilisateurId));
     }
 
-    @PostMapping("/createPropriete/{utilisateurId}")
-    public ResponseEntity<ProprieteDTO> createPropriete(@PathVariable String utilisateurId, @RequestBody ProprieteDTO dto) {
-        return ResponseEntity.ok(unifiedService.savePropriete(utilisateurId, dto));
+    @PostMapping(value = "/createPropriete/{utilisateurId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createPropriete(
+            @PathVariable String utilisateurId, 
+            @RequestBody ProprieteDTO dto) {
+        try {
+            System.out.println("Reçu une requête pour créer une propriété:");
+            System.out.println("Utilisateur ID: " + utilisateurId);
+            System.out.println("Données reçues: " + dto);
+            
+            if (dto.getCompositions() != null) {
+                System.out.println("Compositions reçues: " + dto.getCompositions().size());
+                dto.getCompositions().forEach(c -> 
+                    System.out.println(" - " + c.getCategorie() + ": " + c.getMontant())
+                );
+            }
+            
+            ProprieteDTO saved = unifiedService.savePropriete(utilisateurId, dto);
+            return ResponseEntity.ok(saved);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erreur lors de la création de la propriété : " + e.getMessage());
+        }
     }
 
-    @PutMapping("/updatePropriete")
-    public ResponseEntity<ProprieteDTO> updatePropriete(@RequestBody ProprieteDTO dto) {
-        return ResponseEntity.ok(unifiedService.savePropriete(dto.getId(), dto));
+    @PutMapping("/updatePropriete/{utilisateurId}")
+    public ResponseEntity<?> updatePropriete(
+            @PathVariable String utilisateurId,
+            @RequestBody ProprieteDTO dto) {
+        try {
+            return ResponseEntity.ok(unifiedService.savePropriete(utilisateurId, dto));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erreur lors de la mise à jour de la propriété : " + e.getMessage());
+        }
     }
-
-
-    @PostMapping("/savePropriete")
-public ResponseEntity<?> savePropriete(
-    @RequestHeader("X-User-Id") String utilisateurId,
-    @RequestBody ProprieteDTO proprieteDTO) {
-    try {
-        ProprieteDTO savedPropriete = unifiedService.savePropriete(utilisateurId, proprieteDTO);
-        return ResponseEntity.ok(savedPropriete);
-    } catch (IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("Erreur lors de la sauvegarde de la propriété : " + e.getMessage());
-    }
-}
 
     @DeleteMapping("/deletePropriete/{proprieteId}")
     public ResponseEntity<Void> deletePropriete(@PathVariable String proprieteId) {
         unifiedService.deletePropriete(proprieteId);
         return ResponseEntity.noContent().build();
     }
+    
+    @PostMapping("/createComposition")
+    public ResponseEntity<?> createComposition(
+            @RequestBody Map<String, Object> payload) {
+        try {
+            System.out.println("Reçu une requête pour créer une composition:");
+            System.out.println("Données reçues: " + payload);
+            
+            // Récupérer l'ID de la propriété
+            String proprieteId = (String) payload.get("proprieteId");
+            if (proprieteId == null) {
+                return ResponseEntity.badRequest().body("proprieteId est requis");
+            }
+            
+            // Récupérer la propriété existante
+            Propriete propriete = proprieteRepository.findById(UUID.fromString(proprieteId))
+                .orElseThrow(() -> new IllegalArgumentException("Propriété non trouvée"));
+                
+            // Créer une nouvelle composition
+            CompositionAcquisition composition = new CompositionAcquisition();
+            composition.setCategorie((String) payload.get("categorie"));
+            composition.setDescription((String) payload.get("description"));
+            if (payload.get("montant") != null) {
+                composition.setMontant(new BigDecimal(payload.get("montant").toString()));
+            }
+            composition.setPropriete(propriete);
+            
+            // Ajouter à la liste des compositions de la propriété
+            if (propriete.getCompositions() == null) {
+                propriete.setCompositions(new ArrayList<>());
+            }
+            propriete.getCompositions().add(composition);
+            
+            // Sauvegarder la propriété avec la nouvelle composition
+            Propriete savedPropriete = proprieteRepository.save(propriete);
+            
+            // Récupérer la composition fraîchement créée
+            CompositionAcquisition savedComposition = savedPropriete.getCompositions().stream()
+                .filter(c -> c.getCategorie().equals(composition.getCategorie()))
+                .filter(c -> (c.getMontant() == null && composition.getMontant() == null) || 
+                             (c.getMontant() != null && c.getMontant().compareTo(composition.getMontant()) == 0))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Erreur lors de la création de la composition"));
+            
+            return ResponseEntity.ok(CompositionAcquisitionDTO.fromEntity(savedComposition));
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erreur lors de la création de la composition: " + e.getMessage());
+        }
+    }
 
-    @PostMapping("/createProprieteWithCompositions/{utilisateurId}")
+    @PostMapping(value = "/createProprieteWithCompositions/{utilisateurId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ProprieteDTO> createProprieteWithCompositions(
             @PathVariable String utilisateurId,
             @RequestBody Map<String, Object> payload) {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
+import { useRouter } from 'vue-router'
 import {
   NButton,
   NCard,
@@ -32,7 +33,7 @@ definePage({
 })
 const store = useUnifiedStore()
 const message = useMessage()
-// const _router = useRouter() // Will be used later
+const router = useRouter()
 
 // États
 const loading = ref(true)
@@ -59,10 +60,26 @@ const editForm = ref({
 const compositionForm = ref({
   id: '',
   categorie: '',
+  pourcentage: 0,
   montant: 0,
   description: '',
   proprieteId: '',
 })
+
+const categoriesAmortissement = [
+  { value: 'terrain', label: 'Terrains (non amortissable, 10-20%)' },
+  { value: 'bati', label: 'Bâti (gros œuvre, 50-60%, 35 ans)' },
+  { value: 'agencement', label: 'Agencements et second œuvre (20-30%, 12 ans)' },
+  { value: 'mobilier', label: 'Mobilier et électroménager (variable, 7 ans)' },
+  { value: 'frais', label: 'Frais d\'acquisition (5 ans)' },
+]
+
+function calculerMontant() {
+  if (proprieteDetail.value?.propriete && compositionForm.value.pourcentage) {
+    const montantTotal = parseFloat(proprieteDetail.value.propriete.montantAcquisition) || 0
+    compositionForm.value.montant = (montantTotal * compositionForm.value.pourcentage) / 100
+  }
+}
 
 // Colonnes du tableau des compositions
 // Tableau des colonnes pour le tableau des compositions
@@ -92,6 +109,19 @@ const _compositionColumns = [
 ]
 
 // Méthodes
+async function supprimerPropriete(id: string) {
+  try {
+    await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deletePropriete/${id}`, {
+      method: 'DELETE'
+    })
+    message.success('Propriété supprimée avec succès')
+    router.push('/propriete')
+  } catch (error) {
+    console.error('Erreur lors de la suppression :', error)
+    message.error('Erreur lors de la suppression de la propriété')
+  }
+}
+
 async function fetchProprieteDetails() {
   try {
     loading.value = true
@@ -170,20 +200,20 @@ function addComposition() {
   compositionForm.value = {
     id: '',
     categorie: '',
+    pourcentage: 0,
     montant: 0,
     description: '',
-    proprieteId: proprieteDetail.value?.propriete.id || '',
+    proprieteId: store.selectedProprieteId,
   }
   showCompositionModal.value = true
 }
 
 function editComposition(composition: any) {
-  compositionForm.value = {
-    id: composition.id,
-    categorie: composition.categorie,
-    montant: Number.parseFloat(composition.montant),
-    description: composition.description,
-    proprieteId: proprieteDetail.value?.propriete.id || '',
+  compositionForm.value = { ...composition, pourcentage: 0 }
+  // Si on édite une composition existante, on calcule le pourcentage
+  if (proprieteDetail.value?.propriete && composition.montant) {
+    const montantTotal = parseFloat(proprieteDetail.value.propriete.montantAcquisition) || 1 // Éviter la division par zéro
+    compositionForm.value.pourcentage = (parseFloat(composition.montant) / montantTotal) * 100
   }
   showCompositionModal.value = true
 }
@@ -191,29 +221,37 @@ function editComposition(composition: any) {
 async function saveComposition() {
   try {
     saving.value = true
+    
+    // S'assurer que le montant est à jour avant sauvegarde
+    if (compositionForm.value.pourcentage) {
+      calculerMontant()
+    }
+    
+    const method = compositionForm.value.id ? 'PUT' : 'POST'
     const url = compositionForm.value.id
-      ? `${import.meta.env.VITE_SERVICE_BASE_URL}/api/saveComposition`
-      : `${import.meta.env.VITE_SERVICE_BASE_URL}/api/saveComposition`
+      ? `${import.meta.env.VITE_SERVICE_BASE_URL}/api/updateComposition/${compositionForm.value.id}`
+      : `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createComposition`
 
     const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(compositionForm.value),
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...compositionForm.value,
+        proprieteId: store.selectedProprieteId,
+      }),
     })
 
-    if (!response.ok)
-      throw new Error('Erreur lors de la sauvegarde')
+    if (!response.ok) throw new Error('Erreur lors de la sauvegarde')
 
-    // Recharger les données
-    await fetchProprieteDetails()
-    showCompositionModal.value = false
     message.success('Composition enregistrée avec succès')
-  }
-  catch (error) {
+    showCompositionModal.value = false
+    fetchProprieteDetails()
+  } catch (error) {
+    console.error('Erreur:', error)
     message.error('Erreur lors de la sauvegarde de la composition')
-    console.error(error)
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
@@ -273,9 +311,21 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
         <!-- Onglet Informations -->
         <NTabPane name="infos" tab="Informations">
           <div v-if="!editingInfos" class="action-buttons">
-            <NButton type="primary" @click="startEditing('infos')">
+            <NButton type="primary" @click="startEditing('infos')" class="mr-2">
               Modifier
             </NButton>
+            <NPopconfirm
+              @positive-click="() => supprimerPropriete(proprieteDetail.propriete.id)"
+              positive-text="Supprimer"
+              negative-text="Annuler"
+            >
+              <template #trigger>
+                <NButton type="error" ghost>
+                  Supprimer la propriété
+                </NButton>
+              </template>
+              Êtes-vous sûr de vouloir supprimer cette propriété ? Cette action est irréversible.
+            </NPopconfirm>
           </div>
           <div v-else class="action-buttons">
             <NButton type="primary" :loading="saving" @click="savePropriete">
@@ -435,10 +485,29 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
             >
               <NForm :model="compositionForm">
                 <NFormItem label="Catégorie">
-                  <NInput v-model:value="compositionForm.categorie" />
+                  <NSelect
+                    v-model:value="compositionForm.categorie"
+                    :options="categoriesAmortissement"
+                    placeholder="Sélectionnez une catégorie"
+                    clearable
+                  />
                 </NFormItem>
-                <NFormItem label="Montant">
-                  <NInputNumber v-model:value="compositionForm.montant" />
+                <NFormItem label="Pourcentage du coût total">
+                  <NInputNumber 
+                    v-model:value="compositionForm.pourcentage"
+                    :min="0"
+                    :max="100"
+                    :step="0.01"
+                    @update:value="calculerMontant"
+                    :suffix="'%'"
+                  />
+                </NFormItem>
+                <NFormItem label="Montant calculé">
+                  <NInputNumber 
+                    :value="compositionForm.montant" 
+                    :disabled="true"
+                    :formatter="value => formatCurrency(value)"
+                  />
                 </NFormItem>
                 <NFormItem label="Description">
                   <NInput

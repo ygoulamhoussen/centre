@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS quittance;
 DROP TABLE IF EXISTS location;
 DROP TABLE IF EXISTS locataire;
 DROP TABLE IF EXISTS composition_acquisition;
+DROP TABLE IF EXISTS document;
 DROP TABLE IF EXISTS propriete;
 
 DROP TABLE IF EXISTS utilisateur_role;
@@ -223,7 +224,7 @@ CREATE TABLE cloture_exercice (
     modifie_le TIMESTAMP
 );
 
--- DOCUMENTS
+-- DOCUMENT
 CREATE TABLE document (
     id UUID PRIMARY KEY,
     utilisateur_id UUID REFERENCES utilisateur(id),
@@ -233,9 +234,11 @@ CREATE TABLE document (
     ecriture_id UUID REFERENCES ecriture_comptable(id),
     type_document TEXT,
     titre TEXT,
-    nom_fichier TEXT,
     url_fichier TEXT,
-    contenu TEXT, -- stockage binaire du fichier
+    contenu TEXT,
+    mime_type VARCHAR(255),
+    nom_fichier VARCHAR(255),
+    taille BIGINT,
     date_document DATE,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP

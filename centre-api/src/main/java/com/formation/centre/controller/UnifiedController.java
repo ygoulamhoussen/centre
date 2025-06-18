@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
@@ -307,23 +308,93 @@ public ResponseEntity<byte[]> generateQuittancePdf(@PathVariable String quittanc
 }
 
 @PostMapping("/uploadDocument")
-public DocumentDTO uploadDocument(@RequestBody DocumentDTO dto) {
-//byte[] data = Base64.getDecoder().decode(dto.getContenu());
-    return unifiedService.saveDocument(dto.getContenu(), dto.getUtilisateurId(), dto.getProprieteId(), dto.getLocataireId(), dto.getTypeDocument(), dto.getTitre(), dto.getDateDocument());
+public ResponseEntity<DocumentDTO> uploadDocument(@RequestBody DocumentDTO dto) {
+    try {
+        // Valider les données requises
+        if (dto.getContenu() == null || dto.getContenu().isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        
+        // Appeler le service pour sauvegarder le document
+        DocumentDTO savedDocument = unifiedService.saveDocument(dto);
+        return ResponseEntity.ok(savedDocument);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@GetMapping("/documents/{id}")
+public ResponseEntity<DocumentDTO> getDocument(@PathVariable String id) {
+    try {
+        DocumentDTO dto = unifiedService.getDocumentById(id);
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(dto);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@GetMapping("/documents/{id}/content")
+@Transactional(readOnly = true)
+public ResponseEntity<String> downloadDocumentContent(@PathVariable String id) {
+    try {
+        DocumentDTO dto = unifiedService.getDocumentById(id);
+        if (dto == null || dto.getContenu() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        // Préparer les en-têtes de réponse
+        HttpHeaders headers = new HttpHeaders();
+        String mimeType = dto.getMimeType() != null ? dto.getMimeType() : "application/octet-stream";
+        headers.setContentType(MediaType.TEXT_PLAIN);
+        
+        // Définir le nom du fichier pour le téléchargement
+        String filename = dto.getNomFichier() != null ? dto.getNomFichier() : "document";
+        headers.setContentDisposition(ContentDisposition.attachment()
+            .filename(filename)
+            .build());
+            
+        return new ResponseEntity<>(dto.getContenu(), headers, HttpStatus.OK);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
 }
 
 @GetMapping("/downloadDocument/{id}")
-public ResponseEntity<String> downloadDocument(@PathVariable String id) {
-    DocumentDTO dto = unifiedService.getDocumentById(id);
-    if (dto.getContenu() == null) {
-        return ResponseEntity.notFound().build();
+@Transactional(readOnly = true)
+public ResponseEntity<byte[]> downloadDocument(@PathVariable String id) {
+    try {
+        // Récupérer les métadonnées du document (sans le contenu)
+        DocumentDTO dto = unifiedService.getDocumentMetadataById(id);
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        // Récupérer uniquement le contenu binaire du document
+        byte[] fileContent = unifiedService.getDocumentContentById(id);
+        if (fileContent == null || fileContent.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Définir les en-têtes de la réponse
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        
+        // Définir le nom du fichier pour le téléchargement
+        String fileName = dto.getNomFichier() != null ? dto.getNomFichier() : "document.bin";
+        headers.setContentDisposition(ContentDisposition.attachment().filename(fileName).build());
+        
+        // Retourner le contenu binaire avec les en-têtes appropriés
+        return new ResponseEntity<>(fileContent, headers, HttpStatus.OK);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-    headers.setContentDisposition(ContentDisposition.attachment().filename(dto.getTitre() != null ? dto.getTitre() : "document.bin").build());
-
-    return new ResponseEntity<>(dto.getContenu(), headers, HttpStatus.OK);
 }
 
 @GetMapping("/getDocumentsByUtilisateur/{utilisateurId}")

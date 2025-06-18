@@ -22,10 +22,17 @@ public class DocumentEntity {
     @Id
     private UUID id;
     
-    @Lob
-    @Column(name = "contenu")
-    //mapping pour le type 
+    @Column(name = "contenu",columnDefinition = "TEXT")
     private String contenu;
+    
+    @Column(name = "mime_type")
+    private String mimeType;
+    
+    @Column(name = "nom_fichier")
+    private String nomFichier;
+    
+    @Column(name = "taille")
+    private Long taille;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -74,8 +81,32 @@ public class DocumentEntity {
         this.contenu = contenu;
     }
 
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    public String getNomFichier() {
+        return nomFichier;
+    }
+
+    public void setNomFichier(String nomFichier) {
+        this.nomFichier = nomFichier;
+    }
+
+    public Long getTaille() {
+        return taille;
+    }
+
+    public void setTaille(Long taille) {
+        this.taille = taille;
+    }
+
     public enum TypeDocument {
-        Facture, Quittance, Bail, Justificatif, ContratDeCredit, Autre
+        FACTURE, QUITTANCE, BAIL, JUSTIFICATIF, CONTRAT_DE_CREDIT, AUTRE
     }
 
     // Getters & Setters

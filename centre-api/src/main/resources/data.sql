@@ -76,3 +76,5 @@ INSERT INTO propriete (
     8000.00,                                -- frais agence
     NOW(), NOW()
 );
+
+-- Les documents seront créés via l'interface utilisateur avec un contenu valide

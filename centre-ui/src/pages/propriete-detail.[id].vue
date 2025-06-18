@@ -29,7 +29,8 @@ import {
   Add24Filled,
   Save24Filled,
   Dismiss24Filled,
-  ArrowLeft24Filled
+  ArrowLeft24Filled,
+  Document24Filled
 } from '@vicons/fluent'
 // import { useRouter } from 'vue-router'  // Will be used later
 
@@ -46,11 +47,16 @@ const router = useRouter()
 const store = useUnifiedStore()
 const message = useMessage()
 
+// Initialisation des stores
+const authStore = useAuthStore()
+
 // États
 const loading = ref(true)
 const saving = ref(false)
 const editingInfos = ref(false)
 const showCompositionModal = ref(false)
+const showDocumentModal = ref(false)
+const uploading = ref(false)
 const proprieteDetail = ref<any | null>(null)
 
 // Récupérer l'ID de la propriété depuis les paramètres de route
@@ -79,6 +85,26 @@ const compositionForm = ref({
   description: '',
   proprieteId: '',
 })
+
+// Formulaire de document
+const documentForm = ref({
+  id: '',
+  nom: '',
+  type: 'AUTRE',
+  dateDocument: new Date().toISOString().split('T')[0],
+  fichier: null as File | null,
+  proprieteId: '',
+  contenu: '' // Contenu base64 du fichier
+})
+
+const documentTypes = [
+  { label: 'Facture', value: 'Facture' },
+  { label: 'Quittance', value: 'Quittance' },
+  { label: 'Bail', value: 'Bail' },
+  { label: 'Justificatif', value: 'Justificatif' },
+  { label: 'Contrat de crédit', value: 'ContratDeCredit' },
+  { label: 'Autre', value: 'Autre' },
+]
 
 const categoriesAmortissement = [
   { value: 'terrain', label: 'Terrains (non amortissable, 10-20%)' },
@@ -164,7 +190,11 @@ async function fetchProprieteDetails() {
     const url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprieteDetails/${proprieteId}`
     console.log('URL de l\'API:', url)
     
-    const response = await fetch(url)
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
     console.log('Réponse reçue. Statut:', response.status)
     
     const responseText = await response.text()
@@ -399,6 +429,181 @@ function formatDate(dateString: string | null | undefined) {
   if (!dateString)
     return '-'
   return new Date(dateString).toLocaleDateString('fr-FR')
+}
+
+// Gestion des documents
+function getDocumentIcon(type: string) {
+  // Utilisez Document24Filled pour tous les types de documents
+  return Document24Filled
+}
+
+function getFileExtension(filename: string) {
+  return filename.split('.').pop()?.toUpperCase() || ''
+}
+
+function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    documentForm.value.fichier = file
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      if (result.startsWith('data:')) {
+        documentForm.value.contenu = result.split(',')[1]
+      } else {
+        documentForm.value.contenu = ''
+        message.error('Format de fichier non supporté')
+      }
+    }
+    reader.onerror = () => {
+      documentForm.value.contenu = ''
+      message.error('Erreur lors de la lecture du fichier')
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+async function ajouterDocument() {
+  if (!documentForm.value.fichier || !documentForm.value.contenu) {
+    message.error('Veuillez sélectionner un fichier')
+    return
+  }
+
+  try {
+    uploading.value = true
+    const authStore = useAuthStore()
+    const userId = authStore.userInfo?.userId || ''
+    if (!userId) throw new Error('Utilisateur non connecté')
+
+    const file = documentForm.value.fichier
+    const documentData = {
+      contenu: documentForm.value.contenu,
+      utilisateurId: userId,
+      proprieteId: proprieteId,
+      typeDocument: documentForm.value.type,
+      titre: documentForm.value.nom || file.name,
+      dateDocument: documentForm.value.dateDocument || new Date().toISOString().split('T')[0],
+      mimeType: file.type || 'application/octet-stream',
+      nomFichier: file.name,
+      taille: file.size,
+    }
+
+    const apiUrl = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/uploadDocument`
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.token || localStorage.getItem('token') || ''}`
+      },
+      body: JSON.stringify(documentData)
+    })
+
+    if (!response.ok) {
+      let errorMessage = 'Erreur lors de l\'envoi du document'
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.message || errorMessage
+      } catch (e) {
+        const errorText = await response.text()
+        errorMessage = errorText || errorMessage
+      }
+      throw new Error(errorMessage)
+    }
+
+    message.success('Document ajouté avec succès')
+    showDocumentModal.value = false
+    fetchProprieteDetails()
+  } catch (error) {
+    message.error('Erreur lors de l\'ajout du document: ' + (error instanceof Error ? error.message : String(error)))
+  } finally {
+    uploading.value = false
+  }
+}
+
+async function supprimerDocument(id: string) {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/documents/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de la suppression du document')
+    }
+
+    message.success('Document supprimé avec succès')
+    fetchProprieteDetails()
+  } catch (error) {
+    console.error('Erreur lors de la suppression du document:', error)
+    message.error('Erreur lors de la suppression du document: ' + (error instanceof Error ? error.message : String(error)))
+  }
+}
+
+const telechargerDocument = async (doc: any) => {
+  if (typeof window === 'undefined') return;
+  
+  let a: HTMLAnchorElement | null = null;
+  
+  try {
+    const authStore = useAuthStore()
+    const token = authStore.token || localStorage.getItem('token') || ''
+    
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL || ''}/api/documents/${doc.id}/content`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Erreur ${response.status}: ${errorText || 'Erreur inconnue'}`)
+    }
+
+    // Récupérer le contenu en base64
+    const base64Content = await response.text()
+    
+    // Récupérer le nom de fichier depuis les en-têtes ou utiliser un nom par défaut
+    const contentDisposition = response.headers.get('Content-Disposition')
+    const filename = contentDisposition 
+      ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+      : doc.nomFichier || `document_${doc.id}.bin`
+    
+    // Créer un élément <a> invisible
+    a = document.createElement('a')
+    a.style.display = 'none'
+    a.href = `data:${doc.mimeType || 'application/octet-stream'};base64,${base64Content}`
+    a.download = filename
+    
+    // Ajouter l'élément au DOM, déclencher le clic
+    document.body.appendChild(a)
+    a.click()
+    message.success('Téléchargement démarré')
+  } catch (error) {
+    console.error('Erreur lors du téléchargement:', error)
+    message.error('Erreur lors du téléchargement du document: ' + (error instanceof Error ? error.message : String(error)))
+  } finally {
+    // Nettoyer après un court délai
+    setTimeout(() => {
+      if (a && document.body.contains(a)) {
+        document.body.removeChild(a)
+      }
+    }, 1000)
+  }
+};
+
+function nouveauDocument() {
+  documentForm.value = {
+    id: '',
+    nom: '',
+    type: 'AUTRE',
+    dateDocument: new Date().toISOString().split('T')[0],
+    fichier: null,
+    proprieteId: proprieteId
+  }
+  showDocumentModal.value = true
 }
 
 // Cycle de vie
@@ -691,11 +896,120 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
           </NModal>
         </NTabPane>
 
+
+
         <!-- Onglet Documents -->
         <NTabPane name="documents" tab="Documents">
-          <NEmpty description="Aucun document pour le moment" />
+          <div class="action-buttons">
+            <NButton type="primary" @click="nouveauDocument" class="action-button">
+              <template #icon>
+                <NIcon :component="Add24Filled" />
+              </template>
+              Ajouter un document
+            </NButton>
+          </div>
+
+          <NDataTable
+            :columns="[
+              { 
+                key: 'type', 
+                title: 'Type',
+                render: (row: any) => {
+                  const type = documentTypes.find(t => t.value === row.type)
+                  return type ? type.label : row.type
+                }
+              },
+              { key: 'nom', title: 'Nom du document' },
+              { 
+                key: 'dateDocument', 
+                title: 'Date',
+                render: (row: any) => formatDate(row.dateDocument)
+              },
+              {
+                key: 'actions',
+                title: 'Actions',
+                render: (row: any) => h('div', { class: 'table-actions' }, [
+                  h(NButton, {
+                    size: 'small',
+                    text: true,
+                    onClick: () => telechargerDocument(row),
+                    title: 'Télécharger',
+                    class: 'action-icon',
+                    style: { marginRight: '8px' }
+                  }, () => h(NIcon, { component: getDocumentIcon(getFileExtension(row.nomFichier || '')), size: 18 })),
+                  h(NPopconfirm, {
+                    onPositiveClick: () => supprimerDocument(row.id)
+                  }, {
+                    trigger: () => h(NButton, {
+                      size: 'small',
+                      text: true,
+                      title: 'Supprimer',
+                      class: 'action-icon error',
+                    }, () => h(NIcon, { component: Delete24Filled, size: 18 })),
+                    default: 'Êtes-vous sûr de vouloir supprimer ce document ?'
+                  })
+                ]),
+              },
+            ]"
+            :data="proprieteDetail?.documents || []"
+            :loading="loading"
+          />
         </NTabPane>
       </NTabs>
+
+      <!-- Modal d'ajout de document -->
+      <NModal v-model:show="showDocumentModal" :mask-closable="false">
+        <NCard
+          style="width: 600px; max-width: 90vw;"
+          title="Ajouter un document"
+          :bordered="false"
+          size="huge"
+          role="dialog"
+          aria-modal="true"
+        >
+          <NForm>
+            <NFormItem label="Type de document" required>
+              <NSelect
+                v-model:value="documentForm.type"
+                :options="documentTypes"
+                placeholder="Sélectionnez un type"
+                style="width: 100%"
+              />
+            </NFormItem>
+            <NFormItem label="Nom du document">
+              <NInput v-model:value="documentForm.nom" placeholder="Nom personnalisé (optionnel)" />
+            </NFormItem>
+            <NFormItem label="Date du document" required>
+              <NDatePicker
+                v-model:formatted-value="documentForm.dateDocument"
+                value-format="yyyy-MM-dd"
+                type="date"
+                style="width: 100%"
+              />
+            </NFormItem>
+            <NFormItem label="Fichier" required>
+              <input
+                type="file"
+                @change="handleFileUpload"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+              />
+              <div v-if="documentForm.fichier" class="mt-2">
+                Fichier sélectionné : {{ documentForm.fichier.name }}
+              </div>
+            </NFormItem>
+            <div class="flex justify-end gap-2 mt-4">
+              <NButton @click="showDocumentModal = false">Annuler</NButton>
+              <NButton 
+                type="primary" 
+                :loading="uploading"
+                @click="ajouterDocument"
+              >
+                Enregistrer
+              </NButton>
+            </div>
+          </NForm>
+        </NCard>
+      </NModal>
     </NSpin>
   </div>
 </template>

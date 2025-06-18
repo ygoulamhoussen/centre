@@ -580,37 +580,85 @@ public class UnifiedService {
         }
     }
 
-    public DocumentDTO saveDocument(String fichier, String utilisateurId, String proprieteId, String locataireId, String typeDocument, String titre, String dateDocument) {
 
+    public DocumentDTO saveDocument(DocumentDTO dto) {
         DocumentEntity doc = new DocumentEntity();
         doc.setId(UUID.randomUUID());
-        doc.setUtilisateur(utilisateurRepository.findById(UUID.fromString(utilisateurId)).orElseThrow());
-        if (proprieteId != null) {
-            doc.setPropriete(proprieteRepository.findById(UUID.fromString(proprieteId)).orElse(null));
+        
+        // Récupérer l'utilisateur
+        if (dto.getUtilisateurId() != null && !dto.getUtilisateurId().isEmpty()) {
+            doc.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId()))
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé")));
         }
-        if (locataireId != null) {
-            doc.setLocataire(locataireRepository.findById(UUID.fromString(locataireId)).orElse(null));
+        
+        // Récupérer la propriété si fournie
+        if (dto.getProprieteId() != null && !dto.getProprieteId().isEmpty()) {
+            doc.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId()))
+                .orElse(null));
         }
-        doc.setTypeDocument(DocumentEntity.TypeDocument.valueOf(typeDocument));
-        doc.setTitre(titre);
-        doc.setDateDocument(LocalDate.parse(dateDocument));
-        doc.setContenu(fichier);
+        
+        // Récupérer le locataire si fourni
+        if (dto.getLocataireId() != null && !dto.getLocataireId().isEmpty()) {
+            doc.setLocataire(locataireRepository.findById(UUID.fromString(dto.getLocataireId()))
+                .orElse(null));
+        }
+        
+        // Définir les champs de base
+        if (dto.getTypeDocument() != null && !dto.getTypeDocument().isEmpty()) {
+            try {
+                // Convertir la chaîne en majuscules pour correspondre aux valeurs de l'énumération
+                String typeDocumentStr = dto.getTypeDocument().toUpperCase();
+                doc.setTypeDocument(DocumentEntity.TypeDocument.valueOf(typeDocumentStr));
+            } catch (IllegalArgumentException e) {
+                // Si la valeur n'est pas valide, utiliser AUTRE par défaut
+                doc.setTypeDocument(DocumentEntity.TypeDocument.AUTRE);
+            }
+        }
+        
+        doc.setTitre(dto.getTitre());
+        doc.setDateDocument(dto.getDateDocument() != null ? LocalDate.parse(dto.getDateDocument()) : LocalDate.now());
+        
+        // Encoder le contenu en base64 si ce n'est pas déjà fait
+        String contenu = dto.getContenu();
+/*         if (contenu != null && !contenu.isEmpty() && !contenu.matches("^[A-Za-z0-9+/=]+$")) {
+            contenu = java.util.Base64.getEncoder().encodeToString(contenu.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } */
+        doc.setContenu(contenu);
+        
+        doc.setMimeType(dto.getMimeType());
+        doc.setNomFichier(dto.getNomFichier());
+        doc.setTaille(dto.getTaille());
+        
+        // Métadonnées
         doc.setCreeLe(LocalDateTime.now());
         doc.setModifieLe(LocalDateTime.now());
 
-        documentEntityRepository.save(doc);
-        return toDTO(doc);
-
-}
+        // Sauvegarder le document
+        DocumentEntity savedDoc = documentEntityRepository.save(doc);
+        return toDTO(savedDoc);
+    }
 
 
 private DocumentDTO toDTO(DocumentEntity document) {
+    if (document == null) {
+        return null;
+    }
+    
     DocumentDTO dto = new DocumentDTO();
     dto.setId(document.getId().toString());
     dto.setTitre(document.getTitre());
-    dto.setTypeDocument(document.getTypeDocument().name());
+    
+    if (document.getTypeDocument() != null) {
+        dto.setTypeDocument(document.getTypeDocument().name());
+    }
+    
     dto.setDateDocument(document.getDateDocument() != null ? document.getDateDocument().toString() : null);
+    dto.setContenu(document.getContenu());
+    dto.setMimeType(document.getMimeType());
+    dto.setNomFichier(document.getNomFichier());
+    dto.setTaille(document.getTaille());
 
+    // Références aux entités liées
     if (document.getUtilisateur() != null) {
         dto.setUtilisateurId(document.getUtilisateur().getId().toString());
     }
@@ -620,23 +668,58 @@ private DocumentDTO toDTO(DocumentEntity document) {
     if (document.getLocataire() != null) {
         dto.setLocataireId(document.getLocataire().getId().toString());
     }
-
-    // Le contenu est optionnel dans le DTO, on le met uniquement si nécessaire
-    //encoder le contenu de document en base64  
-    //String encodedContent = Base64.getEncoder().encodeToString(document.getContenu());
-
-     dto.setContenu(document.getContenu());
-
+    
     return dto;
 }
 
 
 
-public DocumentDTO getDocumentById(String id) {
-    DocumentEntity doc = documentEntityRepository.findById(UUID.fromString(id))
-        .orElseThrow(() -> new RuntimeException("Document introuvable"));
-    return toDTO(doc);
-}
+    @Transactional(readOnly = true)
+    public DocumentDTO getDocumentMetadataById(String id) {
+        DocumentEntity doc = documentEntityRepository.findById(UUID.fromString(id))
+            .orElseThrow(() -> new RuntimeException("Document introuvable"));
+            
+        DocumentDTO dto = new DocumentDTO();
+        dto.setId(doc.getId().toString());
+        dto.setNomFichier(doc.getNomFichier());
+        dto.setMimeType(doc.getMimeType());
+        dto.setTaille(doc.getTaille());
+        dto.setTypeDocument(doc.getTypeDocument() != null ? doc.getTypeDocument().name() : null);
+        dto.setTitre(doc.getTitre());
+        dto.setDateDocument(doc.getDateDocument() != null ? doc.getDateDocument().toString() : null);
+        // Ne pas inclure le contenu pour les métadonnées
+        return dto;
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] getDocumentContentById(String id) {
+        DocumentEntity doc = documentEntityRepository.findById(UUID.fromString(id))
+            .orElseThrow(() -> new RuntimeException("Document introuvable"));
+            
+        String contenu = doc.getContenu();
+        if (contenu == null || contenu.trim().isEmpty()) {
+            throw new RuntimeException("Contenu du document vide ou introuvable");
+        }
+        
+        try {
+            // Essayer de décoder en base64
+            try {
+                return java.util.Base64.getDecoder().decode(contenu);
+            } catch (IllegalArgumentException e) {
+                // Si le décodage échoue, retourner le contenu tel quel
+                return contenu.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la lecture du contenu du document: " + e.getMessage(), e);
+        }
+    }
+
+    @Deprecated
+    public DocumentDTO getDocumentById(String id) {
+        DocumentEntity doc = documentEntityRepository.findById(UUID.fromString(id))
+            .orElseThrow(() -> new RuntimeException("Document introuvable"));
+        return toDTO(doc);
+    }
 
 public List<DocumentDTO> getDocumentsByUtilisateur(String utilisateurId) {
     UUID userId = UUID.fromString(utilisateurId);
@@ -654,40 +737,53 @@ public CompositionAcquisitionDTO toDTO(CompositionAcquisition c) {
     return dto;
 }
 
+    @Transactional(readOnly = true)
+    public ProprieteDetailDTO getProprieteDetail(UUID proprieteId) {
+        Propriete propriete = proprieteRepository.findById(proprieteId)
+            .orElseThrow(() -> new RuntimeException("Propriété non trouvée"));
+
+        List<CompositionAcquisitionDTO> compositions = propriete.getCompositions().stream()
+            .map(this::toDTO)
+            .toList();
 
 
-public ProprieteDetailDTO getProprieteDetail(UUID proprieteId) {
-    Propriete propriete = proprieteRepository.findById(proprieteId)
-        .orElseThrow(() -> new RuntimeException("Propriété non trouvée"));
+        // Récupérer uniquement les métadonnées des documents, pas le contenu
+        List<DocumentDTO> documents = documentEntityRepository.findByPropriete_Id(proprieteId).stream()
+            .map(doc -> {
+                DocumentDTO dto = new DocumentDTO();
+                dto.setId(doc.getId().toString());
+                dto.setTitre(doc.getTitre());
+                dto.setTypeDocument(doc.getTypeDocument() != null ? doc.getTypeDocument().name() : null);
+                dto.setDateDocument(doc.getDateDocument() != null ? doc.getDateDocument().toString() : null);
+                dto.setNomFichier(doc.getNomFichier());
+                dto.setMimeType(doc.getMimeType());
+                dto.setTaille(doc.getTaille());
+                // Ne pas inclure le contenu
+                return dto;
+            })
+            .toList();
 
-    List<CompositionAcquisitionDTO> compositions = propriete.getCompositions().stream()
-        .map(this::toDTO)
-        .toList();
+        return new ProprieteDetailDTO(
+            toDTO(propriete),
+            compositions,
+            documents
+        );
+    }
 
-    List<DocumentDTO> documents = documentEntityRepository.findByPropriete_Id(proprieteId).stream()
-        .map(this::toDTO)
-        .toList();
+    
+    public DashboardDTO getDashboard(String id) {
+        UUID utilisateurId = UUID.fromString(id);
+        List<Propriete> proprietes = proprieteRepository.findByUtilisateur_Id(utilisateurId);
+        List<Location> locations = locationRepository.findByPropriete_Utilisateur_Id(utilisateurId);
+        List<Quittance> quittances = quittanceRepository.findByLocation_Propriete_Utilisateur_Id(utilisateurId);
+        List<Paiement> paiements = paiementRepository.findByQuittance_Location_Propriete_Utilisateur_Id(utilisateurId);
 
-    return new ProprieteDetailDTO(
-        toDTO(propriete),
-        compositions,
-        documents
-    );
-}
+        long totalBiens = proprietes.size();
 
-public DashboardDTO getDashboard(String id) {
-    UUID utilisateurId = UUID.fromString(id);
-    List<Propriete> proprietes = proprieteRepository.findByUtilisateur_Id(utilisateurId);
-    List<Location> locations = locationRepository.findByPropriete_Utilisateur_Id(utilisateurId);
-    List<Quittance> quittances = quittanceRepository.findByLocation_Propriete_Utilisateur_Id(utilisateurId);
-    List<Paiement> paiements = paiementRepository.findByQuittance_Location_Propriete_Utilisateur_Id(utilisateurId);
-
-    long totalBiens = proprietes.size();
-
-    // Répartition par type
-    Map<String, Long> repartitionParType = proprietes.stream()
-        .collect(Collectors.groupingBy(
-            p -> p.getTypeBien().toString(),
+        // Répartition par type
+        Map<String, Long> repartitionParType = proprietes.stream()
+            .collect(Collectors.groupingBy(
+                p -> p.getTypeBien().toString(),
             Collectors.counting()
         ));
 

@@ -12,10 +12,35 @@ public class DocumentDTO {
     private String urlFichier;
     private String dateDocument;
     private String contenu; // pour les téléchargements si besoin
-
-
+    private String mimeType;
+    private String nomFichier;
+    private Long taille;
 
     // Getters & Setters
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    public String getNomFichier() {
+        return nomFichier;
+    }
+
+    public void setNomFichier(String nomFichier) {
+        this.nomFichier = nomFichier;
+    }
+
+    public Long getTaille() {
+        return taille;
+    }
+
+    public void setTaille(Long taille) {
+        this.taille = taille;
+    }
 
     public String getId() {
         return id;

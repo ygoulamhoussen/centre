@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import CardData from '@/components/modules/home/card-data.vue'
-import CreativityBanner from '@/components/modules/home/creativity-banner.vue'
 import HeaderBanner from '@/components/modules/home/header-banner.vue'
 import LineChart from '@/components/modules/home/line-chart.vue'
 import PieChart from '@/components/modules/home/pie-chart.vue'
-import ProjectNews from '@/components/modules/home/project-news.vue'
 import { useAppStore } from '@/store/modules/app'
 
 definePage({

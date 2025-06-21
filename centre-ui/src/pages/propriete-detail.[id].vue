@@ -482,8 +482,8 @@ async function ajouterDocument() {
       utilisateurId: userId,
       proprieteId: proprieteId,
       typeDocument: documentForm.value.type,
-      titre: documentForm.value.nom || file.name,
-      dateDocument: documentForm.value.dateDocument || new Date().toISOString().split('T')[0],
+      titre: file.name, // Utiliser directement le nom du fichier
+      dateDocument: new Date().toISOString().split('T')[0], // Date actuelle
       mimeType: file.type || 'application/octet-stream',
       nomFichier: file.name,
       taille: file.size,
@@ -597,9 +597,7 @@ const telechargerDocument = async (doc: any) => {
 function nouveauDocument() {
   documentForm.value = {
     id: '',
-    nom: '',
     type: 'AUTRE',
-    dateDocument: new Date().toISOString().split('T')[0],
     fichier: null,
     proprieteId: proprieteId
   }
@@ -912,14 +910,18 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
           <NDataTable
             :columns="[
               { 
-                key: 'type', 
+                key: 'typeDocument', 
                 title: 'Type',
                 render: (row: any) => {
-                  const type = documentTypes.find(t => t.value === row.type)
-                  return type ? type.label : row.type
+                  const type = documentTypes.find(t => t.value === row.typeDocument)
+                  return type ? type.label : row.typeDocument || 'Non spécifié'
                 }
               },
-              { key: 'nom', title: 'Nom du document' },
+              { 
+                key: 'titre', 
+                title: 'Nom du document',
+                render: (row: any) => row.titre || row.nomFichier || 'Sans nom'
+              },
               { 
                 key: 'dateDocument', 
                 title: 'Date',
@@ -973,17 +975,6 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
                 v-model:value="documentForm.type"
                 :options="documentTypes"
                 placeholder="Sélectionnez un type"
-                style="width: 100%"
-              />
-            </NFormItem>
-            <NFormItem label="Nom du document">
-              <NInput v-model:value="documentForm.nom" placeholder="Nom personnalisé (optionnel)" />
-            </NFormItem>
-            <NFormItem label="Date du document" required>
-              <NDatePicker
-                v-model:formatted-value="documentForm.dateDocument"
-                value-format="yyyy-MM-dd"
-                type="date"
                 style="width: 100%"
               />
             </NFormItem>

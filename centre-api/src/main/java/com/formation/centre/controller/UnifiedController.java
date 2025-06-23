@@ -12,6 +12,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,9 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
@@ -465,6 +466,15 @@ public ResponseEntity<PaiementDTO> savePaiement(@RequestBody PaiementDTO paiemen
 public ResponseEntity<Void> deletePaiement(@PathVariable String id) {
     unifiedService.deletePaiement(id);
     return ResponseEntity.ok().build();
+}
+
+@GetMapping("/getQuittanceById/{id}")
+public ResponseEntity<QuittanceDTO> getQuittanceById(@PathVariable String id) {
+    QuittanceDTO dto = unifiedService.getQuittanceById(id);
+    if (dto == null) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Quittance non trouvée");
+    }
+    return ResponseEntity.ok(dto);
 }
 
 } 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { NButton, NDatePicker, NForm, NFormItem, NH1, NSelect, NSpace, useMessage } from 'naive-ui'
+import { NButton, NDatePicker, NForm, NFormItem, NH1, NSelect, NSpace, useMessage, NCard, NSteps, NGrid, NFormItemGi } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -46,27 +46,47 @@ onMounted(() => fetchLocations())
 </script>
 
 <template>
-  <NSpace vertical :size="24">
-    <NH1>Nouvelle quittance - Étape 1</NH1>
-    <NForm label-placement="top">
-      <NFormItem label="Location">
-        <NSelect
-          v-model:value="quittanceDTO.locationId"
-          :options="locations.map(l => ({ label: l.proprieteNom + ' - ' + l.locataireNom, value: l.id }))"
-          placeholder="Choisir une location"
-        />
-      </NFormItem>
-      <NFormItem label="Période début">
-        <NDatePicker v-model:formatted-value="quittanceDTO.dateDebut" value-format="yyyy-MM-dd" type="date" clearable />
-      </NFormItem>
-      <NFormItem label="Période fin">
-        <NDatePicker v-model:formatted-value="quittanceDTO.dateFin" value-format="yyyy-MM-dd" type="date" clearable />
-      </NFormItem>
-    </NForm>
-    <div class="flex justify-end gap-2">
-      <NButton type="primary" @click="suivant">Suivant</NButton>
-    </div>
-  </NSpace>
+  <div class="p-4">
+    <NCard :bordered="false">
+      <NSteps :current="1" class="mb-8">
+        <NStep title="Sélection" description="Location et période" />
+        <NStep title="Détails" description="Montants et statut" />
+        <NStep title="Récapitulatif" description="Vérification finale" />
+      </NSteps>
+      <h2 class="text-xl font-semibold mb-4">Étape 1 : Sélection de la location et de la période</h2>
+      <NForm label-placement="top">
+        <NGrid :x-gap="24" :y-gap="16" :cols="2">
+          <NFormItemGi :span="2" label="Location">
+            <NSelect
+              v-model:value="quittanceDTO.locationId"
+              :options="locations.map(l => ({ label: l.proprieteNom + ' - ' + l.locataireNom, value: l.id }))"
+              placeholder="Choisir une location"
+              size="large"
+            />
+          </NFormItemGi>
+          <NFormItemGi label="Période début">
+            <NDatePicker v-model:formatted-value="quittanceDTO.dateDebut" value-format="yyyy-MM-dd" type="date" clearable size="large" />
+          </NFormItemGi>
+          <NFormItemGi label="Période fin">
+            <NDatePicker v-model:formatted-value="quittanceDTO.dateFin" value-format="yyyy-MM-dd" type="date" clearable size="large" />
+          </NFormItemGi>
+        </NGrid>
+      </NForm>
+      <div class="flex justify-end mt-8">
+        <NButton type="primary" @click="suivant" size="large">Suivant</NButton>
+      </div>
+    </NCard>
+  </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.flex {
+  display: flex;
+}
+.justify-end {
+  justify-content: flex-end;
+}
+.mt-8 {
+  margin-top: 2rem;
+}
+</style>

@@ -54,7 +54,8 @@ export const useUnifiedStore = defineStore('unified', {
       montantLoyer: null as string | null,
       montantCharges: null as string | null,
       montantTotal: null as string | null,
-      statut: null as string | null
+      statut: null as string | null,
+      inclure_caution: false as boolean
     },
     paiementDTO: {
       id: null as string | null,

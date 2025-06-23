@@ -7,6 +7,9 @@ import {
   NDescriptionsItem,
   NSpace,
   useMessage,
+  NCard,
+  NSteps,
+  NStep,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
@@ -60,8 +63,10 @@ async function enregistrer() {
   try {
     const payload = {
       ...quittanceDTO.value,
+      montantTotal: Number(quittanceDTO.value.montantTotal) || 0,
       locationId: quittanceDTO.value.locationId,
-      utilisateurId: authStore.userInfo.userId
+      utilisateurId: authStore.userInfo.userId,
+      inclure_caution: quittanceDTO.value.inclureCaution ?? false
     }
     const res = await fetch(
       `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createQuittance`,
@@ -85,51 +90,52 @@ async function enregistrer() {
 </script>
 
 <template>
-  <NSpace vertical :size="24">
-    <h1>Nouvelle quittance – Récapitulatif</h1>
-    <NDescriptions label-placement="top" bordered>
-      <NDescriptionsItem label="Location ID">
-        {{ quittanceDTO.locationId }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Date début">
-        {{ quittanceDTO.dateDebut }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Date fin">
-        {{ quittanceDTO.dateFin || '—' }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Date émission">
-        {{ quittanceDTO.dateEmission }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Loyer (€)">
-        {{ quittanceDTO.montantLoyer }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Charges (€)">
-        {{ quittanceDTO.montantCharges }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Inclure caution">
-        {{ quittanceDTO.inclureCaution ? 'Oui' : 'Non' }}
-      </NDescriptionsItem>
-      <NDescriptionsItem
-        v-if="quittanceDTO.inclureCaution"
-        label="Montant caution (€)"
-      >
-        {{ quittanceDTO.depotGarantie }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Montant total (€)">
-        {{ quittanceDTO.montantTotal }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Statut">
-        {{ quittanceDTO.statut }}
-      </NDescriptionsItem>
-    </NDescriptions>
-
-    <div class="flex justify-between pt-4">
-      <NButton @click="precedent">Précédent</NButton>
-      <NButton type="primary" @click="enregistrer" :loading="loading">
-        Enregistrer
-      </NButton>
-    </div>
-  </NSpace>
+  <div class="p-4">
+    <NCard :bordered="false">
+      <NSteps :current="3" class="mb-8">
+        <NStep title="Sélection" description="Location et période" />
+        <NStep title="Détails" description="Montants et statut" />
+        <NStep title="Récapitulatif" description="Vérification finale" />
+      </NSteps>
+      <h2 class="text-xl font-semibold mb-4">Étape 3 : Récapitulatif</h2>
+      <NDescriptions label-placement="top" bordered :column="2">
+        <NDescriptionsItem label="Location ID">
+          {{ quittanceDTO.locationId }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Date début">
+          {{ quittanceDTO.dateDebut }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Date fin">
+          {{ quittanceDTO.dateFin || '—' }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Date émission">
+          {{ quittanceDTO.dateEmission }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Loyer (€)">
+          {{ quittanceDTO.montantLoyer }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Charges (€)">
+          {{ quittanceDTO.montantCharges }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Inclure caution">
+          {{ quittanceDTO.inclureCaution ? 'Oui' : 'Non' }}
+        </NDescriptionsItem>
+        <NDescriptionsItem v-if="quittanceDTO.inclureCaution" label="Montant caution (€)">
+          {{ quittanceDTO.depotGarantie }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Montant total (€)">
+          {{ quittanceDTO.montantTotal }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Statut">
+          {{ quittanceDTO.statut }}
+        </NDescriptionsItem>
+      </NDescriptions>
+      <div class="flex justify-between mt-8">
+        <NButton @click="precedent" size="large">Précédent</NButton>
+        <NButton type="primary" @click="enregistrer" :loading="loading" size="large">Enregistrer</NButton>
+      </div>
+    </NCard>
+  </div>
 </template>
 
 <style scoped>
@@ -139,7 +145,7 @@ async function enregistrer() {
 .justify-between {
   justify-content: space-between;
 }
-.pt-4 {
-  padding-top: 1rem;
+.mt-8 {
+  margin-top: 2rem;
 }
 </style>

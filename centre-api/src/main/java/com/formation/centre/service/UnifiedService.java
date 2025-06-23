@@ -51,6 +51,8 @@ import com.formation.centre.repository.ProprieteRepository;
 import com.formation.centre.repository.QuittanceRepository;
 import com.formation.centre.repository.UtilisateurRepository;
 import com.lowagie.text.Document;
+import com.lowagie.text.Font;
+import com.lowagie.text.Image;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.pdf.PdfWriter;
 
@@ -415,12 +417,12 @@ public class UnifiedService {
         q.setDateFin(dto.getDateFin()!=null?LocalDate.parse(dto.getDateFin()):null);
         //q.setDateEmission(LocalDate.parse(dto.getDateEmission()));
         q.setDateEcheance(dto.getDateEcheance()!=null?LocalDate.parse(dto.getDateEcheance()):null);
-        q.setMontantLoyer(new BigDecimal(dto.getMontantLoyer()));
-        q.setMontantCharges(new BigDecimal(dto.getMontantCharges()));
-        //q.setMontantTotal(new BigDecimal(dto.getMontantTotal()));
+        q.setMontantLoyer(dto.getMontantLoyer()!=null ? new BigDecimal(dto.getMontantLoyer()) : BigDecimal.ZERO);
+        q.setMontantCharges(dto.getMontantCharges()!=null ? new BigDecimal(dto.getMontantCharges()) : BigDecimal.ZERO);
+        //q.setMontantTotal(dto.getMontantTotal()!=null ? new BigDecimal(dto.getMontantTotal()) : BigDecimal.ZERO);
         q.setStatut(Quittance.StatutQuittance.valueOf(dto.getStatut()));
         q.setInclureCaution(dto.getInclureCaution());
-        q.setDepotGarantie(dto.getDepotGarantie()!=null? new BigDecimal(dto.getDepotGarantie()):BigDecimal.ZERO);
+        q.setDepotGarantie(dto.getDepotGarantie()!=null ? new BigDecimal(dto.getDepotGarantie()) : BigDecimal.ZERO);
         q.setModifieLe(LocalDateTime.now());
 
         Quittance saved = quittanceRepository.save(q);
@@ -560,20 +562,97 @@ public class UnifiedService {
     public byte[] generateQuittancePdf(String quittanceId) {
         Quittance quittance = quittanceRepository.findById(UUID.fromString(quittanceId))
             .orElseThrow(() -> new RuntimeException("Quittance non trouvée"));
-    
+
+        Location location = quittance.getLocation();
+        Locataire locataire = location.getLocataire();
+        Propriete propriete = location.getPropriete();
+        Utilisateur bailleur = propriete.getUtilisateur();
+
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             Document document = new Document();
             PdfWriter.getInstance(document, outputStream);
             document.open();
-    
-            document.add(new Paragraph("Quittance de loyer"));
-            document.add(new Paragraph("Date d'émission : " + quittance.getDateEmission()));
-            document.add(new Paragraph("Période : " + quittance.getDateDebut() + " au " + quittance.getDateFin()));
-            document.add(new Paragraph("Montant total : " + quittance.getMontantTotal() + " €"));
-            document.add(new Paragraph("Statut : " + quittance.getStatut()));
-    
+
+            // --- LOGO ---
+            try {
+                // iText/Lowagie ne supporte pas nativement le SVG, mais on tente l'ajout (sinon ignorer)
+                // Si besoin, convertir le SVG en PNG côté projet et utiliser le PNG ici
+                Image logo = Image.getInstance("src/assets/svg-icon/logo.svg");
+                logo.scaleToFit(120, 60);
+                logo.setAlignment(Image.ALIGN_CENTER);
+                document.add(logo);
+            } catch (Exception e) {
+                // Si le SVG n'est pas supporté, on continue sans logo
+            }
+
+            // --- TITRES ET COULEURS ---
+            Font titreFont = new Font(Font.HELVETICA, 18, Font.BOLD, new java.awt.Color(0, 102, 204));
+            Font sectionFont = new Font(Font.HELVETICA, 12, Font.BOLD, new java.awt.Color(0, 51, 102));
+            Font normalFont = new Font(Font.HELVETICA, 11, Font.NORMAL, java.awt.Color.BLACK);
+
+            Paragraph titre = new Paragraph("QUITTANCE DE LOYER", titreFont);
+            titre.setAlignment(Paragraph.ALIGN_CENTER);
+            titre.setSpacingAfter(10);
+            document.add(titre);
+
+            document.add(new Paragraph("Date d'émission : " + (quittance.getDateEmission() != null ? quittance.getDateEmission() : java.time.LocalDate.now()), normalFont));
+            document.add(new Paragraph(" "));
+
+            // --- SÉPARATEUR ---
+            document.add(new com.lowagie.text.pdf.draw.LineSeparator(1, 100, new java.awt.Color(0, 102, 204), com.lowagie.text.Element.ALIGN_CENTER, -2));
+
+            // --- INFOS BAILLEUR ---
+            document.add(new Paragraph("Bailleur", sectionFont));
+            document.add(new Paragraph((bailleur.getPrenom() != null ? bailleur.getPrenom() + " " : "") + bailleur.getNom(), normalFont));
+            document.add(new Paragraph("Email : " + bailleur.getEmail(), normalFont));
+            document.add(new Paragraph(" "));
+
+            // --- INFOS LOCATAIRE ---
+            document.add(new Paragraph("Locataire", sectionFont));
+            document.add(new Paragraph(locataire.getNom(), normalFont));
+            document.add(new Paragraph("Adresse : " + locataire.getAdresse()
+                + (locataire.getComplementAdresse() != null ? ", " + locataire.getComplementAdresse() : "")
+                + ", " + locataire.getCodePostal() + " " + locataire.getVille(), normalFont));
+            document.add(new Paragraph("Email : " + locataire.getEmail(), normalFont));
+            document.add(new Paragraph("Téléphone : " + locataire.getTelephone(), normalFont));
+            document.add(new Paragraph(" "));
+
+            // --- INFOS BIEN ---
+            document.add(new Paragraph("Bien loué", sectionFont));
+            document.add(new Paragraph(propriete.getNom() + " (" + (propriete.getTypeBien() != null ? propriete.getTypeBien().toString() : "") + ")", normalFont));
+            document.add(new Paragraph("Adresse : " + propriete.getAdresse()
+                + (propriete.getComplementAdresse() != null ? ", " + propriete.getComplementAdresse() : "")
+                + ", " + propriete.getCodePostal() + " " + propriete.getVille(), normalFont));
+            document.add(new Paragraph(" "));
+
+            // --- DÉTAILS LOCATION ---
+            document.add(new Paragraph("Détails de la location", sectionFont));
+            document.add(new Paragraph("Période : du " + quittance.getDateDebut() + " au " + quittance.getDateFin(), normalFont));
+            document.add(new Paragraph("Loyer mensuel : " + quittance.getMontantLoyer() + " €", normalFont));
+            document.add(new Paragraph("Charges mensuelles : " + quittance.getMontantCharges() + " €", normalFont));
+            if (Boolean.TRUE.equals(quittance.getInclureCaution()) && quittance.getDepotGarantie() != null) {
+                document.add(new Paragraph("Caution : " + quittance.getDepotGarantie() + " €", normalFont));
+            }
+            java.math.BigDecimal total = quittance.getMontantLoyer()
+                .add(quittance.getMontantCharges())
+                .add(Boolean.TRUE.equals(quittance.getInclureCaution()) && quittance.getDepotGarantie() != null ? quittance.getDepotGarantie() : java.math.BigDecimal.ZERO);
+            document.add(new Paragraph("Total dû : " + total + " €", normalFont));
+            document.add(new Paragraph("Statut : " + quittance.getStatut(), normalFont));
+            if (quittance.getDateEcheance() != null) {
+                document.add(new Paragraph("Date d'échéance : " + quittance.getDateEcheance(), normalFont));
+            }
+            document.add(new Paragraph(" "));
+
+            // --- SÉPARATEUR ---
+            document.add(new com.lowagie.text.pdf.draw.LineSeparator(1, 100, new java.awt.Color(0, 102, 204), com.lowagie.text.Element.ALIGN_CENTER, -2));
+
+            // --- MENTION LÉGALE ---
+            Font legalFont = new Font(Font.HELVETICA, 10, Font.ITALIC, new java.awt.Color(100, 100, 100));
+            Paragraph legal = new Paragraph("La présente quittance atteste que le locataire s'est acquitté du montant dû pour la période indiquée.", legalFont);
+            legal.setSpacingBefore(10);
+            document.add(legal);
+
             document.close();
-    
             return outputStream.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException("Erreur de génération PDF : " + e.getMessage(), e);
@@ -829,7 +908,7 @@ public CompositionAcquisitionDTO toDTO(CompositionAcquisition c) {
         .filter(p -> p.getDatePaiement() != null && p.getMontant() != null)
         .collect(Collectors.groupingBy(
             p -> p.getDatePaiement().format(DateTimeFormatter.ofPattern("yyyy-MM")),
-            TreeMap::new, // pour les trier dans l’ordre chronologique
+            TreeMap::new, // pour les trier dans l'ordre chronologique
             Collectors.reducing(BigDecimal.ZERO, Paiement::getMontant, BigDecimal::add)
         ));
 
@@ -929,6 +1008,12 @@ public LocataireDetailDTO getLocataireDetails(UUID locataireId) {
     detailDTO.setVille(locataireDTO.getVille());
     detailDTO.setDocuments(documents);
     return detailDTO;
+}
+
+public QuittanceDTO getQuittanceById(String id) {
+    return quittanceRepository.findById(UUID.fromString(id))
+        .map(this::toDto)
+        .orElse(null);
 }
 
 

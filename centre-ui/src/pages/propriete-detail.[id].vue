@@ -25,13 +25,14 @@ import {
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { 
-  Edit24Filled,
-  Delete24Filled,
-  Add24Filled,
-  Save24Filled,
-  Dismiss24Filled,
-  ArrowLeft24Filled,
-  Document24Filled
+  Add24Filled, 
+  Edit24Filled, 
+  Delete24Filled, 
+  ArrowLeft24Filled, 
+  Document24Filled,
+  CheckmarkCircle24Filled,
+  ErrorCircle24Filled,
+  Dismiss24Filled as DismissIcon
 } from '@vicons/fluent'
 // import { useRouter } from 'vue-router'  // Will be used later
 
@@ -90,21 +91,27 @@ const compositionForm = ref({
 // Formulaire de document
 const documentForm = ref({
   id: '',
-  nom: '',
   type: 'AUTRE',
-  dateDocument: new Date().toISOString().split('T')[0],
   fichier: null as File | null,
-  proprieteId: '',
-  contenu: '' // Contenu base64 du fichier
+  contenu: '',
+  proprieteId: proprieteId,
+  locataireId: '', // Laisser vide pour les documents de propriété
+  titre: '',
+  nomFichier: '',
+  mimeType: '',
+  taille: 0,
+  dateDocument: new Date().toISOString().split('T')[0]
 })
 
+const fileInput = ref<HTMLInputElement | null>(null)
+
 const documentTypes = [
-  { label: 'Facture', value: 'Facture' },
-  { label: 'Quittance', value: 'Quittance' },
-  { label: 'Bail', value: 'Bail' },
-  { label: 'Justificatif', value: 'Justificatif' },
-  { label: 'Contrat de crédit', value: 'ContratDeCredit' },
-  { label: 'Autre', value: 'Autre' },
+  { value: 'BAIL', label: 'Bail de location' },
+  { value: 'QUITTANCE', label: 'Quittance de loyer' },
+  { value: 'FACTURE', label: 'Facture' },
+  { value: 'JUSTIFICATIF', label: 'Justificatif (revenus, identité...)' },
+  { value: 'CONTRAT_DE_CREDIT', label: 'Contrat de crédit' },
+  { value: 'AUTRE', label: 'Autre document' },
 ]
 
 const categoriesAmortissement = [
@@ -442,83 +449,138 @@ function getFileExtension(filename: string) {
   return filename.split('.').pop()?.toUpperCase() || ''
 }
 
+function handleDrop(event: DragEvent) {
+  const file = event.dataTransfer?.files[0]
+  if (!file) {
+    message.error('Aucun fichier déposé.')
+    return
+  }
+
+  if (file.size > 10 * 1024 * 1024) { // 10 MB
+    message.error('Le fichier est trop volumineux (max 10MB).')
+    return
+  }
+
+  documentForm.value.fichier = file
+  documentForm.value.nomFichier = file.name
+  documentForm.value.mimeType = file.type
+  documentForm.value.taille = file.size
+
+  const reader = new FileReader()
+  reader.onload = e => {
+    documentForm.value.contenu = e.target?.result as string
+  }
+  reader.onerror = () => {
+    message.error('Erreur lors de la lecture du fichier.')
+  }
+  reader.readAsDataURL(file)
+}
+
 function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    const file = target.files[0]
-    documentForm.value.fichier = file
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result as string
-      if (result.startsWith('data:')) {
-        documentForm.value.contenu = result.split(',')[1]
-      } else {
-        documentForm.value.contenu = ''
-        message.error('Format de fichier non supporté')
-      }
-    }
-    reader.onerror = () => {
-      documentForm.value.contenu = ''
-      message.error('Erreur lors de la lecture du fichier')
-    }
-    reader.readAsDataURL(file)
+  if (!target.files || target.files.length === 0) {
+    console.log('Aucun fichier sélectionné.')
+    return
   }
+
+  const file = target.files[0]
+  console.log('Fichier sélectionné:', file)
+
+  if (file.size > 10 * 1024 * 1024) { // 10 MB
+    message.error('Le fichier est trop volumineux. La taille maximale est de 10 Mo.')
+    target.value = ''
+    return
+  }
+
+  documentForm.value.fichier = file
+  documentForm.value.nomFichier = file.name
+  documentForm.value.mimeType = file.type
+  documentForm.value.taille = file.size
+  documentForm.value.titre = file.name.split('.').slice(0, -1).join('.')
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const result = e.target?.result as string
+    documentForm.value.contenu = result.split(',')[1]
+  }
+  reader.onerror = (error) => {
+    console.error('Erreur de lecture du fichier:', error)
+    message.error('Erreur lors de la lecture du fichier.')
+  }
+  reader.readAsDataURL(file)
 }
 
 async function ajouterDocument() {
   if (!documentForm.value.fichier || !documentForm.value.contenu) {
-    message.error('Veuillez sélectionner un fichier')
+    message.error('Veuillez sélectionner un fichier.')
     return
   }
 
+  uploading.value = true
   try {
-    uploading.value = true
     const authStore = useAuthStore()
-    const userId = authStore.userInfo?.userId || ''
-    if (!userId) throw new Error('Utilisateur non connecté')
-
-    const file = documentForm.value.fichier
-    const documentData = {
-      contenu: documentForm.value.contenu,
-      utilisateurId: userId,
-      proprieteId: proprieteId,
-      typeDocument: documentForm.value.type,
-      titre: file.name, // Utiliser directement le nom du fichier
-      dateDocument: new Date().toISOString().split('T')[0], // Date actuelle
-      mimeType: file.type || 'application/octet-stream',
-      nomFichier: file.name,
-      taille: file.size,
+    const token = authStore.token || localStorage.getItem('token')
+    if (!token) {
+      throw new Error('Utilisateur non authentifié')
     }
 
-    const apiUrl = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/uploadDocument`
-    const response = await fetch(apiUrl, {
+    const documentData = {
+      contenu: documentForm.value.contenu,
+      mimeType: documentForm.value.mimeType,
+      nomFichier: documentForm.value.nomFichier,
+      taille: documentForm.value.taille,
+      utilisateurId: authStore.userInfo?.userId,
+      proprieteId: documentForm.value.proprieteId,
+      locataireId: documentForm.value.locataireId,
+      typeDocument: documentForm.value.type,
+      titre: documentForm.value.nomFichier, // Utiliser le nom du fichier comme titre
+      dateDocument: new Date().toISOString().split('T')[0] // Utiliser la date du jour
+    }
+
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/uploadDocument`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.token || localStorage.getItem('token') || ''}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(documentData)
     })
 
     if (!response.ok) {
-      let errorMessage = 'Erreur lors de l\'envoi du document'
-      try {
-        const errorData = await response.json()
-        errorMessage = errorData.message || errorMessage
-      } catch (e) {
-        const errorText = await response.text()
-        errorMessage = errorText || errorMessage
-      }
-      throw new Error(errorMessage)
+      const errorText = await response.text()
+      throw new Error(`Erreur ${response.status}: ${errorText}`)
     }
 
-    message.success('Document ajouté avec succès')
+    message.success('Document téléversé avec succès !')
     showDocumentModal.value = false
-    fetchProprieteDetails()
+    resetDocumentForm()
+    await fetchProprieteDetails() // Recharger les documents
   } catch (error) {
-    message.error('Erreur lors de l\'ajout du document: ' + (error instanceof Error ? error.message : String(error)))
+    console.error('Erreur lors du téléversement du document:', error)
+    message.error(error instanceof Error ? error.message : 'Une erreur est survenue.')
   } finally {
     uploading.value = false
+  }
+}
+
+function resetDocumentForm() {
+  documentForm.value = {
+    id: '',
+    type: 'AUTRE',
+    fichier: null,
+    contenu: '',
+    proprieteId: proprieteId,
+    locataireId: '',
+    titre: '',
+    nomFichier: '',
+    mimeType: '',
+    taille: 0,
+    dateDocument: new Date().toISOString().split('T')[0]
+  }
+  // Reset file input if possible
+  const fileInput = document.getElementById('file-upload') as HTMLInputElement
+  if (fileInput) {
+    fileInput.value = ''
   }
 }
 
@@ -970,36 +1032,76 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
           role="dialog"
           aria-modal="true"
         >
-          <NForm>
+          <NForm @submit.prevent="ajouterDocument">
             <NFormItem label="Type de document" required>
               <NSelect
                 v-model:value="documentForm.type"
                 :options="documentTypes"
                 placeholder="Sélectionnez un type"
-                style="width: 100%"
               />
             </NFormItem>
+
             <NFormItem label="Fichier" required>
-              <input
-                type="file"
-                @change="handleFileUpload"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
-              />
-              <div v-if="documentForm.fichier" class="mt-2">
-                Fichier sélectionné : {{ documentForm.fichier.name }}
+              <div class="w-full">
+                <div 
+                  class="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                  @dragover.prevent
+                  @drop.prevent="handleDrop"
+                  @click="() => fileInput?.click()"
+                >
+                  <input 
+                    type="file" 
+                    ref="fileInput"
+                    class="hidden" 
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,image/*"
+                    @change="handleFileUpload"
+                  >
+                  <div class="flex flex-col items-center">
+                    <NIcon size="48" :depth="3" class="mb-3">
+                      <Document24Filled />
+                    </NIcon>
+                    <NText style="font-size: 16px" class="block mb-1">
+                      Cliquez pour sélectionner un fichier
+                    </NText>
+                    <NText depth="3" class="block mb-3">
+                      ou glissez-déposez un fichier ici
+                    </NText>
+                    <NButton type="primary" ghost @click.stop="() => fileInput?.click()">
+                      Sélectionner un fichier
+                    </NButton>
+                    <NText depth="3" class="block mt-3 text-xs">
+                      Formats supportés: PDF, DOC, DOCX, JPG, PNG (max 10MB)
+                    </NText>
+                  </div>
+                </div>
+                
+                <div v-if="documentForm.fichier" class="mt-4 p-3 border rounded">
+                  <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                      <NIcon :component="getDocumentIcon(documentForm.fichier.name)" size="24" class="mr-2" />
+                      <span>{{ documentForm.fichier.name }}</span>
+                    </div>
+                    <NButton text @click="() => { documentForm.fichier = null; documentForm.contenu = ''; if (fileInput) fileInput.value = ''; }">
+                      <NIcon :component="DismissIcon" />
+                    </NButton>
+                  </div>
+                </div>
               </div>
             </NFormItem>
-            <div class="flex justify-end gap-2 mt-4">
+          </NForm>
+          <template #footer>
+            <div class="flex justify-end gap-2">
               <NButton @click="showDocumentModal = false">Annuler</NButton>
               <NButton 
                 type="primary" 
                 :loading="uploading"
+                :disabled="!documentForm.fichier"
                 @click="ajouterDocument"
               >
-                Enregistrer
+                Téléverser
               </NButton>
             </div>
-          </NForm>
+          </template>
         </NCard>
       </NModal>
     </NSpin>

@@ -232,21 +232,32 @@ async function saveLocataire() {
 
 // Types de documents disponibles
 const documentTypes = [
-  { value: 'CONTRAT', label: 'Contrat de location' },
-  { value: 'ETAT_LIEUX', label: 'État des lieux' },
+  { value: 'BAIL', label: 'Bail de location' },
   { value: 'QUITTANCE', label: 'Quittance de loyer' },
-  { value: 'AVIS_ECHEANCE', label: 'Avis d\'échéance' },
+  { value: 'FACTURE', label: 'Facture' },
+  { value: 'JUSTIFICATIF', label: 'Justificatif (revenus, identité...)' },
+  { value: 'CONTRAT_DE_CREDIT', label: 'Contrat de crédit' },
   { value: 'AUTRE', label: 'Autre document' },
 ]
 
 // Gestion des documents
 const showDocumentModal = ref(false)
-const documentFile = ref<File | null>(null)
-const documentBase64 = ref<string | null>(null)
-const documentType = ref('AUTRE')
+const documentForm = ref({
+  id: '',
+  type: 'AUTRE',
+  fichier: null,
+  contenu: '',
+  proprietaireId: '',
+  locataireId: locataireId,
+  titre: '',
+  nomFichier: '',
+  dateDocument: new Date().toISOString().split('T')[0]
+})
 
 // Référence vers l'input file
 const fileInput = ref<HTMLInputElement | null>(null)
+
+
 
 // Gestion du drop de fichier
 function handleDrop(event: DragEvent) {
@@ -314,44 +325,54 @@ const documentColumns = [
 ]
 
 function handleFileUpload(event: Event) {
+  console.log('handleFileUpload triggered');
   const input = event.target as HTMLInputElement
-  if (!input.files || input.files.length === 0) return
+  if (!input.files || input.files.length === 0) {
+    console.log('No files selected');
+    return
+  }
   
   const file = input.files[0]
-  documentFile.value = file
+  console.log('File selected:', file.name);
   
   // Vérifier la taille du fichier (max 10MB)
   if (file.size > 10 * 1024 * 1024) {
     message.error('Le fichier est trop volumineux. La taille maximale est de 10MB.')
     input.value = ''
-    documentFile.value = null
     return
   }
   
   const reader = new FileReader()
   reader.onload = () => {
+    console.log('FileReader onload');
     const result = reader.result as string
     if (result.startsWith('data:')) {
-      // Stocker le contenu en base64 (sans le préfixe data:...)
-      documentBase64.value = result.split(',')[1]
+      // Mettre à jour le formulaire avec les informations du fichier
+      documentForm.value = {
+        ...documentForm.value,
+        fichier: file,
+        contenu: result.split(',')[1],
+        nomFichier: file.name,
+        titre: file.name
+      }
+      console.log('documentForm updated:', documentForm.value);
     } else {
       console.error('Format inattendu pour le fichier')
       message.error('Format de fichier non supporté')
       input.value = ''
-      documentFile.value = null
     }
   }
   reader.onerror = () => {
     console.error('Erreur lors de la lecture du fichier')
     message.error('Erreur lors de la lecture du fichier')
     input.value = ''
-    documentFile.value = null
   }
+  
   reader.readAsDataURL(file)
 }
 
 async function uploadDocument() {
-  if (!documentFile.value || !documentBase64.value) {
+  if (!documentForm.value.fichier || !documentForm.value.contenu) {
     message.error('Veuillez sélectionner un fichier valide')
     return
   }
@@ -366,15 +387,24 @@ async function uploadDocument() {
       throw new Error('Utilisateur non connecté')
     }
     
+        // S'assurer que la date est au format YYYY-MM-DD
+    const dateDoc = documentForm.value.dateDocument
+      ? new Date(documentForm.value.dateDocument).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
+
     const documentData = {
-      contenu: documentBase64.value,
+      contenu: documentForm.value.contenu,
+      mimeType: documentForm.value.mimeType,
+      nomFichier: documentForm.value.nomFichier,
+      taille: documentForm.value.taille,
       utilisateurId: userId,
       locataireId: locataireId,
-      typeDocument: documentType.value,
-      titre: documentFile.value.name,
-      nomFichier: documentFile.value.name,
-      dateDocument: new Date().toISOString().split('T')[0]
+      typeDocument: documentForm.value.type,
+      titre: documentForm.value.nomFichier, // Utiliser le nom du fichier comme titre
+      dateDocument: new Date().toISOString().split('T')[0] // Utiliser la date du jour
     }
+    
+    console.log('Données du document à envoyer:', documentData)
     
     const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/uploadDocument`, {
       method: 'POST',
@@ -402,9 +432,7 @@ async function uploadDocument() {
     const result = await response.json()
     message.success('Document téléversé avec succès')
     showDocumentModal.value = false
-    documentFile.value = null
-    documentBase64.value = null
-    documentType.value = 'AUTRE'
+    resetDocumentForm()
     await loadLocataire()
     return result
   } catch (error) {
@@ -489,9 +517,17 @@ async function downloadDocument(doc: any) {
 
 // Réinitialiser le formulaire d'ajout de document
 function resetDocumentForm() {
-  documentFile.value = null
-  documentBase64.value = null
-  documentType.value = 'AUTRE'
+  documentForm.value = {
+    id: '',
+    type: 'AUTRE',
+    fichier: null,
+    contenu: '',
+    proprietaireId: '',
+    locataireId: locataireId,
+    titre: '',
+    nomFichier: '',
+    dateDocument: new Date().toISOString().split('T')[0]
+  }
 }
 
 async function confirmDelete() {
@@ -711,7 +747,7 @@ function formatDate(dateString: string) {
         <div class="space-y-4">
           <NFormItem label="Type de document" required>
             <NSelect
-              v-model:value="documentType"
+              v-model:value="documentForm.type"
               :options="documentTypes"
               placeholder="Sélectionnez un type de document"
               :consistent-menu-width="false"
@@ -746,13 +782,13 @@ function formatDate(dateString: string) {
             </div>
           </div>
           
-          <div v-if="documentFile" class="mt-4 p-3 border rounded">
+          <div v-if="documentForm.fichier" class="mt-4 p-3 border rounded">
             <div class="flex justify-between items-center">
               <div class="flex items-center">
-                <NIcon :component="getDocumentIcon(documentFile.name)" size="24" class="mr-2" />
-                <span>{{ documentFile.name }}</span>
+                <NIcon :component="getDocumentIcon(documentForm.fichier.name)" size="24" class="mr-2" />
+                <span>{{ documentForm.fichier.name }}</span>
               </div>
-              <NButton text @click="documentFile = null">
+              <NButton text @click="() => { documentForm.fichier = null; documentForm.contenu = ''; if (fileInput) fileInput.value = ''; }">
                 <NIcon :component="Dismiss24Filled" />
               </NButton>
             </div>
@@ -762,7 +798,7 @@ function formatDate(dateString: string) {
             <NButton @click="showDocumentModal = false">Annuler</NButton>
             <NButton 
               type="primary" 
-              :disabled="!documentFile"
+              :disabled="!documentForm.fichier"
               :loading="saving"
               @click="uploadDocument"
             >

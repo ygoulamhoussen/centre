@@ -125,21 +125,6 @@ onMounted(() => {
                 </div>
               </div>
             </div>
-            <template #footer>
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-gray-500">
-                  <span v-if="locataire.documents && locataire.documents.length > 0">
-                    {{ locataire.documents.length }} document(s)
-                  </span>
-                  <span v-else>
-                    Aucun document
-                  </span>
-                </div>
-                <NButton text @click.stop>
-                  <NIcon :component="Document24Filled" />
-                </NButton>
-              </div>
-            </template>
           </NCard>
         </NGi>
       </NGrid>

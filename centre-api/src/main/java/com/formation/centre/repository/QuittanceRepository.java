@@ -10,4 +10,6 @@ import com.formation.centre.model.Quittance;
 public interface QuittanceRepository extends JpaRepository<Quittance, UUID> {
     
     List<Quittance> findByLocation_Propriete_Utilisateur_Id(UUID utilisateurId);
+
+    List<Quittance> findByLocation_Id(UUID locationId);
 }

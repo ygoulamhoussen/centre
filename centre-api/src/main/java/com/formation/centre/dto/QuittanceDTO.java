@@ -13,6 +13,8 @@ public class QuittanceDTO {
     private String statut;
     private Boolean inclureCaution;
     private String depotGarantie;   // ← nouveau
+    private String proprieteNom;
+    private String locataireNom;
 
     // Getters & Setters
 
@@ -110,5 +112,21 @@ public class QuittanceDTO {
 
     public void setDepotGarantie(String depotGarantie) {
         this.depotGarantie = depotGarantie;
+    }
+
+    public String getProprieteNom() {
+        return proprieteNom;
+    }
+
+    public void setProprieteNom(String proprieteNom) {
+        this.proprieteNom = proprieteNom;
+    }
+
+    public String getLocataireNom() {
+        return locataireNom;
+    }
+
+    public void setLocataireNom(String locataireNom) {
+        this.locataireNom = locataireNom;
     }
 }

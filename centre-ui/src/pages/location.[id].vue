@@ -23,6 +23,7 @@ import {
   NUpload,
   NUploadDragger,
   NText,
+  NTag,
 } from 'naive-ui'
 import {
   ArrowLeft24Filled,
@@ -406,8 +407,64 @@ const documentColumns = [
   },
 ]
 
+const quittances = ref<any[]>([])
+const quittanceLoading = ref(false)
+
+async function loadQuittances() {
+  quittanceLoading.value = true
+  try {
+    const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getQuittancesByLocation/${locationId}`)
+    if (!res.ok) throw new Error('Erreur de chargement des quittances')
+    quittances.value = await res.json()
+  } catch (e) {
+    console.error(e)
+    quittances.value = []
+  } finally {
+    quittanceLoading.value = false
+  }
+}
+
+function getTotalQuittance(q: any) {
+  const loyer = Number(q.montantLoyer) || 0
+  const charges = Number(q.montantCharges) || 0
+  const caution = Number(q.depotGarantie) || 0
+  return (loyer + charges + caution).toFixed(2)
+}
+
+const quittanceColumns = [
+  { title: 'Période', key: 'periode', render: (row: any) => `${row.dateDebut} - ${row.dateFin}` },
+  { title: 'Loyer', key: 'montantLoyer', render: (row: any) => `${row.montantLoyer} €` },
+  { title: 'Charges', key: 'montantCharges', render: (row: any) => `${row.montantCharges} €` },
+  { title: 'Caution', key: 'depotGarantie', render: (row: any) => row.depotGarantie ? `${Number(row.depotGarantie).toFixed(2)} €` : '-' },
+  { title: 'Total', key: 'total', render: (row: any) => `${getTotalQuittance(row)} €` },
+  { title: 'Statut', key: 'statut', render: (row: any) => h(NTag, { type: row.statut === 'PAYEE' ? 'success' : (row.statut === 'PARTIELLE' ? 'warning' : 'error'), size: 'small' }, { default: () => row.statut === 'PAYEE' ? 'Payée' : (row.statut === 'PARTIELLE' ? 'Partielle' : 'Impayée') }) },
+  { title: 'Actions', key: 'actions', render: (row: any) => h('div', { class: 'flex gap-2' }, [
+    h(NButton, { size: 'small', ghost: true, onClick: () => router.push(`/quittance-detail/${row.id}`) }, { default: () => 'Détail' }),
+    row.statut === 'PAYEE'
+      ? h(NButton, { size: 'small', type: 'primary', ghost: true, onClick: () => telechargerQuittance(row.id) }, { default: () => 'PDF' })
+      : null
+  ]) },
+]
+
+async function telechargerQuittance(id: string) {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/generateQuittancePdf/${id}`, { method: 'GET' })
+    const blob = await res.blob()
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `quittance-${id}.pdf`
+    link.click()
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    console.error(e)
+    message.error('Erreur lors du téléchargement du PDF')
+  }
+}
+
 onMounted(() => {
   loadLocation()
+  loadQuittances()
 })
 </script>
 
@@ -422,7 +479,7 @@ onMounted(() => {
       <div v-if="location">
         <h2 class="text-xl font-bold mb-4">Location – {{ location.propriete?.nom }}</h2>
 
-        <NTabs type="line" animated>
+        <NTabs type="line" animated @update:value="(tab) => { if(tab==='quittances'){loadQuittances()} }">
           <NTabPane name="details" tab="Détails">
             <NCard class="mt-4">
               <NForm label-placement="top" :disabled="!editing" class="max-w-xl">
@@ -501,6 +558,12 @@ onMounted(() => {
                 </NButton>
               </div>
               <NDataTable :columns="documentColumns" :data="documents" />
+            </NCard>
+          </NTabPane>
+
+          <NTabPane name="quittances" tab="Quittances">
+            <NCard class="mt-4">
+              <NDataTable :columns="quittanceColumns" :data="quittances" :loading="quittanceLoading" />
             </NCard>
           </NTabPane>
         </NTabs>

@@ -447,6 +447,12 @@ public class UnifiedService {
         dto.setStatut(q.getStatut().toString());
         dto.setInclureCaution(q.getInclureCaution());
         dto.setDepotGarantie(q.getDepotGarantie()!=null?q.getDepotGarantie().toPlainString():null);
+        // Ajout des noms propriété et locataire
+        Location loc = q.getLocation();
+        String proprieteNom = loc != null && loc.getPropriete() != null ? loc.getPropriete().getNom() : null;
+        String locataireNom = loc != null && loc.getLocataire() != null ? loc.getLocataire().getNom() : null;
+        dto.setProprieteNom(proprieteNom);
+        dto.setLocataireNom(locataireNom);
         return dto;
     }
 
@@ -499,7 +505,13 @@ public class UnifiedService {
         return dto;
     }
 
-
+    public List<PaiementDTO> getPaiementsByQuittance(String quittanceId) {
+        UUID qid = UUID.fromString(quittanceId);
+        return paiementRepository.findByQuittance_Id(qid)
+            .stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+    }
 
     // --- CREDIT ---
     public List<CreditDTO> getCreditsByUtilisateur(String utilisateurId) {
@@ -1014,6 +1026,14 @@ public QuittanceDTO getQuittanceById(String id) {
     return quittanceRepository.findById(UUID.fromString(id))
         .map(this::toDto)
         .orElse(null);
+}
+
+public List<QuittanceDTO> getQuittancesByLocation(String locationId) {
+    UUID locId = UUID.fromString(locationId);
+    return quittanceRepository.findByLocation_Id(locId)
+        .stream()
+        .map(this::toDto)
+        .collect(Collectors.toList());
 }
 
 

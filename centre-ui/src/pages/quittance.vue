@@ -38,12 +38,15 @@ async function supprimerQuittance(id: string) {
     const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteQuittance/${id}`, { method: 'DELETE' })
     if (!res.ok) {
       const errorText = await res.text()
+      const q = quittances.value.find(q => q.id === id)
+      const proprieteNom = q?.proprieteNom || 'propriété inconnue'
+      const locataireNom = q?.locataireNom || 'locataire inconnu'
       if (
         errorText.includes('paiement_quittance_id_fkey')
         || errorText.includes('DataIntegrityViolationException')
         || errorText.includes('violates foreign key constraint')
       ) {
-        message.error('Suppression impossible : cette quittance est liée à un ou plusieurs paiements. Veuillez d\'abord supprimer les paiements associés.')
+        message.error(`Suppression impossible : la quittance pour la propriété "${proprieteNom}" et le locataire "${locataireNom}" est liée à un ou plusieurs paiements. Veuillez d'abord supprimer les paiements associés.`)
       } else {
         message.error('Erreur lors de la suppression')
       }
@@ -117,7 +120,7 @@ onMounted(() => fetchQuittances())
               </div>
               <div class="ml-4 flex-1">
                 <h3 class="text-lg font-semibold mb-1">
-                  {{ q.proprieteNom }}<span v-if="q.locataireNom"> – {{ q.locataireNom }}</span>
+                  {{ q.proprieteNom }} – {{ q.locataireNom || 'Aucun locataire' }}
                 </h3>
                 <div class="text-gray-600 text-sm space-y-1">
                   <div><strong>Période :</strong> {{ q.dateDebut }} - {{ q.dateFin }}</div>

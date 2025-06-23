@@ -477,4 +477,14 @@ public ResponseEntity<QuittanceDTO> getQuittanceById(@PathVariable String id) {
     return ResponseEntity.ok(dto);
 }
 
+@GetMapping("/getPaiementsByQuittance/{quittanceId}")
+public ResponseEntity<List<PaiementDTO>> getPaiementsByQuittance(@PathVariable String quittanceId) {
+    return ResponseEntity.ok(unifiedService.getPaiementsByQuittance(quittanceId));
+}
+
+@GetMapping("/getQuittancesByLocation/{locationId}")
+public ResponseEntity<List<QuittanceDTO>> getQuittancesByLocation(@PathVariable String locationId) {
+    return ResponseEntity.ok(unifiedService.getQuittancesByLocation(locationId));
+}
+
 } 

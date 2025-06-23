@@ -19,4 +19,6 @@ public interface PaiementRepository extends JpaRepository<Paiement, UUID> {
     List<Paiement> findByUtilisateurId(@Param("utilisateurId") UUID utilisateurId);
 
     List<Paiement> findByQuittance_Location_Propriete_Utilisateur_Id(UUID utilisateurId);
+
+    List<Paiement> findByQuittance_Id(UUID quittanceId);
 }

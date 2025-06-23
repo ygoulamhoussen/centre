@@ -36,7 +36,7 @@ import {
   DocumentPdf24Filled,
   Image24Filled,
   Document24Regular,
-  Download24Filled,
+  ArrowDownload24Filled,
   ArrowLeft24Filled
 } from '@vicons/fluent'
 
@@ -230,10 +230,20 @@ async function saveLocataire() {
   }
 }
 
+// Types de documents disponibles
+const documentTypes = [
+  { value: 'CONTRAT', label: 'Contrat de location' },
+  { value: 'ETAT_LIEUX', label: 'État des lieux' },
+  { value: 'QUITTANCE', label: 'Quittance de loyer' },
+  { value: 'AVIS_ECHEANCE', label: 'Avis d\'échéance' },
+  { value: 'AUTRE', label: 'Autre document' },
+]
+
 // Gestion des documents
 const showDocumentModal = ref(false)
 const documentFile = ref<File | null>(null)
 const documentBase64 = ref<string | null>(null)
+const documentType = ref('AUTRE')
 
 // Référence vers l'input file
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -258,46 +268,48 @@ function handleDrop(event: DragEvent) {
 
 const documentColumns = [
   {
+    title: 'Type',
+    key: 'type',
+    render: (row: any) => h('div', { class: 'flex items-center' }, [
+      h(NIcon, { component: getDocumentIcon(row.nomFichier || ''), size: 20, class: 'mr-2' }),
+      h('span', row.typeDocument || 'Inconnu')
+    ])
+  },
+  { 
     title: 'Nom',
     key: 'titre',
     render: (row: any) => row.titre || row.nomFichier || 'Sans nom'
   },
   {
-    title: 'Type',
-    key: 'typeDocument',
-    render: (row: any) => row.typeDocument || 'Inconnu'
+    title: 'Date',
+    key: 'dateDocument',
+    render: (row: any) => formatDate(row.dateDocument || row.dateCreation || '')
   },
   {
     title: 'Actions',
     key: 'actions',
-    render: (row: any) => h(
-      'div',
-      { class: 'flex space-x-2' },
-      [
-        h(
-          NButton,
-          {
-            text: true,
-            onClick: () => downloadDocument(row)
-          },
-          { default: () => 'Télécharger' }
-        ),
-        h(
-          NPopconfirm,
-          {
-            onPositiveClick: () => deleteDocument(row.id)
-          },
-          {
-            trigger: () => h(
-              NButton,
-              { text: true, type: 'error' },
-              { default: () => 'Supprimer' }
-            ),
-            default: () => 'Êtes-vous sûr de vouloir supprimer ce document ?'
-          }
-        )
-      ]
-    )
+    width: 100,
+    render: (row: any) => h('div', { class: 'flex space-x-2' }, [
+      h(NButton, {
+        size: 'small',
+        text: true,
+        onClick: () => downloadDocument(row),
+        title: 'Télécharger',
+        class: 'action-icon',
+        style: { marginRight: '8px' }
+      }, () => h(NIcon, { component: ArrowDownload24Filled, size: 18 })),
+      h(NPopconfirm, {
+        onPositiveClick: () => deleteDocument(row.id)
+      }, {
+        trigger: () => h(NButton, {
+          size: 'small',
+          text: true,
+          title: 'Supprimer',
+          class: 'action-icon error',
+        }, () => h(NIcon, { component: Delete24Filled, size: 18 })),
+        default: 'Êtes-vous sûr de vouloir supprimer ce document ?'
+      })
+    ])
   }
 ]
 
@@ -358,7 +370,7 @@ async function uploadDocument() {
       contenu: documentBase64.value,
       utilisateurId: userId,
       locataireId: locataireId,
-      typeDocument: 'AUTRE', // Vous pouvez ajouter un sélecteur de type si nécessaire
+      typeDocument: documentType.value,
       titre: documentFile.value.name,
       nomFichier: documentFile.value.name,
       dateDocument: new Date().toISOString().split('T')[0]
@@ -392,6 +404,7 @@ async function uploadDocument() {
     showDocumentModal.value = false
     documentFile.value = null
     documentBase64.value = null
+    documentType.value = 'AUTRE'
     await loadLocataire()
     return result
   } catch (error) {
@@ -474,7 +487,12 @@ async function downloadDocument(doc: any) {
   }
 }
 
-
+// Réinitialiser le formulaire d'ajout de document
+function resetDocumentForm() {
+  documentFile.value = null
+  documentBase64.value = null
+  documentType.value = 'AUTRE'
+}
 
 async function confirmDelete() {
   window.$dialog.warning({
@@ -691,6 +709,14 @@ function formatDate(dateString: string) {
         </template>
 
         <div class="space-y-4">
+          <NFormItem label="Type de document" required>
+            <NSelect
+              v-model:value="documentType"
+              :options="documentTypes"
+              placeholder="Sélectionnez un type de document"
+              :consistent-menu-width="false"
+            />
+          </NFormItem>
           <div class="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors"
                @dragover.prevent
                @drop.prevent="handleDrop">

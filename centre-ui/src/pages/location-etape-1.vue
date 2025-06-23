@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth' // ajout pour récupérer l'utilisateur connecté
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { NButton, NForm, NFormItem, NH1, NSelect, NSpace, useMessage } from 'naive-ui'
+import { NButton, NForm, NFormItem, NSelect, NSpace, useMessage, NCard, NSteps, NStep, NIcon } from 'naive-ui'
+import { BuildingHome24Filled, Person24Filled, ArrowRight24Filled } from '@vicons/fluent'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -39,6 +40,22 @@ async function fetchData() {
   }
 }
 
+function handleProprieteChange(value: string) {
+  const selected = proprietes.value.find(p => p.id === value)
+  if (selected) {
+    locationDTO.value.proprieteId = selected.id
+    locationDTO.value.proprieteNom = selected.nom
+  }
+}
+
+function handleLocataireChange(value: string) {
+  const selected = locataires.value.find(l => l.id === value)
+  if (selected) {
+    locationDTO.value.locataireId = selected.id
+    locationDTO.value.locataireNom = selected.nom
+  }
+}
+
 function suivant() {
   if (!locationDTO.value.proprieteId || !locationDTO.value.locataireId) {
     message.warning('Merci de choisir une propriété et un locataire')
@@ -53,29 +70,54 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpace vertical :size="24">
-    <NH1>Nouvelle location - Étape 1</NH1>
+  <div class="p-4">
+    <NCard :bordered="false">
+      <NSteps :current="1" class="mb-8">
+        <NStep title="Sélection" description="Propriété et locataire" />
+        <NStep title="Détails du bail" description="Loyer, dates, etc." />
+        <NStep title="Récapitulatif" description="Vérification finale" />
+      </NSteps>
 
-    <NForm label-placement="top">
-      <NFormItem label="Propriété">
-        <NSelect
-          v-model:value="locationDTO.proprieteId"
-          :options="proprietes.map(p => ({ label: p.nom, value: p.id }))"
-          placeholder="Choisir une propriété"
-        />
-      </NFormItem>
+      <h2 class="text-xl font-semibold mb-4">Étape 1: Sélection de la propriété et du locataire</h2>
 
-      <NFormItem label="Locataire">
-        <NSelect
-          v-model:value="locationDTO.locataireId"
-          :options="locataires.map(l => ({ label: l.nom, value: l.id }))"
-          placeholder="Choisir un locataire"
-        />
-      </NFormItem>
-    </NForm>
+      <NForm label-placement="top">
+        <NFormItem label="Propriété">
+          <NSelect
+            :value="locationDTO.proprieteId"
+            :options="proprietes.map(p => ({ label: p.nom, value: p.id }))"
+            placeholder="Choisir une propriété"
+            @update:value="handleProprieteChange"
+            size="large"
+          >
+            <template #prefix>
+              <NIcon :component="BuildingHome24Filled" />
+            </template>
+          </NSelect>
+        </NFormItem>
 
-    <div class="flex justify-end gap-2">
-      <NButton type="primary" @click="suivant">Suivant</NButton>
-    </div>
-  </NSpace>
+        <NFormItem label="Locataire">
+          <NSelect
+            :value="locationDTO.locataireId"
+            :options="locataires.map(l => ({ label: l.nom, value: l.id }))"
+            placeholder="Choisir un locataire"
+            @update:value="handleLocataireChange"
+            size="large"
+          >
+            <template #prefix>
+              <NIcon :component="Person24Filled" />
+            </template>
+          </NSelect>
+        </NFormItem>
+      </NForm>
+
+      <div class="flex justify-end mt-8">
+        <NButton type="primary" @click="suivant" size="large">
+          Suivant
+          <template #icon>
+            <NIcon :component="ArrowRight24Filled" />
+          </template>
+        </NButton>
+      </div>
+    </NCard>
+  </div>
 </template>

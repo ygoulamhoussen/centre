@@ -32,16 +32,18 @@ export const useUnifiedStore = defineStore('unified', {
       ville: null as string | null
     },
     locationDTO: {
-      id: null as string | null,
-      proprieteId: null as string | null,
-      locataireId: null as string | null,
+      id: '',
+      proprieteId: '',
+      proprieteNom: '',
+      locataireId: '',
+      locataireNom: '',
       dateDebut: null as string | null,
       dateFin: null as string | null,
-      loyerMensuel: null as string | null,
-      chargesMensuelles: null as string | null,
-      depotGarantie: null as string | null,
-      frequenceLoyer: null as string | null,
-      jourEcheance: null as string | null
+      loyerMensuel: '0',
+      chargesMensuelles: '0',
+      depotGarantie: '0',
+      frequenceLoyer: 'Mensuel',
+      jourEcheance: '1'
     },
     quittanceDTO: {
       id: null as string | null,

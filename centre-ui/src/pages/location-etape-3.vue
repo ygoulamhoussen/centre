@@ -5,10 +5,14 @@ import {
   NButton,
   NDescriptions,
   NDescriptionsItem,
-  NH1,
   NSpace,
   useMessage,
+  NCard,
+  NSteps,
+  NStep,
+  NIcon,
 } from 'naive-ui'
+import { ArrowLeft24Filled, Checkmark24Filled } from '@vicons/fluent'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -33,16 +37,24 @@ const chargement = ref(false)
 
 async function enregistrer() {
   chargement.value = true
+
+  const payload = {
+    ...locationDTO.value,
+    proprieteId: locationDTO.value.proprieteId || null,
+    locataireId: locationDTO.value.locataireId || null,
+    loyerMensuel: locationDTO.value.loyerMensuel || '0',
+    chargesMensuelles: locationDTO.value.chargesMensuelles || '0',
+    depotGarantie: locationDTO.value.depotGarantie || '0',
+    utilisateurId
+  }
+
   try {
     const response = await fetch(
       `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createLocation`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...locationDTO.value,
-          utilisateurId
-        })
+        body: JSON.stringify(payload)
       }
     )
     if (!response.ok) {
@@ -65,44 +77,60 @@ function precedent() {
 </script>
 
 <template>
-  <NSpace vertical :size="24">
-    <NH1>Nouvelle location - Récapitulatif</NH1>
+  <div class="p-4">
+    <NCard :bordered="false">
+      <NSteps :current="3" class="mb-8">
+        <NStep title="Sélection" description="Propriété et locataire" />
+        <NStep title="Détails du bail" description="Loyer, dates, etc." />
+        <NStep title="Récapitulatif" description="Vérification finale" />
+      </NSteps>
 
-    <NDescriptions label-placement="top" bordered>
-      <NDescriptionsItem label="Propriété">
-        {{ locationDTO.proprieteId }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Locataire">
-        {{ locationDTO.locataireId }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Date début">
-        {{ locationDTO.dateDebut }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Date fin">
-        {{ locationDTO.dateFin || 'Non définie' }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Loyer (€)">
-        {{ locationDTO.loyerMensuel }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Charges (€)">
-        {{ locationDTO.chargesMensuelles }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Dépôt de garantie (€)">
-        {{ locationDTO.depotGarantie }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Fréquence">
-        {{ locationDTO.frequenceLoyer }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="Jour échéance">
-        {{ locationDTO.jourEcheance }}
-      </NDescriptionsItem>
-    </NDescriptions>
+      <h2 class="text-xl font-semibold mb-4">Étape 3: Récapitulatif</h2>
 
-    <div class="flex justify-between pt-4">
-      <NButton @click="precedent">Précédent</NButton>
-      <NButton type="primary" :loading="chargement" @click="enregistrer">
-        Enregistrer
-      </NButton>
-    </div>
-  </NSpace>
+      <NDescriptions label-placement="top" bordered :column="2">
+        <NDescriptionsItem label="Propriété">
+          {{ locationDTO.proprieteNom || 'Non défini' }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Locataire">
+          {{ locationDTO.locataireNom || 'Non défini' }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Date de début">
+          {{ locationDTO.dateDebut || 'Non définie' }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Date de fin">
+          {{ locationDTO.dateFin || 'Non définie' }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Loyer mensuel">
+          {{ locationDTO.loyerMensuel }} €
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Charges mensuelles">
+          {{ locationDTO.chargesMensuelles || 0 }} €
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Dépôt de garantie">
+          {{ locationDTO.depotGarantie || 0 }} €
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Fréquence de paiement">
+          {{ locationDTO.frequenceLoyer || 'Non définie' }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Jour d'échéance du loyer">
+          {{ locationDTO.jourEcheance || 'Non défini' }}
+        </NDescriptionsItem>
+      </NDescriptions>
+
+      <div class="flex justify-between mt-8">
+        <NButton @click="precedent" size="large">
+          <template #icon>
+            <NIcon :component="ArrowLeft24Filled" />
+          </template>
+          Précédent
+        </NButton>
+        <NButton type="primary" :loading="chargement" @click="enregistrer" size="large">
+          <template #icon>
+            <NIcon :component="Checkmark24Filled" />
+          </template>
+          Enregistrer la location
+        </NButton>
+      </div>
+    </NCard>
+  </div>
 </template>

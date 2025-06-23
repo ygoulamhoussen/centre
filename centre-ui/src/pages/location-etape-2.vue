@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
 import { useRouter } from 'vue-router'
-import { NSpace, NH1, NButton, NForm, NFormItem, NInputNumber, NSelect, NDatePicker, useMessage } from 'naive-ui'
+import { NSpace, NButton, NForm, NFormItem, NInputNumber, NSelect, NDatePicker, useMessage, NCard, NSteps, NStep, NIcon, NGrid, NFormItemGi } from 'naive-ui'
+import { ArrowLeft24Filled, ArrowRight24Filled, CalendarLtr24Filled, Money24Filled, CalendarClock24Filled, Key24Filled, ArrowSync20Filled, CalendarDay24Filled } from '@vicons/fluent'
 import { storeToRefs } from 'pinia'
 
 definePage({
@@ -38,52 +39,98 @@ function precedent() {
 </script>
 
 <template>
-  <NSpace vertical :size="24">
-    <NH1>Nouvelle location - Étape 2</NH1>
+  <div class="p-4">
+    <NCard :bordered="false">
+      <NSteps :current="2" class="mb-8">
+        <NStep title="Sélection" description="Propriété et locataire" />
+        <NStep title="Détails du bail" description="Loyer, dates, etc." />
+        <NStep title="Récapitulatif" description="Vérification finale" />
+      </NSteps>
 
-    <NForm label-placement="top">
-      <NFormItem label="Date de début *">
-        <NDatePicker
-          v-model:formatted-value="locationDTO.dateDebut"
-          value-format="yyyy-MM-dd"
-          type="date"
-          clearable
-        />
-      </NFormItem>
+      <h2 class="text-xl font-semibold mb-4">Étape 2: Détails du bail</h2>
 
-      <NFormItem label="Date de fin (optionnel)">
-        <NDatePicker
-          v-model:formatted-value="locationDTO.dateFin"
-          value-format="yyyy-MM-dd"
-          type="date"
-          clearable
-        />
-      </NFormItem>
+      <NForm label-placement="top">
+        <NGrid :x-gap="24" :y-gap="16" :cols="2">
+          <NFormItemGi label="Date de début *">
+            <NDatePicker
+              v-model:formatted-value="locationDTO.dateDebut"
+              value-format="yyyy-MM-dd"
+              type="date"
+              clearable
+              class="w-full"
+              size="large"
+            >
+              <template #prefix>
+                <NIcon :component="CalendarLtr24Filled" />
+              </template>
+            </NDatePicker>
+          </NFormItemGi>
+          <NFormItemGi label="Date de fin (optionnel)">
+            <NDatePicker
+              v-model:formatted-value="locationDTO.dateFin"
+              value-format="yyyy-MM-dd"
+              type="date"
+              clearable
+              class="w-full"
+              size="large"
+            >
+              <template #prefix>
+                <NIcon :component="CalendarClock24Filled" />
+              </template>
+            </NDatePicker>
+          </NFormItemGi>
+          <NFormItemGi label="Loyer mensuel (€) *">
+            <NInputNumber v-model:value="locationDTO.loyerMensuel" min="0" placeholder="0.00" class="w-full" size="large">
+              <template #prefix>
+                <NIcon :component="Money24Filled" />
+              </template>
+            </NInputNumber>
+          </NFormItemGi>
+          <NFormItemGi label="Charges mensuelles (€)">
+            <NInputNumber v-model:value="locationDTO.chargesMensuelles" min="0" placeholder="0.00" class="w-full" size="large">
+              <template #prefix>
+                <NIcon :component="Money24Filled" />
+              </template>
+            </NInputNumber>
+          </NFormItemGi>
+          <NFormItemGi label="Dépôt de garantie (€)">
+            <NInputNumber v-model:value="locationDTO.depotGarantie" min="0" placeholder="0.00" class="w-full" size="large">
+              <template #prefix>
+                <NIcon :component="Key24Filled" />
+              </template>
+            </NInputNumber>
+          </NFormItemGi>
+          <NFormItemGi label="Fréquence de paiement">
+            <NSelect v-model:value="locationDTO.frequenceLoyer" :options="frequences" placeholder="Choisir une fréquence" size="large">
+              <template #prefix>
+                <NIcon :component="ArrowSync20Filled" />
+              </template>
+            </NSelect>
+          </NFormItemGi>
+          <NFormItemGi label="Jour d'échéance du loyer">
+            <NInputNumber v-model:value="locationDTO.jourEcheance" min="1" max="31" placeholder="ex: 5" class="w-full" size="large">
+              <template #prefix>
+                <NIcon :component="CalendarDay24Filled" />
+              </template>
+            </NInputNumber>
+          </NFormItemGi>
+        </NGrid>
+      </NForm>
 
-      <NFormItem label="Loyer mensuel (€) *">
-        <NInputNumber v-model:value="locationDTO.loyerMensuel" min="0" placeholder="0.00" />
-      </NFormItem>
-
-      <NFormItem label="Charges mensuelles (€)">
-        <NInputNumber v-model:value="locationDTO.chargesMensuelles" min="0" placeholder="0.00" />
-      </NFormItem>
-
-      <NFormItem label="Dépôt de garantie (€)">
-        <NInputNumber v-model:value="locationDTO.depotGarantie" min="0" placeholder="0.00" />
-      </NFormItem>
-
-      <NFormItem label="Fréquence de paiement">
-        <NSelect v-model:value="locationDTO.frequenceLoyer" :options="frequences" placeholder="Choisir une fréquence" />
-      </NFormItem>
-
-      <NFormItem label="Jour d'échéance du loyer">
-        <NInputNumber v-model:value="locationDTO.jourEcheance" min="1" max="31" placeholder="ex: 5" />
-      </NFormItem>
-    </NForm>
-
-    <div class="flex justify-between">
-      <NButton @click="precedent">Précédent</NButton>
-      <NButton type="primary" @click="suivant">Suivant</NButton>
-    </div>
-  </NSpace>
+      <div class="flex justify-between mt-8">
+        <NButton @click="precedent" size="large">
+          <template #icon>
+            <NIcon :component="ArrowLeft24Filled" />
+          </template>
+          Précédent
+        </NButton>
+        <NButton type="primary" @click="suivant" size="large">
+          Suivant
+          <template #icon>
+            <NIcon :component="ArrowRight24Filled" />
+          </template>
+        </NButton>
+      </div>
+    </NCard>
+  </div>
 </template>

@@ -49,17 +49,17 @@ const statisticData = computed<StatisticData[]>(() => [
             <h3 class="text-18px font-semibold">
               {{ $t('page.home.greeting', { userName: authStore.userInfo.userName }) }}
             </h3>
-            <p class="text-#999 leading-30px">
+<!--             <p class="text-#999 leading-30px">
               {{ $t('page.home.weatherDesc') }}
-            </p>
+            </p> -->
           </div>
         </div>
       </NGi>
-      <NGi span="24 s:24 m:6">
+<!--       <NGi span="24 s:24 m:6">
         <NSpace :size="24" justify="end">
           <NStatistic v-for="item in statisticData" :key="item.id" class="whitespace-nowrap" v-bind="item" />
         </NSpace>
-      </NGi>
+      </NGi> -->
     </NGrid>
   </NCard>
 </template>

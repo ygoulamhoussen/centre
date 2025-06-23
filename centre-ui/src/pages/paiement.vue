@@ -25,7 +25,7 @@ definePage({
   meta: {
     title: 'Mes paiements',
     icon: 'mdi:account-group',
-    order: 3,
+    order: 7,
   },
 })
 

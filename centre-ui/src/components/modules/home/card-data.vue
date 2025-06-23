@@ -124,4 +124,64 @@ onMounted(async () => {
   </NCard>
 </template>
 
-<style scoped></style>
+<style scoped>
+.card-wrapper {
+  width: 100%;
+}
+
+.rd-8px {
+  border-radius: 8px;
+  height: 100%;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.flex {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex: 1;
+}
+
+.text-30px {
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.text-16px {
+  font-size: 16px;
+  line-height: 1.2;
+  margin: 0;
+  font-weight: 500;
+}
+
+.text-32px {
+  font-size: 32px;
+  opacity: 0.8;
+}
+
+.justify-between {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.px-16px {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.pb-4px {
+  padding-bottom: 4px;
+}
+
+.pt-8px {
+  padding-top: 8px;
+}
+
+.pt-12px {
+  padding-top: 12px;
+}
+</style>

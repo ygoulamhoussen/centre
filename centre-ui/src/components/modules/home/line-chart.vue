@@ -87,4 +87,16 @@ onMounted(fetchData)
   </NCard>
 </template>
 
-<style scoped></style>
+<style scoped>
+.card-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.h-360px {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+</style>

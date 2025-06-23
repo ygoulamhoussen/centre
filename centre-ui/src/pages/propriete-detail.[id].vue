@@ -20,6 +20,7 @@ import {
   NTabPane,
   NTabs,
   NIcon,
+  NPopconfirm,
   useMessage,
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'

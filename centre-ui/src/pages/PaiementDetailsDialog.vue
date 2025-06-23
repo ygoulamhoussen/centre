@@ -1,3 +1,59 @@
+<script setup lang="ts">
+import { defineProps, defineEmits } from 'vue'
+import type { PaiementDTO } from '@/types/dto'
+
+definePage({
+  meta: {
+    title: 'Ajouter un locataire - Étape 2',
+    hideInMenu: true,
+    activeMenu: '/locataire',
+  },
+})
+
+defineProps({
+  modelValue: {
+    type: Boolean,
+    required: true,
+  },
+  paiement: {
+    type: Object as () => PaiementDTO | null,
+    default: null,
+  },
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+// Formater la date
+const formatDate = (dateString: string) => {
+  if (!dateString) return 'N/A'
+  return new Date(dateString).toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+// Formater la monnaie
+const formatCurrency = (amount: string) => {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+  }).format(Number(amount))
+}
+
+// Formater le moyen de paiement
+const formatMoyenPaiement = (moyen: string) => {
+  const moyens: Record<string, string> = {
+    'CARTE': 'Carte bancaire',
+    'VIREMENT': 'Virement',
+    'CHEQUE': 'Chèque',
+    'ESPECES': 'Espèces',
+    'AUTRE': 'Autre',
+  }
+  return moyens[moyen] || moyen || 'Non spécifié'
+}
+</script>
+
 <template>
   <n-modal
     :show="modelValue"
@@ -56,51 +112,3 @@
     </template>
   </n-modal>
 </template>
-
-<script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
-import type { PaiementDTO } from '@/types/dto'
-
-defineProps({
-  modelValue: {
-    type: Boolean,
-    required: true,
-  },
-  paiement: {
-    type: Object as () => PaiementDTO | null,
-    default: null,
-  },
-})
-
-const emit = defineEmits(['update:modelValue'])
-
-// Formater la date
-const formatDate = (dateString: string) => {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-// Formater la monnaie
-const formatCurrency = (amount: string) => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-  }).format(Number(amount))
-}
-
-// Formater le moyen de paiement
-const formatMoyenPaiement = (moyen: string) => {
-  const moyens: Record<string, string> = {
-    'CARTE': 'Carte bancaire',
-    'VIREMENT': 'Virement',
-    'CHEQUE': 'Chèque',
-    'ESPECES': 'Espèces',
-    'AUTRE': 'Autre',
-  }
-  return moyens[moyen] || moyen || 'Non spécifié'
-}
-</script>

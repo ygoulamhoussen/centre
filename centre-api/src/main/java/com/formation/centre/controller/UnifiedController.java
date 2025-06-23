@@ -212,7 +212,7 @@ public class UnifiedController {
 
     @PutMapping("/updateLocataire")
     public ResponseEntity<LocataireDTO> updateLocataire(@RequestBody LocataireDTO dto) {
-        return ResponseEntity.ok(unifiedService.saveLocataire(dto.getId(), dto));
+        return ResponseEntity.ok(unifiedService.saveLocataire(dto.getUtilisateurId(), dto));
     }
 
     @DeleteMapping("/deleteLocataire/{locataireId}")
@@ -393,6 +393,23 @@ public ResponseEntity<byte[]> downloadDocument(@PathVariable String id) {
         return new ResponseEntity<>(fileContent, headers, HttpStatus.OK);
     } catch (Exception e) {
         e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@DeleteMapping("/documents/{id}")
+public ResponseEntity<Void> deleteDocument(@PathVariable String id) {
+    try {
+        unifiedService.deleteDocument(id);
+        return ResponseEntity.noContent().build();
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().build();
+    } catch (RuntimeException e) {
+        if (e.getMessage().contains("introuvable")) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    } catch (Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 }

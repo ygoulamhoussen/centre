@@ -727,6 +727,21 @@ public List<DocumentDTO> getDocumentsByUtilisateur(String utilisateurId) {
         .map(this::toDTO)
         .collect(Collectors.toList());
 }
+
+@Transactional
+public void deleteDocument(String documentId) {
+    try {
+        UUID id = UUID.fromString(documentId);
+        if (!documentEntityRepository.existsById(id)) {
+            throw new RuntimeException("Document introuvable avec l'ID: " + documentId);
+        }
+        documentEntityRepository.deleteById(id);
+    } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("ID de document invalide: " + documentId, e);
+    } catch (Exception e) {
+        throw new RuntimeException("Erreur lors de la suppression du document: " + e.getMessage(), e);
+    }
+}
     
 public CompositionAcquisitionDTO toDTO(CompositionAcquisition c) {
     CompositionAcquisitionDTO dto = new CompositionAcquisitionDTO();

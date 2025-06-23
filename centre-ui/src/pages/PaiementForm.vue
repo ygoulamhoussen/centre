@@ -1,122 +1,16 @@
-<template>
-  <n-form
-    ref="formRef"
-    :model="formData"
-    :rules="rules"
-    label-placement="left"
-    label-width="auto"
-    require-mark-placement="right-hanging"
-    size="large"
-    @submit.prevent="save"
-    class="p-4"
-  >
-    <n-grid :cols="24" :x-gap="24" :y-gap="16">
-      <!-- L'ID de la quittance est généré par le backend -->
-      <n-form-item-gi v-if="isEdit" :span="24" label="ID de la quittance">
-        <n-input
-          v-model:value="formData.quittanceId"
-          placeholder="Généré par le système"
-          disabled
-        />
-      </n-form-item-gi>
-      
-      <n-form-item-gi :span="24" label="Quittance" path="quittanceId" required>
-        <n-select
-          v-model:value="formData.quittanceId"
-          :options="quittanceOptions"
-          placeholder="Sélectionner une quittance"
-          :disabled="isEdit"
-          :loading="loadingQuittances"
-          clearable
-          filterable
-          style="width: 100%"
-        />
-      </n-form-item-gi>
-
-      <n-form-item-gi :span="24" label="Date de paiement" path="datePaiement" required>
-        <n-date-picker
-          v-model:formatted-value="formData.datePaiement"
-          value-format="yyyy-MM-dd"
-          type="date"
-          style="width: 100%"
-        />
-      </n-form-item-gi>
-
-      <n-form-item-gi :span="24" label="Montant" path="montant" required>
-        <n-input-number
-          v-model:value="formData.montant"
-          placeholder="Entrez le montant"
-          :min="0"
-          :max="montantTotalQuittance"
-          :step="0.01"
-          :status="montantValide ? undefined : 'error'"
-          style="width: 100%"
-        >
-          <template #suffix>€</template>
-          <template v-if="!montantValide" #feedback>
-            <n-text type="error">Le montant ne peut pas dépasser {{ montantTotalQuittance }}€</n-text>
-          </template>
-        </n-input-number>
-        <n-text v-if="selectedQuittance" depth="3" class="ml-2 d-block mt-1">
-          <div>Détail de la quittance :</div>
-          <div class="ml-3">
-            <div>Loyer : {{ selectedQuittance.montantLoyer }}€</div>
-            <div>Charges : {{ selectedQuittance.montantCharges }}€</div>
-            <div class="font-weight-medium">Total : {{ montantTotalQuittance }}€</div>
-          </div>
-        </n-text>
-      </n-form-item-gi>
-
-      <n-form-item-gi :span="24" label="Moyen de paiement" path="moyenPaiement" required>
-        <n-select
-          v-model:value="formData.moyenPaiement"
-          :options="moyenPaiementOptions"
-          placeholder="Sélectionnez un moyen de paiement"
-          clearable
-          filterable
-          style="width: 100%"
-        />
-      </n-form-item-gi>
-
-      <n-form-item-gi :span="24" label="Référence" path="reference">
-        <n-input
-          v-model:value="formData.reference"
-          placeholder="Référence du paiement"
-          clearable
-        />
-      </n-form-item-gi>
-
-      <n-form-item-gi :span="24" label="Commentaire" path="commentaire">
-        <n-input
-          v-model:value="formData.commentaire"
-          type="textarea"
-          placeholder="Ajoutez un commentaire si nécessaire"
-          :autosize="{ minRows: 2, maxRows: 5 }"
-        />
-      </n-form-item-gi>
-
-      <n-form-item-gi :span="24" label="Statut" path="estValide">
-        <n-switch v-model:value="formData.estValide">
-          <template #checked>Validé</template>
-          <template #unchecked>En attente</template>
-        </n-switch>
-      </n-form-item-gi>
-    </n-grid>
-
-    <div class="flex justify-end gap-3 mt-6">
-      <n-button @click="closeForm">Annuler</n-button>
-      <n-button type="primary" @click="save" :loading="isSaving">
-        {{ isEdit ? 'Mettre à jour' : 'Enregistrer' }}
-      </n-button>
-    </div>
-  </n-form>
-</template>
-
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/store/modules/auth'
 import type { PaiementDTO } from '@/types/dto'
+
+definePage({
+  meta: {
+    title: 'Ajouter un locataire - Étape 2',
+    hideInMenu: true,
+    activeMenu: '/locataire',
+  },
+})
 
 defineOptions({
   name: 'PaiementFormDialog',
@@ -411,3 +305,117 @@ function closeForm() {
   resetForm()
 }
 </script>
+
+<template>
+  <n-form
+    ref="formRef"
+    :model="formData"
+    :rules="rules"
+    label-placement="left"
+    label-width="auto"
+    require-mark-placement="right-hanging"
+    size="large"
+    @submit.prevent="save"
+    class="p-4"
+  >
+    <n-grid :cols="24" :x-gap="24" :y-gap="16">
+      <!-- L'ID de la quittance est généré par le backend -->
+      <n-form-item-gi v-if="isEdit" :span="24" label="ID de la quittance">
+        <n-input
+          v-model:value="formData.quittanceId"
+          placeholder="Généré par le système"
+          disabled
+        />
+      </n-form-item-gi>
+      
+      <n-form-item-gi :span="24" label="Quittance" path="quittanceId" required>
+        <n-select
+          v-model:value="formData.quittanceId"
+          :options="quittanceOptions"
+          placeholder="Sélectionner une quittance"
+          :disabled="isEdit"
+          :loading="loadingQuittances"
+          clearable
+          filterable
+          style="width: 100%"
+        />
+      </n-form-item-gi>
+
+      <n-form-item-gi :span="24" label="Date de paiement" path="datePaiement" required>
+        <n-date-picker
+          v-model:formatted-value="formData.datePaiement"
+          value-format="yyyy-MM-dd"
+          type="date"
+          style="width: 100%"
+        />
+      </n-form-item-gi>
+
+      <n-form-item-gi :span="24" label="Montant" path="montant" required>
+        <n-input-number
+          v-model:value="formData.montant"
+          placeholder="Entrez le montant"
+          :min="0"
+          :max="montantTotalQuittance"
+          :step="0.01"
+          :status="montantValide ? undefined : 'error'"
+          style="width: 100%"
+        >
+          <template #suffix>€</template>
+          <template v-if="!montantValide" #feedback>
+            <n-text type="error">Le montant ne peut pas dépasser {{ montantTotalQuittance }}€</n-text>
+          </template>
+        </n-input-number>
+        <n-text v-if="selectedQuittance" depth="3" class="ml-2 d-block mt-1">
+          <div>Détail de la quittance :</div>
+          <div class="ml-3">
+            <div>Loyer : {{ selectedQuittance.montantLoyer }}€</div>
+            <div>Charges : {{ selectedQuittance.montantCharges }}€</div>
+            <div class="font-weight-medium">Total : {{ montantTotalQuittance }}€</div>
+          </div>
+        </n-text>
+      </n-form-item-gi>
+
+      <n-form-item-gi :span="24" label="Moyen de paiement" path="moyenPaiement" required>
+        <n-select
+          v-model:value="formData.moyenPaiement"
+          :options="moyenPaiementOptions"
+          placeholder="Sélectionnez un moyen de paiement"
+          clearable
+          filterable
+          style="width: 100%"
+        />
+      </n-form-item-gi>
+
+      <n-form-item-gi :span="24" label="Référence" path="reference">
+        <n-input
+          v-model:value="formData.reference"
+          placeholder="Référence du paiement"
+          clearable
+        />
+      </n-form-item-gi>
+
+      <n-form-item-gi :span="24" label="Commentaire" path="commentaire">
+        <n-input
+          v-model:value="formData.commentaire"
+          type="textarea"
+          placeholder="Ajoutez un commentaire si nécessaire"
+          :autosize="{ minRows: 2, maxRows: 5 }"
+        />
+      </n-form-item-gi>
+
+      <n-form-item-gi :span="24" label="Statut" path="estValide">
+        <n-switch v-model:value="formData.estValide">
+          <template #checked>Validé</template>
+          <template #unchecked>En attente</template>
+        </n-switch>
+      </n-form-item-gi>
+    </n-grid>
+
+    <div class="flex justify-end gap-3 mt-6">
+      <n-button @click="closeForm">Annuler</n-button>
+      <n-button type="primary" @click="save" :loading="isSaving">
+        {{ isEdit ? 'Mettre à jour' : 'Enregistrer' }}
+      </n-button>
+    </div>
+  </n-form>
+</template>

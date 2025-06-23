@@ -20,6 +20,9 @@ import {
   useMessage,
   NTabs,
   NTabPane,
+  NUpload,
+  NUploadDragger,
+  NText,
 } from 'naive-ui'
 import {
   ArrowLeft24Filled,
@@ -81,20 +84,41 @@ const formData = ref({
 // Documents
 const documents = ref<any[]>([])
 const showDocumentModal = ref(false)
-const documentForm = ref({
+
+const documentTypes = [
+  { value: 'BAIL', label: 'Bail de location' },
+  { value: 'QUITTANCE', label: 'Quittance de loyer' },
+  { value: 'FACTURE', label: 'Facture' },
+  { value: 'JUSTIFICATIF', label: 'Justificatif (revenus, identité...)' },
+  { value: 'CONTRAT_DE_CREDIT', label: 'Contrat de crédit' },
+  { value: 'AUTRE', label: 'Autre document' },
+]
+
+const initialDocumentForm = {
   id: '',
-  type: 'BAIL',
+  typeDocument: 'AUTRE',
   fichier: null as File | null,
   contenu: '',
-  util: authStore.userInfo.userId,
   proprieteId: '',
   locataireId: '',
   titre: '',
   nomFichier: '',
-  dateDocument: new Date().toISOString().split('T')[0],
-})
+  dateDocument: new Date().getTime(),
+}
 
-const fileInput = ref<HTMLInputElement | null>(null)
+const documentForm = ref({ ...initialDocumentForm })
+
+function resetDocumentForm() {
+  documentForm.value = {
+    ...initialDocumentForm,
+    dateDocument: new Date().getTime(),
+  }
+}
+
+function openDocumentModal() {
+  resetDocumentForm()
+  showDocumentModal.value = true
+}
 
 function formatDate(str: string) {
   if (!str) return 'Non défini'
@@ -239,46 +263,80 @@ async function deleteLocation() {
   }
 }
 
-function handleFileUpload(event: Event) {
-  const input = event.target as HTMLInputElement
-  if (!input.files || !input.files.length) return
-  const file = input.files[0]
+function handleFileUpload({ file }: { file: any }) {
+  if (!file || !file.file) return
+
+  const uploadedFile = file.file as File
+
+  if (uploadedFile.size > 10 * 1024 * 1024) {
+    message.error('Le fichier est trop volumineux. La taille maximale est de 10MB.')
+    return
+  }
+
   const reader = new FileReader()
   reader.onload = () => {
     const result = reader.result as string
-    if (!result.startsWith('data:')) return
-    documentForm.value.fichier = file
-    documentForm.value.contenu = result.split(',')[1]
-    documentForm.value.nomFichier = file.name
-    documentForm.value.titre = file.name
+    if (result.startsWith('data:')) {
+      documentForm.value.fichier = uploadedFile
+      documentForm.value.contenu = result.split(',')[1]
+      documentForm.value.nomFichier = uploadedFile.name
+      if (!documentForm.value.titre) {
+        documentForm.value.titre =
+          uploadedFile.name.split('.').slice(0, -1).join('.') || uploadedFile.name
+      }
+    } else {
+      message.error('Format de fichier non supporté')
+    }
   }
-  reader.readAsDataURL(file)
+  reader.onerror = () => {
+    message.error('Erreur lors de la lecture du fichier')
+  }
+  reader.readAsDataURL(uploadedFile)
 }
 
 async function uploadDocument() {
-  if (!documentForm.value.contenu) {
-    message.error('Sélectionnez un fichier')
+  if (!documentForm.value.contenu || !documentForm.value.fichier) {
+    message.error('Veuillez sélectionner un fichier')
     return
   }
+  if (!documentForm.value.titre) {
+    message.error('Veuillez saisir un titre pour le document')
+    return
+  }
+
   try {
     saving.value = true
+    const dateDoc = documentForm.value.dateDocument
+      ? new Date(documentForm.value.dateDocument).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
+
     const payload = {
-      ...documentForm.value,
+      contenu: documentForm.value.contenu,
+      nomFichier: documentForm.value.nomFichier,
+      titre: documentForm.value.titre,
+      typeDocument: documentForm.value.typeDocument,
+      dateDocument: dateDoc,
       proprieteId: location.value.propriete.id,
       locataireId: location.value.locataire.id,
       utilisateurId: authStore.userInfo.userId,
     }
-    await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/uploadDocument`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    message.success('Document ajouté')
+    const res = await fetch(
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/uploadDocument`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }
+    )
+
+    if (!res.ok) throw new Error("Échec de l'envoi du document")
+
+    message.success('Document ajouté avec succès')
     showDocumentModal.value = false
     await loadDocuments()
-  } catch (e) {
+  } catch (e: any) {
     console.error(e)
-    message.error("Erreur lors de l'upload")
+    message.error(e.message || "Erreur lors de l'envoi du document")
   } finally {
     saving.value = false
   }
@@ -437,7 +495,7 @@ onMounted(() => {
             <NCard class="mt-4">
               <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold">Documents associés</h3>
-                <NButton type="primary" size="small" @click="showDocumentModal = true">
+                <NButton type="primary" size="small" @click="openDocumentModal">
                   <template #icon><NIcon :component="Add24Filled" /></template>
                   Ajouter un document
                 </NButton>
@@ -447,14 +505,61 @@ onMounted(() => {
           </NTabPane>
         </NTabs>
 
-        <NModal v-model:show="showDocumentModal" preset="card" style="width: 600px;" title="Ajouter un document">
-          <NSpace vertical :size="16">
-            <p>Sélectionnez un fichier. Le titre sera automatiquement défini sur le nom du fichier.</p>
-            <input ref="fileInput" type="file" @change="handleFileUpload" />
-            <NButton type="primary" :loading="saving" @click="uploadDocument" :disabled="!documentForm.fichier">
-              Téléverser et lier
-            </NButton>
-          </NSpace>
+        <NModal
+          v-model:show="showDocumentModal"
+          preset="card"
+          style="width: 600px"
+          title="Ajouter un nouveau document"
+          :on-after-leave="resetDocumentForm"
+        >
+          <NForm :model="documentForm" label-placement="top">
+            <NFormItem label="Titre du document" required>
+              <NInput
+                v-model:value="documentForm.titre"
+                placeholder="Ex: Bail de location signé"
+              />
+            </NFormItem>
+            <NFormItem label="Type de document" required>
+              <NSelect
+                v-model:value="documentForm.typeDocument"
+                :options="documentTypes"
+              />
+            </NFormItem>
+            <NFormItem label="Date du document" required>
+              <NDatePicker
+                v-model:value="documentForm.dateDocument"
+                type="date"
+                class="w-full"
+              />
+            </NFormItem>
+            <NFormItem label="Fichier" required>
+              <NUpload :max="1" :default-upload="false" @change="handleFileUpload">
+                <NUploadDragger>
+                  <div
+                    class="flex flex-col items-center justify-center gap-2 p-4"
+                  >
+                    <NIcon
+                      :component="Document24Filled"
+                      size="48"
+                      class="text-gray-400"
+                    />
+                    <NText>Cliquez ou glissez-déposez un fichier ici</NText>
+                  </div>
+                </NUploadDragger>
+              </NUpload>
+            </NFormItem>
+            <div class="flex justify-end gap-2">
+              <NButton @click="showDocumentModal = false">Annuler</NButton>
+              <NButton
+                type="primary"
+                :loading="saving"
+                :disabled="!documentForm.fichier"
+                @click="uploadDocument"
+              >
+                Enregistrer le document
+              </NButton>
+            </div>
+          </NForm>
         </NModal>
       </div>
 

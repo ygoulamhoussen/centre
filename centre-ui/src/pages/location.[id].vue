@@ -18,6 +18,8 @@ import {
   NSpin,
   NEmpty,
   useMessage,
+  NTabs,
+  NTabPane,
 } from 'naive-ui'
 import {
   ArrowLeft24Filled,
@@ -177,8 +179,16 @@ function cancelEditing() {
 async function saveLocation() {
   try {
     saving.value = true
+
+    const toISODateString = (timestamp: number | null) => {
+      if (!timestamp) return null
+      return new Date(timestamp).toISOString().split('T')[0]
+    }
+
     const body = {
       ...formData.value,
+      dateDebut: toISODateString(formData.value.dateDebut),
+      dateFin: toISODateString(formData.value.dateFin),
       proprieteId: location.value.propriete.id,
       locataireId: location.value.locataire.id,
     }
@@ -208,11 +218,24 @@ async function deleteLocation() {
       `${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteLocation/${locationId}`,
       { method: 'DELETE' }
     )
-    if (!res.ok) throw new Error('La suppression a échoué')
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      if (errorText.includes('quittance_location_id_fkey')) {
+        message.error(
+          'Impossible de supprimer : des quittances sont liées à cette location.'
+        )
+      } else {
+        message.error('La suppression a échoué. Le serveur a retourné une erreur.')
+      }
+      return
+    }
+
     message.success('Location supprimée avec succès')
     router.push('/location')
   } catch (error: any) {
-    message.error(error.message)
+    console.error('Delete location fetch error:', error)
+    message.error('Erreur de communication avec le serveur lors de la suppression.')
   }
 }
 
@@ -338,86 +361,91 @@ onMounted(() => {
     </NButton>
 
     <NSpin :show="loading">
-      <div v-if="location" class="space-y-6">
-        <h2 class="text-xl font-bold">Location – {{ location.propriete?.nom }}</h2>
+      <div v-if="location">
+        <h2 class="text-xl font-bold mb-4">Location – {{ location.propriete?.nom }}</h2>
 
-        <NCard title="Détails de la location">
-          <NForm label-placement="top" :disabled="!editing" class="max-w-xl">
-            <NFormItem label="Date début">
-              <NDatePicker v-model:value="formData.dateDebut" type="date" class="w-full" />
-            </NFormItem>
-            <NFormItem label="Date fin">
-              <NDatePicker v-model:value="formData.dateFin" type="date" class="w-full" />
-            </NFormItem>
-            <NFormItem label="Loyer mensuel (€)">
-              <NInput v-model:value="formData.loyerMensuel" />
-            </NFormItem>
-            <NFormItem label="Charges mensuelles (€)">
-              <NInput v-model:value="formData.chargesMensuelles" />
-            </NFormItem>
-            <NFormItem label="Dépôt garantie (€)">
-              <NInput v-model:value="formData.depotGarantie" />
-            </NFormItem>
-            <NFormItem label="Fréquence loyer">
-              <NSelect
-                v-model:value="formData.frequenceLoyer"
-                :options="[
-                  { label: 'Mensuel', value: 'MENSUEL' },
-                  { label: 'Trimestriel', value: 'TRIMESTRIEL' },
-                ]"
-              />
-            </NFormItem>
-            <NFormItem label="Jour échéance (1-28)">
-              <NInput v-model:value="formData.jourEcheance" />
-            </NFormItem>
-          </NForm>
+        <NTabs type="line" animated>
+          <NTabPane name="details" tab="Détails">
+            <NCard class="mt-4">
+              <NForm label-placement="top" :disabled="!editing" class="max-w-xl">
+                <NFormItem label="Date début">
+                  <NDatePicker v-model:value="formData.dateDebut" type="date" class="w-full" />
+                </NFormItem>
+                <NFormItem label="Date fin">
+                  <NDatePicker v-model:value="formData.dateFin" type="date" class="w-full" />
+                </NFormItem>
+                <NFormItem label="Loyer mensuel (€)">
+                  <NInput v-model:value="formData.loyerMensuel" />
+                </NFormItem>
+                <NFormItem label="Charges mensuelles (€)">
+                  <NInput v-model:value="formData.chargesMensuelles" />
+                </NFormItem>
+                <NFormItem label="Dépôt garantie (€)">
+                  <NInput v-model:value="formData.depotGarantie" />
+                </NFormItem>
+                <NFormItem label="Fréquence loyer">
+                  <NSelect
+                    v-model:value="formData.frequenceLoyer"
+                    :options="[
+                      { label: 'Mensuel', value: 'MENSUEL' },
+                      { label: 'Trimestriel', value: 'TRIMESTRIEL' },
+                    ]"
+                  />
+                </NFormItem>
+                <NFormItem label="Jour échéance (1-28)">
+                  <NInput v-model:value="formData.jourEcheance" />
+                </NFormItem>
+              </NForm>
 
-          <div class="flex justify-between items-center mt-6">
-            <div>
-              <NPopconfirm
-                v-if="!editing"
-                @positive-click="deleteLocation"
-                positive-text="Oui, supprimer"
-                negative-text="Annuler"
-              >
-                <template #trigger>
-                  <NButton type="error" ghost>
-                    <template #icon><NIcon :component="Delete24Filled" /></template>
-                    Supprimer la location
+              <div class="flex justify-between items-center mt-6">
+                <div>
+                  <NPopconfirm
+                    v-if="!editing"
+                    @positive-click="deleteLocation"
+                    positive-text="Oui, supprimer"
+                    negative-text="Annuler"
+                  >
+                    <template #trigger>
+                      <NButton type="error" ghost>
+                        <template #icon><NIcon :component="Delete24Filled" /></template>
+                        Supprimer la location
+                      </NButton>
+                    </template>
+                    Êtes-vous sûr de vouloir supprimer cette location ? Cette action est irréversible.
+                  </NPopconfirm>
+                </div>
+
+                <div class="flex items-center">
+                  <NButton v-if="editing" @click="cancelEditing" class="mr-2">
+                    <template #icon><NIcon :component="Dismiss24Filled" /></template>
+                    Annuler
                   </NButton>
-                </template>
-                Êtes-vous sûr de vouloir supprimer cette location ? Cette action est irréversible.
-              </NPopconfirm>
-            </div>
+                  <NButton v-if="editing" type="primary" :loading="saving" @click="saveLocation">
+                    <template #icon><NIcon :component="Save24Filled" /></template>
+                    Enregistrer
+                  </NButton>
+                  <NButton v-if="!editing" type="primary" @click="startEditing">
+                    <template #icon><NIcon :component="Edit24Filled" /></template>
+                    Modifier
+                  </NButton>
+                </div>
+              </div>
+            </NCard>
+          </NTabPane>
 
-            <div class="flex items-center">
-              <NButton v-if="editing" @click="cancelEditing" class="mr-2">
-                <template #icon><NIcon :component="Dismiss24Filled" /></template>
-                Annuler
-              </NButton>
-              <NButton v-if="editing" type="primary" :loading="saving" @click="saveLocation">
-                <template #icon><NIcon :component="Save24Filled" /></template>
-                Enregistrer
-              </NButton>
-              <NButton v-if="!editing" type="primary" @click="startEditing">
-                <template #icon><NIcon :component="Edit24Filled" /></template>
-                Modifier
-              </NButton>
-            </div>
-          </div>
-        </NCard>
-
-        <!-- Section Documents -->
-        <NCard title="Documents">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold">Documents associés</h3>
-            <NButton type="primary" size="small" @click="showDocumentModal = true">
-              <template #icon><NIcon :component="Add24Filled" /></template>
-              Ajouter un document
-            </NButton>
-          </div>
-          <NDataTable :columns="documentColumns" :data="documents" />
-        </NCard>
+          <NTabPane name="documents" tab="Documents">
+            <NCard class="mt-4">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Documents associés</h3>
+                <NButton type="primary" size="small" @click="showDocumentModal = true">
+                  <template #icon><NIcon :component="Add24Filled" /></template>
+                  Ajouter un document
+                </NButton>
+              </div>
+              <NDataTable :columns="documentColumns" :data="documents" />
+            </NCard>
+          </NTabPane>
+        </NTabs>
 
         <NModal v-model:show="showDocumentModal" preset="card" style="width: 600px;" title="Ajouter un document">
           <NSpace vertical :size="16">

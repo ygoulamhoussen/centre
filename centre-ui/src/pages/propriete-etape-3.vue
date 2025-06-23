@@ -4,25 +4,33 @@ import {
   NButton,
   NDatePicker,
   NForm,
-  NFormItem,
-  NH1,
+  NFormItemGi,
   NInputNumber,
   NSpace,
-  NText,
   NGrid,
-  NGi,
   useMessage,
+  NCard,
+  NSteps,
+  NStep,
+  NIcon,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import {
+  CalendarLtr24Filled,
+  Money24Filled,
+  DocumentHeader24Filled,
+  PeopleCommunity24Filled,
+  ChartMultiple24Filled,
+  ArrowLeft24Filled,
+  ArrowRight24Filled,
+} from '@vicons/fluent'
 
 definePage({
   meta: {
-    title: 'Ajouter une propriété - Étape 3',
+    title: 'Nouvelle propriété - Détails',
     hideInMenu: true,
     activeMenu: '/propriete',
-    
   },
 })
 
@@ -31,95 +39,121 @@ const { proprieteDTO } = storeToRefs(store)
 const router = useRouter()
 const message = useMessage()
 
-const erreur = ref('')
-
 function precedent() {
   router.push('/propriete-etape-2')
 }
 
 function suivant() {
-  if (!proprieteDTO.value.dateAcquisition || !proprieteDTO.value.montantAcquisition) {
-    message.warning('Veuillez remplir les champs obligatoires.')
+  if (proprieteDTO.value.dateAcquisition === null || proprieteDTO.value.montantAcquisition === null) {
+    message.warning('Veuillez remplir tous les champs obligatoires.')
     return
   }
-
   router.push('/propriete-etape-4')
 }
 </script>
 
 <template>
-  <n-space vertical :size="24">
-    <n-h1>Ajouter une propriété - Étape 3</n-h1>
-    <n-text depth="3">Détails de l'acquisition</n-text>
+  <div class="p-4">
+    <NCard :bordered="false">
+      <NSteps :current="3" class="mb-8">
+        <NStep title="Type et Nom" description="Identification du bien" />
+        <NStep title="Adresse" description="Localisation du bien" />
+        <NStep title="Détails" description="Informations financières" />
+        <NStep title="Récapitulatif" description="Vérification finale" />
+      </NSteps>
 
-    <n-form label-placement="top">
-      <n-grid cols="1 s:1 m:2 l:2" x-gap="24" y-gap="16">
-        <n-gi>
-          <n-form-item label="Date d'acquisition *">
-            <n-date-picker
+      <h2 class="text-xl font-semibold mb-4">Étape 3: Détails de l'acquisition</h2>
+
+      <NForm>
+        <NGrid :x-gap="24" :y-gap="16" :cols="2" :item-responsive="true">
+          <NFormItemGi label="Date d'acquisition *">
+            <NDatePicker
               v-model:formatted-value="proprieteDTO.dateAcquisition"
               value-format="yyyy-MM-dd"
               type="date"
               clearable
               style="width: 100%"
-            />
-          </n-form-item>
-        </n-gi>
+              size="large"
+            >
+              <template #prefix>
+                <NIcon :component="CalendarLtr24Filled" />
+              </template>
+            </NDatePicker>
+          </NFormItemGi>
 
-        <n-gi>
-          <n-form-item label="Montant d'acquisition (€) *">
-            <n-input-number
+          <NFormItemGi label="Montant d'acquisition (€) *">
+            <NInputNumber
               v-model:value="proprieteDTO.montantAcquisition"
               min="0"
               placeholder="0.00"
               style="width: 100%"
-            />
-          </n-form-item>
-        </n-gi>
+              size="large"
+            >
+              <template #prefix>
+                <NIcon :component="Money24Filled" />
+              </template>
+            </NInputNumber>
+          </NFormItemGi>
 
-        <n-gi>
-          <n-form-item label="Frais de notaire (€)">
-            <n-input-number
+          <NFormItemGi label="Frais de notaire (€)">
+            <NInputNumber
               v-model:value="proprieteDTO.fraisNotaire"
               min="0"
               placeholder="0.00"
               style="width: 100%"
-            />
-          </n-form-item>
-        </n-gi>
+              size="large"
+            >
+              <template #prefix>
+                <NIcon :component="DocumentHeader24Filled" />
+              </template>
+            </NInputNumber>
+          </NFormItemGi>
 
-        <n-gi>
-          <n-form-item label="Frais d'agence (€)">
-            <n-input-number
+          <NFormItemGi label="Frais d'agence (€)">
+            <NInputNumber
               v-model:value="proprieteDTO.fraisAgence"
               min="0"
               placeholder="0.00"
               style="width: 100%"
-            />
-          </n-form-item>
-        </n-gi>
+              size="large"
+            >
+              <template #prefix>
+                <NIcon :component="PeopleCommunity24Filled" />
+              </template>
+            </NInputNumber>
+          </NFormItemGi>
 
-        <n-gi :span="2">
-          <n-form-item label="Tantième">
-            <n-input-number
+          <NFormItemGi :span="2" label="Tantième">
+            <NInputNumber
               v-model:value="proprieteDTO.tantieme"
               min="0"
               step="1"
               placeholder="ex: 1000"
               style="width: 100%"
-            />
-          </n-form-item>
-        </n-gi>
-      </n-grid>
-    </n-form>
+              size="large"
+            >
+              <template #prefix>
+                <NIcon :component="ChartMultiple24Filled" />
+              </template>
+            </NInputNumber>
+          </NFormItemGi>
+        </NGrid>
+      </NForm>
 
-    <div class="flex justify-between pt-2">
-      <n-button @click="precedent">Précédent</n-button>
-      <n-button type="primary" @click="suivant">Suivant</n-button>
-    </div>
-
-    <n-text v-if="erreur" type="error" class="text-center">{{ erreur }}</n-text>
-  </n-space>
+      <NSpace class="mt-8" justify="space-between">
+        <NButton @click="precedent">
+          <template #icon>
+            <NIcon :component="ArrowLeft24Filled" />
+          </template>
+          Précédent
+        </NButton>
+        <NButton type="primary" @click="suivant">
+          Suivant
+          <template #icon>
+            <NIcon :component="ArrowRight24Filled" />
+          </template>
+        </NButton>
+      </NSpace>
+    </NCard>
+  </div>
 </template>
-
-<style scoped></style>

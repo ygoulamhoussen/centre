@@ -54,7 +54,7 @@ function viewLocataireDetails(id: string) {
 
 // Rediriger vers la page d'ajout d'un locataire
 function addNewLocataire() {
-  router.push('/locataire/nouveau')
+  router.push('/locataire-etape-1')
 }
 
 // Formater la date

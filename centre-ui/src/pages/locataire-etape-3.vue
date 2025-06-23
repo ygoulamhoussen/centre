@@ -3,20 +3,23 @@ import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
 import {
   NButton,
-  NForm,
-  NFormItem,
-  NH1,
   NSpace,
-  NText,
   useMessage,
+  NCard,
+  NSteps,
+  NStep,
+  NIcon,
+  NDescriptions,
+  NDescriptionsItem,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ArrowLeft24Filled, Save24Filled } from '@vicons/fluent'
 
 definePage({
   meta: {
-    title: 'Ajouter un locataire - Étape 3',
+    title: 'Nouveau locataire - Récapitulatif',
     hideInMenu: true,
     activeMenu: '/locataire',
   },
@@ -42,9 +45,9 @@ async function enregistrer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...locataireDTO.value,
-          utilisateurId
-        })
-      }
+          utilisateurId,
+        }),
+      },
     )
     if (!response.ok) {
       throw new Error(`Erreur lors de la création du locataire (${response.status})`)
@@ -66,40 +69,50 @@ function precedent() {
 </script>
 
 <template>
-  <NSpace vertical :size="24">
-    <NH1>Ajouter un locataire - Étape 3</NH1>
+  <div class="p-4">
+    <NCard :bordered="false">
+      <NSteps :current="3" class="mb-8">
+        <NStep title="Informations" description="Nom, contact, etc." />
+        <NStep title="Adresse" description="Lieu de résidence" />
+        <NStep title="Récapitulatif" description="Vérification finale" />
+      </NSteps>
 
-    <NForm label-placement="top" :show-require-mark="false">
-      <NFormItem label="Nom complet">
-        <NText>{{ locataireDTO.nom }}</NText>
-      </NFormItem>
-      <NFormItem label="Téléphone">
-        <NText>{{ locataireDTO.telephone }}</NText>
-      </NFormItem>
-      <NFormItem label="Email">
-        <NText>{{ locataireDTO.email }}</NText>
-      </NFormItem>
-      <NFormItem label="Adresse">
-        <NText>{{ locataireDTO.adresse }}</NText>
-      </NFormItem>
-      <NFormItem label="Complément d'adresse">
-        <NText>{{ locataireDTO.complementAdresse }}</NText>
-      </NFormItem>
-      <NFormItem label="Code postal">
-        <NText>{{ locataireDTO.codePostal }}</NText>
-      </NFormItem>
-      <NFormItem label="Ville">
-        <NText>{{ locataireDTO.ville }}</NText>
-      </NFormItem>
-    </NForm>
+      <h2 class="text-xl font-semibold mb-4">Étape 3: Récapitulatif</h2>
 
-    <div class="flex justify-end gap-3">
-      <NButton @click="precedent">Précédent</NButton>
-      <NButton type="primary" @click="enregistrer" :loading="chargement">
-        Enregistrer
-      </NButton>
-    </div>
-  </NSpace>
+      <NDescriptions label-placement="top" bordered :column="2">
+        <NDescriptionsItem label="Nom complet">
+          {{ locataireDTO.nom }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Téléphone">
+          {{ locataireDTO.telephone }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Email">
+          {{ locataireDTO.email }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Adresse">
+          {{ `${locataireDTO.adresse}, ${locataireDTO.codePostal} ${locataireDTO.ville}` }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="Complément d'adresse" :span="2">
+          {{ locataireDTO.complementAdresse || 'N/A' }}
+        </NDescriptionsItem>
+      </NDescriptions>
+
+      <NSpace class="mt-8" justify="space-between">
+        <NButton @click="precedent">
+          <template #icon>
+            <NIcon :component="ArrowLeft24Filled" />
+          </template>
+          Précédent
+        </NButton>
+        <NButton type="primary" @click="enregistrer" :loading="chargement">
+          <template #icon>
+            <NIcon :component="Save24Filled" />
+          </template>
+          Enregistrer
+        </NButton>
+      </NSpace>
+    </NCard>
+  </div>
 </template>
 
 <style scoped>

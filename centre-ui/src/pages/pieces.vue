@@ -13,6 +13,7 @@ definePage({
   meta: {
     title: 'Mes documents',
     icon: 'mdi:file-document',
+    hideInMenu: true,
     order: 6
   }
 })

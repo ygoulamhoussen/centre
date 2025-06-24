@@ -5,7 +5,9 @@ INSERT INTO utilisateur (id, user_name, nom, prenom, email, mot_de_passe_hash, c
 ('00000000-0000-0000-0000-000000000001', 'jdupont', 'Dupont', 'Jean', 'jean.dupont@example.com', 'hash1', now(), now()),
 ('00000000-0000-0000-0000-000000000002', 'cmartin', 'Martin', 'Claire', 'claire.martin@example.com', 'hash2', now(), now()),
 ('00000000-0000-0000-0000-000000000003', 'Yussouf', 'Martin', 'Claire', 'yussouf.goulamhoussen@gmail.com', '123456', now(), now()),
-('00000000-0000-0000-0000-000000000004', 'Taha', 'Martin', 'Claire', 'taha.goulamhoussen@gmail.com', '123456', now(), now());
+('00000000-0000-0000-0000-000000000004', 'Taha', 'Martin', 'Claire', 'taha.goulamhoussen@gmail.com', '123456', now(), now()),
+('00000000-0000-0000-0000-000000000005', 'bmorel', 'Morel', 'Benoit', 'benoit.morel@example.com', 'hash3', now(), now()),
+('00000000-0000-0000-0000-000000000006', 'lperrin', 'Perrin', 'Laura', 'laura.perrin@example.com', 'hash4', now(), now());
 
 
 -- Création des rôles
@@ -16,7 +18,9 @@ INSERT INTO role (id, name) VALUES
 -- Association utilisateur ↔ rôle
 INSERT INTO utilisateur_role (utilisateur_id, role_id) VALUES
 ('00000000-0000-0000-0000-000000000003', '80000000-0000-0000-0000-000000000001'), -- Yussouf → USER
-('00000000-0000-0000-0000-000000000004', '80000000-0000-0000-0000-000000000002'); -- Taha → ADMIN
+('00000000-0000-0000-0000-000000000004', '80000000-0000-0000-0000-000000000002'), -- Taha → ADMIN
+('00000000-0000-0000-0000-000000000005', '80000000-0000-0000-0000-000000000001'), -- Benoit → USER
+('00000000-0000-0000-0000-000000000006', '80000000-0000-0000-0000-000000000002'); -- Laura → ADMIN
 
 
 -- Propriétés
@@ -25,36 +29,97 @@ INSERT INTO propriete (id, utilisateur_id, type_bien, nom, adresse, complement_a
 ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'APPARTEMENT', 'Studio Paris 15e',
     '10 rue de Vaugirard', '', '75015', 'Paris', '2022-06-15', '2022-07-01', 220000, 100, 15000, 8000, now(), now()),
 ('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'MAISON', 'Maison Bordeaux',
-    '15 avenue des Vins', '', '33000', 'Bordeaux', '2023-01-10', '2023-03-01', 350000, 100, 25000, 12000, now(), now());
+    '15 avenue des Vins', '', '33000', 'Bordeaux', '2023-01-10', '2023-03-01', 350000, 100, 25000, 12000, now(), now()),
+('10000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000005', 'APPARTEMENT', 'Appartement Nice',
+    '25 avenue Jean Médecin', '', '06000', 'Nice', '2021-05-10', '2021-06-01', 180000, 100, 12000, 6000, now(), now()),
+('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000006', 'MAISON', 'Villa Lyon',
+    '8 rue des Fleurs', '', '69000', 'Lyon', '2020-03-15', '2020-05-01', 400000, 100, 20000, 15000, now(), now());
 
 -- LOCATAIRES (mise à jour : utilisateur_id au lieu de propriete_id)
 INSERT INTO locataire (id, utilisateur_id, nom, telephone, email, adresse, complement_adresse, code_postal, ville, cree_le, modifie_le) VALUES
 ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'Alice Laurent', '0601010101', 'alice@example.com', '1 rue des Lilas', '', '75015', 'Paris', now(), now()),
-('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'Marc Durant', '0602020202', 'marc@example.com', '2 rue des Vignes', '', '33000', 'Bordeaux', now(), now());
+('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'Marc Durant', '0602020202', 'marc@example.com', '2 rue des Vignes', '', '33000', 'Bordeaux', now(), now()),
+('20000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000005', 'Sophie Martin', '0603030303', 'sophie.martin@example.com', '3 rue des Oliviers', '', '06000', 'Nice', now(), now()),
+('20000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000006', 'Julien Petit', '0604040404', 'julien.petit@example.com', '4 rue des Roses', '', '69000', 'Lyon', now(), now());
 
 -- Location
 INSERT INTO location (id, propriete_id, locataire_id, date_debut, date_fin, loyer_mensuel, charges_mensuelles, depot_garantie, frequence_loyer, jour_echeance, cree_le, modifie_le) VALUES
 ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001',
     '2023-01-01', null, 900, 100, 1000, 'MENSUEL', 5, now(), now()),
 ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002',
-    '2023-02-01', null, 1200, 150, 1500, 'MENSUEL', 10, now(), now());
+    '2023-02-01', null, 1200, 150, 1500, 'MENSUEL', 10, now(), now()),
+('30000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000003',
+    '2022-01-01', null, 750, 80, 800, 'MENSUEL', 3, now(), now()),
+('30000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004',
+    '2021-04-01', '2023-04-01', 1500, 200, 2000, 'MENSUEL', 7, now(), now());
 
 -- Composition Acquisition
 INSERT INTO composition_acquisition (id, propriete_id, categorie, montant, description, cree_le, modifie_le) VALUES
 ('40000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'TERRAIN', 80000, 'Terrain brut', now(), now()),
-('40000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'CONSTRUCTION', 120000, 'Construction neuve', now(), now());
+('40000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'CONSTRUCTION', 120000, 'Construction neuve', now(), now()),
+('40000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000003', 'TERRAIN', 60000, 'Terrain centre-ville', now(), now()),
+('40000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000003', 'CONSTRUCTION', 120000, 'Construction ancienne', now(), now()),
+('40000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000004', 'TERRAIN', 100000, 'Grand terrain', now(), now()),
+('40000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000004', 'CONSTRUCTION', 300000, 'Villa moderne', now(), now());
 
 -- Crédits
 INSERT INTO credit (id, propriete_id, banque, montant_emprunte, date_debut, date_fin, duree_mois, taux_interet_annuel, mensualite, assurance_mensuelle, frais_dossier, frais_garantie, cree_le, modifie_le) VALUES
-('50000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Banque A', 200000, '2022-06-01', '2037-06-01', 180, 1.2, 1000, 30, 500, 1000, now(), now());
+('50000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Banque A', 200000, '2022-06-01', '2037-06-01', 180, 1.2, 1000, 30, 500, 1000, now(), now()),
+('50000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000003', 'Banque B', 150000, '2021-05-01', '2036-05-01', 180, 1.5, 800, 25, 400, 900, now(), now()),
+('50000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000004', 'Banque C', 350000, '2020-03-01', '2040-03-01', 240, 1.1, 1400, 40, 600, 1200, now(), now());
 
 -- QUITTANCE
 INSERT INTO quittance (id, location_id, date_debut, date_fin, date_emission, montant_loyer, montant_charges, montant_total, statut, cree_le, modifie_le) VALUES
-('40000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '2024-04-01', '2024-04-30', '2024-04-01', 900.00, 100.00, 1000.00, 'PAYEE', NOW(), NOW());
+('40000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '2024-04-01', '2024-04-30', '2024-04-01', 900.00, 100.00, 1000.00, 'PAYEE', NOW(), NOW()),
+('40000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000003', '2024-03-01', '2024-03-31', '2024-03-01', 750.00, 80.00, 830.00, 'PAYEE', NOW(), NOW()),
+('40000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000004', '2023-03-01', '2023-03-31', '2023-03-01', 1500.00, 200.00, 1700.00, 'IMPAYEE', NOW(), NOW());
 
 -- PAIEMENT
 INSERT INTO paiement (id, quittance_id, date_paiement, montant, moyen_paiement, reference, commentaire, est_valide, cree_le, modifie_le) VALUES
-('50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', '2024-04-03', 1000.00, 'VIREMENT', 'VIR123456', 'Paiement complet', true, NOW(), NOW());
+('50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', '2024-04-03', 1000.00, 'VIREMENT', 'VIR123456', 'Paiement complet', true, NOW(), NOW()),
+('50000000-0000-0000-0000-000000000002', '40000000-0000-0000-0000-000000000002', '2024-03-05', 830.00, 'CARTE', 'CB202403', 'Paiement par carte', true, NOW(), NOW()),
+('50000000-0000-0000-0000-000000000003', '40000000-0000-0000-0000-000000000003', '2023-03-10', 1700.00, 'CHEQUE', 'CHQ202303', 'Chèque en attente', false, NOW(), NOW());
+
+-- Propriétés supplémentaires pour Yussouf
+INSERT INTO propriete (id, utilisateur_id, type_bien, nom, adresse, complement_adresse, code_postal, ville, date_acquisition, date_livraison, montant_acquisition, tantieme, frais_notaire, frais_agence, cree_le, modifie_le) VALUES
+('10000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000003', 'APPARTEMENT', 'Appartement Marseille', '12 rue Paradis', '', '13001', 'Marseille', '2021-02-10', '2021-03-01', 160000, 100, 10000, 5000, now(), now()),
+('10000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000003', 'MAISON', 'Maison Lille', '7 rue Nationale', '', '59000', 'Lille', '2020-09-15', '2020-10-01', 300000, 100, 18000, 9000, now(), now());
+
+-- Locataires supplémentaires pour Yussouf
+INSERT INTO locataire (id, utilisateur_id, nom, telephone, email, adresse, complement_adresse, code_postal, ville, cree_le, modifie_le) VALUES
+('20000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000003', 'Paul Dubois', '0605050505', 'paul.dubois@example.com', '5 rue des Pins', '', '13001', 'Marseille', now(), now()),
+('20000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000003', 'Emma Leroy', '0606060606', 'emma.leroy@example.com', '6 rue des Peupliers', '', '59000', 'Lille', now(), now());
+
+-- Locations supplémentaires pour Yussouf
+INSERT INTO location (id, propriete_id, locataire_id, date_debut, date_fin, loyer_mensuel, charges_mensuelles, depot_garantie, frequence_loyer, jour_echeance, cree_le, modifie_le) VALUES
+('30000000-0000-0000-0000-000000000101', '10000000-0000-0000-0000-000000000101', '20000000-0000-0000-0000-000000000101', '2022-05-01', null, 700, 70, 700, 'MENSUEL', 2, now(), now()),
+('30000000-0000-0000-0000-000000000102', '10000000-0000-0000-0000-000000000102', '20000000-0000-0000-0000-000000000102', '2021-11-01', null, 1100, 120, 1200, 'MENSUEL', 8, now(), now());
+
+-- Quittances pour Yussouf
+INSERT INTO quittance (id, location_id, date_debut, date_fin, date_emission, montant_loyer, montant_charges, montant_total, statut, cree_le, modifie_le) VALUES
+('40000000-0000-0000-0000-000000000101', '30000000-0000-0000-0000-000000000101', '2024-05-01', '2024-05-31', '2024-05-01', 700.00, 70.00, 770.00, 'PAYEE', NOW(), NOW()),
+('40000000-0000-0000-0000-000000000102', '30000000-0000-0000-0000-000000000101', '2024-04-01', '2024-04-30', '2024-04-01', 700.00, 70.00, 770.00, 'IMPAYEE', NOW(), NOW()),
+('40000000-0000-0000-0000-000000000103', '30000000-0000-0000-0000-000000000102', '2024-05-01', '2024-05-31', '2024-05-01', 1100.00, 120.00, 1220.00, 'PAYEE', NOW(), NOW()),
+('40000000-0000-0000-0000-000000000104', '30000000-0000-0000-0000-000000000102', '2024-04-01', '2024-04-30', '2024-04-01', 1100.00, 120.00, 1220.00, 'PAYEE', NOW(), NOW());
+
+-- Paiements pour Yussouf (divers statuts et moyens)
+INSERT INTO paiement (id, quittance_id, date_paiement, montant, moyen_paiement, reference, commentaire, est_valide, cree_le, modifie_le) VALUES
+('50000000-0000-0000-0000-000000000101', '40000000-0000-0000-0000-000000000101', '2024-05-05', 770.00, 'VIREMENT', 'VIR202405', 'Loyer payé en virement', true, NOW(), NOW()),
+('50000000-0000-0000-0000-000000000102', '40000000-0000-0000-0000-000000000102', '2024-04-10', 400.00, 'ESPECES', 'ESP202404', 'Paiement partiel en espèces', false, NOW(), NOW()),
+('50000000-0000-0000-0000-000000000103', '40000000-0000-0000-0000-000000000103', '2024-05-07', 1220.00, 'CARTE', 'CB202405', 'Loyer payé par carte', true, NOW(), NOW()),
+('50000000-0000-0000-0000-000000000104', '40000000-0000-0000-0000-000000000104', '2024-04-10', 1220.00, 'CHEQUE', 'CHQ202404', 'Chèque reçu', true, NOW(), NOW());
+
+-- Crédits pour les nouvelles propriétés de Yussouf
+INSERT INTO credit (id, propriete_id, banque, montant_emprunte, date_debut, date_fin, duree_mois, taux_interet_annuel, mensualite, assurance_mensuelle, frais_dossier, frais_garantie, cree_le, modifie_le) VALUES
+('50000000-0000-0000-0000-000000000101', '10000000-0000-0000-0000-000000000101', 'Banque D', 120000, '2021-02-01', '2036-02-01', 180, 1.3, 650, 20, 300, 700, now(), now()),
+('50000000-0000-0000-0000-000000000102', '10000000-0000-0000-0000-000000000102', 'Banque E', 250000, '2020-09-01', '2040-09-01', 240, 1.0, 1100, 35, 500, 1000, now(), now());
+
+-- Compositions d'acquisition pour les nouvelles propriétés de Yussouf
+INSERT INTO composition_acquisition (id, propriete_id, categorie, montant, description, cree_le, modifie_le) VALUES
+('40000000-0000-0000-0000-000000000101', '10000000-0000-0000-0000-000000000101', 'TERRAIN', 50000, 'Terrain centre Marseille', now(), now()),
+('40000000-0000-0000-0000-000000000102', '10000000-0000-0000-0000-000000000101', 'CONSTRUCTION', 110000, 'Immeuble ancien rénové', now(), now()),
+('40000000-0000-0000-0000-000000000103', '10000000-0000-0000-0000-000000000102', 'TERRAIN', 90000, 'Terrain Lille', now(), now()),
+('40000000-0000-0000-0000-000000000104', '10000000-0000-0000-0000-000000000102', 'CONSTRUCTION', 210000, 'Maison familiale', now(), now());
 
 -- PROPRIÉTÉ SANS COMPOSITION
 INSERT INTO propriete (

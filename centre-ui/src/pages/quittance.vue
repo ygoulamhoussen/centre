@@ -15,7 +15,7 @@ const loading = ref(false)
 definePage({
   meta: {
     title: 'Mes quittances',
-    icon: 'mdi:account-group',
+    icon: 'mdi:receipt-text',
     order: 5,
   },
 })
@@ -153,13 +153,13 @@ onMounted(() => fetchQuittances())
                 <NTooltip v-if="q.statut !== 'PAYEE'">
                   <template #trigger>
                     <NButton size="small" type="primary" ghost :disabled="q.statut !== 'PAYEE'">
-                      Télécharger
+                      Editer la quittance
                     </NButton>
                   </template>
                   La quittance n'est téléchargeable que si elle est payée.
                 </NTooltip>
                 <NButton v-else size="small" type="primary" ghost @click="telechargerQuittance(q.id)">
-                  Télécharger
+                  Editer la quittance
                 </NButton>
               </div>
             </template>

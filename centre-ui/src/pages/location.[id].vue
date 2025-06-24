@@ -439,9 +439,9 @@ const quittanceColumns = [
   { title: 'Total', key: 'total', render: (row: any) => `${getTotalQuittance(row)} €` },
   { title: 'Statut', key: 'statut', render: (row: any) => h(NTag, { type: row.statut === 'PAYEE' ? 'success' : (row.statut === 'PARTIELLE' ? 'warning' : 'error'), size: 'small' }, { default: () => row.statut === 'PAYEE' ? 'Payée' : (row.statut === 'PARTIELLE' ? 'Partielle' : 'Impayée') }) },
   { title: 'Actions', key: 'actions', render: (row: any) => h('div', { class: 'flex gap-2' }, [
-    h(NButton, { size: 'small', ghost: true, onClick: () => router.push(`/quittance-detail/${row.id}`) }, { default: () => 'Détail' }),
+    h(NButton, { size: 'small', ghost: true, onClick: () => router.push(`/quittance-detail/${row.id}`) }, { default: () => 'Modifier' }),
     row.statut === 'PAYEE'
-      ? h(NButton, { size: 'small', type: 'primary', ghost: true, onClick: () => telechargerQuittance(row.id) }, { default: () => 'PDF' })
+      ? h(NButton, { size: 'small', type: 'primary', ghost: true, onClick: () => telechargerQuittance(row.id) }, { default: () => 'Editer la quittance' })
       : null
   ]) },
 ]

@@ -17,7 +17,7 @@ import { Add24Filled, Home24Filled } from '@vicons/fluent'
 definePage({
   meta: {
     title: 'Mes locations',
-    icon: 'mdi:home-city-outline',
+    icon: 'mdi:key-outline',
     order: 4,
   },
 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
 import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage } from 'naive-ui'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 definePage({
@@ -75,7 +75,10 @@ async function fetchPaiements() {
   paiementLoading.value = true
   try {
     const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getPaiementsByQuittance/${quittanceId}`)
-    paiements.value = await res.json()
+    const data = await res.json()
+    paiements.value = Array.isArray(data)
+      ? data.map((p: any) => ({ ...p, actions: '' }))
+      : []
   } catch (e) {
     message.error('Erreur de chargement des paiements')
   } finally {
@@ -149,9 +152,14 @@ async function savePaiementModal() {
       montant: paiementForm.value.montant?.toString() || '0',
       datePaiement: dateStr,
     }
-    const url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/${isNew ? 'createPaiement' : 'updatePaiement'}`
+    let url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createPaiement`
+    let method = 'POST'
+    if (!isNew) {
+      url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/updatePaiement`
+      method = 'PUT'
+    }
     const res = await fetch(url, {
-      method: 'POST',
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
@@ -186,7 +194,23 @@ const paiementColumns = [
   { title: 'Moyen', key: 'moyenPaiement' },
   { title: 'Référence', key: 'reference' },
   { title: 'Commentaire', key: 'commentaire' },
-  { title: 'Actions', key: 'actions' },
+  {
+    title: 'Actions',
+    key: 'actions',
+    render: (row: any) =>
+      h('div', { class: 'flex gap-2' }, [
+        h(
+          NButton,
+          { size: 'small', ghost: true, onClick: () => openEditPaiementModal(row) },
+          { default: () => 'Modifier' }
+        ),
+        h(
+          NButton,
+          { size: 'small', type: 'error', ghost: true, onClick: () => deletePaiement(row) },
+          { default: () => 'Supprimer' }
+        ),
+      ]),
+  },
 ]
 
 function getPaiementTableData() {
@@ -241,12 +265,11 @@ function getPaiementTableData() {
             <div class="flex justify-end mb-2">
               <NButton size="small" type="primary" ghost @click="openAddPaiementModal">Ajouter un paiement</NButton>
             </div>
-            <NDataTable :columns="paiementColumns" :data="Array.isArray(paiements) ? paiements : []" :loading="paiementLoading">
-              <template #cell-actions="{ row }">
-                <NButton size="small" ghost @click="() => openEditPaiementModal(row)">Modifier</NButton>
-                <NButton size="small" type="error" ghost @click="() => deletePaiement(row)">Supprimer</NButton>
-              </template>
-            </NDataTable>
+            <NDataTable
+              :columns="paiementColumns"
+              :data="Array.isArray(paiements) ? paiements : []"
+              :loading="paiementLoading"
+            />
             <NModal v-model:show="paiementModalVisible" preset="dialog" title="Paiement" style="width: 400px">
               <NForm label-placement="top">
                 <NFormItem label="Date">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PaiementDTO } from '@/types/dto'
+import type { DataTableColumn } from 'naive-ui'
 import { 
   deletePaiement as apiDeletePaiement, 
   fetchPaiements, 
@@ -7,9 +8,9 @@ import {
   updatePaiement 
 } from '@/service/api/paiement'
 import { useAuthStore } from '@/store/modules/auth'
+import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, SearchOutlined } from '@vicons/antd'
+import { NButton, NIcon, NSpin, NTag, useMessage } from 'naive-ui'
 import { h, onMounted, ref, computed, nextTick } from 'vue'
-import { NButton, NIcon, useMessage } from 'naive-ui'
-import { SearchOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@vicons/antd'
 import PaiementDetailsDialog from './PaiementDetailsDialog.vue'
 import PaiementForm from './PaiementForm.vue'
 
@@ -24,7 +25,7 @@ declare function definePage(options: {
 definePage({
   meta: {
     title: 'Mes paiements',
-    icon: 'mdi:account-group',
+    icon: 'mdi:credit-card-outline',
     order: 7,
   },
 })
@@ -51,80 +52,98 @@ const pagination = {
 
 const filteredPaiements = computed(() => {
   if (!search.value) return paiements.value
+  
   const searchTerm = search.value.toLowerCase()
-  return paiements.value.filter(paiement => 
+  return paiements.value.filter(paiement =>
     Object.values(paiement).some(
-      value => value && String(value).toLowerCase().includes(searchTerm)
-    )
+      value => value && String(value).toLowerCase().includes(searchTerm),
+    ),
   )
 })
 
-const createColumns = () => [
-  {
-    title: 'ID',
-    key: 'id',
-    width: 80,
-  },
-  {
-    title: 'Date',
-    key: 'datePaiement',
-    render: (row: PaiementDTO) => formatDate(row.datePaiement)
-  },
-  {
-    title: 'Montant',
-    key: 'montant',
-    render: (row: PaiementDTO) => formatCurrency(row.montant)
-  },
-  {
-    title: 'Moyen de paiement',
-    key: 'moyenPaiement'
-  },
-  {
-    title: 'Référence',
-    key: 'reference'
-  },
-  {
-    title: 'Statut',
-    key: 'estValide',
-    render: (row: PaiementDTO) => row.estValide === 'true' ? 'Validé' : 'En attente'
-  },
-  {
-    title: 'Actions',
-    key: 'actions',
-    width: 150,
-    render: (row: PaiementDTO) => h('div', { class: 'flex gap-2' }, [
-      h(
-        NButton,
-        {
-          text: true,
-          type: 'primary',
-          onClick: () => viewDetails(row)
-        },
-        { default: () => h(NIcon, { component: EyeOutlined }) }
-      ),
-      h(
-        NButton,
-        {
-          text: true,
-          type: 'info',
-          onClick: () => editPaiement(row)
-        },
-        { default: () => h(NIcon, { component: EditOutlined }) }
-      ),
-      h(
-        NButton,
-        {
-          text: true,
-          type: 'error',
-          onClick: () => confirmDelete(row)
-        },
-        { default: () => h(NIcon, { component: DeleteOutlined }) }
-      )
-    ])
-  }
-]
+function createColumns(): DataTableColumn[] {
+  return [
+    {
+      title: 'ID',
+      key: 'id',
+      width: 80,
+      align: 'center',
+    },
+    {
+      title: 'Date',
+      key: 'datePaiement',
+      align: 'center',
+      render: (rowData: any, _rowIndex: number) => formatDate(rowData.datePaiement),
+    },
+    {
+      title: 'Montant',
+      key: 'montant',
+      align: 'center',
+      render: (rowData: any, _rowIndex: number) => formatCurrency(rowData.montant),
+    },
+    {
+      title: 'Moyen de paiement',
+      key: 'moyenPaiement',
+      align: 'center',
+    },
+    {
+      title: 'Référence',
+      key: 'reference',
+      align: 'center',
+    },
+    {
+      title: 'Statut',
+      key: 'estValide',
+      align: 'center',
+      render: (rowData: any, _rowIndex: number) =>
+        h(
+          NTag,
+          {
+            type: rowData.estValide === 'true' ? 'success' : 'warning',
+            bordered: false,
+          },
+          { default: () => (rowData.estValide === 'true' ? 'Validé' : 'En attente') },
+        ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 150,
+      align: 'center',
+      render: (rowData: any, _rowIndex: number) => h('div', { class: 'flex gap-2 justify-center' }, [
+        h(
+          NButton,
+          {
+            text: true,
+            type: 'primary',
+            onClick: () => viewDetails(rowData),
+          },
+          { default: () => h(NIcon, { component: EyeOutlined }) },
+        ),
+        h(
+          NButton,
+          {
+            text: true,
+            type: 'info',
+            onClick: () => editPaiement(rowData),
+          },
+          { default: () => h(NIcon, { component: EditOutlined }) },
+        ),
+        h(
+          NButton,
+          {
+            text: true,
+            type: 'error',
+            onClick: () => confirmDelete(rowData),
+          },
+          { default: () => h(NIcon, { component: DeleteOutlined }) },
+        ),
+      ]),
+    },
+  ]
+}
 
-const columns = createColumns()
+const columns: DataTableColumn[] = createColumns()
 
 // Formater la date
 function formatDate(dateString: string) {
@@ -151,7 +170,7 @@ async function loadPaiements() {
     
     if (!authStore.userInfo.userId) {
       console.log('Récupération des informations utilisateur...')
-      await authStore.getUserInfo()
+      await authStore.initUserInfo()
       console.log('Nouvelles informations utilisateur:', authStore.userInfo)
     }
     
@@ -322,11 +341,14 @@ onMounted(async () => {
 
 <template>
   <n-layout>
-    <n-card>
+    <n-card class="w-full">
       <template #header>
-        <div class="flex justify-between items-center">
-          <span class="text-lg font-medium">Gestion des Paiements</span>
-          <n-button type="primary" @click="openCreateDialog">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <div>
+            <span class="text-lg font-medium">Gestion des Paiements</span>
+            <span class="block text-gray-500 text-sm mt-1">Consultez, ajoutez ou modifiez vos paiements</span>
+          </div>
+          <n-button type="primary" size="large" @click="openCreateDialog">
             <template #icon>
               <n-icon><PlusOutlined /></n-icon>
             </template>
@@ -347,22 +369,25 @@ onMounted(async () => {
           </template>
         </n-input>
 
-        <n-data-table
-          :columns="columns"
-          :data="filteredPaiements"
-          :loading="loading"
-          :pagination="pagination"
-          :bordered="false"
-          class="min-h-[400px]"
-        >
-          <template #empty>
-            <n-empty description="Aucun paiement trouvé" class="py-8">
-              <template #description>
-                <span>Aucun paiement trouvé</span>
+        <div class="w-full overflow-x-auto">
+          <n-spin :show="loading" size="large" class="flex justify-center py-10 w-full">
+            <n-data-table
+              :columns="columns"
+              :data="filteredPaiements"
+              :loading="false"
+              :pagination="pagination"
+              :bordered="false"
+              striped
+              class="w-full"
+            >
+              <template #empty>
+                <n-empty class="py-8">
+                  Aucun paiement trouvé
+                </n-empty>
               </template>
-            </n-empty>
-          </template>
-        </n-data-table>
+            </n-data-table>
+          </n-spin>
+        </div>
       </n-space>
     </n-card>
 
@@ -390,7 +415,7 @@ onMounted(async () => {
     <!-- Détails du paiement -->
     <PaiementDetailsDialog
       v-if="showDetailsDialog"
-      v-model:show="showDetailsDialog"
+      v-model:modelValue="showDetailsDialog"
       :paiement="selectedPaiement"
     />
 

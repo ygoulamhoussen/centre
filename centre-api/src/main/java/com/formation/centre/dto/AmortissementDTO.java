@@ -6,6 +6,8 @@ public class AmortissementDTO {
     private String annee;
     private String montantAmorti;
     private String valeurResiduelle;
+    private String categorie;
+    private String compositionId;
 
     // Getters & Setters
 
@@ -47,5 +49,21 @@ public class AmortissementDTO {
 
     public void setValeurResiduelle(String valeurResiduelle) {
         this.valeurResiduelle = valeurResiduelle;
+    }
+
+    public String getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(String categorie) {
+        this.categorie = categorie;
+    }
+
+    public String getCompositionId() {
+        return compositionId;
+    }
+
+    public void setCompositionId(String compositionId) {
+        this.compositionId = compositionId;
     }
 }

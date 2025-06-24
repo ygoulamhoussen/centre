@@ -1,28 +1,38 @@
 package com.formation.centre.model;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "amortissement")
 public class Amortissement {
 
     @Id
+    @GeneratedValue
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "immobilisation_id")
-    private Immobilisation immobilisation;
+    @JoinColumn(name = "propriete_id")
+    private Propriete propriete;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "composition_id", nullable = true)
+    private CompositionAcquisition composition;
 
     private Integer annee;
-
-    @Column(name = "montant_amorti")
     private BigDecimal montantAmorti;
-
-    @Column(name = "valeur_residuelle")
     private BigDecimal valeurResiduelle;
+    private String categorie;
 
     @Column(name = "cree_le")
     private LocalDateTime creeLe;
@@ -40,12 +50,20 @@ public class Amortissement {
         this.id = id;
     }
 
-    public Immobilisation getImmobilisation() {
-        return immobilisation;
+    public Propriete getPropriete() {
+        return propriete;
     }
 
-    public void setImmobilisation(Immobilisation immobilisation) {
-        this.immobilisation = immobilisation;
+    public void setPropriete(Propriete propriete) {
+        this.propriete = propriete;
+    }
+
+    public CompositionAcquisition getComposition() {
+        return composition;
+    }
+
+    public void setComposition(CompositionAcquisition composition) {
+        this.composition = composition;
     }
 
     public Integer getAnnee() {
@@ -70,6 +88,14 @@ public class Amortissement {
 
     public void setValeurResiduelle(BigDecimal valeurResiduelle) {
         this.valeurResiduelle = valeurResiduelle;
+    }
+
+    public String getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(String categorie) {
+        this.categorie = categorie;
     }
 
     public LocalDateTime getCreeLe() {

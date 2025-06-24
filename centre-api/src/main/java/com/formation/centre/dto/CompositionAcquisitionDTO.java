@@ -8,6 +8,7 @@ public class CompositionAcquisitionDTO {
     private String categorie;
     private String montant;
     private String description;
+    private Integer duree; // durée d'amortissement en années
 
     // Getters & Setters
 
@@ -50,6 +51,14 @@ public class CompositionAcquisitionDTO {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public Integer getDuree() {
+        return duree;
+    }
+
+    public void setDuree(Integer duree) {
+        this.duree = duree;
+    }
     
     // Méthode utilitaire pour créer un DTO à partir d'une entité
     public static CompositionAcquisitionDTO fromEntity(CompositionAcquisition entity) {
@@ -62,6 +71,7 @@ public class CompositionAcquisitionDTO {
         dto.setCategorie(entity.getCategorie());
         dto.setMontant(entity.getMontant() != null ? entity.getMontant().toPlainString() : null);
         dto.setDescription(entity.getDescription());
+        dto.setDuree(entity.getDuree());
         return dto;
     }
 }

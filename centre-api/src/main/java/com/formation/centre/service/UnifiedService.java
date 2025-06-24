@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.formation.centre.dto.AmortissementDTO;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
@@ -33,6 +34,7 @@ import com.formation.centre.dto.PaiementDTO;
 import com.formation.centre.dto.ProprieteDTO;
 import com.formation.centre.dto.ProprieteDetailDTO;
 import com.formation.centre.dto.QuittanceDTO;
+import com.formation.centre.model.Amortissement;
 import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Credit;
 import com.formation.centre.model.DocumentEntity;
@@ -42,6 +44,7 @@ import com.formation.centre.model.Paiement;
 import com.formation.centre.model.Propriete;
 import com.formation.centre.model.Quittance;
 import com.formation.centre.model.Utilisateur;
+import com.formation.centre.repository.AmortissementRepository;
 import com.formation.centre.repository.CreditRepository;
 import com.formation.centre.repository.DocumentEntityRepository;
 import com.formation.centre.repository.LocataireRepository;
@@ -68,6 +71,7 @@ public class UnifiedService {
     @Autowired private PaiementRepository paiementRepository;
     @Autowired private CreditRepository creditRepository;
     @Autowired private DocumentEntityRepository documentEntityRepository;
+    @Autowired private AmortissementRepository amortissementRepository;
 
 
 
@@ -901,7 +905,7 @@ public CompositionAcquisitionDTO toDTO(CompositionAcquisition c) {
 
     // Alerte impayé = quittances non soldées
     List<Quittance> impayes = quittances.stream()
-        .filter(q -> "IMPAYEE".equals(q.getStatut()) || "PARTIELLE".equals(q.getStatut()))
+        .filter(q -> q.getStatut() != null && (q.getStatut() == Quittance.StatutQuittance.IMPAYEE || q.getStatut() == Quittance.StatutQuittance.PARTIELLE))
         .toList();
 
     // Total des loyers perçus ce mois-ci
@@ -1034,6 +1038,71 @@ public List<QuittanceDTO> getQuittancesByLocation(String locationId) {
         .stream()
         .map(this::toDto)
         .collect(Collectors.toList());
+}
+
+public List<AmortissementDTO> genererAmortissement(String proprieteId, int dureeDefaut) {
+    Propriete propriete = proprieteRepository.findById(UUID.fromString(proprieteId))
+        .orElseThrow(() -> new IllegalArgumentException("Propriété non trouvée"));
+    List<AmortissementDTO> plan = new ArrayList<>();
+    if (propriete.getCompositions() == null || propriete.getCompositions().isEmpty()) {
+        // fallback : amortissement global si pas de composition
+        java.math.BigDecimal montant = propriete.getMontantAcquisition();
+        if (montant == null) throw new IllegalArgumentException("Montant d'acquisition non renseigné");
+        java.math.BigDecimal annuite = montant.divide(new java.math.BigDecimal(dureeDefaut), 2, java.math.RoundingMode.HALF_UP);
+        java.math.BigDecimal valeurNette = montant;
+        for (int annee = 1; annee <= dureeDefaut; annee++) {
+            AmortissementDTO dto = new AmortissementDTO();
+            dto.setId(null);
+            dto.setImmobilisationId(proprieteId);
+            dto.setAnnee(String.valueOf(annee));
+            dto.setMontantAmorti(annuite.toPlainString());
+            valeurNette = valeurNette.subtract(annuite);
+            dto.setValeurResiduelle(valeurNette.max(java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString());
+            dto.setCategorie("Global");
+            plan.add(dto);
+        }
+        return plan;
+    }
+    // Amortissement par composant
+    for (CompositionAcquisition comp : propriete.getCompositions()) {
+        if (comp.getMontant() == null || comp.getMontant().compareTo(java.math.BigDecimal.ZERO) <= 0) continue;
+        int duree = comp.getDuree() != null && comp.getDuree() > 0 ? comp.getDuree() : dureeDefaut;
+        java.math.BigDecimal annuite = comp.getMontant().divide(new java.math.BigDecimal(duree), 2, java.math.RoundingMode.HALF_UP);
+        java.math.BigDecimal valeurNette = comp.getMontant();
+        for (int annee = 1; annee <= duree; annee++) {
+            AmortissementDTO dto = new AmortissementDTO();
+            dto.setId(null);
+            dto.setImmobilisationId(proprieteId);
+            dto.setAnnee(String.valueOf(annee));
+            dto.setMontantAmorti(annuite.toPlainString());
+            valeurNette = valeurNette.subtract(annuite);
+            dto.setValeurResiduelle(valeurNette.max(java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString());
+            dto.setCategorie(comp.getCategorie());
+            plan.add(dto);
+        }
+    }
+    return plan;
+}
+
+public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> plan) {
+    UUID propId = UUID.fromString(proprieteId);
+    // Supprimer les anciens amortissements de la propriété
+    amortissementRepository.deleteAll(amortissementRepository.findByPropriete_Id(propId));
+    // Insérer les nouveaux
+    for (AmortissementDTO dto : plan) {
+        Amortissement a = new Amortissement();
+        a.setPropriete(proprieteRepository.findById(propId).orElse(null));
+        if (dto.getCompositionId() != null) {
+            try {
+                a.setComposition(proprieteRepository.findCompositionById(UUID.fromString(dto.getCompositionId())).orElse(null));
+            } catch (Exception ignore) {}
+        }
+        a.setAnnee(dto.getAnnee() != null ? Integer.valueOf(dto.getAnnee()) : null);
+        a.setMontantAmorti(dto.getMontantAmorti() != null ? new java.math.BigDecimal(dto.getMontantAmorti()) : null);
+        a.setValeurResiduelle(dto.getValeurResiduelle() != null ? new java.math.BigDecimal(dto.getValeurResiduelle()) : null);
+        a.setCategorie(dto.getCategorie());
+        amortissementRepository.save(a);
+    }
 }
 
 

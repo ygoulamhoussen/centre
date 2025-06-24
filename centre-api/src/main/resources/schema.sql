@@ -74,6 +74,7 @@ CREATE TABLE composition_acquisition (
     categorie TEXT,
     montant DECIMAL,
     description TEXT,
+    duree INT,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
@@ -156,12 +157,12 @@ CREATE TABLE immobilisation (
 -- AMORTISSEMENT
 CREATE TABLE amortissement (
     id UUID PRIMARY KEY,
-    immobilisation_id UUID REFERENCES immobilisation(id),
+    propriete_id UUID REFERENCES propriete(id),
+    composition_id UUID,
     annee INT,
     montant_amorti DECIMAL,
     valeur_residuelle DECIMAL,
-    cree_le TIMESTAMP,
-    modifie_le TIMESTAMP
+    categorie TEXT
 );
 
 -- CREDIT

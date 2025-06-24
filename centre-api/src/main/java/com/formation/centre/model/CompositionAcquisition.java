@@ -26,6 +26,7 @@ public class CompositionAcquisition {
     private String categorie;
     private BigDecimal montant;
     private String description;
+    private Integer duree;
 
     public UUID getId() {
         return id;
@@ -65,5 +66,13 @@ public class CompositionAcquisition {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Integer getDuree() {
+        return duree;
+    }
+
+    public void setDuree(Integer duree) {
+        this.duree = duree;
     }
 }

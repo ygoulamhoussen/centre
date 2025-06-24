@@ -168,7 +168,7 @@ async function enregistrer() {
             <NGrid :x-gap="16" :y-gap="16" :cols="3" :item-responsive="true">
               <NGi v-for="item in decompositions" :key="item.categorie">
                 <NCard :title="item.categorie" size="small">
-                  <NFormItem>
+                  <NFormItem label="Quote-part (%)">
                     <NInputNumber
                       v-model:value="item.quotePart"
                       :min="0"
@@ -178,6 +178,15 @@ async function enregistrer() {
                     >
                       <template #suffix>%</template>
                     </NInputNumber>
+                  </NFormItem>
+                  <NFormItem label="Durée (années)">
+                    <NInputNumber
+                      v-model:value="item.duree"
+                      :min="1"
+                      :max="100"
+                      placeholder="Durée"
+                      style="width: 100%;"
+                    />
                   </NFormItem>
                   <template #footer>
                     <NText depth="3" class="text-xs">{{ item.description }}</NText>

@@ -113,7 +113,7 @@ onMounted(() => fetchQuittances())
       </div>
       <NGrid v-else :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
         <NGi v-for="q in quittances" :key="q.id">
-          <NCard hoverable class="quittance-card">
+          <NCard hoverable class="quittance-card cursor-pointer" @click="router.push(`/quittance-detail/${q.id}`)">
             <div class="flex items-start">
               <div class="quittance-avatar">
                 <NIcon :component="DocumentPdf24Filled" size="32" />
@@ -139,26 +139,15 @@ onMounted(() => fetchQuittances())
             </div>
             <template #footer>
               <div class="flex justify-end gap-2">
-                <NPopconfirm
-                  @positive-click="() => supprimerQuittance(q.id)"
-                  positive-text="Supprimer"
-                  negative-text="Annuler"
-                >
-                  <template #trigger>
-                    <NButton size="small" type="info" ghost @click="router.push(`/quittance-detail/${q.id}`)">
-                      Modifier
-                    </NButton>
-                  </template>
-                </NPopconfirm>
                 <NTooltip v-if="q.statut !== 'PAYEE'">
                   <template #trigger>
-                    <NButton size="small" type="primary" ghost :disabled="q.statut !== 'PAYEE'">
+                    <NButton size="small" type="primary" ghost :disabled="q.statut !== 'PAYEE'" @click.stop>
                       Editer la quittance
                     </NButton>
                   </template>
                   La quittance n'est téléchargeable que si elle est payée.
                 </NTooltip>
-                <NButton v-else size="small" type="primary" ghost @click="telechargerQuittance(q.id)">
+                <NButton v-else size="small" type="primary" ghost @click.stop="telechargerQuittance(q.id)">
                   Editer la quittance
                 </NButton>
               </div>

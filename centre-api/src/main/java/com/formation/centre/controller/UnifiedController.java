@@ -22,11 +22,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.formation.centre.dto.AmortissementDTO;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
@@ -485,6 +487,20 @@ public ResponseEntity<List<PaiementDTO>> getPaiementsByQuittance(@PathVariable S
 @GetMapping("/getQuittancesByLocation/{locationId}")
 public ResponseEntity<List<QuittanceDTO>> getQuittancesByLocation(@PathVariable String locationId) {
     return ResponseEntity.ok(unifiedService.getQuittancesByLocation(locationId));
+}
+
+@GetMapping("/genererAmortissement/{proprieteId}")
+public ResponseEntity<List<AmortissementDTO>> genererAmortissement(
+        @PathVariable String proprieteId,
+        @RequestParam(name = "duree", required = false, defaultValue = "25") int duree
+) {
+    return ResponseEntity.ok(unifiedService.genererAmortissement(proprieteId, duree));
+}
+
+@PostMapping("/saveAmortissement/{proprieteId}")
+public ResponseEntity<Void> saveAmortissement(@PathVariable String proprieteId, @RequestBody List<AmortissementDTO> plan) {
+    unifiedService.saveAmortissementPlan(proprieteId, plan);
+    return ResponseEntity.ok().build();
 }
 
 } 

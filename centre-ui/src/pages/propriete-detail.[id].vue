@@ -23,7 +23,7 @@ import {
   NPopconfirm,
   useMessage,
 } from 'naive-ui'
-import { h, onMounted, ref } from 'vue'
+import { h, onMounted, ref, computed, watch } from 'vue'
 import { 
   Add24Filled, 
   Edit24Filled, 
@@ -32,7 +32,8 @@ import {
   Document24Filled,
   CheckmarkCircle24Filled,
   ErrorCircle24Filled,
-  Dismiss24Filled as DismissIcon
+  Dismiss24Filled as DismissIcon,
+  Save24Filled
 } from '@vicons/fluent'
 // import { useRouter } from 'vue-router'  // Will be used later
 
@@ -73,7 +74,7 @@ const editForm = ref({
   codePostal: '',
   typeBien: '',
   montantAcquisition: 0,
-  dateAcquisition: null as string | null,
+  dateAcquisition: '',
   tantieme: 0,
   fraisNotaire: 0,
   fraisAgence: 0,
@@ -675,6 +676,59 @@ onMounted(() => {
 function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMenu: string } }) {
   throw new Error('Function not implemented.')
 }
+
+// --- Amortissement ---
+const amortissements = ref<any[]>([])
+const amortissementLoading = ref(false)
+const selectedCategorie = ref('')
+const amortissementCategoriesList = computed((): string[] => {
+  const cats = amortissements.value.map((a: any) => a.categorie).filter(Boolean)
+  return Array.from(new Set(cats))
+})
+const amortissementSelectOptions = computed(() => [
+  { label: 'Tous', value: '' },
+  ...amortissementCategoriesList.value.map((c: string) => ({ label: c, value: c }))
+])
+const filteredAmortissements = computed(() => {
+  if (!selectedCategorie.value) return amortissements.value
+  return amortissements.value.filter((a: any) => a.categorie === selectedCategorie.value)
+})
+async function fetchAmortissement() {
+  amortissementLoading.value = true
+  try {
+    const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/genererAmortissement/${proprieteId}`)
+    if (!res.ok) throw new Error('Erreur serveur')
+    amortissements.value = await res.json()
+  } catch (e) {
+    amortissements.value = []
+  } finally {
+    amortissementLoading.value = false
+  }
+}
+async function saveAmortissement() {
+  if (!proprieteId || !amortissements.value.length) {
+    message.warning('Aucun plan à sauvegarder')
+    return
+  }
+  amortissementLoading.value = true
+  try {
+    const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/saveAmortissement/${proprieteId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(amortissements.value),
+    })
+    if (!res.ok) throw new Error('Erreur serveur')
+    message.success('Plan d\'amortissement sauvegardé')
+  } catch (e) {
+    message.error('Erreur lors de la sauvegarde')
+  } finally {
+    amortissementLoading.value = false
+  }
+}
+const activeTab = ref('infos')
+watch(activeTab, (tab) => {
+  if (tab === 'amortissement' && amortissements.value.length === 0) fetchAmortissement()
+})
 </script>
 
 <template>
@@ -687,7 +741,7 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
     </div>
 
     <NSpin :show="loading">
-      <NTabs v-if="proprieteDetail" type="line" animated>
+      <NTabs v-if="proprieteDetail" v-model:value="activeTab" type="line" animated>
         <!-- Onglet Informations -->
         <NTabPane name="infos" tab="Informations">
           <div v-if="!editingInfos" class="action-buttons">
@@ -720,7 +774,7 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
             </NButton>
             <NButton class="action-button ml-2" @click="cancelEditing">
               <template #icon>
-                <NIcon :component="Dismiss24Filled" />
+                <NIcon :component="DismissIcon" />
               </template>
               Annuler
             </NButton>
@@ -957,8 +1011,6 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
           </NModal>
         </NTabPane>
 
-
-
         <!-- Onglet Documents -->
         <NTabPane name="documents" tab="Documents">
           <div class="action-buttons">
@@ -1019,6 +1071,33 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
             :data="proprieteDetail?.documents || []"
             :loading="loading"
           />
+        </NTabPane>
+
+        <!-- Onglet Amortissement -->
+        <NTabPane name="amortissement" tab="Amortissement">
+          <div class="action-buttons" style="gap: 12px; display: flex; align-items: center;">
+            <NSelect v-model:value="selectedCategorie" :options="amortissementSelectOptions" placeholder="Filtrer par composant" style="max-width: 300px;" :disabled="amortissementLoading || amortissements.length === 0" clearable />
+            <NButton type="primary" :loading="amortissementLoading" @click="() => { selectedCategorie = ''; fetchAmortissement(); }">
+              Générer le plan d'amortissement
+            </NButton>
+            <NButton type="success" :loading="amortissementLoading" @click="saveAmortissement" :disabled="amortissements.length === 0">
+              Sauvegarder le plan
+            </NButton>
+          </div>
+          <NDataTable
+            :columns="[
+              { title: 'Composant', key: 'categorie', if: !selectedCategorie },
+              { title: 'Année', key: 'annee' },
+              { title: 'Annuité', key: 'montantAmorti', render: (row: any) => formatCurrency(row.montantAmorti) },
+              { title: 'Valeur nette comptable', key: 'valeurResiduelle', render: (row: any) => formatCurrency(row.valeurResiduelle) },
+            ].filter(col => col.if === undefined || col.if)"
+            :data="filteredAmortissements"
+            :loading="amortissementLoading"
+          >
+            <template #empty>
+              <NEmpty description="Aucun plan d'amortissement généré" />
+            </template>
+          </NDataTable>
         </NTabPane>
       </NTabs>
 

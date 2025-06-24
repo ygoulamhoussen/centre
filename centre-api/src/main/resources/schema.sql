@@ -162,7 +162,9 @@ CREATE TABLE amortissement (
     annee INT,
     montant_amorti DECIMAL,
     valeur_residuelle DECIMAL,
-    categorie TEXT
+    categorie TEXT,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
 );
 
 -- CREDIT

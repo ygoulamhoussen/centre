@@ -499,7 +499,17 @@ public ResponseEntity<List<AmortissementDTO>> genererAmortissement(
 
 @PostMapping("/saveAmortissement/{proprieteId}")
 public ResponseEntity<Void> saveAmortissement(@PathVariable String proprieteId, @RequestBody List<AmortissementDTO> plan) {
-    unifiedService.saveAmortissementPlan(proprieteId, plan);
+    try {
+        unifiedService.saveAmortissementPlan(proprieteId, plan);
+        return ResponseEntity.ok().build();
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(500).build();
+    }
+}
+
+@RequestMapping(value = "/**", method = RequestMethod.OPTIONS)
+public ResponseEntity<?> handleOptions() {
     return ResponseEntity.ok().build();
 }
 

@@ -1101,6 +1101,9 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
         a.setMontantAmorti(dto.getMontantAmorti() != null ? new java.math.BigDecimal(dto.getMontantAmorti()) : null);
         a.setValeurResiduelle(dto.getValeurResiduelle() != null ? new java.math.BigDecimal(dto.getValeurResiduelle()) : null);
         a.setCategorie(dto.getCategorie());
+        a.setCreeLe(java.time.LocalDateTime.now());
+        a.setModifieLe(java.time.LocalDateTime.now());
+        System.out.println("Insertion amortissement : " + a);
         amortissementRepository.save(a);
     }
 }

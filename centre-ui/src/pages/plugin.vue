@@ -3,7 +3,7 @@ definePage({
   meta: {
     order: 7,
     icon: 'clarity:plugin-line',
-    roles: ['ADMIN', 'USER'],
+    roles: ['ADMIN'],
   },
 })
 </script>

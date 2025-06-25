@@ -1,7 +1,21 @@
 <script setup lang="ts">
-import { useUnifiedStore } from '@/store/unifiedStore'
 import { useAuthStore } from '@/store/modules/auth'
-import { useRoute, useRouter } from 'vue-router'
+import { useUnifiedStore } from '@/store/unifiedStore'
+import {
+  Add24Filled,
+  ArrowLeft24Filled,
+  ChartMultiple24Filled,
+  CheckmarkCircle24Filled,
+  Delete24Filled,
+  Dismiss24Filled as DismissIcon,
+  Document24Filled,
+  Edit24Filled,
+  ErrorCircle24Filled,
+  Home24Filled,
+  Info24Filled,
+  Money24Filled,
+  Save24Filled,
+} from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -12,36 +26,21 @@ import {
   NFormItem,
   NH1,
   NH3,
+  NIcon,
   NInput,
   NInputNumber,
   NModal,
+  NPopconfirm,
   NSelect,
   NSpace,
   NSpin,
   NTabPane,
   NTabs,
-  NIcon,
-  NPopconfirm,
+  NTooltip,
   useMessage,
-  NTooltip
 } from 'naive-ui'
-import { h, onMounted, ref, computed, watch, nextTick } from 'vue'
-import {
-  Add24Filled,
-  ArrowLeft24Filled,
-  CheckmarkCircle24Filled,
-  Delete24Filled,
-  Dismiss24Filled as DismissIcon,
-  Document24Filled,
-  Edit24Filled,
-  ErrorCircle24Filled,
-  Save24Filled,
-  Info24Filled,
-  ChartMultiple24Filled,
-  Money24Filled
-} from '@vicons/fluent'
-// import { useRouter } from 'vue-router'  // Will be used later
-
+import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 definePage({
   meta: {
@@ -54,9 +53,6 @@ const route = useRoute()
 const router = useRouter()
 const store = useUnifiedStore()
 const message = useMessage()
-
-// Initialisation des stores
-const authStore = useAuthStore()
 
 // États
 const loading = ref(true)
@@ -100,13 +96,13 @@ const documentForm = ref({
   type: 'AUTRE',
   fichier: null as File | null,
   contenu: '',
-  proprieteId: proprieteId,
+  proprieteId,
   locataireId: '', // Laisser vide pour les documents de propriété
   titre: '',
   nomFichier: '',
   mimeType: '',
   taille: 0,
-  dateDocument: new Date().toISOString().split('T')[0]
+  dateDocument: new Date().toISOString().split('T')[0],
 })
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -128,9 +124,12 @@ const categoriesAmortissement = [
   { value: 'frais', label: 'Frais d\'acquisition (5 ans)' },
 ]
 
+// Ajouter la ref pour le champ nom
+const nomInputRef = ref<HTMLInputElement | null>(null)
+
 function calculerMontant() {
   if (proprieteDetail.value?.propriete && compositionForm.value.pourcentage) {
-    const montantTotal = parseFloat(proprieteDetail.value.propriete.montantAcquisition) || 0
+    const montantTotal = Number.parseFloat(proprieteDetail.value.propriete.montantAcquisition) || 0
     compositionForm.value.montant = (montantTotal * compositionForm.value.pourcentage) / 100
   }
 }
@@ -200,37 +199,28 @@ async function supprimerPropriete(id: string) {
 async function fetchProprieteDetails() {
   try {
     loading.value = true
-    console.log('Chargement des détails de la propriété ID:', proprieteId)
     const url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprieteDetails/${proprieteId}`
-    console.log('URL de l\'API:', url)
-    
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     })
-    console.log('Réponse reçue. Statut:', response.status)
-    
     const responseText = await response.text()
-    console.log('Réponse brute:', responseText)
-    
     if (!response.ok) {
       console.error('Erreur de réponse. Contenu:', responseText)
       throw new Error(`Erreur HTTP: ${response.status}`)
     }
-    
     // Essayer de parser le JSON
     try {
       const data = JSON.parse(responseText)
-      console.log('Données JSON parsées:', data)
       proprieteDetail.value = data
     } catch (parseError) {
       console.error('Erreur lors de l\'analyse JSON:', parseError)
       throw new Error(`Réponse du serveur invalide (pas du JSON): ${responseText.substring(0, 200)}...`)
     }
   } catch (error) {
-    console.error('Erreur lors du chargement de la propriété:', error)
-    message.error('Erreur de chargement de la propriété: ' + (error instanceof Error ? error.message : String(error)))
+    console.error('Erreur lors du chargement de la propriété:', error instanceof Error ? error.message : String(error))
+    message.error(`Erreur de chargement de la propriété : ${error instanceof Error ? error.message : String(error)}`)
   } finally {
     loading.value = false
   }
@@ -248,6 +238,12 @@ function startEditing(section?: string) {
       fraisAgence: Number(propriete.fraisAgence) || 0,
     }
     editingInfos.value = true
+    nextTick(() => {
+      // Scroll sur le signet
+      document.getElementById('focus-nom')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      // Focus sur l'input si possible
+      nomInputRef.value?.focus?.()
+    })
   }
 }
 
@@ -306,7 +302,7 @@ function addComposition() {
     pourcentage: 0,
     montant: 0,
     description: '',
-    proprieteId: store.selectedProprieteId,
+    proprieteId: String(store.selectedProprieteId || ''),
   }
   showCompositionModal.value = true
 }
@@ -315,8 +311,8 @@ function editComposition(composition: any) {
   compositionForm.value = { ...composition, pourcentage: 0 }
   // Si on édite une composition existante, on calcule le pourcentage
   if (proprieteDetail.value?.propriete && composition.montant) {
-    const montantTotal = parseFloat(proprieteDetail.value.propriete.montantAcquisition) || 1 // Éviter la division par zéro
-    compositionForm.value.pourcentage = (parseFloat(composition.montant) / montantTotal) * 100
+    const montantTotal = Number.parseFloat(proprieteDetail.value.propriete.montantAcquisition) || 1 // Éviter la division par zéro
+    compositionForm.value.pourcentage = (Number.parseFloat(composition.montant) / montantTotal) * 100
   }
   showCompositionModal.value = true
 }
@@ -575,7 +571,7 @@ function resetDocumentForm() {
     type: 'AUTRE',
     fichier: null,
     contenu: '',
-    proprieteId: proprieteId,
+    proprieteId,
     locataireId: '',
     titre: '',
     nomFichier: '',
@@ -668,7 +664,7 @@ function nouveauDocument() {
     id: '',
     type: 'AUTRE',
     fichier: null,
-    proprieteId: proprieteId
+    proprieteId,
   }
   showDocumentModal.value = true
 }
@@ -781,7 +777,7 @@ onMounted(() => {
       <div ref="tabsWrapperRef" class="tabs-scrollable">
         <NTabs v-if="proprieteDetail" v-model:value="activeTab" type="line" animated>
           <!-- Onglet Informations -->
-          <NTabPane name="infos" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), ' Informations']" title="Informations">
+          <NTabPane name="infos" :tab="() => h('span', [h(NIcon, { component: Info24Filled, size: 20, class: 'mr-1' }), ' Informations'])" title="Informations">
             <div v-if="!editingInfos" class="action-buttons">
               <NButton type="primary" @click="startEditing('infos')" class="action-button" ghost title="Modifier">
                 <template #icon>
@@ -814,91 +810,74 @@ onMounted(() => {
               </NButton>
             </div>
 
-            <div v-if="!editingInfos" class="info-grid">
-              <div class="info-label">
-                Nom :
+            <NCard class="propriete-info-card" :bordered="false">
+              <div class="propriete-info-grid">
+                <div class="propriete-info-item">
+                  <span class="propriete-info-label"><NIcon :component="Home24Filled" class="mr-1" />Nom :</span>
+                  <span class="propriete-info-value">{{ proprieteDetail.propriete.nom }}</span>
+                </div>
+                <div class="propriete-info-item">
+                  <span class="propriete-info-label"><NIcon :component="Document24Filled" class="mr-1" />Type :</span>
+                  <span class="propriete-info-value">{{ proprieteDetail.propriete.typeBien }}</span>
+                </div>
+                <div class="propriete-info-item">
+                  <span class="propriete-info-label"><NIcon :component="Document24Filled" class="mr-1" />Adresse :</span>
+                  <span class="propriete-info-value">{{ proprieteDetail.propriete.adresse }}</span>
+                </div>
+                <div class="propriete-info-item">
+                  <span class="propriete-info-label"><NIcon :component="Document24Filled" class="mr-1" />Ville :</span>
+                  <span class="propriete-info-value">{{ proprieteDetail.propriete.ville }}</span>
+                </div>
+                <div id="focus-nom"></div>
+                <div class="propriete-info-item">
+                  <span class="propriete-info-label"><NIcon :component="Document24Filled" class="mr-1" />Montant acquisition :</span>
+                  <span class="propriete-info-value">{{ formatCurrency(proprieteDetail.propriete.montantAcquisition) }}</span>
+                </div>
+                <div class="propriete-info-item">
+                  <span class="propriete-info-label"><NIcon :component="Document24Filled" class="mr-1" />Date acquisition :</span>
+                  <span class="propriete-info-value">{{ formatDate(proprieteDetail.propriete.dateAcquisition) }}</span>
+                </div>
+                <div class="propriete-info-item">
+                  <span class="propriete-info-label"><NIcon :component="Document24Filled" class="mr-1" />Tantième :</span>
+                  <span class="propriete-info-value">{{ proprieteDetail.propriete.tantieme }}</span>
+                </div>
               </div>
-              <div class="info-value">
-                {{ proprieteDetail.propriete.nom }}
-              </div>
+            </NCard>
 
-              <div class="info-label">
-                Adresse :
-              </div>
-              <div class="info-value">
-                {{ proprieteDetail.propriete.adresse }}
-              </div>
-
-              <div class="info-label">
-                Ville :
-              </div>
-              <div class="info-value">
-                {{ proprieteDetail.propriete.ville }}
-              </div>
-
-              <div class="info-label">
-                Type :
-              </div>
-              <div class="info-value">
-                {{ proprieteDetail.propriete.typeBien }}
-              </div>
-
-              <div class="info-label">
-                Montant acquisition :
-              </div>
-              <div class="info-value">
-                {{ formatCurrency(proprieteDetail.propriete.montantAcquisition) }}
-              </div>
-
-              <div class="info-label">
-                Date acquisition :
-              </div>
-              <div class="info-value">
-                {{ formatDate(proprieteDetail.propriete.dateAcquisition) }}
-              </div>
-
-              <div class="info-label">
-                Tantième :
-              </div>
-              <div class="info-value">
-                {{ proprieteDetail.propriete.tantieme }}
-              </div>
-            </div>
-
-            <NForm v-else class="edit-form">
+            <NForm v-if="editingInfos" class="edit-form">
               <div class="info-grid">
                 <div class="info-label">
                   Nom :
                 </div>
-                <div class="info-value">
-                  <NInput v-model:value="editForm.nom" />
+                <div class="info-value-edit">
+                  <NInput v-model:value="editForm.nom" size="large" style="width: 100%" ref="nomInputRef" />
                 </div>
 
                 <div class="info-label">
                   Adresse :
                 </div>
-                <div class="info-value">
-                  <NInput v-model:value="editForm.adresse" />
+                <div class="info-value-edit">
+                  <NInput v-model:value="editForm.adresse" size="large" style="width: 100%" />
                 </div>
 
                 <div class="info-label">
                   Code postal :
                 </div>
-                <div class="info-value">
-                  <NInput v-model:value="editForm.codePostal" />
+                <div class="info-value-edit">
+                  <NInput v-model:value="editForm.codePostal" size="large" style="width: 100%" />
                 </div>
 
                 <div class="info-label">
                   Ville :
                 </div>
-                <div class="info-value">
-                  <NInput v-model:value="editForm.ville" />
+                <div class="info-value-edit">
+                  <NInput v-model:value="editForm.ville" size="large" style="width: 100%" />
                 </div>
 
                 <div class="info-label">
                   Type :
                 </div>
-                <div class="info-value">
+                <div class="info-value-edit">
                   <NSelect
                     v-model:value="editForm.typeBien"
                     :options="[
@@ -906,6 +885,7 @@ onMounted(() => {
                       { label: 'Maison', value: 'MAISON' },
                       { label: 'Local commercial', value: 'LOCAL_COMMERCIAL' },
                     ]"
+                    size="large"
                     style="width: 100%"
                   />
                 </div>
@@ -913,29 +893,29 @@ onMounted(() => {
                 <div class="info-label">
                   Montant acquisition :
                 </div>
-                <div class="info-value">
-                  <NInputNumber v-model:value="editForm.montantAcquisition" style="width: 100%" />
+                <div class="info-value-edit">
+                  <NInputNumber v-model:value="editForm.montantAcquisition" size="large" style="width: 100%" />
                 </div>
 
                 <div class="info-label">
                   Date acquisition :
                 </div>
-                <div class="info-value">
-                  <NDatePicker v-model:value="editForm.dateAcquisition" style="width: 100%" />
+                <div class="info-value-edit">
+                  <NDatePicker v-model:value="editForm.dateAcquisition" size="large" style="width: 100%" />
                 </div>
 
                 <div class="info-label">
                   Tantième :
                 </div>
-                <div class="info-value">
-                  <NInputNumber v-model:value="editForm.tantieme" style="width: 100%" />
+                <div class="info-value-edit">
+                  <NInputNumber v-model:value="editForm.tantieme" size="large" style="width: 100%" />
                 </div>
               </div>
             </NForm>
           </NTabPane>
 
           <!-- Onglet Compositions -->
-          <NTabPane name="compositions" :tab="[h(NIcon, { component: ChartMultiple24Filled, size: 20 }), ' Compositions']" title="Compositions">
+          <NTabPane name="compositions" :tab="() => h('span', [h(NIcon, { component: ChartMultiple24Filled, size: 20, class: 'mr-1' }), ' Compositions'])" title="Compositions">
             <div class="action-buttons">
               <NButton type="primary" @click="addComposition" class="action-button" title="Ajouter une composition">
                 <template #icon>
@@ -1029,7 +1009,7 @@ onMounted(() => {
           </NTabPane>
 
           <!-- Onglet Documents -->
-          <NTabPane name="documents" :tab="[h(NIcon, { component: Document24Filled, size: 20 }), ' Documents']" title="Documents">
+          <NTabPane name="documents" :tab="() => h('span', [h(NIcon, { component: Document24Filled, size: 20, class: 'mr-1' }), ' Documents'])" title="Documents">
             <div class="action-buttons">
               <NButton type="primary" @click="nouveauDocument" class="action-button" title="Ajouter un document">
                 <template #icon>
@@ -1074,7 +1054,7 @@ onMounted(() => {
           </NTabPane>
 
           <!-- Onglet Amortissement -->
-          <NTabPane name="amortissement" :tab="[h(NIcon, { component: Money24Filled, size: 20 }), ' Amortissement']" title="Amortissement">
+          <NTabPane name="amortissement" :tab="() => h('span', [h(NIcon, { component: Money24Filled, size: 20, class: 'mr-1' }), ' Amortissement'])" title="Amortissement">
             <div class="action-buttons" style="gap: 12px; display: flex; align-items: center;">
               <NSelect v-model:value="selectedCategorie as string | null | undefined" :options="amortissementSelectOptions" placeholder="Filtrer par composant" style="max-width: 300px;" :disabled="amortissementLoading || amortissements.length === 0" clearable />
               <NButton type="primary" :loading="amortissementLoading" @click="() => { fetchAmortissement(); }" title="Générer le plan d'amortissement">
@@ -1223,10 +1203,11 @@ onMounted(() => {
 .back-button:hover {
   color: var(--n-text-color-hover);
 }
+
 .action-buttons {
-  margin-bottom: 20px;
   display: flex;
-  gap: 12px;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 .table-actions {
   display: flex;
@@ -1250,23 +1231,25 @@ onMounted(() => {
   background-color: var(--n-color-error-hover);
   color: white;
 }
-.info-grid {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 10px;
-  margin-top: 20px;
-  width: 100%;
-}
+
 .info-label {
   font-weight: bold;
   padding: 12px;
   background-color: var(--n-color-embedded);
   border-radius: 4px;
 }
-.info-value {
-  padding: 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: 4px;
+.info-value-edit {
+  padding: 0;
+  border: none;
+  background: none;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+}
+.info-value-edit > * {
+  flex: 1 1 0%;
+  min-width: 0;
 }
 .edit-form {
   width: 100%;
@@ -1377,5 +1360,38 @@ onMounted(() => {
   margin-bottom: 16px;
   width: auto;
   max-width: 100%;
+}
+.propriete-info-card {
+  margin-bottom: 24px;
+  background: var(--n-color-embedded);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.propriete-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 32px;
+}
+.propriete-info-item {
+  display: flex;
+  flex-direction: column;
+}
+.propriete-info-label {
+  color: var(--n-text-color-disabled);
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.propriete-info-value {
+  color: var(--n-text-color);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+@media (max-width: 768px) {
+  .propriete-info-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
 }
 </style>

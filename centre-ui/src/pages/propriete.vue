@@ -13,7 +13,8 @@ import {
   NPopconfirm,
   NSpace,
   useMessage,
-  NH1
+  NH1,
+  NSpin
 } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -31,9 +32,11 @@ const message = useMessage()
 const authStore = useAuthStore()
 const proprietes = ref<any[]>([])
 const store = useUnifiedStore()
+const loading = ref(false)
 
 async function fetchProprietes() {
   try {
+    loading.value = true
     const userId = authStore.userInfo.userId
     const response = await fetch(
       `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/${userId}`
@@ -42,6 +45,8 @@ async function fetchProprietes() {
   } catch (error) {
     console.error('Erreur lors du chargement des propriétés :', error)
     message.error('Impossible de charger les propriétés')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -87,38 +92,40 @@ onMounted(fetchProprietes)
 </script>
 
 <template>
-  <NSpace vertical :size="24">
-    <div class="flex items-center justify-between">
-      <NH1 class="titre-principal">Mes propriétés</NH1>
-      <NButton type="primary" @click="demarrerCreation" title="Ajouter une propriété">
-        <template #icon>
-          <NIcon :component="Add24Filled" />
-        </template>
-      </NButton>
-    </div>
+  <NSpin :show="loading">
+    <NSpace vertical :size="24">
+      <div class="flex items-center justify-between">
+        <NH1 class="titre-principal">Mes propriétés</NH1>
+        <NButton type="primary" @click="demarrerCreation" title="Ajouter une propriété">
+          <template #icon>
+            <NIcon :component="Add24Filled" />
+          </template>
+        </NButton>
+      </div>
 
-    <NGrid cols="1 s:1 m:2 l:3" x-gap="16" y-gap="16" v-if="proprietes.length">
-      <NGi v-for="propriete in proprietes" :key="propriete.id">
-        <NCard
-          class="hoverable-card"
-          :title="propriete.nom"
-          size="small"
-          content-style="cursor: pointer;"
-          @click="allerAuDetail(propriete.id)"
-        >
-          <div class="mb-2 flex items-center gap-3">
-            <NIcon :component="getIconComponent(propriete.typeBien)" size="40" :depth="1" />
-            <div>
-              <p>{{ propriete.adresse }}, {{ propriete.ville }}</p>
-              <p><strong>Type :</strong> {{ propriete.typeBien }}</p>
+      <NGrid cols="1 s:1 m:2 l:3" x-gap="16" y-gap="16" v-if="proprietes.length">
+        <NGi v-for="propriete in proprietes" :key="propriete.id">
+          <NCard
+            class="hoverable-card"
+            :title="propriete.nom"
+            size="small"
+            content-style="cursor: pointer;"
+            @click="allerAuDetail(propriete.id)"
+          >
+            <div class="mb-2 flex items-center gap-3">
+              <NIcon :component="getIconComponent(propriete.typeBien)" size="40" :depth="1" />
+              <div>
+                <p>{{ propriete.adresse }}, {{ propriete.ville }}</p>
+                <p><strong>Type :</strong> {{ propriete.typeBien }}</p>
+              </div>
             </div>
-          </div>
-        </NCard>
-      </NGi>
-    </NGrid>
+          </NCard>
+        </NGi>
+      </NGrid>
 
-    <NEmpty description="Aucune propriété enregistrée." v-else />
-  </NSpace>
+      <NEmpty description="Aucune propriété enregistrée." v-else />
+    </NSpace>
+  </NSpin>
 </template>
 
 <style scoped>

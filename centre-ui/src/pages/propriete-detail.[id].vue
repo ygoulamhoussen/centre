@@ -1209,6 +1209,12 @@ onMounted(() => {
   gap: 0.5rem;
   margin-bottom: 1.5rem;
 }
+.action-buttons .n-button {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
 .table-actions {
   display: flex;
   gap: 8px;
@@ -1290,43 +1296,6 @@ onMounted(() => {
   color: var(--n-text-color);
   margin-right: 4px;
 }
-@media (max-width: 768px) {
-  .titre-principal, h1, h2, h3 {
-    font-size: 1.25rem !important;
-  }
-  .sous-titre {
-    font-size: 1rem;
-  }
-  .p-4 {
-    padding: 1rem !important;
-  }
-  .page-header {
-    margin-bottom: 1rem;
-  }
-  .n-form {
-    grid-template-columns: 1fr;
-  }
-  .info-grid {
-    grid-template-columns: 1fr;
-  }
-  .info-label {
-    padding-bottom: 4px;
-  }
-  .composition-cards, .document-cards, .amortissement-cards {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .action-buttons {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-  }
-  .action-buttons .n-button {
-    width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box;
-  }
-}
 .n-tabs-tab {
   min-width: unset;
   max-width: unset;
@@ -1387,11 +1356,5 @@ onMounted(() => {
   color: var(--n-text-color);
   font-size: 1.15rem;
   font-weight: 500;
-}
-@media (max-width: 768px) {
-  .propriete-info-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
 }
 </style>

@@ -431,9 +431,9 @@ const quittanceColumns = [
   { title: 'Total', key: 'total', render: (row: any) => `${getTotalQuittance(row)} €` },
   { title: 'Statut', key: 'statut', render: (row: any) => h(NTag, { type: row.statut === 'PAYEE' ? 'success' : (row.statut === 'PARTIELLE' ? 'warning' : 'error'), size: 'small' }, { default: () => row.statut === 'PAYEE' ? 'Payée' : (row.statut === 'PARTIELLE' ? 'Partielle' : 'Impayée') }) },
   { title: 'Actions', key: 'actions', render: (row: any) => h('div', { class: 'flex gap-2' }, [
-    h(NButton, { size: 'small', ghost: true, onClick: () => router.push(`/quittance-detail/${row.id}`) }, { default: () => 'Modifier' }),
+    h(NButton, { size: 'small', ghost: true, onClick: () => router.push(`/quittance-detail/${row.id}`) }, { default: () => h(NIcon, { component: Edit24Filled }) }),
     row.statut === 'PAYEE'
-      ? h(NButton, { size: 'small', type: 'primary', ghost: true, onClick: () => telechargerQuittance(row.id) }, { default: () => 'Editer la quittance' })
+      ? h(NButton, { size: 'small', type: 'primary', ghost: true, onClick: () => telechargerQuittance(row.id) }, { default: () => h(NIcon, { component: DocumentPdf24Filled }) })
       : null
   ]) },
 ]
@@ -462,9 +462,8 @@ onMounted(() => {
 
 <template>
   <div class="p-4">
-    <NButton text @click="router.back()" class="mb-4">
+    <NButton text @click="router.back()" class="mb-4" title="Retour">
       <template #icon><NIcon :component="ArrowLeft24Filled" /></template>
-      Retour
     </NButton>
 
     <NSpin :show="loading">
@@ -513,9 +512,8 @@ onMounted(() => {
                     negative-text="Annuler"
                   >
                     <template #trigger>
-                      <NButton type="error" ghost>
+                      <NButton type="error" ghost title="Supprimer la location">
                         <template #icon><NIcon :component="Delete24Filled" /></template>
-                        Supprimer la location
                       </NButton>
                     </template>
                     Êtes-vous sûr de vouloir supprimer cette location ? Cette action est irréversible.
@@ -523,17 +521,14 @@ onMounted(() => {
                 </div>
 
                 <div class="flex items-center">
-                  <NButton v-if="editing" @click="cancelEditing" class="mr-2">
+                  <NButton v-if="editing" @click="cancelEditing" class="mr-2" title="Annuler">
                     <template #icon><NIcon :component="Dismiss24Filled" /></template>
-                    Annuler
                   </NButton>
-                  <NButton v-if="editing" type="primary" :loading="saving" @click="saveLocation">
+                  <NButton v-if="editing" type="primary" :loading="saving" @click="saveLocation" title="Enregistrer">
                     <template #icon><NIcon :component="Save24Filled" /></template>
-                    Enregistrer
                   </NButton>
-                  <NButton v-if="!editing" type="primary" @click="startEditing">
+                  <NButton v-if="!editing" type="primary" @click="startEditing" title="Modifier">
                     <template #icon><NIcon :component="Edit24Filled" /></template>
-                    Modifier
                   </NButton>
                 </div>
               </div>
@@ -544,9 +539,8 @@ onMounted(() => {
             <NCard class="mt-4">
               <div class="flex justify-between items-center mb-4">
                 <NH3 class="sous-titre">Documents associés</NH3>
-                <NButton type="primary" size="small" @click="openDocumentModal">
+                <NButton type="primary" size="small" @click="openDocumentModal" title="Ajouter un document">
                   <template #icon><NIcon :component="Add24Filled" /></template>
-                  Ajouter un document
                 </NButton>
               </div>
               <div class="document-cards">
@@ -598,8 +592,12 @@ onMounted(() => {
                   <div class="flex justify-between items-center mb-2">
                     <div class="font-bold">Période : {{ q.dateDebut }} - {{ q.dateFin }}</div>
                     <div class="flex gap-2">
-                      <NButton size="small" ghost @click="() => router.push(`/quittance-detail/${q.id}`)">Modifier</NButton>
-                      <NButton v-if="q.statut === 'PAYEE'" size="small" type="primary" ghost @click="() => telechargerQuittance(q.id)">Editer la quittance</NButton>
+                      <NButton size="small" ghost @click="() => router.push(`/quittance-detail/${q.id}`)" title="Modifier">
+                        <template #icon><NIcon :component="Edit24Filled" /></template>
+                      </NButton>
+                      <NButton v-if="q.statut === 'PAYEE'" size="small" type="primary" ghost @click="() => telechargerQuittance(q.id)" title="Editer la quittance">
+                        <template #icon><NIcon :component="DocumentPdf24Filled" /></template>
+                      </NButton>
                     </div>
                   </div>
                   <div class="mb-1"><span class="label">Loyer :</span> {{ q.montantLoyer }} €</div>
@@ -658,14 +656,17 @@ onMounted(() => {
               </NUpload>
             </NFormItem>
             <div class="flex justify-end gap-2">
-              <NButton @click="showDocumentModal = false">Annuler</NButton>
+              <NButton @click="showDocumentModal = false" title="Annuler">
+                <template #icon><NIcon :component="Dismiss24Filled" /></template>
+              </NButton>
               <NButton
                 type="primary"
                 :loading="saving"
                 :disabled="!documentForm.fichier"
                 @click="uploadDocument"
+                title="Enregistrer le document"
               >
-                Enregistrer le document
+                <template #icon><NIcon :component="Save24Filled" /></template>
               </NButton>
             </div>
           </NForm>

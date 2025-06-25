@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage, NH2, NEmpty, NIcon } from 'naive-ui'
-import { onMounted, ref, h, nextTick, watch } from 'vue'
+import { h, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Info24Filled, ArrowLeft24Filled, Delete24Filled, Save24Filled, Add24Filled } from '@vicons/fluent'
+import { Add24Filled, ArrowLeft24Filled, Delete24Filled, Dismiss24Filled, Edit24Filled, Info24Filled, Save24Filled } from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -16,7 +16,7 @@ definePage({
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
-const quittanceId = route.params.id as string
+const quittanceId = typeof route.params.id === 'string' ? route.params.id : Array.isArray(route.params.id) ? route.params.id[0] : ''
 const loading = ref(false)
 const saving = ref(false)
 const quittance = ref<any>(null)
@@ -53,7 +53,6 @@ const statutOptions = [
   { label: 'Impayée', value: 'IMPAYEE' },
 ]
 
-const showAddPaiement = ref(false)
 const tabsWrapperRef = ref<HTMLElement | null>(null)
 const activeTab = ref('detail')
 
@@ -234,13 +233,6 @@ const paiementColumns = [
       ]),
   },
 ]
-
-function getPaiementTableData() {
-  // Affiche la ligne d'ajout seulement si showAddPaiement est true
-  return showAddPaiement.value
-    ? [{ ...newPaiement.value }, ...(Array.isArray(paiements.value) ? paiements.value.map((p: any) => ({ ...p })) : [])]
-    : (Array.isArray(paiements.value) ? paiements.value.map((p: any) => ({ ...p })) : [])
-}
 </script>
 
 <template>
@@ -250,7 +242,7 @@ function getPaiementTableData() {
         <NH1 class="titre-principal mb-4">Modifier la quittance</NH1>
         <div ref="tabsWrapperRef" class="tabs-scrollable">
           <NTabs v-model:value="activeTab" type="line" class="mt-8">
-            <NTabPane name="detail" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), ' Détail']">
+            <NTabPane name="detail" :tab="h('span', [h(NIcon, { component: Info24Filled, size: 20 }), ' Détail'])">
               <NH2 class="sous-titre mb-4">Détail de la quittance</NH2>
               <NForm label-placement="top">
                 <NFormItem label="Montant loyer (€)">
@@ -285,14 +277,18 @@ function getPaiementTableData() {
                     </template>
                     Confirmer la suppression ?
                   </NPopconfirm>
-                  <NButton type="primary" :loading="saving" @click="enregistrer">Enregistrer</NButton>
+                  <NButton type="primary" :loading="saving" @click="enregistrer" title="Enregistrer">
+                    <template #icon><NIcon :component="Save24Filled" /></template>
+                  </NButton>
                 </div>
               </div>
             </NTabPane>
-            <NTabPane name="paiements" :tab="[h(NIcon, { component: Add24Filled, size: 20 }), ' Paiements']">
+            <NTabPane name="paiements" :tab="h('span', [h(NIcon, { component: Add24Filled, size: 20 }), ' Paiements'])">
               <div class="flex justify-between items-center mb-2">
                 <NH2 class="sous-titre">Paiements associés</NH2>
-                <NButton size="small" type="primary" ghost @click="openAddPaiementModal">Ajouter un paiement</NButton>
+                <NButton size="small" type="primary" ghost @click="openAddPaiementModal" title="Ajouter un paiement">
+                  <template #icon><NIcon :component="Add24Filled" /></template>
+                </NButton>
               </div>
               <div class="paiement-cards">
                 <NCard
@@ -305,8 +301,12 @@ function getPaiementTableData() {
                   <div class="flex justify-between items-center mb-2">
                     <div class="font-bold">Date : {{ p.datePaiement }}</div>
                     <div class="flex gap-2">
-                      <NButton size="small" ghost @click="() => openEditPaiementModal(p)">Modifier</NButton>
-                      <NButton size="small" type="error" ghost @click="() => deletePaiement(p)">Supprimer</NButton>
+                      <NButton size="small" ghost @click="() => openEditPaiementModal(p)" title="Modifier">
+                        <template #icon><NIcon :component="Edit24Filled" /></template>
+                      </NButton>
+                      <NButton size="small" type="error" ghost @click="() => deletePaiement(p)" title="Supprimer">
+                        <template #icon><NIcon :component="Delete24Filled" /></template>
+                      </NButton>
                     </div>
                   </div>
                   <div class="mb-1"><span class="label">Montant :</span> {{ p.montant }} €</div>
@@ -334,8 +334,12 @@ function getPaiementTableData() {
                     <NInput v-model:value="paiementForm.commentaire" style="width: 100%" />
                   </NFormItem>
                   <div class="flex justify-end gap-2 mt-4">
-                    <NButton ghost @click="closePaiementModal">Annuler</NButton>
-                    <NButton type="primary" @click="savePaiementModal">Enregistrer</NButton>
+                    <NButton ghost @click="closePaiementModal" title="Annuler">
+                      <template #icon><NIcon :component="Dismiss24Filled" /></template>
+                    </NButton>
+                    <NButton type="primary" @click="savePaiementModal" title="Enregistrer">
+                      <template #icon><NIcon :component="Save24Filled" /></template>
+                    </NButton>
                   </div>
                 </NForm>
               </NModal>

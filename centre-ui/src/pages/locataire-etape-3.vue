@@ -109,17 +109,15 @@ function precedent() {
       </NDescriptions>
 
       <NSpace justify="center" class="mt-8">
-        <NButton @click="precedent">
+        <NButton @click="precedent" title="Précédent">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
           </template>
-          Précédent
         </NButton>
-        <NButton type="primary" @click="enregistrer" :loading="chargement">
+        <NButton type="primary" @click="enregistrer" :loading="chargement" title="Enregistrer">
           <template #icon>
             <NIcon :component="Checkmark24Filled" />
           </template>
-          Enregistrer
         </NButton>
       </NSpace>
     </NCard>

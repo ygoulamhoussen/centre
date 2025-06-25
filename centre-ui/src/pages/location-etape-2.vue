@@ -153,14 +153,12 @@ function precedent() {
       </NForm>
 
       <NSpace class="flex justify-between mt-8">
-        <NButton @click="precedent" size="large">
+        <NButton @click="precedent" size="large" title="Précédent">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
           </template>
-          Précédent
         </NButton>
-        <NButton type="primary" @click="suivant" size="large">
-          Suivant
+        <NButton type="primary" @click="suivant" size="large" title="Suivant">
           <template #icon>
             <NIcon :component="ArrowRight24Filled" />
           </template>

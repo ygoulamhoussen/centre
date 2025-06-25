@@ -127,17 +127,21 @@ onMounted(() => fetchQuittances())
             </div>
             <template #footer>
               <div class="flex justify-end gap-2">
-                <NTooltip v-if="q.statut !== 'PAYEE'">
-                  <template #trigger>
-                    <NButton size="small" type="primary" ghost :disabled="q.statut !== 'PAYEE'" @click.stop>
-                      Editer la quittance
-                    </NButton>
-                  </template>
-                  La quittance n'est téléchargeable que si elle est payée.
-                </NTooltip>
-                <NButton v-else size="small" type="primary" ghost @click.stop="telechargerQuittance(q.id)">
-                  Editer la quittance
-                </NButton>
+                <template v-if="q.statut !== 'PAYEE'">
+                  <NTooltip>
+                    <template #trigger>
+                      <NButton size="small" type="primary" ghost :disabled="q.statut !== 'PAYEE'" @click.stop>
+                        Editer la quittance
+                      </NButton>
+                    </template>
+                    La quittance n'est téléchargeable que si elle est payée.
+                  </NTooltip>
+                </template>
+                <template v-else>
+                  <NButton size="small" type="primary" ghost @click.stop="telechargerQuittance(q.id)">
+                    Editer la quittance
+                  </NButton>
+                </template>
               </div>
             </template>
           </NCard>
@@ -162,7 +166,9 @@ h3 {
 }
 .quittance-card {
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: 
+    transform 0.2s,
+    box-shadow 0.2s;
   height: 100%;
   display: flex;
   flex-direction: column;

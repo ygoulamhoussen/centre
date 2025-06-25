@@ -74,7 +74,7 @@ async function enregistrer() {
     router.push('/location')
   } catch (error: any) {
     console.error(error)
-    message.error(error.message || 'Erreur lors de l’enregistrement')
+    message.error(error.message || "Erreur lors de l'enregistrement")
   } finally {
     chargement.value = false
   }
@@ -129,17 +129,15 @@ function precedent() {
       </NDescriptions>
 
       <div class="flex justify-between mt-8">
-        <NButton @click="precedent" size="large">
+        <NButton @click="precedent" size="large" title="Précédent">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
           </template>
-          Précédent
         </NButton>
-        <NButton type="primary" :loading="chargement" @click="enregistrer" size="large">
+        <NButton type="primary" :loading="chargement" @click="enregistrer" size="large" title="Enregistrer la location">
           <template #icon>
             <NIcon :component="Checkmark24Filled" />
           </template>
-          Enregistrer la location
         </NButton>
       </div>
     </NCard>

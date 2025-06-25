@@ -120,8 +120,8 @@ function valider() {
           type="primary"
           @click="valider"
           :disabled="!proprieteDTO.typeBien || !proprieteDTO.nom"
+          title="Suivant"
         >
-          Suivant
           <template #icon>
             <NIcon :component="ArrowRight24Filled" />
           </template>

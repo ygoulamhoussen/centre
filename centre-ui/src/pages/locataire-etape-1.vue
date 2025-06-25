@@ -79,8 +79,7 @@ function suivant() {
       </NForm>
 
       <div class="flex justify-end mt-8">
-        <NButton type="primary" @click="suivant">
-          Suivant
+        <NButton type="primary" @click="suivant" title="Suivant">
           <template #icon>
             <NIcon :component="ArrowRight24Filled" />
           </template>

@@ -37,7 +37,8 @@ import {
   Image24Filled,
   Document24Regular,
   ArrowDownload24Filled,
-  ArrowLeft24Filled
+  ArrowLeft24Filled,
+  Info24Filled,
 } from '@vicons/fluent'
 
 // Fonction pour obtenir l'icône appropriée en fonction du type de fichier
@@ -591,38 +592,34 @@ function formatDate(dateString: string) {
           <!-- Onglet Informations -->
           <NTabPane name="informations" tab="Informations">
             <div v-if="!editing" class="action-buttons mb-4">
-              <NButton type="primary" @click="startEditing" class="action-button" ghost>
+              <NButton type="primary" @click="startEditing" class="action-button" ghost title="Modifier">
                 <template #icon>
                   <NIcon :component="Edit24Filled" />
                 </template>
-                Modifier
               </NButton>
               <NPopconfirm
                 @positive-click="confirmDelete"
               >
                 <template #trigger>
-                  <NButton type="error" ghost class="action-button">
+                  <NButton type="error" ghost class="action-button" title="Supprimer">
                     <template #icon>
                       <NIcon :component="Delete24Filled" />
                     </template>
-                    Supprimer
                   </NButton>
                 </template>
                 Êtes-vous sûr de vouloir supprimer ce locataire ?
               </NPopconfirm>
             </div>
             <div v-else class="action-buttons mb-4">
-              <NButton type="primary" :loading="saving" @click="saveLocataire" class="action-button">
+              <NButton type="primary" :loading="saving" @click="saveLocataire" class="action-button" title="Enregistrer">
                 <template #icon>
                   <NIcon :component="Save24Filled" />
                 </template>
-                Enregistrer
               </NButton>
-              <NButton class="action-button ml-2" @click="cancelEditing">
+              <NButton class="action-button ml-2" @click="cancelEditing" title="Annuler">
                 <template #icon>
                   <NIcon :component="Dismiss24Filled" />
                 </template>
-                Annuler
               </NButton>
             </div>
             <NCard :bordered="false">
@@ -704,11 +701,10 @@ function formatDate(dateString: string) {
             <NCard :bordered="false">
               <div class="mb-4 flex justify-between items-center">
                 <NH3 class="sous-titre">Documents</NH3>
-                <NButton type="primary" @click="showDocumentModal = true">
+                <NButton type="primary" @click="showDocumentModal = true" title="Ajouter un document">
                   <template #icon>
                     <NIcon :component="Add24Filled" />
                   </template>
-                  Ajouter un document
                 </NButton>
               </div>
 
@@ -901,5 +897,15 @@ function formatDate(dateString: string) {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+}
+.tab-label-hover {
+  display: none;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-size: 15px;
+  font-weight: 500;
+}
+.n-tabs-tab:hover .tab-label-hover {
+  display: inline;
 }
 </style>

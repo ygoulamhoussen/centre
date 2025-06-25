@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage, NH2, NEmpty } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage, NH2, NEmpty, NIcon } from 'naive-ui'
+import { onMounted, ref, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Info24Filled, ArrowLeft24Filled, Delete24Filled, Save24Filled, Add24Filled } from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -227,7 +228,7 @@ function getPaiementTableData() {
       <NCard v-if="quittance" :bordered="false">
         <NH1 class="titre-principal mb-4">Modifier la quittance</NH1>
         <NTabs type="line" class="mt-8">
-          <NTabPane name="detail" tab="Détail">
+          <NTabPane name="detail" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Détail')]">
             <NH2 class="sous-titre mb-4">Détail de la quittance</NH2>
             <NForm label-placement="top">
               <NFormItem label="Montant loyer (€)">
@@ -250,11 +251,15 @@ function getPaiementTableData() {
               </NFormItem>
             </NForm>
             <div class="flex justify-between mt-8">
-              <NButton @click="router.push('/quittance')" ghost>Précédent</NButton>
+              <NButton ghost @click="router.push('/quittance')" title="Précédent">
+                <template #icon><NIcon :component="ArrowLeft24Filled" /></template>
+              </NButton>
               <div class="flex gap-2">
                 <NPopconfirm @positive-click="supprimer" positive-text="Supprimer" negative-text="Annuler">
                   <template #trigger>
-                    <NButton type="error" ghost>Supprimer</NButton>
+                    <NButton type="error" ghost title="Supprimer">
+                      <template #icon><NIcon :component="Delete24Filled" /></template>
+                    </NButton>
                   </template>
                   Confirmer la suppression ?
                 </NPopconfirm>
@@ -379,5 +384,15 @@ function getPaiementTableData() {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+}
+.tab-label-hover {
+  display: none;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-size: 15px;
+  font-weight: 500;
+}
+.n-tabs-tab:hover .tab-label-hover {
+  display: inline;
 }
 </style> 

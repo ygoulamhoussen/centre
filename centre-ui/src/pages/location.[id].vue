@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { Add24Filled, ArrowLeft24Filled, Delete24Filled, Edit24Filled, Eye24Filled, DocumentPdf24Filled, Document24Filled, Image24Filled, ArrowDownload24Filled, Dismiss24Filled, Save24Filled } from '@vicons/fluent'
+import { Add24Filled, ArrowLeft24Filled, Delete24Filled, Edit24Filled, Eye24Filled, DocumentPdf24Filled, Document24Filled, Image24Filled, ArrowDownload24Filled, Dismiss24Filled, Save24Filled, Info24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -738,5 +738,15 @@ h3 {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+}
+.tab-label-hover {
+  display: none;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-size: 15px;
+  font-weight: 500;
+}
+.n-tabs-tab:hover .tab-label-hover {
+  display: inline;
 }
 </style>

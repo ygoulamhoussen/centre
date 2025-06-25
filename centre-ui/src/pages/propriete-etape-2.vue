@@ -105,14 +105,12 @@ function valider() {
       </NForm>
 
       <NSpace class="mt-8" justify="space-between">
-        <NButton @click="precedent">
+        <NButton @click="precedent" title="Précédent">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
           </template>
-          Précédent
         </NButton>
-        <NButton type="primary" @click="valider">
-          Suivant
+        <NButton type="primary" @click="valider" title="Suivant">
           <template #icon>
             <NIcon :component="ArrowRight24Filled" />
           </template>

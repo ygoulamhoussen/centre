@@ -2,7 +2,7 @@
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
 import { storeToRefs } from 'pinia'
-import { Box24Regular, Building24Regular, Home24Regular, VehicleCar24Regular } from '@vicons/fluent'
+import { Box24Regular, Building24Regular, Home24Regular, VehicleCar24Regular, Add24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -90,8 +90,10 @@ onMounted(fetchProprietes)
   <NSpace vertical :size="24">
     <div class="flex items-center justify-between">
       <NH1 class="titre-principal">Mes propriétés</NH1>
-      <NButton type="primary" @click="demarrerCreation">
-        Ajouter une propriété
+      <NButton type="primary" @click="demarrerCreation" title="Ajouter une propriété">
+        <template #icon>
+          <NIcon :component="Add24Filled" />
+        </template>
       </NButton>
     </div>
 

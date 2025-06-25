@@ -220,17 +220,15 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
       </div>
 
       <NSpace class="mt-8" justify="space-between">
-        <NButton @click="precedent">
+        <NButton @click="precedent" title="Précédent">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
           </template>
-          Précédent
         </NButton>
-        <NButton type="primary" @click="enregistrer" :loading="chargement">
+        <NButton type="primary" @click="enregistrer" :loading="chargement" title="Enregistrer la propriété">
           <template #icon>
             <NIcon :component="Save24Filled" />
           </template>
-          Enregistrer la propriété
         </NButton>
       </NSpace>
     </NCard>

@@ -22,7 +22,8 @@ import {
   NTabs,
   NIcon,
   NPopconfirm,
-  useMessage
+  useMessage,
+  NTooltip
 } from 'naive-ui'
 import { h, onMounted, ref, computed, watch } from 'vue'
 import {
@@ -34,7 +35,10 @@ import {
   Document24Filled,
   Edit24Filled,
   ErrorCircle24Filled,
-  Save24Filled
+  Save24Filled,
+  Info24Filled,
+  ChartMultiple24Filled,
+  Money24Filled
 } from '@vicons/fluent'
 // import { useRouter } from 'vue-router'  // Will be used later
 
@@ -742,7 +746,7 @@ watch(activeTab, (tab) => {
 <template>
   <div class="propriete-detail">
     <div class="page-header">
-      <NButton text @click="$router.push('/propriete')" class="back-button">
+      <NButton text @click="$router.push('/propriete')" class="back-button" title="Retour">
         <NIcon :component="ArrowLeft24Filled" size="20" />
       </NButton>
       <NH1 class="titre-principal">Détails de la propriété</NH1>
@@ -751,40 +755,36 @@ watch(activeTab, (tab) => {
     <NSpin :show="loading">
       <NTabs v-if="proprieteDetail" v-model:value="activeTab" type="line" animated>
         <!-- Onglet Informations -->
-        <NTabPane name="infos" tab="Informations">
+        <NTabPane name="infos" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Informations')]" title="Informations">
           <div v-if="!editingInfos" class="action-buttons">
-            <NButton type="primary" @click="startEditing('infos')" class="action-button" ghost>
+            <NButton type="primary" @click="startEditing('infos')" class="action-button" ghost title="Modifier">
               <template #icon>
                 <NIcon :component="Edit24Filled" />
               </template>
-              Modifier
             </NButton>
             <NPopconfirm
               @positive-click="() => proprieteDetail.propriete && proprieteDetail.propriete.id && supprimerPropriete(proprieteDetail.propriete.id)"
             >
               <template #trigger>
-                <NButton type="error" ghost class="action-button">
+                <NButton type="error" ghost class="action-button" title="Supprimer">
                   <template #icon>
                     <NIcon :component="Delete24Filled" />
                   </template>
-                  Supprimer
                 </NButton>
               </template>
               Êtes-vous sûr de vouloir supprimer cette propriété ?
             </NPopconfirm>
           </div>
           <div v-else class="action-buttons">
-            <NButton type="primary" :loading="saving" @click="savePropriete" class="action-button">
+            <NButton type="primary" :loading="saving" @click="savePropriete" class="action-button" title="Enregistrer">
               <template #icon>
                 <NIcon :component="Save24Filled" />
               </template>
-              Enregistrer
             </NButton>
-            <NButton class="action-button ml-2" @click="cancelEditing">
+            <NButton class="action-button ml-2" @click="cancelEditing" title="Annuler">
               <template #icon>
                 <NIcon :component="DismissIcon" />
               </template>
-              Annuler
             </NButton>
           </div>
 
@@ -909,13 +909,12 @@ watch(activeTab, (tab) => {
         </NTabPane>
 
         <!-- Onglet Compositions -->
-        <NTabPane name="compositions" tab="Compositions">
+        <NTabPane name="compositions" :tab="[h(NIcon, { component: ChartMultiple24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Compositions')]" title="Compositions">
           <div class="action-buttons">
-            <NButton type="primary" @click="addComposition" class="action-button">
+            <NButton type="primary" @click="addComposition" class="action-button" title="Ajouter une composition">
               <template #icon>
                 <NIcon :component="Add24Filled" />
               </template>
-              Ajouter une composition
             </NButton>
           </div>
 
@@ -931,8 +930,12 @@ watch(activeTab, (tab) => {
               <div class="flex justify-between items-center mb-2">
                 <div class="font-bold">{{ composition.categorie }}</div>
                 <div class="flex gap-2">
-                  <NButton size="small" @click="editComposition(composition)">Modifier</NButton>
-                  <NButton size="small" type="error" @click="deleteComposition(composition.id)">Supprimer</NButton>
+                  <NButton size="small" @click="editComposition(composition)" title="Modifier">
+                    <NIcon :component="Edit24Filled" />
+                  </NButton>
+                  <NButton size="small" type="error" @click="deleteComposition(composition.id)" title="Supprimer">
+                    <NIcon :component="Delete24Filled" />
+                  </NButton>
                 </div>
               </div>
               <div class="mb-1"><span class="label">Montant :</span> {{ formatCurrency(composition.montant) }}</div>
@@ -1000,13 +1003,12 @@ watch(activeTab, (tab) => {
         </NTabPane>
 
         <!-- Onglet Documents -->
-        <NTabPane name="documents" tab="Documents">
+        <NTabPane name="documents" :tab="[h(NIcon, { component: Document24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Documents')]" title="Documents">
           <div class="action-buttons">
-            <NButton type="primary" @click="nouveauDocument" class="action-button">
+            <NButton type="primary" @click="nouveauDocument" class="action-button" title="Ajouter un document">
               <template #icon>
                 <NIcon :component="Add24Filled" />
               </template>
-              Ajouter un document
             </NButton>
           </div>
 
@@ -1046,14 +1048,18 @@ watch(activeTab, (tab) => {
         </NTabPane>
 
         <!-- Onglet Amortissement -->
-        <NTabPane name="amortissement" tab="Amortissement">
+        <NTabPane name="amortissement" :tab="[h(NIcon, { component: Money24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Amortissement')]" title="Amortissement">
           <div class="action-buttons" style="gap: 12px; display: flex; align-items: center;">
             <NSelect v-model:value="selectedCategorie as string | null | undefined" :options="amortissementSelectOptions" placeholder="Filtrer par composant" style="max-width: 300px;" :disabled="amortissementLoading || amortissements.length === 0" clearable />
-            <NButton type="primary" :loading="amortissementLoading" @click="() => { fetchAmortissement(); }">
-              Générer le plan d'amortissement
+            <NButton type="primary" :loading="amortissementLoading" @click="() => { fetchAmortissement(); }" title="Générer le plan d'amortissement">
+              <template #icon>
+                <NIcon :component="Money24Filled" />
+              </template>
             </NButton>
-            <NButton type="success" :loading="amortissementLoading" @click="saveAmortissement" :disabled="amortissements.length === 0">
-              Sauvegarder le plan
+            <NButton type="success" :loading="amortissementLoading" @click="saveAmortissement" :disabled="amortissements.length === 0" title="Sauvegarder le plan">
+              <template #icon>
+                <NIcon :component="Save24Filled" />
+              </template>
             </NButton>
           </div>
           <NH3 class="sous-titre mb-4">Plan d'amortissement</NH3>
@@ -1308,5 +1314,15 @@ watch(activeTab, (tab) => {
     min-width: 0 !important;
     box-sizing: border-box;
   }
+}
+.tab-label-hover {
+  display: none;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-size: 15px;
+  font-weight: 500;
+}
+.n-tabs-tab:hover .tab-label-hover {
+  display: inline;
 }
 </style>

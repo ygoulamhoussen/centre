@@ -14,11 +14,13 @@ import {
   NSpace,
   NStep,
   NSteps,
-  useMessage
+  useMessage,
+  NIcon
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ArrowRight24Filled } from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -101,7 +103,11 @@ onUnmounted(() => {
         </NGrid>
       </NForm>
       <div class="flex justify-end mt-8">
-        <NButton type="primary" @click="suivant" size="large">Suivant</NButton>
+        <NButton type="primary" @click="suivant" :loading="chargement" title="Suivant">
+          <template #icon>
+            <NIcon :component="ArrowRight24Filled" />
+          </template>
+        </NButton>
       </div>
     </NCard>
   </div>

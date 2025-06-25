@@ -11,7 +11,8 @@ import {
   NCard,
   NSteps,
   NStep,
-  NH2
+  NH2,
+  NIcon
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { ref, onMounted, onUnmounted } from 'vue'
@@ -139,10 +140,18 @@ async function enregistrer() {
           {{ quittanceDTO.statut }}
         </NDescriptionsItem>
       </NDescriptions>
-      <div class="flex justify-between mt-8">
-        <NButton @click="precedent" size="large">Précédent</NButton>
-        <NButton type="primary" @click="enregistrer" :loading="loading" size="large">Enregistrer</NButton>
-      </div>
+      <NSpace class="mt-8" justify="space-between">
+        <NButton @click="precedent" title="Précédent">
+          <template #icon>
+            <NIcon :component="ArrowLeft24Filled" />
+          </template>
+        </NButton>
+        <NButton type="primary" @click="enregistrer" :loading="loading" title="Valider">
+          <template #icon>
+            <NIcon :component="Checkmark24Filled" />
+          </template>
+        </NButton>
+      </NSpace>
     </NCard>
   </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage, NH2, NEmpty, NIcon } from 'naive-ui'
-import { onMounted, ref, h } from 'vue'
+import { onMounted, ref, h, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Info24Filled, ArrowLeft24Filled, Delete24Filled, Save24Filled, Add24Filled } from '@vicons/fluent'
 
@@ -54,6 +54,8 @@ const statutOptions = [
 ]
 
 const showAddPaiement = ref(false)
+const tabsWrapperRef = ref<HTMLElement | null>(null)
+const activeTab = ref('detail')
 
 async function fetchQuittance() {
   loading.value = true
@@ -184,9 +186,28 @@ async function deletePaiement(row: any) {
   }
 }
 
+function centerActiveTab() {
+  nextTick(() => {
+    const wrapper = tabsWrapperRef.value
+    if (!wrapper) return
+    const activeTabEl = wrapper.querySelector('.n-tabs-tab.n-tabs-tab--active') as HTMLElement
+    if (activeTabEl && wrapper) {
+      const wrapperRect = wrapper.getBoundingClientRect()
+      const tabRect = activeTabEl.getBoundingClientRect()
+      const scrollLeft = activeTabEl.offsetLeft - (wrapperRect.width / 2) + (tabRect.width / 2)
+      wrapper.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+    }
+  })
+}
+
+watch(activeTab, () => {
+  centerActiveTab()
+})
+
 onMounted(() => {
   fetchQuittance()
   fetchPaiements()
+  centerActiveTab()
 })
 
 const paiementColumns = [
@@ -227,98 +248,100 @@ function getPaiementTableData() {
     <NSpin :show="loading">
       <NCard v-if="quittance" :bordered="false">
         <NH1 class="titre-principal mb-4">Modifier la quittance</NH1>
-        <NTabs type="line" class="mt-8">
-          <NTabPane name="detail" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Détail')]">
-            <NH2 class="sous-titre mb-4">Détail de la quittance</NH2>
-            <NForm label-placement="top">
-              <NFormItem label="Montant loyer (€)">
-                <NInputNumber v-model:value="quittance.montantLoyer" min="0" placeholder="0.00" size="large" />
-              </NFormItem>
-              <NFormItem label="Montant charges (€)">
-                <NInputNumber v-model:value="quittance.montantCharges" min="0" placeholder="0.00" size="large" />
-              </NFormItem>
-              <NFormItem label="Inclure caution ?">
-                <NRadioGroup v-model:value="quittance.inclureCaution">
-                  <NRadio :value="true">Oui</NRadio>
-                  <NRadio :value="false">Non</NRadio>
-                </NRadioGroup>
-              </NFormItem>
-              <NFormItem v-if="quittance.inclureCaution" label="Montant caution (€)">
-                <NInputNumber v-model:value="quittance.depotGarantie" min="0" placeholder="0.00" size="large" />
-              </NFormItem>
-              <NFormItem label="Statut">
-                <NSelect v-model:value="quittance.statut" :options="statutOptions" size="large" />
-              </NFormItem>
-            </NForm>
-            <div class="flex justify-between mt-8">
-              <NButton ghost @click="router.push('/quittance')" title="Précédent">
-                <template #icon><NIcon :component="ArrowLeft24Filled" /></template>
-              </NButton>
-              <div class="flex gap-2">
-                <NPopconfirm @positive-click="supprimer" positive-text="Supprimer" negative-text="Annuler">
-                  <template #trigger>
-                    <NButton type="error" ghost title="Supprimer">
-                      <template #icon><NIcon :component="Delete24Filled" /></template>
-                    </NButton>
-                  </template>
-                  Confirmer la suppression ?
-                </NPopconfirm>
-                <NButton type="primary" :loading="saving" @click="enregistrer">Enregistrer</NButton>
-              </div>
-            </div>
-          </NTabPane>
-          <NTabPane name="paiements" tab="Paiements">
-            <div class="flex justify-between items-center mb-2">
-              <NH2 class="sous-titre">Paiements associés</NH2>
-              <NButton size="small" type="primary" ghost @click="openAddPaiementModal">Ajouter un paiement</NButton>
-            </div>
-            <div class="paiement-cards">
-              <NCard
-                v-for="p in Array.isArray(paiements) ? paiements : []"
-                :key="p.id"
-                class="paiement-card"
-                :bordered="true"
-                size="medium"
-              >
-                <div class="flex justify-between items-center mb-2">
-                  <div class="font-bold">Date : {{ p.datePaiement }}</div>
-                  <div class="flex gap-2">
-                    <NButton size="small" ghost @click="() => openEditPaiementModal(p)">Modifier</NButton>
-                    <NButton size="small" type="error" ghost @click="() => deletePaiement(p)">Supprimer</NButton>
-                  </div>
-                </div>
-                <div class="mb-1"><span class="label">Montant :</span> {{ p.montant }} €</div>
-                <div class="mb-1"><span class="label">Moyen :</span> {{ p.moyenPaiement }}</div>
-                <div class="mb-1"><span class="label">Référence :</span> {{ p.reference }}</div>
-                <div class="mb-1"><span class="label">Commentaire :</span> {{ p.commentaire }}</div>
-              </NCard>
-              <NEmpty v-if="!paiements || paiements.length === 0" description="Aucun paiement pour le moment" />
-            </div>
-            <NModal v-model:show="paiementModalVisible" preset="dialog" title="Paiement" style="width: 400px">
+        <div ref="tabsWrapperRef" class="tabs-scrollable">
+          <NTabs v-model:value="activeTab" type="line" class="mt-8">
+            <NTabPane name="detail" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), ' Détail']">
+              <NH2 class="sous-titre mb-4">Détail de la quittance</NH2>
               <NForm label-placement="top">
-                <NFormItem label="Date">
-                  <NDatePicker v-model:value="paiementForm.datePaiement" value-format="yyyy-MM-dd" type="date" style="width: 100%" />
+                <NFormItem label="Montant loyer (€)">
+                  <NInputNumber v-model:value="quittance.montantLoyer" min="0" placeholder="0.00" size="large" />
                 </NFormItem>
-                <NFormItem label="Montant (€)">
-                  <NInputNumber v-model:value="paiementForm.montant" min="0" style="width: 100%" />
+                <NFormItem label="Montant charges (€)">
+                  <NInputNumber v-model:value="quittance.montantCharges" min="0" placeholder="0.00" size="large" />
                 </NFormItem>
-                <NFormItem label="Moyen">
-                  <NSelect v-model:value="paiementForm.moyenPaiement" :options="moyenPaiementOptions" style="width: 100%" />
+                <NFormItem label="Inclure caution ?">
+                  <NRadioGroup v-model:value="quittance.inclureCaution">
+                    <NRadio :value="true">Oui</NRadio>
+                    <NRadio :value="false">Non</NRadio>
+                  </NRadioGroup>
                 </NFormItem>
-                <NFormItem label="Référence">
-                  <NInput v-model:value="paiementForm.reference" style="width: 100%" />
+                <NFormItem v-if="quittance.inclureCaution" label="Montant caution (€)">
+                  <NInputNumber v-model:value="quittance.depotGarantie" min="0" placeholder="0.00" size="large" />
                 </NFormItem>
-                <NFormItem label="Commentaire">
-                  <NInput v-model:value="paiementForm.commentaire" style="width: 100%" />
+                <NFormItem label="Statut">
+                  <NSelect v-model:value="quittance.statut" :options="statutOptions" size="large" />
                 </NFormItem>
-                <div class="flex justify-end gap-2 mt-4">
-                  <NButton ghost @click="closePaiementModal">Annuler</NButton>
-                  <NButton type="primary" @click="savePaiementModal">Enregistrer</NButton>
-                </div>
               </NForm>
-            </NModal>
-          </NTabPane>
-        </NTabs>
+              <div class="flex justify-between mt-8">
+                <NButton ghost @click="router.push('/quittance')" title="Précédent">
+                  <template #icon><NIcon :component="ArrowLeft24Filled" /></template>
+                </NButton>
+                <div class="flex gap-2">
+                  <NPopconfirm @positive-click="supprimer" positive-text="Supprimer" negative-text="Annuler">
+                    <template #trigger>
+                      <NButton type="error" ghost title="Supprimer">
+                        <template #icon><NIcon :component="Delete24Filled" /></template>
+                      </NButton>
+                    </template>
+                    Confirmer la suppression ?
+                  </NPopconfirm>
+                  <NButton type="primary" :loading="saving" @click="enregistrer">Enregistrer</NButton>
+                </div>
+              </div>
+            </NTabPane>
+            <NTabPane name="paiements" :tab="[h(NIcon, { component: Add24Filled, size: 20 }), ' Paiements']">
+              <div class="flex justify-between items-center mb-2">
+                <NH2 class="sous-titre">Paiements associés</NH2>
+                <NButton size="small" type="primary" ghost @click="openAddPaiementModal">Ajouter un paiement</NButton>
+              </div>
+              <div class="paiement-cards">
+                <NCard
+                  v-for="p in Array.isArray(paiements) ? paiements : []"
+                  :key="p.id"
+                  class="paiement-card"
+                  :bordered="true"
+                  size="medium"
+                >
+                  <div class="flex justify-between items-center mb-2">
+                    <div class="font-bold">Date : {{ p.datePaiement }}</div>
+                    <div class="flex gap-2">
+                      <NButton size="small" ghost @click="() => openEditPaiementModal(p)">Modifier</NButton>
+                      <NButton size="small" type="error" ghost @click="() => deletePaiement(p)">Supprimer</NButton>
+                    </div>
+                  </div>
+                  <div class="mb-1"><span class="label">Montant :</span> {{ p.montant }} €</div>
+                  <div class="mb-1"><span class="label">Moyen :</span> {{ p.moyenPaiement }}</div>
+                  <div class="mb-1"><span class="label">Référence :</span> {{ p.reference }}</div>
+                  <div class="mb-1"><span class="label">Commentaire :</span> {{ p.commentaire }}</div>
+                </NCard>
+                <NEmpty v-if="!paiements || paiements.length === 0" description="Aucun paiement pour le moment" />
+              </div>
+              <NModal v-model:show="paiementModalVisible" preset="dialog" title="Paiement" style="width: 400px">
+                <NForm label-placement="top">
+                  <NFormItem label="Date">
+                    <NDatePicker v-model:value="paiementForm.datePaiement" value-format="yyyy-MM-dd" type="date" style="width: 100%" />
+                  </NFormItem>
+                  <NFormItem label="Montant (€)">
+                    <NInputNumber v-model:value="paiementForm.montant" min="0" style="width: 100%" />
+                  </NFormItem>
+                  <NFormItem label="Moyen">
+                    <NSelect v-model:value="paiementForm.moyenPaiement" :options="moyenPaiementOptions" style="width: 100%" />
+                  </NFormItem>
+                  <NFormItem label="Référence">
+                    <NInput v-model:value="paiementForm.reference" style="width: 100%" />
+                  </NFormItem>
+                  <NFormItem label="Commentaire">
+                    <NInput v-model:value="paiementForm.commentaire" style="width: 100%" />
+                  </NFormItem>
+                  <div class="flex justify-end gap-2 mt-4">
+                    <NButton ghost @click="closePaiementModal">Annuler</NButton>
+                    <NButton type="primary" @click="savePaiementModal">Enregistrer</NButton>
+                  </div>
+                </NForm>
+              </NModal>
+            </NTabPane>
+          </NTabs>
+        </div>
       </NCard>
     </NSpin>
   </div>
@@ -394,5 +417,26 @@ function getPaiementTableData() {
 }
 .n-tabs-tab:hover .tab-label-hover {
   display: inline;
+}
+.tabs-scrollable {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 16px;
+}
+.tabs-scrollable .n-tabs {
+  min-width: 400px;
+}
+.n-tabs-tab {
+  min-width: unset;
+  max-width: unset;
+  justify-content: flex-start;
+  text-align: left;
+  padding: 0 16px !important;
+  position: relative;
+}
+.n-tabs-tab .n-icon {
+  margin: 0 8px 0 0;
+  display: inline-block;
 }
 </style> 

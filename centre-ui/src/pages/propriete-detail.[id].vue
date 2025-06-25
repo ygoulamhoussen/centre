@@ -1274,7 +1274,9 @@ onMounted(() => {
   margin-top: 20px;
 }
 .n-tabs {
-  width: 100%;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
 }
 .n-tab-pane {
   padding: 0;
@@ -1373,8 +1375,7 @@ onMounted(() => {
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
   margin-bottom: 16px;
-}
-.tabs-scrollable .n-tabs {
-  min-width: 600px;
+  width: auto;
+  max-width: 100%;
 }
 </style>

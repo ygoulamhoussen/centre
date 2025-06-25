@@ -1298,5 +1298,15 @@ watch(activeTab, (tab) => {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+  .action-buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .action-buttons .n-button {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+  }
 }
 </style>

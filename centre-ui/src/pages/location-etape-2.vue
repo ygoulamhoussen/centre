@@ -95,11 +95,13 @@ function precedent() {
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <NSteps :current="2" class="mb-8">
-        <NStep title="Sélection" description="Propriété et locataire" />
-        <NStep title="Détails du bail" description="Loyer, dates, etc." />
-        <NStep title="Récapitulatif" description="Vérification finale" />
-      </NSteps>
+      <div class="steps-wrapper" style="overflow-x:auto;">
+        <NSteps :current="2" class="mb-8">
+          <NStep title="Sélection" description="Propriété et locataire" />
+          <NStep title="Détails du bail" description="Loyer, dates, etc." />
+          <NStep title="Récapitulatif" description="Vérification finale" />
+        </NSteps>
+      </div>
 
       <NH2 class="titre-principal mb-4">Étape 2: Détails du bail</NH2>
 
@@ -170,6 +172,25 @@ h3 {
   font-weight: bold;
 }
 @media (max-width: 768px) {
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+  .n-steps {
+    font-size: 12px !important;
+    min-width: 400px;
+  }
+  .n-steps,
+  .n-steps .n-steps-main {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    display: block !important;
+  }
+  .n-step {
+    min-width: 120px !important;
+  }
+  .n-step__description {
+    display: none !important;
+  }
   .titre-principal,
   h1,
   h2,

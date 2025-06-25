@@ -62,6 +62,11 @@ onMounted(() => fetchLocations())
 <template>
   <div class="p-4">
     <NCard :bordered="false">
+      <div class="steps-wrapper" style="overflow-x:auto;">
+        <NSteps :current="1" class="mb-8">
+          <NStep title="Sélection" description="Location et période" />
+          <NStep title="Détails" description="Montants et statut" />
+          <NStep title="Récapitulatif" description="Vérification finale" />
       <NSteps :current="1" class="mb-8">
         <NStep title="Sélection" description="Location et période" />
         <NStep title="Détails" description="Montants et statut" />

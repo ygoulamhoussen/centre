@@ -67,11 +67,13 @@ function suivant() {
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <NSteps :current="2" class="mb-8">
-        <NStep title="Sélection" description="Location et période" />
-        <NStep title="Détails" description="Montants et statut" />
-        <NStep title="Récapitulatif" description="Vérification finale" />
-      </NSteps>
+      <div class="steps-wrapper" style="overflow-x:auto;">
+        <NSteps :current="2" class="mb-8">
+          <NStep title="Sélection" description="Location et période" />
+          <NStep title="Détails" description="Montants et statut" />
+          <NStep title="Récapitulatif" description="Vérification finale" />
+        </NSteps>
+      </div>
       <NH2 class="titre-principal mb-4">Étape 2 : Détails de la quittance</NH2>
       <NForm label-placement="top">
         <NGrid :x-gap="24" :y-gap="16" :cols="2">
@@ -138,6 +140,25 @@ h3 {
   margin-top: 2rem;
 }
 @media (max-width: 768px) {
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+  .n-steps {
+    font-size: 12px !important;
+    min-width: 400px;
+  }
+  .n-steps,
+  .n-steps .n-steps-main {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    display: block !important;
+  }
+  .n-step {
+    min-width: 120px !important;
+  }
+  .n-step__description {
+    display: none !important;
+  }
   .titre-principal,
   h1,
   h2,

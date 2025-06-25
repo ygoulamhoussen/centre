@@ -4,9 +4,9 @@ import { useUnifiedStore } from '@/store/unifiedStore'
 import {
   ArrowRight24Filled,
   BuildingHome24Filled,
+  Edit24Filled,
   Home24Filled,
-  Pen24Filled,
-  Tag24Filled
+  Tag24Filled,
 } from '@vicons/fluent'
 import {
   NButton,
@@ -44,7 +44,7 @@ const message = useMessage()
 const typesBien = [
   { value: 'APPARTEMENT', label: 'Appartement', icon: BuildingHome24Filled },
   { value: 'MAISON', label: 'Maison', icon: Home24Filled },
-  { value: 'BOX', label: 'Box', icon: Pen24Filled },
+  { value: 'BOX', label: 'Box', icon: Edit24Filled },
   { value: 'PARKING', label: 'Parking', icon: BuildingHome24Filled },
 ]
 
@@ -64,12 +64,14 @@ function valider() {
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <NSteps :current="1" class="mb-8">
-        <NStep title="Type et Nom" description="Identification du bien" />
-        <NStep title="Adresse" description="Localisation du bien" />
-        <NStep title="Détails" description="Informations techniques" />
-        <NStep title="Récapitulatif" description="Vérification finale" />
-      </NSteps>
+      <div class="steps-wrapper" style="overflow-x:auto;">
+        <NSteps :current="1" class="mb-8">
+          <NStep title="Type et Nom" description="Identification du bien" />
+          <NStep title="Adresse" description="Localisation du bien" />
+          <NStep title="Détails" description="Informations techniques" />
+          <NStep title="Récapitulatif" description="Vérification finale" />
+        </NSteps>
+      </div>
 
       <NH2 class="titre-principal mb-6">Étape 1: Donnez un nom à votre propriété</NH2>
       <NForm>
@@ -130,6 +132,25 @@ h3 {
   font-weight: bold;
 }
 @media (max-width: 768px) {
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+  .n-steps {
+    font-size: 12px !important;
+    min-width: 400px;
+  }
+  .n-steps,
+  .n-steps .n-steps-main {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    display: block !important;
+  }
+  .n-step {
+    min-width: 120px !important;
+  }
+  .n-step__description {
+    display: none !important;
+  }
   .titre-principal,
   h1,
   h2,
@@ -138,12 +159,6 @@ h3 {
   }
   .p-4 {
     padding: 1rem !important;
-  }
-  .mb-6,
-  .mb-8,
-  .my-6 {
-    margin-bottom: 1rem !important;
-    margin-top: 1rem !important;
   }
 }
 </style>

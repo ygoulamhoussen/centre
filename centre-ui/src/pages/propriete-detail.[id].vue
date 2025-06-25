@@ -25,7 +25,7 @@ import {
   useMessage,
   NTooltip
 } from 'naive-ui'
-import { h, onMounted, ref, computed, watch } from 'vue'
+import { h, onMounted, ref, computed, watch, nextTick } from 'vue'
 import {
   Add24Filled,
   ArrowLeft24Filled,
@@ -741,6 +741,31 @@ const activeTab = ref('infos')
 watch(activeTab, (tab) => {
   if (tab === 'amortissement' && amortissements.value.length === 0) fetchAmortissement()
 })
+
+const tabsWrapperRef = ref<HTMLElement | null>(null)
+
+// Centrage automatique de l'onglet sélectionné
+function centerActiveTab() {
+  nextTick(() => {
+    const wrapper = tabsWrapperRef.value
+    if (!wrapper) return
+    const activeTab = wrapper.querySelector('.n-tabs-tab.n-tabs-tab--active') as HTMLElement
+    if (activeTab && wrapper) {
+      const wrapperRect = wrapper.getBoundingClientRect()
+      const tabRect = activeTab.getBoundingClientRect()
+      const scrollLeft = activeTab.offsetLeft - (wrapperRect.width / 2) + (tabRect.width / 2)
+      wrapper.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+    }
+  })
+}
+
+watch(activeTab, () => {
+  centerActiveTab()
+})
+
+onMounted(() => {
+  centerActiveTab()
+})
 </script>
 
 <template>
@@ -753,335 +778,337 @@ watch(activeTab, (tab) => {
     </div>
 
     <NSpin :show="loading">
-      <NTabs v-if="proprieteDetail" v-model:value="activeTab" type="line" animated>
-        <!-- Onglet Informations -->
-        <NTabPane name="infos" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), ' Informations']" title="Informations">
-          <div v-if="!editingInfos" class="action-buttons">
-            <NButton type="primary" @click="startEditing('infos')" class="action-button" ghost title="Modifier">
-              <template #icon>
-                <NIcon :component="Edit24Filled" />
-              </template>
-            </NButton>
-            <NPopconfirm
-              @positive-click="() => proprieteDetail.propriete && proprieteDetail.propriete.id && supprimerPropriete(proprieteDetail.propriete.id)"
-            >
-              <template #trigger>
-                <NButton type="error" ghost class="action-button" title="Supprimer">
-                  <template #icon>
-                    <NIcon :component="Delete24Filled" />
-                  </template>
-                </NButton>
-              </template>
-              Êtes-vous sûr de vouloir supprimer cette propriété ?
-            </NPopconfirm>
-          </div>
-          <div v-else class="action-buttons">
-            <NButton type="primary" :loading="saving" @click="savePropriete" class="action-button" title="Enregistrer">
-              <template #icon>
-                <NIcon :component="Save24Filled" />
-              </template>
-            </NButton>
-            <NButton class="action-button ml-2" @click="cancelEditing" title="Annuler">
-              <template #icon>
-                <NIcon :component="DismissIcon" />
-              </template>
-            </NButton>
-          </div>
-
-          <div v-if="!editingInfos" class="info-grid">
-            <div class="info-label">
-              Nom :
+      <div ref="tabsWrapperRef" class="tabs-scrollable">
+        <NTabs v-if="proprieteDetail" v-model:value="activeTab" type="line" animated>
+          <!-- Onglet Informations -->
+          <NTabPane name="infos" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), ' Informations']" title="Informations">
+            <div v-if="!editingInfos" class="action-buttons">
+              <NButton type="primary" @click="startEditing('infos')" class="action-button" ghost title="Modifier">
+                <template #icon>
+                  <NIcon :component="Edit24Filled" />
+                </template>
+              </NButton>
+              <NPopconfirm
+                @positive-click="() => proprieteDetail.propriete && proprieteDetail.propriete.id && supprimerPropriete(proprieteDetail.propriete.id)"
+              >
+                <template #trigger>
+                  <NButton type="error" ghost class="action-button" title="Supprimer">
+                    <template #icon>
+                      <NIcon :component="Delete24Filled" />
+                    </template>
+                  </NButton>
+                </template>
+                Êtes-vous sûr de vouloir supprimer cette propriété ?
+              </NPopconfirm>
             </div>
-            <div class="info-value">
-              {{ proprieteDetail.propriete.nom }}
+            <div v-else class="action-buttons">
+              <NButton type="primary" :loading="saving" @click="savePropriete" class="action-button" title="Enregistrer">
+                <template #icon>
+                  <NIcon :component="Save24Filled" />
+                </template>
+              </NButton>
+              <NButton class="action-button ml-2" @click="cancelEditing" title="Annuler">
+                <template #icon>
+                  <NIcon :component="DismissIcon" />
+                </template>
+              </NButton>
             </div>
 
-            <div class="info-label">
-              Adresse :
-            </div>
-            <div class="info-value">
-              {{ proprieteDetail.propriete.adresse }}
-            </div>
-
-            <div class="info-label">
-              Ville :
-            </div>
-            <div class="info-value">
-              {{ proprieteDetail.propriete.ville }}
-            </div>
-
-            <div class="info-label">
-              Type :
-            </div>
-            <div class="info-value">
-              {{ proprieteDetail.propriete.typeBien }}
-            </div>
-
-            <div class="info-label">
-              Montant acquisition :
-            </div>
-            <div class="info-value">
-              {{ formatCurrency(proprieteDetail.propriete.montantAcquisition) }}
-            </div>
-
-            <div class="info-label">
-              Date acquisition :
-            </div>
-            <div class="info-value">
-              {{ formatDate(proprieteDetail.propriete.dateAcquisition) }}
-            </div>
-
-            <div class="info-label">
-              Tantième :
-            </div>
-            <div class="info-value">
-              {{ proprieteDetail.propriete.tantieme }}
-            </div>
-          </div>
-
-          <NForm v-else class="edit-form">
-            <div class="info-grid">
+            <div v-if="!editingInfos" class="info-grid">
               <div class="info-label">
                 Nom :
               </div>
               <div class="info-value">
-                <NInput v-model:value="editForm.nom" />
+                {{ proprieteDetail.propriete.nom }}
               </div>
 
               <div class="info-label">
                 Adresse :
               </div>
               <div class="info-value">
-                <NInput v-model:value="editForm.adresse" />
-              </div>
-
-              <div class="info-label">
-                Code postal :
-              </div>
-              <div class="info-value">
-                <NInput v-model:value="editForm.codePostal" />
+                {{ proprieteDetail.propriete.adresse }}
               </div>
 
               <div class="info-label">
                 Ville :
               </div>
               <div class="info-value">
-                <NInput v-model:value="editForm.ville" />
+                {{ proprieteDetail.propriete.ville }}
               </div>
 
               <div class="info-label">
                 Type :
               </div>
               <div class="info-value">
-                <NSelect
-                  v-model:value="editForm.typeBien"
-                  :options="[
-                    { label: 'Appartement', value: 'APPARTEMENT' },
-                    { label: 'Maison', value: 'MAISON' },
-                    { label: 'Local commercial', value: 'LOCAL_COMMERCIAL' },
-                  ]"
-                  style="width: 100%"
-                />
+                {{ proprieteDetail.propriete.typeBien }}
               </div>
 
               <div class="info-label">
                 Montant acquisition :
               </div>
               <div class="info-value">
-                <NInputNumber v-model:value="editForm.montantAcquisition" style="width: 100%" />
+                {{ formatCurrency(proprieteDetail.propriete.montantAcquisition) }}
               </div>
 
               <div class="info-label">
                 Date acquisition :
               </div>
               <div class="info-value">
-                <NDatePicker v-model:value="editForm.dateAcquisition" style="width: 100%" />
+                {{ formatDate(proprieteDetail.propriete.dateAcquisition) }}
               </div>
 
               <div class="info-label">
                 Tantième :
               </div>
               <div class="info-value">
-                <NInputNumber v-model:value="editForm.tantieme" style="width: 100%" />
+                {{ proprieteDetail.propriete.tantieme }}
               </div>
             </div>
-          </NForm>
-        </NTabPane>
 
-        <!-- Onglet Compositions -->
-        <NTabPane name="compositions" :tab="[h(NIcon, { component: ChartMultiple24Filled, size: 20 }), ' Compositions']" title="Compositions">
-          <div class="action-buttons">
-            <NButton type="primary" @click="addComposition" class="action-button" title="Ajouter une composition">
-              <template #icon>
-                <NIcon :component="Add24Filled" />
-              </template>
-            </NButton>
-          </div>
-
-          <NH3 class="sous-titre mb-4">Composants de la propriété</NH3>
-          <div class="composition-cards">
-            <NCard
-              v-for="composition in proprieteDetail?.compositions || []"
-              :key="composition.id"
-              class="composition-card"
-              :bordered="true"
-              size="medium"
-            >
-              <div class="flex justify-between items-center mb-2">
-                <div class="font-bold">{{ composition.categorie }}</div>
-                <div class="flex gap-2">
-                  <NButton size="small" @click="editComposition(composition)" title="Modifier">
-                    <NIcon :component="Edit24Filled" />
-                  </NButton>
-                  <NButton size="small" type="error" @click="deleteComposition(composition.id)" title="Supprimer">
-                    <NIcon :component="Delete24Filled" />
-                  </NButton>
+            <NForm v-else class="edit-form">
+              <div class="info-grid">
+                <div class="info-label">
+                  Nom :
                 </div>
-              </div>
-              <div class="mb-1"><span class="label">Montant :</span> {{ formatCurrency(composition.montant) }}</div>
-              <div><span class="label">Description :</span> {{ composition.description }}</div>
-            </NCard>
-            <NEmpty v-if="!proprieteDetail?.compositions || proprieteDetail.compositions.length === 0" description="Aucune composition trouvée" />
-          </div>
+                <div class="info-value">
+                  <NInput v-model:value="editForm.nom" />
+                </div>
 
-          <!-- Modal d'édition de composition -->
-          <NModal v-model:show="showCompositionModal">
-            <NCard
-              style="width: 600px"
-              title="Édition de composition"
-              :bordered="false"
-              size="huge"
-              role="dialog"
-              aria-modal="true"
-            >
-              <NForm :model="compositionForm">
-                <NFormItem label="Catégorie">
+                <div class="info-label">
+                  Adresse :
+                </div>
+                <div class="info-value">
+                  <NInput v-model:value="editForm.adresse" />
+                </div>
+
+                <div class="info-label">
+                  Code postal :
+                </div>
+                <div class="info-value">
+                  <NInput v-model:value="editForm.codePostal" />
+                </div>
+
+                <div class="info-label">
+                  Ville :
+                </div>
+                <div class="info-value">
+                  <NInput v-model:value="editForm.ville" />
+                </div>
+
+                <div class="info-label">
+                  Type :
+                </div>
+                <div class="info-value">
                   <NSelect
-                    v-model:value="compositionForm.categorie"
-                    :options="categoriesAmortissement"
-                    placeholder="Sélectionnez une catégorie"
-                    clearable
+                    v-model:value="editForm.typeBien"
+                    :options="[
+                      { label: 'Appartement', value: 'APPARTEMENT' },
+                      { label: 'Maison', value: 'MAISON' },
+                      { label: 'Local commercial', value: 'LOCAL_COMMERCIAL' },
+                    ]"
+                    style="width: 100%"
                   />
-                </NFormItem>
-                <NFormItem label="Pourcentage du coût total">
-                  <NInputNumber 
-                    v-model:value="compositionForm.pourcentage"
-                    :min="0"
-                    :max="100"
-                    :step="0.01"
-                    @update:value="calculerMontant"
-                    :suffix="'%'"
-                  />
-                </NFormItem>
-                <NFormItem label="Montant calculé">
-                  <NInputNumber 
-                    :value="compositionForm.montant" 
-                    :disabled="true"
-                    :formatter="value => formatCurrency(value)"
-                  />
-                </NFormItem>
-                <NFormItem label="Description">
-                  <NInput
-                    v-model:value="compositionForm.description"
-                    type="textarea"
-                    :autosize="{ minRows: 3 }"
-                  />
-                </NFormItem>
-              </NForm>
-              <template #footer>
-                <NSpace justify="end">
-                  <NButton @click="showCompositionModal = false">
-                    Annuler
-                  </NButton>
-                  <NButton type="primary" :loading="saving" @click="saveComposition">
-                    Enregistrer
-                  </NButton>
-                </NSpace>
-              </template>
-            </NCard>
-          </NModal>
-        </NTabPane>
-
-        <!-- Onglet Documents -->
-        <NTabPane name="documents" :tab="[h(NIcon, { component: Document24Filled, size: 20 }), ' Documents']" title="Documents">
-          <div class="action-buttons">
-            <NButton type="primary" @click="nouveauDocument" class="action-button" title="Ajouter un document">
-              <template #icon>
-                <NIcon :component="Add24Filled" />
-              </template>
-            </NButton>
-          </div>
-
-          <NH3 class="sous-titre mb-4">Documents de la propriété</NH3>
-          <div class="document-cards">
-            <NCard
-              v-for="doc in proprieteDetail?.documents || []"
-              :key="doc.id"
-              class="document-card"
-              :bordered="true"
-              size="medium"
-            >
-              <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center gap-2">
-                  <NIcon :component="getDocumentIcon(getFileExtension(doc.nomFichier || ''))" size="22" />
-                  <span class="font-bold">{{ doc.titre || doc.nomFichier || 'Sans nom' }}</span>
                 </div>
-                <div class="flex gap-2">
-                  <NButton size="small" text @click="telechargerDocument(doc)" title="Télécharger">
-                    <NIcon :component="Document24Filled" />
-                  </NButton>
-                  <NPopconfirm @positive-click="() => supprimerDocument(doc.id)">
-                    <template #trigger>
-                      <NButton size="small" text type="error" title="Supprimer">
-                        <NIcon :component="Delete24Filled" />
-                      </NButton>
-                    </template>
-                    Êtes-vous sûr de vouloir supprimer ce document ?
-                  </NPopconfirm>
+
+                <div class="info-label">
+                  Montant acquisition :
+                </div>
+                <div class="info-value">
+                  <NInputNumber v-model:value="editForm.montantAcquisition" style="width: 100%" />
+                </div>
+
+                <div class="info-label">
+                  Date acquisition :
+                </div>
+                <div class="info-value">
+                  <NDatePicker v-model:value="editForm.dateAcquisition" style="width: 100%" />
+                </div>
+
+                <div class="info-label">
+                  Tantième :
+                </div>
+                <div class="info-value">
+                  <NInputNumber v-model:value="editForm.tantieme" style="width: 100%" />
                 </div>
               </div>
-              <div class="mb-1"><span class="label">Type :</span> {{ (documentTypes.find(t => t.value === doc.typeDocument)?.label) || doc.typeDocument || 'Non spécifié' }}</div>
-              <div class="mb-1"><span class="label">Date :</span> {{ formatDate(doc.dateDocument) }}</div>
-            </NCard>
-            <NEmpty v-if="!proprieteDetail?.documents || proprieteDetail.documents.length === 0" description="Aucun document pour le moment" />
-          </div>
-        </NTabPane>
+            </NForm>
+          </NTabPane>
 
-        <!-- Onglet Amortissement -->
-        <NTabPane name="amortissement" :tab="[h(NIcon, { component: Money24Filled, size: 20 }), ' Amortissement']" title="Amortissement">
-          <div class="action-buttons" style="gap: 12px; display: flex; align-items: center;">
-            <NSelect v-model:value="selectedCategorie as string | null | undefined" :options="amortissementSelectOptions" placeholder="Filtrer par composant" style="max-width: 300px;" :disabled="amortissementLoading || amortissements.length === 0" clearable />
-            <NButton type="primary" :loading="amortissementLoading" @click="() => { fetchAmortissement(); }" title="Générer le plan d'amortissement">
-              <template #icon>
-                <NIcon :component="Money24Filled" />
-              </template>
-            </NButton>
-            <NButton type="success" :loading="amortissementLoading" @click="saveAmortissement" :disabled="amortissements.length === 0" title="Sauvegarder le plan">
-              <template #icon>
-                <NIcon :component="Save24Filled" />
-              </template>
-            </NButton>
-          </div>
-          <NH3 class="sous-titre mb-4">Plan d'amortissement</NH3>
-          <div class="amortissement-cards">
-            <NCard
-              v-for="item in filteredAmortissements"
-              :key="item.id ? item.id + '-' + item.annee : item.categorie + '-' + item.annee"
-              class="amortissement-card"
-              :bordered="true"
-              size="medium"
-            >
-              <div class="flex gap-2 mb-1" v-if="!selectedCategorie">
-                <span class="label">Composant :</span> <span class="font-bold">{{ item.categorie }}</span>
-              </div>
-              <div class="mb-1"><span class="label">Année :</span> {{ item.annee }}</div>
-              <div class="mb-1"><span class="label">Annuité :</span> {{ formatCurrency(item.montantAmorti) }}</div>
-              <div><span class="label">Valeur nette comptable :</span> {{ formatCurrency(item.valeurResiduelle) }}</div>
-            </NCard>
-            <NEmpty v-if="filteredAmortissements.length === 0" description="Aucun plan d'amortissement généré" />
-          </div>
-        </NTabPane>
-      </NTabs>
+          <!-- Onglet Compositions -->
+          <NTabPane name="compositions" :tab="[h(NIcon, { component: ChartMultiple24Filled, size: 20 }), ' Compositions']" title="Compositions">
+            <div class="action-buttons">
+              <NButton type="primary" @click="addComposition" class="action-button" title="Ajouter une composition">
+                <template #icon>
+                  <NIcon :component="Add24Filled" />
+                </template>
+              </NButton>
+            </div>
+
+            <NH3 class="sous-titre mb-4">Composants de la propriété</NH3>
+            <div class="composition-cards">
+              <NCard
+                v-for="composition in proprieteDetail?.compositions || []"
+                :key="composition.id"
+                class="composition-card"
+                :bordered="true"
+                size="medium"
+              >
+                <div class="flex justify-between items-center mb-2">
+                  <div class="font-bold">{{ composition.categorie }}</div>
+                  <div class="flex gap-2">
+                    <NButton size="small" @click="editComposition(composition)" title="Modifier">
+                      <NIcon :component="Edit24Filled" />
+                    </NButton>
+                    <NButton size="small" type="error" @click="deleteComposition(composition.id)" title="Supprimer">
+                      <NIcon :component="Delete24Filled" />
+                    </NButton>
+                  </div>
+                </div>
+                <div class="mb-1"><span class="label">Montant :</span> {{ formatCurrency(composition.montant) }}</div>
+                <div><span class="label">Description :</span> {{ composition.description }}</div>
+              </NCard>
+              <NEmpty v-if="!proprieteDetail?.compositions || proprieteDetail.compositions.length === 0" description="Aucune composition trouvée" />
+            </div>
+
+            <!-- Modal d'édition de composition -->
+            <NModal v-model:show="showCompositionModal">
+              <NCard
+                style="width: 600px"
+                title="Édition de composition"
+                :bordered="false"
+                size="huge"
+                role="dialog"
+                aria-modal="true"
+              >
+                <NForm :model="compositionForm">
+                  <NFormItem label="Catégorie">
+                    <NSelect
+                      v-model:value="compositionForm.categorie"
+                      :options="categoriesAmortissement"
+                      placeholder="Sélectionnez une catégorie"
+                      clearable
+                    />
+                  </NFormItem>
+                  <NFormItem label="Pourcentage du coût total">
+                    <NInputNumber 
+                      v-model:value="compositionForm.pourcentage"
+                      :min="0"
+                      :max="100"
+                      :step="0.01"
+                      @update:value="calculerMontant"
+                      :suffix="'%'"
+                    />
+                  </NFormItem>
+                  <NFormItem label="Montant calculé">
+                    <NInputNumber 
+                      :value="compositionForm.montant" 
+                      :disabled="true"
+                      :formatter="value => formatCurrency(value)"
+                    />
+                  </NFormItem>
+                  <NFormItem label="Description">
+                    <NInput
+                      v-model:value="compositionForm.description"
+                      type="textarea"
+                      :autosize="{ minRows: 3 }"
+                    />
+                  </NFormItem>
+                </NForm>
+                <template #footer>
+                  <NSpace justify="end">
+                    <NButton @click="showCompositionModal = false">
+                      Annuler
+                    </NButton>
+                    <NButton type="primary" :loading="saving" @click="saveComposition">
+                      Enregistrer
+                    </NButton>
+                  </NSpace>
+                </template>
+              </NCard>
+            </NModal>
+          </NTabPane>
+
+          <!-- Onglet Documents -->
+          <NTabPane name="documents" :tab="[h(NIcon, { component: Document24Filled, size: 20 }), ' Documents']" title="Documents">
+            <div class="action-buttons">
+              <NButton type="primary" @click="nouveauDocument" class="action-button" title="Ajouter un document">
+                <template #icon>
+                  <NIcon :component="Add24Filled" />
+                </template>
+              </NButton>
+            </div>
+
+            <NH3 class="sous-titre mb-4">Documents de la propriété</NH3>
+            <div class="document-cards">
+              <NCard
+                v-for="doc in proprieteDetail?.documents || []"
+                :key="doc.id"
+                class="document-card"
+                :bordered="true"
+                size="medium"
+              >
+                <div class="flex justify-between items-center mb-2">
+                  <div class="flex items-center gap-2">
+                    <NIcon :component="getDocumentIcon(getFileExtension(doc.nomFichier || ''))" size="22" />
+                    <span class="font-bold">{{ doc.titre || doc.nomFichier || 'Sans nom' }}</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <NButton size="small" text @click="telechargerDocument(doc)" title="Télécharger">
+                      <NIcon :component="Document24Filled" />
+                    </NButton>
+                    <NPopconfirm @positive-click="() => supprimerDocument(doc.id)">
+                      <template #trigger>
+                        <NButton size="small" text type="error" title="Supprimer">
+                          <NIcon :component="Delete24Filled" />
+                        </NButton>
+                      </template>
+                      Êtes-vous sûr de vouloir supprimer ce document ?
+                    </NPopconfirm>
+                  </div>
+                </div>
+                <div class="mb-1"><span class="label">Type :</span> {{ (documentTypes.find(t => t.value === doc.typeDocument)?.label) || doc.typeDocument || 'Non spécifié' }}</div>
+                <div class="mb-1"><span class="label">Date :</span> {{ formatDate(doc.dateDocument) }}</div>
+              </NCard>
+              <NEmpty v-if="!proprieteDetail?.documents || proprieteDetail.documents.length === 0" description="Aucun document pour le moment" />
+            </div>
+          </NTabPane>
+
+          <!-- Onglet Amortissement -->
+          <NTabPane name="amortissement" :tab="[h(NIcon, { component: Money24Filled, size: 20 }), ' Amortissement']" title="Amortissement">
+            <div class="action-buttons" style="gap: 12px; display: flex; align-items: center;">
+              <NSelect v-model:value="selectedCategorie as string | null | undefined" :options="amortissementSelectOptions" placeholder="Filtrer par composant" style="max-width: 300px;" :disabled="amortissementLoading || amortissements.length === 0" clearable />
+              <NButton type="primary" :loading="amortissementLoading" @click="() => { fetchAmortissement(); }" title="Générer le plan d'amortissement">
+                <template #icon>
+                  <NIcon :component="Money24Filled" />
+                </template>
+              </NButton>
+              <NButton type="success" :loading="amortissementLoading" @click="saveAmortissement" :disabled="amortissements.length === 0" title="Sauvegarder le plan">
+                <template #icon>
+                  <NIcon :component="Save24Filled" />
+                </template>
+              </NButton>
+            </div>
+            <NH3 class="sous-titre mb-4">Plan d'amortissement</NH3>
+            <div class="amortissement-cards">
+              <NCard
+                v-for="item in filteredAmortissements"
+                :key="item.id ? item.id + '-' + item.annee : item.categorie + '-' + item.annee"
+                class="amortissement-card"
+                :bordered="true"
+                size="medium"
+              >
+                <div class="flex gap-2 mb-1" v-if="!selectedCategorie">
+                  <span class="label">Composant :</span> <span class="font-bold">{{ item.categorie }}</span>
+                </div>
+                <div class="mb-1"><span class="label">Année :</span> {{ item.annee }}</div>
+                <div class="mb-1"><span class="label">Annuité :</span> {{ formatCurrency(item.montantAmorti) }}</div>
+                <div><span class="label">Valeur nette comptable :</span> {{ formatCurrency(item.valeurResiduelle) }}</div>
+              </NCard>
+              <NEmpty v-if="filteredAmortissements.length === 0" description="Aucun plan d'amortissement généré" />
+            </div>
+          </NTabPane>
+        </NTabs>
+      </div>
 
       <!-- Modal d'ajout de document -->
       <NModal v-model:show="showDocumentModal" :mask-closable="false">
@@ -1340,5 +1367,14 @@ watch(activeTab, (tab) => {
   border-radius: 0;
   white-space: normal;
   box-shadow: none;
+}
+.tabs-scrollable {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 16px;
+}
+.tabs-scrollable .n-tabs {
+  min-width: 600px;
 }
 </style>

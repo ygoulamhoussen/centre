@@ -1,20 +1,21 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
+import { ArrowRight24Filled, Call24Filled, Mail24Filled, Person24Filled } from '@vicons/fluent'
 import {
   NButton,
+  NCard,
   NForm,
   NFormItemGi,
-  NInput,
-  useMessage,
-  NCard,
-  NSteps,
-  NStep,
-  NIcon,
   NGrid,
+  NH2,
+  NIcon,
+  NInput,
+  NStep,
+  NSteps,
+  useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import { Person24Filled, Call24Filled, Mail24Filled, ArrowRight24Filled } from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -47,7 +48,7 @@ function suivant() {
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
 
-      <h2 class="text-xl font-semibold mb-4">Étape 1: Informations personnelles</h2>
+      <NH2 class="titre-principal mb-4">Étape 1: Informations personnelles</NH2>
 
       <NForm>
         <NGrid :x-gap="24" :y-gap="24" :cols="1">
@@ -86,3 +87,29 @@ function suivant() {
     </NCard>
   </div>
 </template>
+
+<style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-4,
+  .mb-6,
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+}
+</style>

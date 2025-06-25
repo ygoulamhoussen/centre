@@ -1,9 +1,24 @@
 <script setup lang="ts">
-import { NButton, NCard, NGi, NGrid, NH1, NPopconfirm, NSpace, NEmpty, NSpin, NIcon, useMessage, NTag, NTooltip } from 'naive-ui'
+import { useAuthStore } from '@/store/modules/auth'
+import { useUnifiedStore } from '@/store/unifiedStore'
 import { DocumentPdf24Filled } from '@vicons/fluent'
+import {
+  NButton,
+  NCard,
+  NEmpty,
+  NGi,
+  NGrid,
+  NH1,
+  NH3,
+  NIcon,
+  NSpin,
+  NTag,
+  NText,
+  NTooltip,
+  useMessage
+} from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/store/modules/auth'
 
 const router = useRouter()
 const message = useMessage()
@@ -30,33 +45,6 @@ async function fetchQuittances() {
     message.error('Erreur de chargement des quittances')
   } finally {
     loading.value = false
-  }
-}
-
-async function supprimerQuittance(id: string) {
-  try {
-    const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteQuittance/${id}`, { method: 'DELETE' })
-    if (!res.ok) {
-      const errorText = await res.text()
-      const q = quittances.value.find(q => q.id === id)
-      const proprieteNom = q?.proprieteNom || 'propriété inconnue'
-      const locataireNom = q?.locataireNom || 'locataire inconnu'
-      if (
-        errorText.includes('paiement_quittance_id_fkey')
-        || errorText.includes('DataIntegrityViolationException')
-        || errorText.includes('violates foreign key constraint')
-      ) {
-        message.error(`Suppression impossible : la quittance pour la propriété "${proprieteNom}" et le locataire "${locataireNom}" est liée à un ou plusieurs paiements. Veuillez d'abord supprimer les paiements associés.`)
-      } else {
-        message.error('Erreur lors de la suppression')
-      }
-      return
-    }
-    message.success('Quittance supprimée')
-    fetchQuittances()
-  } catch (e) {
-    console.error(e)
-    message.error('Erreur lors de la suppression')
   }
 }
 
@@ -96,7 +84,7 @@ onMounted(() => fetchQuittances())
 <template>
   <div class="p-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Mes quittances</h1>
+      <NH1 class="titre-principal">Mes quittances</NH1>
       <NButton type="primary" @click="demarrerCreation">
         Créer une quittance
       </NButton>
@@ -114,22 +102,22 @@ onMounted(() => fetchQuittances())
       <NGrid v-else :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
         <NGi v-for="q in quittances" :key="q.id">
           <NCard hoverable class="quittance-card cursor-pointer" @click="router.push(`/quittance-detail/${q.id}`)">
-            <div class="flex items-start">
+            <div class="flex items-start gap-4">
               <div class="quittance-avatar">
                 <NIcon :component="DocumentPdf24Filled" size="32" />
               </div>
-              <div class="ml-4 flex-1">
-                <h3 class="text-lg font-semibold mb-1">
+              <div class="flex-1">
+                <NH3 class="quittance-titre mb-2">
                   {{ q.proprieteNom }} – {{ q.locataireNom || 'Aucun locataire' }}
-                </h3>
-                <div class="text-gray-600 text-sm space-y-1">
-                  <div><strong>Période :</strong> {{ q.dateDebut }} - {{ q.dateFin }}</div>
-                  <div><strong>Loyer :</strong> {{ q.montantLoyer }} €</div>
-                  <div><strong>Charges :</strong> {{ q.montantCharges }} €</div>
-                  <div v-if="q.depotGarantie && Number(q.depotGarantie) > 0"><strong>Caution :</strong> {{ Number(q.depotGarantie).toFixed(2) }} €</div>
-                  <div><strong>Total (loyer + charges<span v-if="q.depotGarantie && Number(q.depotGarantie) > 0"> + caution</span>) :</strong> {{ getTotalQuittance(q) }} €</div>
-                  <div>
-                    <strong>Statut :</strong>
+                </NH3>
+                <div class="text-sm space-y-1">
+                  <div><NText strong>Période :</NText> <NText depth="3">{{ q.dateDebut }} - {{ q.dateFin }}</NText></div>
+                  <div><NText strong>Loyer :</NText> <NText depth="3">{{ q.montantLoyer }} €</NText></div>
+                  <div><NText strong>Charges :</NText> <NText depth="3">{{ q.montantCharges }} €</NText></div>
+                  <div v-if="q.depotGarantie && Number(q.depotGarantie) > 0"><NText strong>Caution :</NText> <NText depth="3">{{ Number(q.depotGarantie).toFixed(2) }} €</NText></div>
+                  <div><NText strong>Total :</NText> <NText depth="3">{{ getTotalQuittance(q) }} €</NText></div>
+                  <div class="flex items-center gap-2">
+                    <NText strong>Statut :</NText>
                     <NTag :type="q.statut === 'PAYEE' ? 'success' : (q.statut === 'PARTIELLE' ? 'warning' : 'error')" size="small">
                       {{ q.statut === 'PAYEE' ? 'Payée' : (q.statut === 'PARTIELLE' ? 'Partielle' : 'Impayée') }}
                     </NTag>
@@ -160,6 +148,18 @@ onMounted(() => fetchQuittances())
 </template>
 
 <style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+.quittance-titre {
+  color: var(--n-text-color) !important;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
 .quittance-card {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -172,8 +172,8 @@ onMounted(() => fetchQuittances())
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 .quittance-avatar {
-  background-color: #f6f6f6;
-  color: #409eff;
+  background-color: var(--n-color-embedded);
+  color: var(--n-color-target);
   border-radius: 50%;
   width: 48px;
   height: 48px;
@@ -205,5 +205,22 @@ onMounted(() => fetchQuittances())
 }
 .text-center {
   text-align: center;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .quittance-titre {
+    font-size: 1rem;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-6 {
+    margin-bottom: 1rem !important;
+  }
 }
 </style>

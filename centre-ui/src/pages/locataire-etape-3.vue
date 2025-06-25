@@ -1,21 +1,22 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
+import { ArrowLeft24Filled, Checkmark24Filled } from '@vicons/fluent'
 import {
   NButton,
-  NSpace,
-  useMessage,
   NCard,
-  NSteps,
-  NStep,
-  NIcon,
   NDescriptions,
   NDescriptionsItem,
+  NH2,
+  NIcon,
+  NSpace,
+  NStep,
+  NSteps,
+  useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft24Filled, Save24Filled } from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -77,7 +78,7 @@ function precedent() {
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
 
-      <h2 class="text-xl font-semibold mb-4">Étape 3: Récapitulatif</h2>
+      <NH2 class="titre-principal mb-4">Étape 3: Récapitulatif</NH2>
 
       <NDescriptions label-placement="top" bordered :column="2">
         <NDescriptionsItem label="Nom complet">
@@ -97,7 +98,7 @@ function precedent() {
         </NDescriptionsItem>
       </NDescriptions>
 
-      <NSpace class="mt-8" justify="space-between">
+      <NSpace justify="center" class="mt-8">
         <NButton @click="precedent">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
@@ -106,7 +107,7 @@ function precedent() {
         </NButton>
         <NButton type="primary" @click="enregistrer" :loading="chargement">
           <template #icon>
-            <NIcon :component="Save24Filled" />
+            <NIcon :component="Checkmark24Filled" />
           </template>
           Enregistrer
         </NButton>
@@ -116,5 +117,27 @@ function precedent() {
 </template>
 
 <style scoped>
-/* rien à personnaliser ici */
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-4,
+  .mb-6,
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+}
 </style>

@@ -1,27 +1,28 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
 import {
+  AddSquare24Filled,
+  ArrowLeft24Filled,
+  ArrowRight24Filled,
+  City24Filled,
+  Home24Filled,
+  Location24Filled
+} from '@vicons/fluent'
+import {
   NButton,
+  NCard,
   NForm,
   NFormItemGi,
+  NGrid,
+  NH2,
+  NIcon,
   NInput,
   NSpace,
-  NCard,
-  NSteps,
   NStep,
-  NIcon,
-  NGrid,
+  NSteps
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import {
-  Home24Filled,
-  AddSquare24Filled,
-  Location24Filled,
-  City24Filled,
-  ArrowLeft24Filled,
-  ArrowRight24Filled,
-} from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -54,7 +55,7 @@ function valider() {
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
 
-      <h2 class="text-xl font-semibold mb-4">Étape 2: Adresse de la propriété</h2>
+      <NH2 class="titre-principal mb-4">Étape 2: Adresse de la propriété</NH2>
 
       <NForm>
         <NGrid :x-gap="24" :y-gap="24" :cols="2" :item-responsive="true">
@@ -110,3 +111,28 @@ function valider() {
     </NCard>
   </div>
 </template>
+
+<style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-4,
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+}
+</style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage } from 'naive-ui'
+import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage, NH2 } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -225,9 +225,10 @@ function getPaiementTableData() {
   <div class="p-4">
     <NSpin :show="loading">
       <NCard v-if="quittance" :bordered="false">
-        <NH1 class="mb-4">Modifier la quittance</NH1>
+        <NH1 class="titre-principal mb-4">Modifier la quittance</NH1>
         <NTabs type="line" class="mt-8">
           <NTabPane name="detail" tab="Détail">
+            <NH2 class="sous-titre mb-4">Détail de la quittance</NH2>
             <NForm label-placement="top">
               <NFormItem label="Montant loyer (€)">
                 <NInputNumber v-model:value="quittance.montantLoyer" min="0" placeholder="0.00" size="large" />
@@ -262,7 +263,8 @@ function getPaiementTableData() {
             </div>
           </NTabPane>
           <NTabPane name="paiements" tab="Paiements">
-            <div class="flex justify-end mb-2">
+            <div class="flex justify-between items-center mb-2">
+              <NH2 class="sous-titre">Paiements associés</NH2>
               <NButton size="small" type="primary" ghost @click="openAddPaiementModal">Ajouter un paiement</NButton>
             </div>
             <NDataTable
@@ -301,11 +303,21 @@ function getPaiementTableData() {
 </template>
 
 <style scoped>
+.titre-principal, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+.sous-titre {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--n-text-color);
+}
 .flex {
   display: flex;
 }
 .justify-between {
   justify-content: space-between;
+  align-items: center;
 }
 .gap-2 {
   gap: 0.5rem;
@@ -315,5 +327,20 @@ function getPaiementTableData() {
 }
 .mb-4 {
   margin-bottom: 1rem;
+}
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .sous-titre {
+    font-size: 1rem;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mt-8, .mb-4 {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
 }
 </style> 

@@ -1,42 +1,34 @@
 <script setup lang="ts">
-import { onMounted, ref, h } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/modules/auth'
+import { useUnifiedStore } from '@/store/unifiedStore'
+import { Add24Filled, ArrowLeft24Filled, Delete24Filled, Edit24Filled, Eye24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
+  NDataTable,
+  NDatePicker,
+  NEmpty,
   NForm,
   NFormItem,
-  NInput,
-  NDatePicker,
-  NSelect,
-  NPopconfirm,
+  NH2,
+  NH3,
   NIcon,
-  NDataTable,
+  NInput,
+  NInputNumber,
   NModal,
-  NSpace,
+  NPopconfirm,
+  NSelect,
   NSpin,
-  NEmpty,
-  useMessage,
-  NTabs,
   NTabPane,
+  NTabs,
+  NTag,
+  NText,
   NUpload,
   NUploadDragger,
-  NText,
-  NTag,
+  useMessage
 } from 'naive-ui'
-import {
-  ArrowLeft24Filled,
-  Edit24Filled,
-  Save24Filled,
-  Dismiss24Filled,
-  Add24Filled,
-  Delete24Filled,
-  ArrowDownload24Filled,
-  DocumentPdf24Filled,
-  Document24Filled,
-  Image24Filled,
-} from '@vicons/fluent'
+import { computed, h, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 // Utilitaires pour choisir la bonne icône suivant l'extension
 function getDocumentIcon(name: string) {
@@ -477,7 +469,7 @@ onMounted(() => {
 
     <NSpin :show="loading">
       <div v-if="location">
-        <h2 class="text-xl font-bold mb-4">Location – {{ location.propriete?.nom }}</h2>
+        <NH2 class="titre-principal mb-4">Location – {{ location.propriete?.nom }}</NH2>
 
         <NTabs type="line" animated @update:value="(tab) => { if(tab==='quittances'){loadQuittances()} }">
           <NTabPane name="details" tab="Détails">
@@ -551,7 +543,7 @@ onMounted(() => {
           <NTabPane name="documents" tab="Documents">
             <NCard class="mt-4">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Documents associés</h3>
+                <NH3 class="sous-titre">Documents associés</NH3>
                 <NButton type="primary" size="small" @click="openDocumentModal">
                   <template #icon><NIcon :component="Add24Filled" /></template>
                   Ajouter un document
@@ -563,6 +555,7 @@ onMounted(() => {
 
           <NTabPane name="quittances" tab="Quittances">
             <NCard class="mt-4">
+              <NH3 class="sous-titre mb-4">Quittances de cette location</NH3>
               <NDataTable :columns="quittanceColumns" :data="quittances" :loading="quittanceLoading" />
             </NCard>
           </NTabPane>
@@ -634,6 +627,18 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+.sous-titre {
+  color: var(--n-text-color) !important;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
 .location-card {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -641,5 +646,22 @@ onMounted(() => {
 .location-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .sous-titre {
+    font-size: 1rem;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-4 {
+    margin-bottom: 1rem !important;
+  }
 }
 </style>

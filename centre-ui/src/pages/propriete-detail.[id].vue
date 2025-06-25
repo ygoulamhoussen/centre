@@ -11,6 +11,7 @@ import {
   NForm,
   NFormItem,
   NH1,
+  NH3,
   NInput,
   NInputNumber,
   NModal,
@@ -21,18 +22,18 @@ import {
   NTabs,
   NIcon,
   NPopconfirm,
-  useMessage,
+  useMessage
 } from 'naive-ui'
 import { h, onMounted, ref, computed, watch } from 'vue'
-import { 
-  Add24Filled, 
-  Edit24Filled, 
-  Delete24Filled, 
-  ArrowLeft24Filled, 
-  Document24Filled,
+import {
+  Add24Filled,
+  ArrowLeft24Filled,
   CheckmarkCircle24Filled,
-  ErrorCircle24Filled,
+  Delete24Filled,
   Dismiss24Filled as DismissIcon,
+  Document24Filled,
+  Edit24Filled,
+  ErrorCircle24Filled,
   Save24Filled
 } from '@vicons/fluent'
 // import { useRouter } from 'vue-router'  // Will be used later
@@ -63,7 +64,7 @@ const uploading = ref(false)
 const proprieteDetail = ref<any | null>(null)
 
 // Récupérer l'ID de la propriété depuis les paramètres de route
-const proprieteId = route.params.id as string
+const proprieteId = String(route.params.id || '')
 
 // Formulaires
 const editForm = ref({
@@ -693,12 +694,19 @@ const filteredAmortissements = computed(() => {
   if (!selectedCategorie.value) return amortissements.value
   return amortissements.value.filter((a: any) => a.categorie === selectedCategorie.value)
 })
-async function fetchAmortissement() {
+const fetchAmortissement = async () => {
+  if (amortissementLoading.value) return
   amortissementLoading.value = true
   try {
-    const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/genererAmortissement/${proprieteId}`)
-    if (!res.ok) throw new Error('Erreur serveur')
-    amortissements.value = await res.json()
+    if (typeof (store as any).getAmortissement === 'function') {
+      const data = await (store as any).getAmortissement(
+        proprieteId,
+        selectedCategorie.value || '',
+      )
+      amortissements.value = data
+    } else {
+      amortissements.value = []
+    }
   } catch (e) {
     amortissements.value = []
   } finally {
@@ -737,7 +745,7 @@ watch(activeTab, (tab) => {
       <NButton text @click="$router.push('/propriete')" class="back-button">
         <NIcon :component="ArrowLeft24Filled" size="20" />
       </NButton>
-      <NH1>Détails de la propriété</NH1>
+      <NH1 class="titre-principal">Détails de la propriété</NH1>
     </div>
 
     <NSpin :show="loading">
@@ -752,7 +760,7 @@ watch(activeTab, (tab) => {
               Modifier
             </NButton>
             <NPopconfirm
-              @positive-click="() => supprimerPropriete(proprieteDetail.propriete.id)"
+              @positive-click="() => proprieteDetail.propriete && proprieteDetail.propriete.id && supprimerPropriete(proprieteDetail.propriete.id)"
             >
               <template #trigger>
                 <NButton type="error" ghost class="action-button">
@@ -911,47 +919,27 @@ watch(activeTab, (tab) => {
             </NButton>
           </div>
 
-          <NDataTable
-            :columns="[
-              { key: 'categorie', title: 'Catégorie' },
-              {
-                key: 'montant',
-                title: 'Montant',
-                render: (row: any) => formatCurrency(row.montant),
-              },
-              {
-                key: 'description',
-                title: 'Description',
-              },
-              {
-                key: 'actions',
-                title: 'Actions',
-                render: (row: any) => h('div', { class: 'table-actions' }, [
-                  h(NButton, {
-                    size: 'small',
-                    text: true,
-                    onClick: () => editComposition(row),
-                    title: 'Modifier',
-                    class: 'action-icon',
-                    style: { marginRight: '8px' }
-                  }, () => h(NIcon, { component: Edit24Filled, size: 18 })),
-                  h(NButton, {
-                    size: 'small',
-                    text: true,
-                    onClick: () => deleteComposition(row.id),
-                    title: 'Supprimer',
-                    class: 'action-icon error',
-                  }, () => h(NIcon, { component: Delete24Filled, size: 18 }))
-                ]),
-              },
-            ]"
-            :data="proprieteDetail?.compositions || []"
-            :loading="loading"
-          >
-            <template #empty>
-              <NEmpty description="Aucune composition trouvée" />
-            </template>
-          </NDataTable>
+          <NH3 class="sous-titre mb-4">Composants de la propriété</NH3>
+          <div class="composition-cards">
+            <NCard
+              v-for="composition in proprieteDetail?.compositions || []"
+              :key="composition.id"
+              class="composition-card"
+              :bordered="true"
+              size="medium"
+            >
+              <div class="flex justify-between items-center mb-2">
+                <div class="font-bold">{{ composition.categorie }}</div>
+                <div class="flex gap-2">
+                  <NButton size="small" @click="editComposition(composition)">Modifier</NButton>
+                  <NButton size="small" type="error" @click="deleteComposition(composition.id)">Supprimer</NButton>
+                </div>
+              </div>
+              <div class="mb-1"><span class="label">Montant :</span> {{ formatCurrency(composition.montant) }}</div>
+              <div><span class="label">Description :</span> {{ composition.description }}</div>
+            </NCard>
+            <NEmpty v-if="!proprieteDetail?.compositions || proprieteDetail.compositions.length === 0" description="Aucune composition trouvée" />
+          </div>
 
           <!-- Modal d'édition de composition -->
           <NModal v-model:show="showCompositionModal">
@@ -1022,82 +1010,70 @@ watch(activeTab, (tab) => {
             </NButton>
           </div>
 
-          <NDataTable
-            :columns="[
-              { 
-                key: 'typeDocument', 
-                title: 'Type',
-                render: (row: any) => {
-                  const type = documentTypes.find(t => t.value === row.typeDocument)
-                  return type ? type.label : row.typeDocument || 'Non spécifié'
-                }
-              },
-              { 
-                key: 'titre', 
-                title: 'Nom du document',
-                render: (row: any) => row.titre || row.nomFichier || 'Sans nom'
-              },
-              { 
-                key: 'dateDocument', 
-                title: 'Date',
-                render: (row: any) => formatDate(row.dateDocument)
-              },
-              {
-                key: 'actions',
-                title: 'Actions',
-                render: (row: any) => h('div', { class: 'table-actions' }, [
-                  h(NButton, {
-                    size: 'small',
-                    text: true,
-                    onClick: () => telechargerDocument(row),
-                    title: 'Télécharger',
-                    class: 'action-icon',
-                    style: { marginRight: '8px' }
-                  }, () => h(NIcon, { component: getDocumentIcon(getFileExtension(row.nomFichier || '')), size: 18 })),
-                  h(NPopconfirm, {
-                    onPositiveClick: () => supprimerDocument(row.id)
-                  }, {
-                    trigger: () => h(NButton, {
-                      size: 'small',
-                      text: true,
-                      title: 'Supprimer',
-                      class: 'action-icon error',
-                    }, () => h(NIcon, { component: Delete24Filled, size: 18 })),
-                    default: 'Êtes-vous sûr de vouloir supprimer ce document ?'
-                  })
-                ]),
-              },
-            ]"
-            :data="proprieteDetail?.documents || []"
-            :loading="loading"
-          />
+          <NH3 class="sous-titre mb-4">Documents de la propriété</NH3>
+          <div class="document-cards">
+            <NCard
+              v-for="doc in proprieteDetail?.documents || []"
+              :key="doc.id"
+              class="document-card"
+              :bordered="true"
+              size="medium"
+            >
+              <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center gap-2">
+                  <NIcon :component="getDocumentIcon(getFileExtension(doc.nomFichier || ''))" size="22" />
+                  <span class="font-bold">{{ doc.titre || doc.nomFichier || 'Sans nom' }}</span>
+                </div>
+                <div class="flex gap-2">
+                  <NButton size="small" text @click="telechargerDocument(doc)" title="Télécharger">
+                    <NIcon :component="Document24Filled" />
+                  </NButton>
+                  <NPopconfirm @positive-click="() => supprimerDocument(doc.id)">
+                    <template #trigger>
+                      <NButton size="small" text type="error" title="Supprimer">
+                        <NIcon :component="Delete24Filled" />
+                      </NButton>
+                    </template>
+                    Êtes-vous sûr de vouloir supprimer ce document ?
+                  </NPopconfirm>
+                </div>
+              </div>
+              <div class="mb-1"><span class="label">Type :</span> {{ (documentTypes.find(t => t.value === doc.typeDocument)?.label) || doc.typeDocument || 'Non spécifié' }}</div>
+              <div class="mb-1"><span class="label">Date :</span> {{ formatDate(doc.dateDocument) }}</div>
+            </NCard>
+            <NEmpty v-if="!proprieteDetail?.documents || proprieteDetail.documents.length === 0" description="Aucun document pour le moment" />
+          </div>
         </NTabPane>
 
         <!-- Onglet Amortissement -->
         <NTabPane name="amortissement" tab="Amortissement">
           <div class="action-buttons" style="gap: 12px; display: flex; align-items: center;">
-            <NSelect v-model:value="selectedCategorie" :options="amortissementSelectOptions" placeholder="Filtrer par composant" style="max-width: 300px;" :disabled="amortissementLoading || amortissements.length === 0" clearable />
-            <NButton type="primary" :loading="amortissementLoading" @click="() => { selectedCategorie = ''; fetchAmortissement(); }">
+            <NSelect v-model:value="selectedCategorie as string | null | undefined" :options="amortissementSelectOptions" placeholder="Filtrer par composant" style="max-width: 300px;" :disabled="amortissementLoading || amortissements.length === 0" clearable />
+            <NButton type="primary" :loading="amortissementLoading" @click="() => { fetchAmortissement(); }">
               Générer le plan d'amortissement
             </NButton>
             <NButton type="success" :loading="amortissementLoading" @click="saveAmortissement" :disabled="amortissements.length === 0">
               Sauvegarder le plan
             </NButton>
           </div>
-          <NDataTable
-            :columns="[
-              { title: 'Composant', key: 'categorie', if: !selectedCategorie },
-              { title: 'Année', key: 'annee' },
-              { title: 'Annuité', key: 'montantAmorti', render: (row: any) => formatCurrency(row.montantAmorti) },
-              { title: 'Valeur nette comptable', key: 'valeurResiduelle', render: (row: any) => formatCurrency(row.valeurResiduelle) },
-            ].filter(col => col.if === undefined || col.if)"
-            :data="filteredAmortissements"
-            :loading="amortissementLoading"
-          >
-            <template #empty>
-              <NEmpty description="Aucun plan d'amortissement généré" />
-            </template>
-          </NDataTable>
+          <NH3 class="sous-titre mb-4">Plan d'amortissement</NH3>
+          <div class="amortissement-cards">
+            <NCard
+              v-for="item in filteredAmortissements"
+              :key="item.id ? item.id + '-' + item.annee : item.categorie + '-' + item.annee"
+              class="amortissement-card"
+              :bordered="true"
+              size="medium"
+            >
+              <div class="flex gap-2 mb-1" v-if="!selectedCategorie">
+                <span class="label">Composant :</span> <span class="font-bold">{{ item.categorie }}</span>
+              </div>
+              <div class="mb-1"><span class="label">Année :</span> {{ item.annee }}</div>
+              <div class="mb-1"><span class="label">Annuité :</span> {{ formatCurrency(item.montantAmorti) }}</div>
+              <div><span class="label">Valeur nette comptable :</span> {{ formatCurrency(item.valeurResiduelle) }}</div>
+            </NCard>
+            <NEmpty v-if="filteredAmortissements.length === 0" description="Aucun plan d'amortissement généré" />
+          </div>
         </NTabPane>
       </NTabs>
 
@@ -1188,83 +1164,42 @@ watch(activeTab, (tab) => {
 </template>
 
 <style scoped>
-/* Styles de base pour les champs de formulaire */
-.info-value {
-  width: 100%;
+.titre-principal, .sous-titre, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
 }
-
-/* Tous les champs de saisie prennent 100% de la largeur */
-.info-value :deep(.n-input),
-.info-value :deep(.n-input-number),
-.info-value :deep(.n-date-picker),
-.info-value :deep(.n-select) {
-  width: 100% !important;
-  max-width: 100%;
+.sous-titre {
+  font-size: 1.1rem;
+  font-weight: 600;
 }
-
-/* Pour les éléments internes des champs */
-.info-value :deep(.n-input__input),
-.info-value :deep(.n-input-number-input),
-.info-value :deep(.n-base-selection) {
-  width: 100% !important;
-}
-
-/* Ajustement pour le sélecteur de date */
-.info-value :deep(.n-date-picker) {
-  width: 100%;
-}
-
-/* Pour les petits écrans */
-@media (max-width: 768px) {
-  .info-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .info-label {
-    text-align: left;
-  }
-}
-
 .propriete-detail {
   padding: 20px;
   width: 100%;
   margin: 0;
 }
-
 .page-header {
   display: flex;
   align-items: center;
   margin-bottom: 24px;
 }
-
 .back-button {
   margin-right: 12px;
   color: var(--n-text-color);
   transition: color 0.2s;
 }
-
 .back-button:hover {
   color: var(--n-text-color-hover);
 }
-
 .action-buttons {
   margin-bottom: 20px;
   display: flex;
   gap: 12px;
 }
-
-.action-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .table-actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
 }
-
 .action-icon {
   font-size: 18px;
   padding: 4px;
@@ -1272,26 +1207,16 @@ watch(activeTab, (tab) => {
   transition: background-color 0.2s;
   color: var(--n-text-color);
 }
-
 .action-icon:hover {
   background-color: var(--n-color-hover);
 }
-
 .action-icon.error {
   color: var(--n-color-error);
 }
-
 .action-icon.error:hover {
   background-color: var(--n-color-error-hover);
   color: white;
 }
-
-.page-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
 .info-grid {
   display: grid;
   grid-template-columns: 200px 1fr;
@@ -1299,53 +1224,67 @@ watch(activeTab, (tab) => {
   margin-top: 20px;
   width: 100%;
 }
-
 .info-label {
   font-weight: bold;
   padding: 12px;
-  background-color: #f5f5f5;
+  background-color: var(--n-color-embedded);
   border-radius: 4px;
 }
-
 .info-value {
   padding: 12px;
-  border: 1px solid #eee;
+  border: 1px solid var(--n-border-color);
   border-radius: 4px;
 }
-
 .edit-form {
   width: 100%;
   max-width: 100%;
   margin-top: 20px;
 }
-
 .n-tabs {
   width: 100%;
 }
-
 .n-tab-pane {
   padding: 0;
   width: 100%;
 }
-
 .n-form {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
   width: 100%;
 }
-
 .n-form-item {
   margin-bottom: 0;
 }
-
-/* Pour les champs qui doivent prendre toute la largeur */
-.full-width {
-  grid-column: 1 / -1;
+.composition-cards, .document-cards, .amortissement-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
 }
-
-/* Ajustements pour les petits écrans */
+.composition-card, .document-card, .amortissement-card {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+.label {
+  font-weight: 600;
+  color: var(--n-text-color);
+  margin-right: 4px;
+}
 @media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .sous-titre {
+    font-size: 1rem;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .page-header {
+    margin-bottom: 1rem;
+  }
   .n-form {
     grid-template-columns: 1fr;
   }
@@ -1355,33 +1294,9 @@ watch(activeTab, (tab) => {
   .info-label {
     padding-bottom: 4px;
   }
-}
-
-/* Styles pour la table des compositions */
-.n-data-table {
-  width: 100%;
-  margin-top: 20px;
-}
-
-/* Styles pour la modale */
-.n-modal {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.n-card {
-  width: 90%;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.ml-2 {
-  margin-left: 8px;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
+  .composition-cards, .document-cards, .amortissement-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 </style>

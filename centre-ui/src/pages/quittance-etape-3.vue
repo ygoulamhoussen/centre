@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
+import { ArrowLeft24Filled, Checkmark24Filled } from '@vicons/fluent'
 import {
   NButton,
   NDescriptions,
@@ -10,6 +11,7 @@ import {
   NCard,
   NSteps,
   NStep,
+  NH2
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
@@ -51,12 +53,9 @@ async function genererPdfPreview() {
   }
 }
 
-
 function precedent() {
   router.back()
 }
-
-
 
 async function enregistrer() {
   loading.value = true
@@ -97,7 +96,7 @@ async function enregistrer() {
         <NStep title="Détails" description="Montants et statut" />
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
-      <h2 class="text-xl font-semibold mb-4">Étape 3 : Récapitulatif</h2>
+      <NH2 class="titre-principal mb-4">Étape 3 : Récapitulatif</NH2>
       <NDescriptions label-placement="top" bordered :column="2">
         <NDescriptionsItem label="Location ID">
           {{ quittanceDTO.locationId }}
@@ -121,7 +120,7 @@ async function enregistrer() {
           {{ quittanceDTO.inclureCaution ? 'Oui' : 'Non' }}
         </NDescriptionsItem>
         <NDescriptionsItem v-if="quittanceDTO.inclureCaution" label="Montant caution (€)">
-          {{ quittanceDTO.depotGarantie }}
+          {{ quittanceDTO.depot_garantie }}
         </NDescriptionsItem>
         <NDescriptionsItem label="Montant total (€)">
           {{ quittanceDTO.montantTotal }}
@@ -139,6 +138,10 @@ async function enregistrer() {
 </template>
 
 <style scoped>
+.titre-principal, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
 .flex {
   display: flex;
 }
@@ -147,5 +150,17 @@ async function enregistrer() {
 }
 .mt-8 {
   margin-top: 2rem;
+}
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-8, .mt-8 {
+    margin-bottom: 1rem !important;
+    margin-top: 1rem !important;
+  }
 }
 </style>

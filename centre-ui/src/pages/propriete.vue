@@ -12,7 +12,8 @@ import {
   NIcon,
   NPopconfirm,
   NSpace,
-  useMessage
+  useMessage,
+  NH1
 } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -88,7 +89,7 @@ onMounted(fetchProprietes)
 <template>
   <NSpace vertical :size="24">
     <div class="flex items-center justify-between">
-      <h1 class="text-xl font-bold">Mes propriétés</h1>
+      <NH1 class="titre-principal">Mes propriétés</NH1>
       <NButton type="primary" @click="demarrerCreation">
         Ajouter une propriété
       </NButton>
@@ -119,6 +120,10 @@ onMounted(fetchProprietes)
 </template>
 
 <style scoped>
+.titre-principal, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
 .hoverable-card {
   cursor: pointer;
   transition:
@@ -131,12 +136,22 @@ onMounted(fetchProprietes)
 .hoverable-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  background-color: #f9f9f9;
-  border: 1px solid #409eff;
+  background-color: var(--n-color-hover);
+  border: 1px solid var(--n-color-target);
 }
 .flex {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }
 </style>

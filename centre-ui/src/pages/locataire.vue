@@ -9,7 +9,10 @@ import {
   NSpace, 
   NIcon,
   useMessage,
-  NSpin
+  NSpin,
+  NH1,
+  NText,
+  NH2
 } from 'naive-ui'
 import { onMounted, ref, h } from 'vue'
 import { useRouter } from 'vue-router'
@@ -76,7 +79,7 @@ onMounted(() => {
 <template>
   <div class="p-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Mes locataires</h1>
+      <NH1 class="titre-principal">Mes locataires</NH1>
       <NButton type="primary" @click="addNewLocataire">
         <template #icon>
           <NIcon :component="Add24Filled" />
@@ -103,24 +106,24 @@ onMounted(() => {
             class="locataire-card" 
             @click="viewLocataireDetails(locataire.id)"
           >
-            <div class="flex items-start">
+            <div class="flex items-start gap-4">
               <div class="locataire-avatar">
                 <NIcon :component="Person24Filled" size="32" />
               </div>
-              <div class="ml-4 flex-1">
-                <h3 class="text-lg font-semibold mb-1">{{ locataire.prenom }} {{ locataire.nom }}</h3>
+              <div class="flex-1">
+                <NH2 class="locataire-nom mb-1">{{ locataire.prenom }} {{ locataire.nom }}</NH2>
                 <div class="text-gray-600 text-sm space-y-1">
-                  <div v-if="locataire.telephone" class="flex items-center">
-                    <span class="i-carbon-phone mr-2" />
-                    {{ locataire.telephone }}
+                  <div v-if="locataire.telephone" class="flex items-center gap-2">
+                    <span class="i-carbon-phone" />
+                    <NText depth="3">{{ locataire.telephone }}</NText>
                   </div>
-                  <div v-if="locataire.email" class="flex items-center">
-                    <span class="i-carbon-email mr-2" />
-                    {{ locataire.email }}
+                  <div v-if="locataire.email" class="flex items-center gap-2">
+                    <span class="i-carbon-email" />
+                    <NText depth="3">{{ locataire.email }}</NText>
                   </div>
-                  <div v-if="locataire.dateNaissance" class="flex items-center">
-                    <span class="i-carbon-calendar mr-2" />
-                    {{ formatDate(locataire.dateNaissance) }}
+                  <div v-if="locataire.dateNaissance" class="flex items-center gap-2">
+                    <span class="i-carbon-calendar" />
+                    <NText depth="3">{{ formatDate(locataire.dateNaissance) }}</NText>
                   </div>
                 </div>
               </div>
@@ -133,12 +136,25 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Titres adaptatifs au thème */
+.titre-principal, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+
+.locataire-nom {
+  color: var(--n-text-color) !important;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
 .locataire-card {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   height: 100%;
   display: flex;
   flex-direction: column;
+  padding: 1rem 0.5rem;
 }
 
 .locataire-card:hover {
@@ -169,5 +185,23 @@ onMounted(() => {
   padding-top: 12px;
   border-top: 1px solid #f0f0f0;
   margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-6 {
+    margin-bottom: 1rem !important;
+  }
+  .locataire-card {
+    padding: 0.5rem 0.25rem;
+  }
+  .locataire-nom {
+    font-size: 1rem;
+  }
 }
 </style>

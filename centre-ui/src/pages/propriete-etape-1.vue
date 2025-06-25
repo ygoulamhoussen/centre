@@ -1,29 +1,32 @@
 <script setup lang="ts">
+import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
 import {
-  useMessage,
-  NSpace,
-  NForm,
-  NInput,
-  NGrid,
-  NGi,
+  ArrowRight24Filled,
+  BuildingHome24Filled,
+  Home24Filled,
+  Pen24Filled,
+  Tag24Filled
+} from '@vicons/fluent'
+import {
   NButton,
   NCard,
-  NSteps,
-  NStep,
-  NIcon,
+  NForm,
+  NFormItem,
   NFormItemGi,
+  NGi,
+  NGrid,
+  NH2,
+  NIcon,
+  NInput,
+  NSelect,
+  NSpace,
+  NStep,
+  NSteps,
+  useMessage
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import {
-  Tag24Filled,
-  BuildingHome24Filled,
-  Home24Filled,
-  Box24Filled,
-  VehicleCar24Filled,
-  ArrowRight24Filled,
-} from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -41,8 +44,8 @@ const message = useMessage()
 const typesBien = [
   { value: 'APPARTEMENT', label: 'Appartement', icon: BuildingHome24Filled },
   { value: 'MAISON', label: 'Maison', icon: Home24Filled },
-  { value: 'BOX', label: 'Box', icon: Box24Filled },
-  { value: 'PARKING', label: 'Parking', icon: VehicleCar24Filled },
+  { value: 'BOX', label: 'Box', icon: Pen24Filled },
+  { value: 'PARKING', label: 'Parking', icon: BuildingHome24Filled },
 ]
 
 function choisirType(type: string) {
@@ -68,7 +71,7 @@ function valider() {
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
 
-      <h2 class="text-xl font-semibold mb-6">Étape 1: Donnez un nom à votre propriété</h2>
+      <NH2 class="titre-principal mb-6">Étape 1: Donnez un nom à votre propriété</NH2>
       <NForm>
         <NGrid :cols="1">
           <NFormItemGi>
@@ -85,7 +88,7 @@ function valider() {
         </NGrid>
       </NForm>
 
-      <h2 class="text-xl font-semibold my-6">Quel est le type de bien ?</h2>
+      <NH2 class="titre-principal my-6">Quel est le type de bien ?</NH2>
       <NGrid :cols="2" :x-gap="12" :y-gap="12" responsive="screen" :item-responsive="true">
         <NGi v-for="type in typesBien" :key="type.value">
           <NButton
@@ -117,3 +120,30 @@ function valider() {
     </NCard>
   </div>
 </template>
+
+<style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-6,
+  .mb-8,
+  .my-6 {
+    margin-bottom: 1rem !important;
+    margin-top: 1rem !important;
+  }
+}
+</style>

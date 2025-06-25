@@ -1,9 +1,35 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { useRouter } from 'vue-router'
-import { NSpace, NButton, NForm, NFormItem, NInputNumber, NSelect, NDatePicker, useMessage, NCard, NSteps, NStep, NIcon, NGrid, NFormItemGi } from 'naive-ui'
-import { ArrowLeft24Filled, ArrowRight24Filled, CalendarLtr24Filled, Money24Filled, CalendarClock24Filled, Key24Filled, ArrowSync20Filled, CalendarDay24Filled } from '@vicons/fluent'
+import {
+  ArrowLeft24Filled,
+  ArrowRight24Filled,
+  ArrowSync20Filled,
+  CalendarClock24Filled,
+  CalendarDay24Filled,
+  CalendarLtr24Filled,
+  Key24Filled,
+  Money24Filled,
+} from '@vicons/fluent'
+import {
+  NButton,
+  NCard,
+  NDatePicker,
+  NForm,
+  NFormItem,
+  NFormItemGi,
+  NGrid,
+  NH2,
+  NIcon,
+  NInputNumber,
+  NSelect,
+  NSpace,
+  NStep,
+  NSteps,
+  useMessage,
+} from 'naive-ui'
 import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
@@ -24,6 +50,34 @@ const frequences = [
   { label: 'Trimestriel', value: 'TRIMESTRIEL' },
   { label: 'Annuel', value: 'ANNUEL' }
 ]
+
+const loyerMensuel = computed({
+  get: () => (locationDTO.value.loyerMensuel ? Number(locationDTO.value.loyerMensuel) : null),
+  set: (val: number | null) => {
+    locationDTO.value.loyerMensuel = val === null ? '' : String(val)
+  },
+})
+
+const chargesMensuelles = computed({
+  get: () => (locationDTO.value.chargesMensuelles ? Number(locationDTO.value.chargesMensuelles) : null),
+  set: (val: number | null) => {
+    locationDTO.value.chargesMensuelles = val === null ? '' : String(val)
+  },
+})
+
+const depotGarantie = computed({
+  get: () => (locationDTO.value.depotGarantie ? Number(locationDTO.value.depotGarantie) : null),
+  set: (val: number | null) => {
+    locationDTO.value.depotGarantie = val === null ? '' : String(val)
+  },
+})
+
+const jourEcheance = computed({
+  get: () => (locationDTO.value.jourEcheance ? Number(locationDTO.value.jourEcheance) : null),
+  set: (val: number | null) => {
+    locationDTO.value.jourEcheance = val === null ? '' : String(val)
+  },
+})
 
 function suivant() {
   if (!locationDTO.value.loyerMensuel || !locationDTO.value.dateDebut) {
@@ -47,7 +101,7 @@ function precedent() {
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
 
-      <h2 class="text-xl font-semibold mb-4">Étape 2: Détails du bail</h2>
+      <NH2 class="titre-principal mb-4">Étape 2: Détails du bail</NH2>
 
       <NForm label-placement="top">
         <NGrid :x-gap="24" :y-gap="16" :cols="2">
@@ -59,11 +113,7 @@ function precedent() {
               clearable
               class="w-full"
               size="large"
-            >
-              <template #prefix>
-                <NIcon :component="CalendarLtr24Filled" />
-              </template>
-            </NDatePicker>
+            />
           </NFormItemGi>
           <NFormItemGi label="Date de fin (optionnel)">
             <NDatePicker
@@ -73,51 +123,27 @@ function precedent() {
               clearable
               class="w-full"
               size="large"
-            >
-              <template #prefix>
-                <NIcon :component="CalendarClock24Filled" />
-              </template>
-            </NDatePicker>
+            />
           </NFormItemGi>
           <NFormItemGi label="Loyer mensuel (€) *">
-            <NInputNumber v-model:value="locationDTO.loyerMensuel" min="0" placeholder="0.00" class="w-full" size="large">
-              <template #prefix>
-                <NIcon :component="Money24Filled" />
-              </template>
-            </NInputNumber>
+            <NInputNumber v-model:value="loyerMensuel" min="0" placeholder="0.00" class="w-full" size="large" />
           </NFormItemGi>
           <NFormItemGi label="Charges mensuelles (€)">
-            <NInputNumber v-model:value="locationDTO.chargesMensuelles" min="0" placeholder="0.00" class="w-full" size="large">
-              <template #prefix>
-                <NIcon :component="Money24Filled" />
-              </template>
-            </NInputNumber>
+            <NInputNumber v-model:value="chargesMensuelles" min="0" placeholder="0.00" class="w-full" size="large" />
           </NFormItemGi>
           <NFormItemGi label="Dépôt de garantie (€)">
-            <NInputNumber v-model:value="locationDTO.depotGarantie" min="0" placeholder="0.00" class="w-full" size="large">
-              <template #prefix>
-                <NIcon :component="Key24Filled" />
-              </template>
-            </NInputNumber>
+            <NInputNumber v-model:value="depotGarantie" min="0" placeholder="0.00" class="w-full" size="large" />
           </NFormItemGi>
           <NFormItemGi label="Fréquence de paiement">
-            <NSelect v-model:value="locationDTO.frequenceLoyer" :options="frequences" placeholder="Choisir une fréquence" size="large">
-              <template #prefix>
-                <NIcon :component="ArrowSync20Filled" />
-              </template>
-            </NSelect>
+            <NSelect v-model:value="locationDTO.frequenceLoyer" :options="frequences" placeholder="Choisir une fréquence" size="large" />
           </NFormItemGi>
           <NFormItemGi label="Jour d'échéance du loyer">
-            <NInputNumber v-model:value="locationDTO.jourEcheance" min="1" max="31" placeholder="ex: 5" class="w-full" size="large">
-              <template #prefix>
-                <NIcon :component="CalendarDay24Filled" />
-              </template>
-            </NInputNumber>
+            <NInputNumber v-model:value="jourEcheance" min="1" max="31" placeholder="ex: 5" class="w-full" size="large" />
           </NFormItemGi>
         </NGrid>
       </NForm>
 
-      <div class="flex justify-between mt-8">
+      <NSpace class="flex justify-between mt-8">
         <NButton @click="precedent" size="large">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
@@ -130,7 +156,32 @@ function precedent() {
             <NIcon :component="ArrowRight24Filled" />
           </template>
         </NButton>
-      </div>
+      </NSpace>
     </NCard>
   </div>
 </template>
+
+<style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-4,
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+}
+</style>

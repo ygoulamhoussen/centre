@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
+import { useUnifiedStore } from '@/store/unifiedStore'
+import { Add24Filled, Home24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
   NEmpty,
-  NGrid,
   NGi,
+  NGrid,
+  NH1,
+  NH3,
   NIcon,
-  useMessage,
   NSpin,
+  NText,
+  useMessage,
 } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Add24Filled, Home24Filled } from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -70,7 +74,7 @@ onMounted(() => {
 <template>
   <div class="p-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Mes locations</h1>
+      <NH1 class="titre-principal">Mes locations</NH1>
       <NButton type="primary" @click="demarrerCreation">
         <template #icon>
           <NIcon :component="Add24Filled" />
@@ -97,26 +101,26 @@ onMounted(() => {
             class="location-card"
             @click="viewLocationDetails(location.id)"
           >
-            <div class="flex items-start">
+            <div class="flex items-start gap-4">
               <div class="location-avatar">
                 <NIcon :component="Home24Filled" size="32" />
               </div>
-              <div class="ml-4 flex-1">
-                <h3 class="text-lg font-semibold mb-1">
+              <div class="flex-1">
+                <NH3 class="location-titre mb-2">
                   {{ location.proprieteNom }}
-                </h3>
-                <div class="text-gray-600 text-sm space-y-1">
-                  <div class="flex items-center">
-                    <span class="i-carbon-user mr-2" />
-                    {{ location.locataireNom }} {{ location.locatairePrenom }}
+                </NH3>
+                <div class="text-sm space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="i-carbon-user" />
+                    <NText depth="3">{{ location.locataireNom }} {{ location.locatairePrenom }}</NText>
                   </div>
-                  <div class="flex items-center">
-                    <span class="i-carbon-calendar mr-2" />
-                    Début: {{ formatDate(location.dateDebut) }}
+                  <div class="flex items-center gap-2">
+                    <span class="i-carbon-calendar" />
+                    <NText depth="3">Début: {{ formatDate(location.dateDebut) }}</NText>
                   </div>
-                  <div class="flex items-center">
-                    <span class="i-carbon-money mr-2" />
-                    {{ location.loyerMensuel }}€ + {{ location.chargesMensuelles }}€
+                  <div class="flex items-center gap-2">
+                    <span class="i-carbon-money" />
+                    <NText depth="3">{{ location.loyerMensuel }}€ + {{ location.chargesMensuelles }}€</NText>
                   </div>
                 </div>
               </div>
@@ -129,6 +133,18 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+.location-titre {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--n-text-color);
+}
 .location-card {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -143,8 +159,8 @@ onMounted(() => {
 }
 
 .location-avatar {
-  background-color: #e6f7ff;
-  color: #1890ff;
+  background-color: var(--n-color-embedded);
+  color: var(--n-color-target);
   border-radius: 50%;
   width: 48px;
   height: 48px;
@@ -155,5 +171,23 @@ onMounted(() => {
 
 :deep(.n-card__content) {
   flex: 1;
+}
+
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .location-titre {
+    font-size: 1rem;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-6 {
+    margin-bottom: 1rem !important;
+  }
 }
 </style>

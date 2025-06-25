@@ -24,7 +24,7 @@ import {
   NTabs,
   NTabPane,
   NTab,
-  NTabPanels
+  NH3,
 } from 'naive-ui'
 import { 
   Save24Filled, 
@@ -256,8 +256,6 @@ const documentForm = ref({
 
 // Référence vers l'input file
 const fileInput = ref<HTMLInputElement | null>(null)
-
-
 
 // Gestion du drop de fichier
 function handleDrop(event: DragEvent) {
@@ -580,7 +578,7 @@ function formatDate(dateString: string) {
       <NButton text @click="router.push('/locataire')" class="back-button">
         <NIcon :component="ArrowLeft24Filled" size="20" />
       </NButton>
-      <NH1>Détails du locataire</NH1>
+      <NH1 class="titre-principal">Détails du locataire</NH1>
     </div>
 
     <NSpin :show="loading">
@@ -661,7 +659,7 @@ function formatDate(dateString: string) {
               </NForm>
               <div v-else class="space-y-6">
                 <div>
-                  <h3 class="text-lg font-semibold mb-4">Informations personnelles</h3>
+                  <NH3 class="sous-titre mb-4">Informations personnelles</NH3>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <div class="text-sm text-gray-500">Nom</div>
@@ -687,7 +685,7 @@ function formatDate(dateString: string) {
                 </div>
 
                 <div v-if="locataire.adresse || locataire.ville || locataire.codePostal || locataire.pays">
-                  <h3 class="text-lg font-semibold mb-4">Adresse</h3>
+                  <NH3 class="sous-titre mb-4">Adresse</NH3>
                   <div class="space-y-1">
                     <div v-if="locataire.adresse" class="text-base">{{ locataire.adresse }}</div>
                     <div v-if="locataire.codePostal || locataire.ville" class="text-base">
@@ -705,7 +703,7 @@ function formatDate(dateString: string) {
           <NTabPane name="documents" tab="Documents">
             <NCard :bordered="false">
               <div class="mb-4 flex justify-between items-center">
-                <h3 class="text-lg font-semibold">Documents</h3>
+                <NH3 class="sous-titre">Documents</NH3>
                 <NButton type="primary" @click="showDocumentModal = true">
                   <template #icon>
                     <NIcon :component="Add24Filled" />
@@ -812,55 +810,68 @@ function formatDate(dateString: string) {
 </template>
 
 <style scoped>
+.titre-principal, .sous-titre, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+.sous-titre {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
 .page-header {
   display: flex;
   align-items: center;
   margin-bottom: 1.5rem;
 }
-
 .page-header .back-button {
   margin-right: 1rem;
 }
-
 .action-buttons {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
 }
-
 .action-button {
   margin-right: 0.5rem;
 }
-
 .info-grid {
   display: grid;
   grid-template-columns: 200px 1fr;
   gap: 1rem;
   margin-top: 1rem;
 }
-
 .info-label {
   font-weight: 500;
   color: var(--n-text-color);
 }
-
 .document-list {
   margin-top: 1rem;
 }
-
 .document-item {
   transition: background-color 0.2s;
 }
-
 .document-item:hover {
   background-color: var(--n-color-embedded);
 }
-
 .edit-form {
   max-width: 800px;
   margin: 0 auto;
   padding: 1.5rem;
   background: var(--n-color-embedded);
   border-radius: var(--n-border-radius);
+}
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .sous-titre {
+    font-size: 1rem;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .page-header, .action-buttons {
+    margin-bottom: 1rem;
+  }
 }
 </style>

@@ -20,6 +20,7 @@ import {
   NDescriptionsItem,
   NText,
   NAlert,
+  NH2,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { ref, computed } from 'vue'
@@ -135,12 +136,16 @@ async function enregistrer() {
         <NStep title="Récapitulatif" description="Vérification et sauvegarde" />
       </NSteps>
 
-      <h2 class="text-xl font-semibold mb-6">Étape 4: Récapitulatif et Amortissement</h2>
+      <NH2 class="titre-principal mb-6">Étape 4: Récapitulatif et Amortissement</NH2>
 
       <NDescriptions label-placement="top" bordered :columns="2" title="Récapitulatif de la propriété">
-        <NDescriptionsItem label="Nom">{{ proprieteDTO.nom }}</NDescriptionsItem>
-        <NDescriptionsItem label="Type">{{ proprieteDTO.type }}</NDescriptionsItem>
-        <NDescriptionsItem label="Adresse" :span="2">
+        <NDescriptionsItem label="Nom de la propriété" :label-style="{ fontWeight: 'bold' }">{{
+          proprieteDTO.nom
+        }}</NDescriptionsItem>
+        <NDescriptionsItem label="Type de bien" :label-style="{ fontWeight: 'bold' }">{{
+          proprieteDTO.typeBien
+        }}</NDescriptionsItem>
+        <NDescriptionsItem label="Adresse" :label-style="{ fontWeight: 'bold' }" :span="2">
           {{ proprieteDTO.adresse }}, {{ proprieteDTO.codePostal }} {{ proprieteDTO.ville }}
           <br>
           <span v-if="proprieteDTO.complementAdresse">{{ proprieteDTO.complementAdresse }}</span>
@@ -222,3 +227,22 @@ async function enregistrer() {
     </NCard>
   </div>
 </template>
+
+<style scoped>
+.titre-principal, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-6, .mb-8, .mt-8 {
+    margin-bottom: 1rem !important;
+    margin-top: 1rem !important;
+  }
+}
+</style>

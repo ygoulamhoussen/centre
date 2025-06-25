@@ -1,8 +1,20 @@
 <script setup lang="ts">
-import { useAuthStore } from '@/store/modules/auth' // ajout pour récupérer l'utilisateur connecté
+import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { NButton, NForm, NFormItem, NSelect, NSpace, useMessage, NCard, NSteps, NStep, NIcon } from 'naive-ui'
-import { BuildingHome24Filled, Person24Filled, ArrowRight24Filled } from '@vicons/fluent'
+import { ArrowRight24Filled, BuildingHome24Filled, Person24Filled } from '@vicons/fluent'
+import {
+  NButton,
+  NCard,
+  NForm,
+  NFormItem,
+  NH2,
+  NIcon,
+  NSelect,
+  NSpace,
+  NStep,
+  NSteps,
+  useMessage,
+} from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -12,7 +24,7 @@ definePage({
     title: 'Nouvelle location - Étape 1',
     hideInMenu: true,
     activeMenu: '/location',
-  }
+  },
 })
 
 const store = useUnifiedStore()
@@ -78,46 +90,63 @@ onMounted(() => {
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
 
-      <h2 class="text-xl font-semibold mb-4">Étape 1: Sélection de la propriété et du locataire</h2>
+      <NH2 class="titre-principal mb-4">Étape 1: Sélection de la propriété et du locataire</NH2>
 
       <NForm label-placement="top">
-        <NFormItem label="Propriété">
+        <NFormItem label="Sélectionner une propriété">
           <NSelect
-            :value="locationDTO.proprieteId"
+            v-model:value="locationDTO.proprieteId"
             :options="proprietes.map(p => ({ label: p.nom, value: p.id }))"
             placeholder="Choisir une propriété"
             @update:value="handleProprieteChange"
             size="large"
-          >
-            <template #prefix>
-              <NIcon :component="BuildingHome24Filled" />
-            </template>
-          </NSelect>
+          />
         </NFormItem>
 
-        <NFormItem label="Locataire">
+        <NFormItem label="Sélectionner un locataire">
           <NSelect
-            :value="locationDTO.locataireId"
+            v-model:value="locationDTO.locataireId"
             :options="locataires.map(l => ({ label: l.nom, value: l.id }))"
             placeholder="Choisir un locataire"
             @update:value="handleLocataireChange"
             size="large"
-          >
-            <template #prefix>
-              <NIcon :component="Person24Filled" />
-            </template>
-          </NSelect>
+          />
         </NFormItem>
       </NForm>
 
-      <div class="flex justify-end mt-8">
+      <NSpace justify="end" class="mt-8">
         <NButton type="primary" @click="suivant" size="large">
           Suivant
           <template #icon>
             <NIcon :component="ArrowRight24Filled" />
           </template>
         </NButton>
-      </div>
+      </NSpace>
     </NCard>
   </div>
 </template>
+
+<style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-4,
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+}
+</style>

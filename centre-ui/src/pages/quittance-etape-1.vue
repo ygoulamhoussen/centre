@@ -1,7 +1,21 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { NButton, NDatePicker, NForm, NFormItem, NH1, NSelect, NSpace, useMessage, NCard, NSteps, NGrid, NFormItemGi } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NDatePicker,
+  NForm,
+  NFormItem,
+  NFormItemGi,
+  NGrid,
+  NH2,
+  NSelect,
+  NSpace,
+  NStep,
+  NSteps,
+  useMessage
+} from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -53,7 +67,7 @@ onMounted(() => fetchLocations())
         <NStep title="Détails" description="Montants et statut" />
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
-      <h2 class="text-xl font-semibold mb-4">Étape 1 : Sélection de la location et de la période</h2>
+      <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la location et de la période</NH2>
       <NForm label-placement="top">
         <NGrid :x-gap="24" :y-gap="16" :cols="2">
           <NFormItemGi :span="2" label="Location">
@@ -80,6 +94,13 @@ onMounted(() => fetchLocations())
 </template>
 
 <style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
 .flex {
   display: flex;
 }
@@ -88,5 +109,21 @@ onMounted(() => fetchLocations())
 }
 .mt-8 {
   margin-top: 2rem;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-8,
+  .mt-8 {
+    margin-bottom: 1rem !important;
+    margin-top: 1rem !important;
+  }
 }
 </style>

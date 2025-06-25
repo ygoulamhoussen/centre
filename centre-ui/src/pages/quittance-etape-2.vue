@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
+import { ArrowLeft24Filled, ArrowRight24Filled } from '@vicons/fluent'
 import {
   NButton,
+  NCard,
   NDatePicker,
   NForm,
   NFormItem,
-  NH1,
+  NFormItemGi,
+  NGrid,
+  NH2,
   NInputNumber,
   NRadio,
   NRadioGroup,
   NSelect,
   NSpace,
-  useMessage,
-  NCard,
+  NStep,
   NSteps,
-  NGrid,
-  NFormItemGi
+  useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
@@ -70,7 +72,7 @@ function suivant() {
         <NStep title="Détails" description="Montants et statut" />
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
-      <h2 class="text-xl font-semibold mb-4">Étape 2 : Détails de la quittance</h2>
+      <NH2 class="titre-principal mb-4">Étape 2 : Détails de la quittance</NH2>
       <NForm label-placement="top">
         <NGrid :x-gap="24" :y-gap="16" :cols="2">
           <NFormItemGi label="Date émission *">
@@ -119,6 +121,13 @@ function suivant() {
 </template>
 
 <style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
 .flex {
   display: flex;
 }
@@ -127,5 +136,21 @@ function suivant() {
 }
 .mt-8 {
   margin-top: 2rem;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-8,
+  .mt-8 {
+    margin-bottom: 1rem !important;
+    margin-top: 1rem !important;
+  }
 }
 </style>

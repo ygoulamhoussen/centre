@@ -1,30 +1,31 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
 import {
+  ArrowLeft24Filled,
+  ArrowRight24Filled,
+  CalendarLtr24Filled,
+  ChartMultiple24Filled,
+  DocumentHeader24Filled,
+  Money24Filled,
+  PeopleCommunity24Filled
+} from '@vicons/fluent'
+import {
   NButton,
+  NCard,
   NDatePicker,
   NForm,
   NFormItemGi,
+  NGrid,
+  NH2,
+  NIcon,
   NInputNumber,
   NSpace,
-  NGrid,
-  useMessage,
-  NCard,
-  NSteps,
   NStep,
-  NIcon,
+  NSteps,
+  useMessage
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import {
-  CalendarLtr24Filled,
-  Money24Filled,
-  DocumentHeader24Filled,
-  PeopleCommunity24Filled,
-  ChartMultiple24Filled,
-  ArrowLeft24Filled,
-  ArrowRight24Filled,
-} from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -62,7 +63,7 @@ function suivant() {
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
 
-      <h2 class="text-xl font-semibold mb-4">Étape 3: Détails de l'acquisition</h2>
+      <NH2 class="titre-principal mb-4">Étape 3: Détails de l'acquisition</NH2>
 
       <NForm>
         <NGrid :x-gap="24" :y-gap="16" :cols="2" :item-responsive="true">
@@ -157,3 +158,28 @@ function suivant() {
     </NCard>
   </div>
 </template>
+
+<style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-4,
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+}
+</style>

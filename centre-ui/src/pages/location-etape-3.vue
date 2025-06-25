@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
+import { ArrowLeft24Filled, Checkmark24Filled } from '@vicons/fluent'
 import {
   NButton,
+  NCard,
   NDescriptions,
   NDescriptionsItem,
-  NSpace,
-  useMessage,
-  NCard,
-  NSteps,
-  NStep,
+  NH2,
   NIcon,
+  NSpace,
+  NStep,
+  NSteps,
+  useMessage,
 } from 'naive-ui'
-import { ArrowLeft24Filled, Checkmark24Filled } from '@vicons/fluent'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -85,7 +86,7 @@ function precedent() {
         <NStep title="Récapitulatif" description="Vérification finale" />
       </NSteps>
 
-      <h2 class="text-xl font-semibold mb-4">Étape 3: Récapitulatif</h2>
+      <NH2 class="titre-principal mb-4">Étape 3: Récapitulatif</NH2>
 
       <NDescriptions label-placement="top" bordered :column="2">
         <NDescriptionsItem label="Propriété">
@@ -134,3 +135,28 @@ function precedent() {
     </NCard>
   </div>
 </template>
+
+<style scoped>
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-4,
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+}
+</style>

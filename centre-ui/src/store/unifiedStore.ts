@@ -18,7 +18,7 @@ export const useUnifiedStore = defineStore('unified', {
       tantieme: null as string | null,
       fraisNotaire: null as string | null,
       fraisAgence: null as string | null,
-      compositions: [] as any[]
+      compositions: [] as any[],
     },
     locataireDTO: {
       id: null as string | null,
@@ -29,7 +29,7 @@ export const useUnifiedStore = defineStore('unified', {
       adresse: null as string | null,
       complementAdresse: null as string | null,
       codePostal: null as string | null,
-      ville: null as string | null
+      ville: null as string | null,
     },
     locationDTO: {
       id: '',
@@ -43,7 +43,7 @@ export const useUnifiedStore = defineStore('unified', {
       chargesMensuelles: '0',
       depotGarantie: '0',
       frequenceLoyer: 'Mensuel',
-      jourEcheance: '1'
+      jourEcheance: '1',
     },
     quittanceDTO: {
       id: null as string | null,
@@ -55,7 +55,7 @@ export const useUnifiedStore = defineStore('unified', {
       montantCharges: null as string | null,
       montantTotal: null as string | null,
       statut: null as string | null,
-      inclure_caution: false as boolean
+      inclure_caution: false as boolean,
     },
     paiementDTO: {
       id: null as string | null,
@@ -65,7 +65,7 @@ export const useUnifiedStore = defineStore('unified', {
       moyenPaiement: null as string | null,
       reference: null as string | null,
       commentaire: null as string | null,
-      estValide: false as boolean
+      estValide: false as boolean,
     },
     creditDTO: {
       id: null as string | null,
@@ -79,8 +79,8 @@ export const useUnifiedStore = defineStore('unified', {
       mensualite: null as string | null,
       assuranceMensuelle: null as string | null,
       fraisDossier: null as string | null,
-      fraisGarantie: null as string | null
-    }
+      fraisGarantie: null as string | null,
+    },
   }),
 
   actions: {
@@ -137,6 +137,15 @@ export const useUnifiedStore = defineStore('unified', {
     },
     resetCreditDTO() {
       Object.assign(this.creditDTO, this.$state.creditDTO)
+    },
+    async getAmortissement(proprieteId: string, categorie: string = '') {
+      let url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/genererAmortissement/${proprieteId}`
+      if (categorie) url += `?categorie=${encodeURIComponent(categorie)}`
+      const res = await fetch(url, {
+        credentials: 'include',
+      })
+      if (!res.ok) throw new Error('Erreur lors de la génération du plan')
+      return await res.json()
     }
   }
 })

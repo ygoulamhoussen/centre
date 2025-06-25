@@ -755,7 +755,7 @@ watch(activeTab, (tab) => {
     <NSpin :show="loading">
       <NTabs v-if="proprieteDetail" v-model:value="activeTab" type="line" animated>
         <!-- Onglet Informations -->
-        <NTabPane name="infos" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Informations')]" title="Informations">
+        <NTabPane name="infos" :tab="[h(NIcon, { component: Info24Filled, size: 20 }), ' Informations']" title="Informations">
           <div v-if="!editingInfos" class="action-buttons">
             <NButton type="primary" @click="startEditing('infos')" class="action-button" ghost title="Modifier">
               <template #icon>
@@ -909,7 +909,7 @@ watch(activeTab, (tab) => {
         </NTabPane>
 
         <!-- Onglet Compositions -->
-        <NTabPane name="compositions" :tab="[h(NIcon, { component: ChartMultiple24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Compositions')]" title="Compositions">
+        <NTabPane name="compositions" :tab="[h(NIcon, { component: ChartMultiple24Filled, size: 20 }), ' Compositions']" title="Compositions">
           <div class="action-buttons">
             <NButton type="primary" @click="addComposition" class="action-button" title="Ajouter une composition">
               <template #icon>
@@ -1003,7 +1003,7 @@ watch(activeTab, (tab) => {
         </NTabPane>
 
         <!-- Onglet Documents -->
-        <NTabPane name="documents" :tab="[h(NIcon, { component: Document24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Documents')]" title="Documents">
+        <NTabPane name="documents" :tab="[h(NIcon, { component: Document24Filled, size: 20 }), ' Documents']" title="Documents">
           <div class="action-buttons">
             <NButton type="primary" @click="nouveauDocument" class="action-button" title="Ajouter un document">
               <template #icon>
@@ -1048,7 +1048,7 @@ watch(activeTab, (tab) => {
         </NTabPane>
 
         <!-- Onglet Amortissement -->
-        <NTabPane name="amortissement" :tab="[h(NIcon, { component: Money24Filled, size: 20 }), h('span', { class: 'tab-label-hover' }, 'Amortissement')]" title="Amortissement">
+        <NTabPane name="amortissement" :tab="[h(NIcon, { component: Money24Filled, size: 20 }), ' Amortissement']" title="Amortissement">
           <div class="action-buttons" style="gap: 12px; display: flex; align-items: center;">
             <NSelect v-model:value="selectedCategorie as string | null | undefined" :options="amortissementSelectOptions" placeholder="Filtrer par composant" style="max-width: 300px;" :disabled="amortissementLoading || amortissements.length === 0" clearable />
             <NButton type="primary" :loading="amortissementLoading" @click="() => { fetchAmortissement(); }" title="Générer le plan d'amortissement">
@@ -1315,14 +1315,30 @@ watch(activeTab, (tab) => {
     box-sizing: border-box;
   }
 }
+.n-tabs-tab {
+  min-width: unset;
+  max-width: unset;
+  justify-content: flex-start;
+  text-align: left;
+  padding: 0 16px !important;
+  position: relative;
+}
+.n-tabs-tab .n-icon {
+  margin: 0 8px 0 0;
+  display: inline-block;
+}
 .tab-label-hover {
-  display: none;
-  margin-left: 6px;
+  display: inline;
+  margin-left: 0;
   vertical-align: middle;
   font-size: 15px;
   font-weight: 500;
-}
-.n-tabs-tab:hover .tab-label-hover {
-  display: inline;
+  position: static;
+  background: none;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  white-space: normal;
+  box-shadow: none;
 }
 </style>

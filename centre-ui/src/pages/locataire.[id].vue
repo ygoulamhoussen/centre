@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/modules/auth'
 import { 
@@ -590,7 +590,10 @@ function formatDate(dateString: string) {
       <template v-else-if="locataire">
         <NTabs type="line" animated>
           <!-- Onglet Informations -->
-          <NTabPane name="informations" tab="Informations">
+          <NTabPane name="informations" :tab="[
+            h(NIcon, { component: Info24Filled, size: 20 }),
+            ' Informations'
+          ]">
             <div v-if="!editing" class="action-buttons mb-4">
               <NButton type="primary" @click="startEditing" class="action-button" ghost title="Modifier">
                 <template #icon>
@@ -697,7 +700,10 @@ function formatDate(dateString: string) {
           </NTabPane>
 
           <!-- Onglet Documents -->
-          <NTabPane name="documents" tab="Documents">
+          <NTabPane name="documents" :tab="[
+            h(NIcon, { component: Document24Filled, size: 20 }),
+            ' Documents'
+          ]">
             <NCard :bordered="false">
               <div class="mb-4 flex justify-between items-center">
                 <NH3 class="sous-titre">Documents</NH3>
@@ -905,7 +911,26 @@ function formatDate(dateString: string) {
   font-size: 15px;
   font-weight: 500;
 }
-.n-tabs-tab:hover .tab-label-hover {
+.n-tabs-tab {
+  min-width: unset;
+  max-width: unset;
+  justify-content: flex-start;
+  text-align: left;
+  padding: 0 16px !important;
+  position: relative;
+}
+.n-tabs-tab .n-icon {
+  margin: 0 8px 0 0;
+  display: inline-block;
+}
+.n-tabs-tab .tab-label-hover {
   display: inline;
+  position: static;
+  background: none;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  white-space: normal;
+  box-shadow: none;
 }
 </style>

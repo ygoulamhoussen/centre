@@ -371,21 +371,35 @@ onMounted(async () => {
 
         <div class="w-full overflow-x-auto">
           <n-spin :show="loading" size="large" class="flex justify-center py-10 w-full">
-            <n-data-table
-              :columns="columns"
-              :data="filteredPaiements"
-              :loading="false"
-              :pagination="pagination"
-              :bordered="false"
-              striped
-              class="w-full"
-            >
-              <template #empty>
-                <n-empty class="py-8">
-                  Aucun paiement trouvé
-                </n-empty>
-              </template>
-            </n-data-table>
+            <div class="paiement-cards">
+              <n-card
+                v-for="paiement in filteredPaiements"
+                :key="paiement.id"
+                class="paiement-card"
+                :bordered="true"
+                size="medium"
+              >
+                <div class="flex justify-between items-center mb-2">
+                  <div class="font-bold">Date : {{ formatDate(paiement.datePaiement) }}</div>
+                  <div class="flex gap-2">
+                    <n-button text type="primary" @click="() => viewDetails(paiement)">
+                      <n-icon :component="EyeOutlined" />
+                    </n-button>
+                    <n-button text type="info" @click="() => editPaiement(paiement)">
+                      <n-icon :component="EditOutlined" />
+                    </n-button>
+                    <n-button text type="error" @click="() => confirmDelete(paiement)">
+                      <n-icon :component="DeleteOutlined" />
+                    </n-button>
+                  </div>
+                </div>
+                <div class="mb-1"><span class="label">Montant :</span> {{ formatCurrency(paiement.montant) }}</div>
+                <div class="mb-1"><span class="label">Moyen :</span> {{ paiement.moyenPaiement }}</div>
+                <div class="mb-1"><span class="label">Référence :</span> {{ paiement.reference }}</div>
+                <div class="mb-1"><span class="label">Statut :</span> <n-tag :type="paiement.estValide === 'true' ? 'success' : 'warning'" size="small">{{ paiement.estValide === 'true' ? 'Validé' : 'En attente' }}</n-tag></div>
+              </n-card>
+              <n-empty v-if="!filteredPaiements.length" class="py-8">Aucun paiement trouvé</n-empty>
+            </div>
           </n-spin>
         </div>
       </n-space>
@@ -451,3 +465,28 @@ onMounted(async () => {
     </n-modal>
   </n-layout>
 </template>
+
+<style scoped>
+.paiement-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.paiement-card {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+.label {
+  font-weight: 600;
+  color: var(--n-text-color);
+  margin-right: 4px;
+}
+@media (max-width: 768px) {
+  .paiement-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+</style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage, NH2 } from 'naive-ui'
+import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage, NH2, NEmpty } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -267,11 +267,28 @@ function getPaiementTableData() {
               <NH2 class="sous-titre">Paiements associés</NH2>
               <NButton size="small" type="primary" ghost @click="openAddPaiementModal">Ajouter un paiement</NButton>
             </div>
-            <NDataTable
-              :columns="paiementColumns"
-              :data="Array.isArray(paiements) ? paiements : []"
-              :loading="paiementLoading"
-            />
+            <div class="paiement-cards">
+              <NCard
+                v-for="p in Array.isArray(paiements) ? paiements : []"
+                :key="p.id"
+                class="paiement-card"
+                :bordered="true"
+                size="medium"
+              >
+                <div class="flex justify-between items-center mb-2">
+                  <div class="font-bold">Date : {{ p.datePaiement }}</div>
+                  <div class="flex gap-2">
+                    <NButton size="small" ghost @click="() => openEditPaiementModal(p)">Modifier</NButton>
+                    <NButton size="small" type="error" ghost @click="() => deletePaiement(p)">Supprimer</NButton>
+                  </div>
+                </div>
+                <div class="mb-1"><span class="label">Montant :</span> {{ p.montant }} €</div>
+                <div class="mb-1"><span class="label">Moyen :</span> {{ p.moyenPaiement }}</div>
+                <div class="mb-1"><span class="label">Référence :</span> {{ p.reference }}</div>
+                <div class="mb-1"><span class="label">Commentaire :</span> {{ p.commentaire }}</div>
+              </NCard>
+              <NEmpty v-if="!paiements || paiements.length === 0" description="Aucun paiement pour le moment" />
+            </div>
             <NModal v-model:show="paiementModalVisible" preset="dialog" title="Paiement" style="width: 400px">
               <NForm label-placement="top">
                 <NFormItem label="Date">
@@ -328,6 +345,22 @@ function getPaiementTableData() {
 .mb-4 {
   margin-bottom: 1rem;
 }
+.paiement-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.paiement-card {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+.label {
+  font-weight: 600;
+  color: var(--n-text-color);
+  margin-right: 4px;
+}
 @media (max-width: 768px) {
   .titre-principal, h1, h2, h3 {
     font-size: 1.25rem !important;
@@ -341,6 +374,10 @@ function getPaiementTableData() {
   .mt-8, .mb-4 {
     margin-top: 1rem !important;
     margin-bottom: 1rem !important;
+  }
+  .paiement-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 </style> 

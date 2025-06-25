@@ -712,14 +712,38 @@ function formatDate(dateString: string) {
                 </NButton>
               </div>
 
-              <NDataTable
-                v-if="locataire.documents && locataire.documents.length > 0"
-                :columns="documentColumns"
-                :data="locataire.documents"
-                :bordered="false"
-                :single-line="false"
-              />
-              <NEmpty v-else description="Aucun document pour le moment" />
+              <div class="document-cards">
+                <NCard
+                  v-for="doc in locataire.documents || []"
+                  :key="doc.id"
+                  class="document-card"
+                  :bordered="true"
+                  size="medium"
+                >
+                  <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-2">
+                      <NIcon :component="getDocumentIcon(doc.nomFichier || '')" size="22" />
+                      <span class="font-bold">{{ doc.titre || doc.nomFichier || 'Sans nom' }}</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <NButton size="small" text @click="downloadDocument(doc)" title="Télécharger">
+                        <NIcon :component="ArrowDownload24Filled" />
+                      </NButton>
+                      <NPopconfirm @positive-click="() => deleteDocument(doc.id)">
+                        <template #trigger>
+                          <NButton size="small" text type="error" title="Supprimer">
+                            <NIcon :component="Delete24Filled" />
+                          </NButton>
+                        </template>
+                        Êtes-vous sûr de vouloir supprimer ce document ?
+                      </NPopconfirm>
+                    </div>
+                  </div>
+                  <div class="mb-1"><span class="label">Type :</span> {{ (documentTypes.find(t => t.value === doc.typeDocument)?.label) || doc.typeDocument || 'Non spécifié' }}</div>
+                  <div class="mb-1"><span class="label">Date :</span> {{ formatDate(doc.dateDocument) }}</div>
+                </NCard>
+                <NEmpty v-if="!locataire.documents || locataire.documents.length === 0" description="Aucun document pour le moment" />
+              </div>
             </NCard>
           </NTabPane>
         </NTabs>
@@ -844,21 +868,21 @@ function formatDate(dateString: string) {
   font-weight: 500;
   color: var(--n-text-color);
 }
-.document-list {
-  margin-top: 1rem;
+.document-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
 }
-.document-item {
-  transition: background-color 0.2s;
+.document-card {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
-.document-item:hover {
-  background-color: var(--n-color-embedded);
-}
-.edit-form {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 1.5rem;
-  background: var(--n-color-embedded);
-  border-radius: var(--n-border-radius);
+.label {
+  font-weight: 600;
+  color: var(--n-text-color);
+  margin-right: 4px;
 }
 @media (max-width: 768px) {
   .titre-principal, h1, h2, h3 {
@@ -872,6 +896,10 @@ function formatDate(dateString: string) {
   }
   .page-header, .action-buttons {
     margin-bottom: 1rem;
+  }
+  .document-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 </style>

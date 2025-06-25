@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { Add24Filled, ArrowLeft24Filled, Delete24Filled, Edit24Filled, Eye24Filled } from '@vicons/fluent'
+import { Add24Filled, ArrowLeft24Filled, Delete24Filled, Edit24Filled, Eye24Filled, DocumentPdf24Filled, Document24Filled, Image24Filled, ArrowDownload24Filled, Dismiss24Filled, Save24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -549,14 +549,67 @@ onMounted(() => {
                   Ajouter un document
                 </NButton>
               </div>
-              <NDataTable :columns="documentColumns" :data="documents" />
+              <div class="document-cards">
+                <NCard
+                  v-for="doc in documents"
+                  :key="doc.id"
+                  class="document-card"
+                  :bordered="true"
+                  size="medium"
+                >
+                  <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-2">
+                      <NIcon :component="getDocumentIcon(doc.nomFichier || '')" size="22" />
+                      <span class="font-bold">{{ doc.titre || doc.nomFichier || 'Sans nom' }}</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <NButton size="small" text @click="downloadDocument(doc)" title="Télécharger">
+                        <NIcon :component="ArrowDownload24Filled" />
+                      </NButton>
+                      <NPopconfirm @positive-click="() => deleteDocument(doc.id)">
+                        <template #trigger>
+                          <NButton size="small" text type="error" title="Supprimer">
+                            <NIcon :component="Delete24Filled" />
+                          </NButton>
+                        </template>
+                        Êtes-vous sûr de vouloir supprimer ce document ?
+                      </NPopconfirm>
+                    </div>
+                  </div>
+                  <div class="mb-1"><span class="label">Type :</span> {{ (documentTypes.find(t => t.value === doc.typeDocument)?.label) || doc.typeDocument || 'Non spécifié' }}</div>
+                  <div class="mb-1"><span class="label">Date :</span> {{ formatDate(doc.dateDocument) }}</div>
+                </NCard>
+                <NEmpty v-if="!documents || documents.length === 0" description="Aucun document pour le moment" />
+              </div>
             </NCard>
           </NTabPane>
 
           <NTabPane name="quittances" tab="Quittances">
             <NCard class="mt-4">
               <NH3 class="sous-titre mb-4">Quittances de cette location</NH3>
-              <NDataTable :columns="quittanceColumns" :data="quittances" :loading="quittanceLoading" />
+              <div class="quittance-cards">
+                <NCard
+                  v-for="q in quittances"
+                  :key="q.id"
+                  class="quittance-card"
+                  :bordered="true"
+                  size="medium"
+                >
+                  <div class="flex justify-between items-center mb-2">
+                    <div class="font-bold">Période : {{ q.dateDebut }} - {{ q.dateFin }}</div>
+                    <div class="flex gap-2">
+                      <NButton size="small" ghost @click="() => router.push(`/quittance-detail/${q.id}`)">Modifier</NButton>
+                      <NButton v-if="q.statut === 'PAYEE'" size="small" type="primary" ghost @click="() => telechargerQuittance(q.id)">Editer la quittance</NButton>
+                    </div>
+                  </div>
+                  <div class="mb-1"><span class="label">Loyer :</span> {{ q.montantLoyer }} €</div>
+                  <div class="mb-1"><span class="label">Charges :</span> {{ q.montantCharges }} €</div>
+                  <div class="mb-1"><span class="label">Caution :</span> {{ q.depotGarantie ? Number(q.depotGarantie).toFixed(2) + ' €' : '-' }}</div>
+                  <div class="mb-1"><span class="label">Total :</span> {{ getTotalQuittance(q) }} €</div>
+                  <div><span class="label">Statut :</span> <NTag :type="q.statut === 'PAYEE' ? 'success' : (q.statut === 'PARTIELLE' ? 'warning' : 'error')" size="small">{{ q.statut === 'PAYEE' ? 'Payée' : (q.statut === 'PARTIELLE' ? 'Partielle' : 'Impayée') }}</NTag></div>
+                </NCard>
+                <NEmpty v-if="!quittances || quittances.length === 0" description="Aucune quittance pour le moment" />
+              </div>
             </NCard>
           </NTabPane>
         </NTabs>
@@ -662,6 +715,28 @@ h3 {
   }
   .mb-4 {
     margin-bottom: 1rem !important;
+  }
+}
+.document-cards, .quittance-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.document-card, .quittance-card {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+.label {
+  font-weight: 600;
+  color: var(--n-text-color);
+  margin-right: 4px;
+}
+@media (max-width: 768px) {
+  .document-cards, .quittance-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 </style>

@@ -23,6 +23,7 @@ import {
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 definePage({
   meta: {
@@ -35,6 +36,13 @@ definePage({
 const store = useUnifiedStore()
 const { proprieteDTO } = storeToRefs(store)
 const router = useRouter()
+
+const isMobile = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
 
 function precedent() {
   router.push('/propriete-etape-1')
@@ -60,7 +68,7 @@ function valider() {
       <NH2 class="titre-principal mb-4">Étape 2: Adresse de la propriété</NH2>
 
       <NForm>
-        <NGrid :x-gap="24" :y-gap="24" :cols="2" :item-responsive="true">
+        <NGrid :x-gap="24" :y-gap="24" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
           <NFormItemGi :span="2" label="Adresse">
             <NInput v-model:value="proprieteDTO.adresse" placeholder="Saisir l'adresse" size="large">
               <template #prefix>
@@ -151,9 +159,11 @@ h3 {
   .p-4 {
     padding: 1rem !important;
   }
-  .mb-4,
-  .mb-8 {
-    margin-bottom: 1rem !important;
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .form-grid .n-form-item-gi {
+    grid-column: 1 !important;
   }
 }
 </style>

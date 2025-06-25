@@ -14,7 +14,7 @@ import {
   NH2
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePage({
@@ -34,6 +34,14 @@ const message = useMessage()
 const loading = ref(false)
 
 const pdfSrc = ref<string | undefined>()
+const isMobile = ref(window.innerWidth < 768)
+
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
 
 async function genererPdfPreview() {
   try {
@@ -99,7 +107,7 @@ async function enregistrer() {
         </NSteps>
       </div>
       <NH2 class="titre-principal mb-4">Étape 3 : Récapitulatif</NH2>
-      <NDescriptions label-placement="top" bordered :column="2">
+      <NDescriptions label-placement="top" bordered :column="isMobile ? 1 : 2">
         <NDescriptionsItem label="Location ID">
           {{ quittanceDTO.locationId }}
         </NDescriptionsItem>

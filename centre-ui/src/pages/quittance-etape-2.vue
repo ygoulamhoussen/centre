@@ -20,7 +20,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePage({
@@ -62,6 +62,13 @@ function suivant() {
   quittanceDTO.value.montantTotal = computedTotal.value
   router.push('/quittance-etape-3')
 }
+
+const isMobile = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
 </script>
 
 <template>
@@ -76,7 +83,7 @@ function suivant() {
       </div>
       <NH2 class="titre-principal mb-4">Étape 2 : Détails de la quittance</NH2>
       <NForm label-placement="top">
-        <NGrid :x-gap="24" :y-gap="16" :cols="2">
+        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
           <NFormItemGi label="Date émission *">
             <NDatePicker v-model:formatted-value="quittanceDTO.dateEmission" type="date" value-format="yyyy-MM-dd" size="large" />
           </NFormItemGi>

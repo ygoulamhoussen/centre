@@ -23,6 +23,7 @@ import {
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 definePage({
   meta: {
@@ -35,6 +36,13 @@ definePage({
 const store = useUnifiedStore()
 const { locataireDTO } = storeToRefs(store)
 const router = useRouter()
+
+const isMobile = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
 
 function precedent() {
   router.push('/locataire-etape-1')
@@ -59,7 +67,7 @@ function suivant() {
       <NH2 class="titre-principal mb-4">Étape 2: Adresse</NH2>
 
       <NForm>
-        <NGrid :x-gap="24" :y-gap="24" :cols="2" :item-responsive="true">
+        <NGrid :x-gap="24" :y-gap="24" :cols="isMobile ? 1 : 2" :item-responsive="true">
           <NFormItemGi :span="2" label="Adresse">
             <NInput v-model:value="locataireDTO.adresse" placeholder="Saisir l'adresse" size="large">
               <template #prefix>

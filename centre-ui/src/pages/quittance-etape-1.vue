@@ -17,7 +17,7 @@ import {
   useMessage
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePage({
@@ -37,6 +37,7 @@ const { quittanceDTO } = storeToRefs(store)
 const locations = ref<any[]>([])
 const authStore = useAuthStore()
 const userId = authStore.userInfo.userId
+const isMobile = ref(window.innerWidth < 768)
 
 async function fetchLocations() {
   try {
@@ -56,7 +57,18 @@ function suivant() {
   router.push('/quittance-etape-2')
 }
 
-onMounted(() => fetchLocations())
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  fetchLocations()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <template>
@@ -67,14 +79,11 @@ onMounted(() => fetchLocations())
           <NStep title="Sélection" description="Location et période" />
           <NStep title="Détails" description="Montants et statut" />
           <NStep title="Récapitulatif" description="Vérification finale" />
-      <NSteps :current="1" class="mb-8">
-        <NStep title="Sélection" description="Location et période" />
-        <NStep title="Détails" description="Montants et statut" />
-        <NStep title="Récapitulatif" description="Vérification finale" />
-      </NSteps>
+        </NSteps>
+      </div>
       <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la location et de la période</NH2>
       <NForm label-placement="top">
-        <NGrid :x-gap="24" :y-gap="16" :cols="2">
+        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
           <NFormItemGi :span="2" label="Location">
             <NSelect
               v-model:value="quittanceDTO.locationId"
@@ -116,6 +125,25 @@ h3 {
   margin-top: 2rem;
 }
 @media (max-width: 768px) {
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+  .steps-wrapper {
+    overflow-x: auto !important;
+  }
+  .n-steps {
+    font-size: 12px !important;
+    min-width: 400px;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    display: block !important;
+  }
+  .n-step {
+    min-width: 120px !important;
+  }
+  .n-step__description {
+    display: none !important;
+  }
   .titre-principal,
   h1,
   h2,

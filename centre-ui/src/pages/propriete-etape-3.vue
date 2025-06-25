@@ -26,6 +26,7 @@ import {
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 definePage({
   meta: {
@@ -39,6 +40,13 @@ const store = useUnifiedStore()
 const { proprieteDTO } = storeToRefs(store)
 const router = useRouter()
 const message = useMessage()
+
+const isMobile = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
 
 function precedent() {
   router.push('/propriete-etape-2')
@@ -68,7 +76,7 @@ function suivant() {
       <NH2 class="titre-principal mb-4">Étape 3: Détails de l'acquisition</NH2>
 
       <NForm>
-        <NGrid :x-gap="24" :y-gap="16" :cols="2" :item-responsive="true">
+        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
           <NFormItemGi label="Date d'acquisition *">
             <NDatePicker
               v-model:formatted-value="proprieteDTO.dateAcquisition"
@@ -198,9 +206,11 @@ h3 {
   .p-4 {
     padding: 1rem !important;
   }
-  .mb-4,
-  .mb-8 {
-    margin-bottom: 1rem !important;
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .form-grid .n-form-item-gi {
+    grid-column: 1 !important;
   }
 }
 </style>

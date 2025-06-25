@@ -15,7 +15,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePage({
@@ -35,6 +35,14 @@ const utilisateurId = authStore.userInfo.userId
 const router = useRouter()
 const message = useMessage()
 const chargement = ref(false)
+const isMobile = ref(window.innerWidth < 768)
+
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
 
 async function enregistrer() {
   chargement.value = true
@@ -82,7 +90,7 @@ function precedent() {
 
       <NH2 class="titre-principal mb-4">Étape 3: Récapitulatif</NH2>
 
-      <NDescriptions label-placement="top" bordered :column="2">
+      <NDescriptions label-placement="top" bordered :column="isMobile ? 1 : 2">
         <NDescriptionsItem label="Nom complet">
           {{ locataireDTO.nom }}
         </NDescriptionsItem>

@@ -27,6 +27,7 @@ import {
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 definePage({
   meta: {
@@ -47,6 +48,13 @@ const typesBien = [
   { value: 'BOX', label: 'Box', icon: Edit24Filled },
   { value: 'PARKING', label: 'Parking', icon: BuildingHome24Filled },
 ]
+
+const isMobile = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
 
 function choisirType(type: string) {
   store.updateProprieteField('typeBien', type)
@@ -75,7 +83,7 @@ function valider() {
 
       <NH2 class="titre-principal mb-6">Étape 1: Donnez un nom à votre propriété</NH2>
       <NForm>
-        <NGrid :cols="1">
+        <NGrid :cols="isMobile ? 1 : 2" :x-gap="24" :y-gap="24" class="form-grid">
           <NFormItemGi>
             <NInput
               v-model:value="proprieteDTO.nom"
@@ -91,7 +99,7 @@ function valider() {
       </NForm>
 
       <NH2 class="titre-principal my-6">Quel est le type de bien ?</NH2>
-      <NGrid :cols="2" :x-gap="12" :y-gap="12" responsive="screen" :item-responsive="true">
+      <NGrid :cols="isMobile ? 1 : 2" :x-gap="12" :y-gap="12" responsive="screen" :item-responsive="true" class="type-grid">
         <NGi v-for="type in typesBien" :key="type.value">
           <NButton
             block
@@ -159,6 +167,15 @@ h3 {
   }
   .p-4 {
     padding: 1rem !important;
+  }
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .form-grid .n-form-item-gi {
+    grid-column: 1 !important;
+  }
+  .type-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 </style>

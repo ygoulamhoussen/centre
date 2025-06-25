@@ -1,4 +1,4 @@
-# Vue Naive Admin
+# Zimmo
 
 ![image](./public/favicon.svg)
 

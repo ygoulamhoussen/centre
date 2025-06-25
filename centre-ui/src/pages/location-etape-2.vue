@@ -28,7 +28,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePage({
@@ -79,6 +79,13 @@ const jourEcheance = computed({
   },
 })
 
+const isMobile = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
+
 function suivant() {
   if (!locationDTO.value.loyerMensuel || !locationDTO.value.dateDebut) {
     message.warning('Veuillez saisir les informations obligatoires')
@@ -106,7 +113,7 @@ function precedent() {
       <NH2 class="titre-principal mb-4">Étape 2: Détails du bail</NH2>
 
       <NForm label-placement="top">
-        <NGrid :x-gap="24" :y-gap="16" :cols="2">
+        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
           <NFormItemGi label="Date de début *">
             <NDatePicker
               v-model:formatted-value="locationDTO.dateDebut"

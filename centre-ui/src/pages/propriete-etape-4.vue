@@ -23,7 +23,7 @@ import {
   NH2,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ArrowLeft24Filled,
@@ -124,6 +124,13 @@ async function enregistrer() {
     chargement.value = false
   }
 }
+
+const isMobile = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
 </script>
 
 <template>
@@ -172,7 +179,7 @@ async function enregistrer() {
             <NAlert title="Répartition par composantes" type="info" class="mb-4">
               Décomposez le coût d'acquisition selon les catégories d'amortissement standard. La somme des pourcentages doit être égale à 100%.
             </NAlert>
-            <NGrid :x-gap="16" :y-gap="16" :cols="3" :item-responsive="true">
+            <NGrid :x-gap="16" :y-gap="16" :cols="isMobile ? 1 : 3" :item-responsive="true" class="form-grid">
               <NGi v-for="item in decompositions" :key="item.categorie">
                 <NCard :title="item.categorie" size="small">
                   <NFormItem label="Quote-part (%)">
@@ -267,11 +274,11 @@ h3 {
   .p-4 {
     padding: 1rem !important;
   }
-  .mb-6,
-  .mb-8,
-  .mt-8 {
-    margin-bottom: 1rem !important;
-    margin-top: 1rem !important;
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .form-grid .n-form-item-gi {
+    grid-column: 1 !important;
   }
 }
 </style>

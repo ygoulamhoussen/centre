@@ -1,26 +1,28 @@
 -- DROP TABLES EXISTANTS
 -- DROP TABLES dans l'ordre des dépendances inversées
-DROP TABLE IF EXISTS document;
-DROP TABLE IF EXISTS cloture_exercice;
-DROP TABLE IF EXISTS ecriture_comptable;
-DROP TABLE IF EXISTS echeance_credit;
-DROP TABLE IF EXISTS credit;
-DROP TABLE IF EXISTS amortissement;
-DROP TABLE IF EXISTS immobilisation;
-DROP TABLE IF EXISTS paiement;
-DROP TABLE IF EXISTS quittance;
-DROP TABLE IF EXISTS location;
-DROP TABLE IF EXISTS locataire;
-DROP TABLE IF EXISTS composition_acquisition;
-DROP TABLE IF EXISTS document;
-DROP TABLE IF EXISTS propriete;
+DROP TABLE IF EXISTS document CASCADE;
+DROP TABLE IF EXISTS cloture_exercice CASCADE;
+DROP TABLE IF EXISTS charges CASCADE;
+DROP TABLE IF EXISTS recettes CASCADE;
+DROP TABLE IF EXISTS ecriture_comptable CASCADE;
+DROP TABLE IF EXISTS echeance_credit CASCADE;
+DROP TABLE IF EXISTS credit CASCADE;
+DROP TABLE IF EXISTS amortissement CASCADE;
+DROP TABLE IF EXISTS immobilisation CASCADE;
+DROP TABLE IF EXISTS paiement CASCADE;
+DROP TABLE IF EXISTS quittance CASCADE;
+DROP TABLE IF EXISTS location CASCADE;
+DROP TABLE IF EXISTS locataire CASCADE;
+DROP TABLE IF EXISTS composition_acquisition CASCADE;
+DROP TABLE IF EXISTS document CASCADE;
+DROP TABLE IF EXISTS propriete CASCADE;
 
-DROP TABLE IF EXISTS utilisateur_role;
-DROP TABLE IF EXISTS utilisateur_roles;
-DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS role;
+DROP TABLE IF EXISTS utilisateur_role CASCADE;
+DROP TABLE IF EXISTS utilisateur_roles CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+DROP TABLE IF EXISTS role CASCADE;
 
-DROP TABLE IF EXISTS utilisateur;
+DROP TABLE IF EXISTS utilisateur CASCADE;
 
 
 
@@ -196,18 +198,48 @@ CREATE TABLE echeance_credit (
     total_echeance DECIMAL
 );
 
+
+
+-- CHARGE
+CREATE TABLE charges (
+    id UUID PRIMARY KEY,
+    intitule TEXT NOT NULL,
+    montant DECIMAL(10,2) NOT NULL,
+    date_charge DATE NOT NULL,
+    propriete_id UUID REFERENCES propriete(id) NOT NULL,
+    nature TEXT NOT NULL,
+    commentaire TEXT,
+    utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
+
+-- RECETTE
+CREATE TABLE recettes (
+    id UUID PRIMARY KEY,
+    intitule TEXT NOT NULL,
+    montant DECIMAL(10,2) NOT NULL,
+    date_recette DATE NOT NULL,
+    propriete_id UUID REFERENCES propriete(id) NOT NULL,
+    type TEXT NOT NULL,
+    quittance_id UUID REFERENCES quittance(id),
+    commentaire TEXT,
+    utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
+
 -- ECRITURE COMPTABLE
 CREATE TABLE ecriture_comptable (
     id UUID PRIMARY KEY,
-    propriete_id UUID REFERENCES propriete(id),
-    date_ecriture DATE,
-    libelle TEXT,
-    montant DECIMAL,
-    type_operation TEXT,
-    categorie_comptable TEXT,
-    code_journal TEXT,
-    tva DECIMAL,
-    justificatif_url TEXT,
+    date_ecriture DATE NOT NULL,
+    montant DECIMAL(10,2) NOT NULL,
+    type TEXT NOT NULL,
+    propriete_id UUID REFERENCES propriete(id) NOT NULL,
+    charge_id UUID REFERENCES charges(id),
+    recette_id UUID REFERENCES recettes(id),
+    commentaire TEXT,
+    utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );

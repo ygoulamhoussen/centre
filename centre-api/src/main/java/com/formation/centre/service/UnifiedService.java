@@ -22,10 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.AmortissementDTO;
+import com.formation.centre.dto.ChargeDTO;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
+import com.formation.centre.dto.EcritureComptableDTO;
 import com.formation.centre.dto.LocataireDTO;
 import com.formation.centre.dto.LocataireDetailDTO;
 import com.formation.centre.dto.LocationDTO;
@@ -34,24 +36,31 @@ import com.formation.centre.dto.PaiementDTO;
 import com.formation.centre.dto.ProprieteDTO;
 import com.formation.centre.dto.ProprieteDetailDTO;
 import com.formation.centre.dto.QuittanceDTO;
+import com.formation.centre.dto.RecetteDTO;
 import com.formation.centre.model.Amortissement;
+import com.formation.centre.model.Charge;
 import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Credit;
 import com.formation.centre.model.DocumentEntity;
+import com.formation.centre.model.EcritureComptable;
 import com.formation.centre.model.Locataire;
 import com.formation.centre.model.Location;
 import com.formation.centre.model.Paiement;
 import com.formation.centre.model.Propriete;
 import com.formation.centre.model.Quittance;
+import com.formation.centre.model.Recette;
 import com.formation.centre.model.Utilisateur;
 import com.formation.centre.repository.AmortissementRepository;
+import com.formation.centre.repository.ChargeRepository;
 import com.formation.centre.repository.CreditRepository;
 import com.formation.centre.repository.DocumentEntityRepository;
+import com.formation.centre.repository.EcritureComptableRepository;
 import com.formation.centre.repository.LocataireRepository;
 import com.formation.centre.repository.LocationRepository;
 import com.formation.centre.repository.PaiementRepository;
 import com.formation.centre.repository.ProprieteRepository;
 import com.formation.centre.repository.QuittanceRepository;
+import com.formation.centre.repository.RecetteRepository;
 import com.formation.centre.repository.UtilisateurRepository;
 import com.lowagie.text.Document;
 import com.lowagie.text.Font;
@@ -72,6 +81,9 @@ public class UnifiedService {
     @Autowired private CreditRepository creditRepository;
     @Autowired private DocumentEntityRepository documentEntityRepository;
     @Autowired private AmortissementRepository amortissementRepository;
+    @Autowired private ChargeRepository chargeRepository;
+    @Autowired private EcritureComptableRepository ecritureComptableRepository;
+    @Autowired private RecetteRepository recetteRepository;
 
 
 
@@ -1107,6 +1119,173 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
         amortissementRepository.save(a);
     }
 }
+
+    // ===== SERVICES POUR LES CHARGES =====
+
+    public List<ChargeDTO> getChargesByUtilisateur(String utilisateurId) {
+        UUID uid = UUID.fromString(utilisateurId);
+        return chargeRepository.findByUtilisateurId(uid)
+                .stream()
+                .map(this::chargeToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ChargeDTO> getChargesByPropriete(String proprieteId) {
+        UUID pid = UUID.fromString(proprieteId);
+        return chargeRepository.findByProprieteId(pid)
+                .stream()
+                .map(this::chargeToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ChargeDTO saveCharge(ChargeDTO dto) {
+        Charge c;
+        if (dto.getId() != null && !dto.getId().isEmpty()) {
+            c = chargeRepository.findById(UUID.fromString(dto.getId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Charge introuvable"));
+        } else {
+            c = new Charge();
+            c.setCreeLe(LocalDateTime.now());
+        }
+
+        c.setIntitule(dto.getIntitule());
+        c.setMontant(new BigDecimal(dto.getMontant()));
+        c.setDateCharge(LocalDate.parse(dto.getDateCharge()));
+        c.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+        c.setNature(Charge.NatureCharge.valueOf(dto.getNature()));
+        c.setCommentaire(dto.getCommentaire());
+        c.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
+        c.setModifieLe(LocalDateTime.now());
+
+        Charge saved = chargeRepository.save(c);
+        
+        // Créer automatiquement l'écriture comptable pour une nouvelle charge
+        if (dto.getId() == null || dto.getId().isEmpty()) {
+            createEcritureComptableCharge(saved.getId().toString());
+        }
+        
+        return chargeToDTO(saved);
+    }
+
+    public void deleteCharge(String id) {
+        chargeRepository.deleteById(UUID.fromString(id));
+    }
+
+    private ChargeDTO chargeToDTO(Charge c) {
+        return ChargeDTO.fromEntity(c);
+    }
+
+    // ===== SERVICES POUR LES RECETTES =====
+
+    public List<RecetteDTO> getRecettesByUtilisateur(String utilisateurId) {
+        UUID uid = UUID.fromString(utilisateurId);
+        return recetteRepository.findByUtilisateurId(uid)
+                .stream()
+                .map(this::recetteToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<RecetteDTO> getRecettesByPropriete(String proprieteId) {
+        UUID pid = UUID.fromString(proprieteId);
+        return recetteRepository.findByProprieteId(pid)
+                .stream()
+                .map(this::recetteToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public RecetteDTO saveRecette(RecetteDTO dto) {
+        Recette r;
+        if (dto.getId() != null && !dto.getId().isEmpty()) {
+            r = recetteRepository.findById(UUID.fromString(dto.getId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Recette introuvable"));
+        } else {
+            r = new Recette();
+            r.setCreeLe(LocalDateTime.now());
+        }
+
+        r.setIntitule(dto.getIntitule());
+        r.setMontant(new BigDecimal(dto.getMontant()));
+        r.setDateRecette(LocalDate.parse(dto.getDateRecette()));
+        r.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+        r.setType(Recette.TypeRecette.valueOf(dto.getType()));
+        
+        if (dto.getQuittanceId() != null && !dto.getQuittanceId().isEmpty()) {
+            r.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElse(null));
+        }
+        
+        r.setCommentaire(dto.getCommentaire());
+        r.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
+        r.setModifieLe(LocalDateTime.now());
+
+        Recette saved = recetteRepository.save(r);
+        
+        // Créer automatiquement l'écriture comptable pour une nouvelle recette
+        if (dto.getId() == null || dto.getId().isEmpty()) {
+            createEcritureComptableRecette(saved.getId().toString());
+        }
+        
+        return recetteToDTO(saved);
+    }
+
+    public void deleteRecette(String id) {
+        recetteRepository.deleteById(UUID.fromString(id));
+    }
+
+    private RecetteDTO recetteToDTO(Recette r) {
+        return RecetteDTO.fromEntity(r);
+    }
+
+    // ===== SERVICES POUR LES ÉCRITURES COMPTABLES =====
+
+    public List<EcritureComptableDTO> getEcrituresComptables(String proprieteId, int anneeFiscale) {
+        UUID pid = UUID.fromString(proprieteId);
+        return ecritureComptableRepository.findByProprieteIdAndAnnee(pid, anneeFiscale)
+                .stream()
+                .map(this::ecritureToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public EcritureComptableDTO createEcritureComptableCharge(String chargeId) {
+        Charge charge = chargeRepository.findById(UUID.fromString(chargeId))
+                .orElseThrow(() -> new IllegalArgumentException("Charge introuvable"));
+
+        EcritureComptable ecriture = new EcritureComptable();
+        ecriture.setDateEcriture(charge.getDateCharge());
+        ecriture.setMontant(charge.getMontant());
+        ecriture.setType(EcritureComptable.TypeEcriture.CHARGE);
+        ecriture.setPropriete(charge.getPropriete());
+        ecriture.setCharge(charge);
+        ecriture.setCommentaire("Charge: " + charge.getIntitule());
+        ecriture.setUtilisateur(charge.getUtilisateur());
+        ecriture.setCreeLe(LocalDateTime.now());
+        ecriture.setModifieLe(LocalDateTime.now());
+
+        EcritureComptable saved = ecritureComptableRepository.save(ecriture);
+        return ecritureToDTO(saved);
+    }
+
+    public EcritureComptableDTO createEcritureComptableRecette(String recetteId) {
+        Recette recette = recetteRepository.findById(UUID.fromString(recetteId))
+                .orElseThrow(() -> new IllegalArgumentException("Recette introuvable"));
+
+        EcritureComptable ecriture = new EcritureComptable();
+        ecriture.setDateEcriture(recette.getDateRecette());
+        ecriture.setMontant(recette.getMontant());
+        ecriture.setType(EcritureComptable.TypeEcriture.RECETTE);
+        ecriture.setPropriete(recette.getPropriete());
+        ecriture.setRecette(recette);
+        ecriture.setCommentaire("Recette: " + recette.getIntitule());
+        ecriture.setUtilisateur(recette.getUtilisateur());
+        ecriture.setCreeLe(LocalDateTime.now());
+        ecriture.setModifieLe(LocalDateTime.now());
+
+        EcritureComptable saved = ecritureComptableRepository.save(ecriture);
+        return ecritureToDTO(saved);
+    }
+
+    private EcritureComptableDTO ecritureToDTO(EcritureComptable e) {
+        return EcritureComptableDTO.fromEntity(e);
+    }
 
 
 

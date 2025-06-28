@@ -26,6 +26,7 @@ definePage({
   meta: {
     title: 'Mes paiements',
     icon: 'mdi:credit-card-outline',
+    hideInMenu : true,
     order: 7,
   },
 })

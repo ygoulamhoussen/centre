@@ -24,6 +24,8 @@ declare module 'vue-router/auto-routes' {
     '/404': RouteRecordInfo<'/404', '/404', Record<never, never>, Record<never, never>>,
     '/500': RouteRecordInfo<'/500', '/500', Record<never, never>, Record<never, never>>,
     '/about': RouteRecordInfo<'/about', '/about', Record<never, never>, Record<never, never>>,
+    '/comptabilite': RouteRecordInfo<'/comptabilite', '/comptabilite', Record<never, never>, Record<never, never>>,
+    '/comptabilite-propriete.[id]': RouteRecordInfo<'/comptabilite-propriete.[id]', '/comptabilite-propriete/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/document/naive': RouteRecordInfo<'/document/naive', '/document/naive', Record<never, never>, Record<never, never>>,
     '/document/unocss': RouteRecordInfo<'/document/unocss', '/document/unocss', Record<never, never>, Record<never, never>>,
     '/document/vite': RouteRecordInfo<'/document/vite', '/document/vite', Record<never, never>, Record<never, never>>,

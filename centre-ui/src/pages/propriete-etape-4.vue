@@ -1,34 +1,33 @@
 <script setup lang="ts">
-import { useUnifiedStore } from '@/store/unifiedStore'
 import { useAuthStore } from '@/store/modules/auth'
+import { useUnifiedStore } from '@/store/unifiedStore'
 import {
+  NAlert,
   NButton,
-  NForm,
-  NFormItem,
-  NInputNumber,
-  NSpace,
-  NGrid,
-  NGi,
-  useMessage,
   NCard,
-  NSteps,
-  NStep,
-  NIcon,
-  NRadioGroup,
-  NRadio,
   NDescriptions,
   NDescriptionsItem,
+  NForm,
+  NFormItem,
+  NGi,
+  NGrid,
+  NIcon,
+  NInputNumber,
+  NRadio,
+  NRadioGroup,
+  NSpace,
+  NStep,
+  NSteps,
   NText,
-  NAlert,
-  NH2,
+  useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import {
   ArrowLeft24Filled,
   Save24Filled,
 } from '@vicons/fluent'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
@@ -80,6 +79,12 @@ async function enregistrer() {
   try {
     const utilisateurId = authStore.userInfo.userId
 
+    // Calculer le montant total d'acquisition
+    const montantAcquisition = Number.parseFloat(proprieteDTO.value.montantAcquisition || '0')
+    const fraisNotaire = Number.parseFloat(proprieteDTO.value.fraisNotaire || '0')
+    const fraisAgence = Number.parseFloat(proprieteDTO.value.fraisAgence || '0')
+    const montantTotal = montantAcquisition + fraisNotaire + fraisAgence
+
     const finalDTO = {
       ...proprieteDTO.value,
       dateAcquisition: proprieteDTO.value.dateAcquisition || null,
@@ -92,9 +97,9 @@ async function enregistrer() {
             .filter(r => r.quotePart != null && r.quotePart > 0)
             .map(r => ({
               categorie: r.categorie,
-              montant: r.quotePart!.toString(),
+              montant: ((r.quotePart! / 100) * montantTotal).toFixed(2),
               description: r.description,
-              duree: r.duree
+              duree: r.duree,
             }))
         : [],
     }
@@ -208,7 +213,7 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
                 </NCard>
               </NGi>
             </NGrid>
-             <NAlert
+            <NAlert
               title="Validation"
               :type="sommePourcentages === 100 ? 'success' : 'error'"
               class="mt-4"

@@ -17,34 +17,29 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "ecriture_comptable")
-public class EcritureComptable {
+@Table(name = "charges")
+public class Charge {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "date_ecriture", nullable = false)
-    private LocalDate dateEcriture;
+    @Column(name = "intitule", nullable = false)
+    private String intitule;
 
     @Column(name = "montant", nullable = false, precision = 10, scale = 2)
     private BigDecimal montant;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
-    private TypeEcriture type;
+    @Column(name = "date_charge", nullable = false)
+    private LocalDate dateCharge;
 
     @ManyToOne
     @JoinColumn(name = "propriete_id", nullable = false)
     private Propriete propriete;
 
-    @ManyToOne
-    @JoinColumn(name = "charge_id")
-    private Charge charge;
-
-    @ManyToOne
-    @JoinColumn(name = "recette_id")
-    private Recette recette;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "nature", nullable = false)
+    private NatureCharge nature;
 
     @Column(name = "commentaire", columnDefinition = "TEXT")
     private String commentaire;
@@ -60,7 +55,7 @@ public class EcritureComptable {
     private LocalDateTime modifieLe;
 
     // Constructeurs
-    public EcritureComptable() {}
+    public Charge() {}
 
     // Getters et Setters
     public UUID getId() {
@@ -71,12 +66,12 @@ public class EcritureComptable {
         this.id = id;
     }
 
-    public LocalDate getDateEcriture() {
-        return dateEcriture;
+    public String getIntitule() {
+        return intitule;
     }
 
-    public void setDateEcriture(LocalDate dateEcriture) {
-        this.dateEcriture = dateEcriture;
+    public void setIntitule(String intitule) {
+        this.intitule = intitule;
     }
 
     public BigDecimal getMontant() {
@@ -87,12 +82,12 @@ public class EcritureComptable {
         this.montant = montant;
     }
 
-    public TypeEcriture getType() {
-        return type;
+    public LocalDate getDateCharge() {
+        return dateCharge;
     }
 
-    public void setType(TypeEcriture type) {
-        this.type = type;
+    public void setDateCharge(LocalDate dateCharge) {
+        this.dateCharge = dateCharge;
     }
 
     public Propriete getPropriete() {
@@ -103,20 +98,12 @@ public class EcritureComptable {
         this.propriete = propriete;
     }
 
-    public Charge getCharge() {
-        return charge;
+    public NatureCharge getNature() {
+        return nature;
     }
 
-    public void setCharge(Charge charge) {
-        this.charge = charge;
-    }
-
-    public Recette getRecette() {
-        return recette;
-    }
-
-    public void setRecette(Recette recette) {
-        this.recette = recette;
+    public void setNature(NatureCharge nature) {
+        this.nature = nature;
     }
 
     public String getCommentaire() {
@@ -151,13 +138,21 @@ public class EcritureComptable {
         this.modifieLe = modifieLe;
     }
 
-    public enum TypeEcriture {
-        CHARGE("Charge"),
-        RECETTE("Recette");
+    public enum NatureCharge {
+        TRAVAUX("Travaux et réparations"),
+        COPROPRIETE("Charges de copropriété"),
+        TAXES("Taxes foncières"),
+        ASSURANCE("Assurance"),
+        GESTION("Gestion locative"),
+        ELECTRICITE("Électricité"),
+        EAU("Eau"),
+        CHAUFFAGE("Chauffage"),
+        ENTRETIEN("Entretien"),
+        AUTRES("Autres");
 
         private final String libelle;
 
-        TypeEcriture(String libelle) {
+        NatureCharge(String libelle) {
             this.libelle = libelle;
         }
 
@@ -165,4 +160,4 @@ public class EcritureComptable {
             return libelle;
         }
     }
-}
+} 

@@ -29,10 +29,12 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.AmortissementDTO;
+import com.formation.centre.dto.ChargeDTO;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
+import com.formation.centre.dto.EcritureComptableDTO;
 import com.formation.centre.dto.LocataireDTO;
 import com.formation.centre.dto.LocataireDetailDTO;
 import com.formation.centre.dto.LocationDTO;
@@ -41,6 +43,7 @@ import com.formation.centre.dto.PaiementDTO;
 import com.formation.centre.dto.ProprieteDTO;
 import com.formation.centre.dto.ProprieteDetailDTO;
 import com.formation.centre.dto.QuittanceDTO;
+import com.formation.centre.dto.RecetteDTO;
 import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Propriete;
 import com.formation.centre.repository.ProprieteRepository;
@@ -511,6 +514,91 @@ public ResponseEntity<Void> saveAmortissement(@PathVariable String proprieteId, 
 @RequestMapping(value = "/**", method = RequestMethod.OPTIONS)
 public ResponseEntity<?> handleOptions() {
     return ResponseEntity.ok().build();
+}
+
+// ===== ENDPOINTS POUR LES CHARGES =====
+
+@GetMapping("/getChargesByUtilisateur/{utilisateurId}")
+public ResponseEntity<List<ChargeDTO>> getChargesByUtilisateur(@PathVariable String utilisateurId) {
+    return ResponseEntity.ok(unifiedService.getChargesByUtilisateur(utilisateurId));
+}
+
+@GetMapping("/charges/{utilisateurId}")
+public ResponseEntity<List<ChargeDTO>> getChargesByUtilisateurAlt(@PathVariable String utilisateurId) {
+    return ResponseEntity.ok(unifiedService.getChargesByUtilisateur(utilisateurId));
+}
+
+@GetMapping("/charges/propriete/{proprieteId}")
+public ResponseEntity<List<ChargeDTO>> getChargesByPropriete(@PathVariable String proprieteId) {
+    return ResponseEntity.ok(unifiedService.getChargesByPropriete(proprieteId));
+}
+
+@PostMapping("/charges")
+public ResponseEntity<ChargeDTO> createCharge(@RequestBody ChargeDTO dto) {
+    return ResponseEntity.ok(unifiedService.saveCharge(dto));
+}
+
+@PutMapping("/charges")
+public ResponseEntity<ChargeDTO> updateCharge(@RequestBody ChargeDTO dto) {
+    return ResponseEntity.ok(unifiedService.saveCharge(dto));
+}
+
+@DeleteMapping("/charges/{id}")
+public ResponseEntity<Void> deleteCharge(@PathVariable String id) {
+    unifiedService.deleteCharge(id);
+    return ResponseEntity.noContent().build();
+}
+
+// ===== ENDPOINTS POUR LES RECETTES =====
+
+@GetMapping("/getRecettesByUtilisateur/{utilisateurId}")
+public ResponseEntity<List<RecetteDTO>> getRecettesByUtilisateur(@PathVariable String utilisateurId) {
+    return ResponseEntity.ok(unifiedService.getRecettesByUtilisateur(utilisateurId));
+}
+
+@GetMapping("/recettes/{utilisateurId}")
+public ResponseEntity<List<RecetteDTO>> getRecettesByUtilisateurAlt(@PathVariable String utilisateurId) {
+    return ResponseEntity.ok(unifiedService.getRecettesByUtilisateur(utilisateurId));
+}
+
+@GetMapping("/recettes/propriete/{proprieteId}")
+public ResponseEntity<List<RecetteDTO>> getRecettesByPropriete(@PathVariable String proprieteId) {
+    return ResponseEntity.ok(unifiedService.getRecettesByPropriete(proprieteId));
+}
+
+@PostMapping("/recettes")
+public ResponseEntity<RecetteDTO> createRecette(@RequestBody RecetteDTO dto) {
+    return ResponseEntity.ok(unifiedService.saveRecette(dto));
+}
+
+@PutMapping("/recettes")
+public ResponseEntity<RecetteDTO> updateRecette(@RequestBody RecetteDTO dto) {
+    return ResponseEntity.ok(unifiedService.saveRecette(dto));
+}
+
+@DeleteMapping("/recettes/{id}")
+public ResponseEntity<Void> deleteRecette(@PathVariable String id) {
+    unifiedService.deleteRecette(id);
+    return ResponseEntity.noContent().build();
+}
+
+// ===== ENDPOINTS POUR LES ÉCRITURES COMPTABLES =====
+
+@GetMapping("/ecritures-comptables/{proprieteId}/{anneeFiscale}")
+public ResponseEntity<List<EcritureComptableDTO>> getEcrituresComptables(
+        @PathVariable String proprieteId, 
+        @PathVariable int anneeFiscale) {
+    return ResponseEntity.ok(unifiedService.getEcrituresComptables(proprieteId, anneeFiscale));
+}
+
+@PostMapping("/ecritures-comptables/charge/{chargeId}")
+public ResponseEntity<EcritureComptableDTO> createEcritureComptableCharge(@PathVariable String chargeId) {
+    return ResponseEntity.ok(unifiedService.createEcritureComptableCharge(chargeId));
+}
+
+@PostMapping("/ecritures-comptables/recette/{recetteId}")
+public ResponseEntity<EcritureComptableDTO> createEcritureComptableRecette(@PathVariable String recetteId) {
+    return ResponseEntity.ok(unifiedService.createEcritureComptableRecette(recetteId));
 }
 
 } 

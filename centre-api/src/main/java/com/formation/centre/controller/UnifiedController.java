@@ -591,6 +591,19 @@ public ResponseEntity<List<EcritureComptableDTO>> getEcrituresComptables(
     return ResponseEntity.ok(unifiedService.getEcrituresComptables(proprieteId, anneeFiscale));
 }
 
+@GetMapping("/ecritures-comptables/utilisateur/{utilisateurId}")
+public ResponseEntity<List<EcritureComptableDTO>> getEcrituresComptablesByUtilisateur(
+        @PathVariable String utilisateurId) {
+    return ResponseEntity.ok(unifiedService.getEcrituresComptablesByUtilisateur(utilisateurId));
+}
+
+@GetMapping("/ecritures-comptables/utilisateur/{utilisateurId}/{anneeFiscale}")
+public ResponseEntity<List<EcritureComptableDTO>> getEcrituresComptablesByUtilisateurAndAnnee(
+        @PathVariable String utilisateurId,
+        @PathVariable int anneeFiscale) {
+    return ResponseEntity.ok(unifiedService.getEcrituresComptablesByUtilisateurAndAnnee(utilisateurId, anneeFiscale));
+}
+
 @PostMapping("/ecritures-comptables/charge/{chargeId}")
 public ResponseEntity<EcritureComptableDTO> createEcritureComptableCharge(@PathVariable String chargeId) {
     return ResponseEntity.ok(unifiedService.createEcritureComptableCharge(chargeId));

@@ -1245,6 +1245,22 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
                 .collect(Collectors.toList());
     }
 
+    public List<EcritureComptableDTO> getEcrituresComptablesByUtilisateur(String utilisateurId) {
+        UUID uid = UUID.fromString(utilisateurId);
+        return ecritureComptableRepository.findByUtilisateurId(uid)
+                .stream()
+                .map(this::ecritureToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<EcritureComptableDTO> getEcrituresComptablesByUtilisateurAndAnnee(String utilisateurId, int anneeFiscale) {
+        UUID uid = UUID.fromString(utilisateurId);
+        return ecritureComptableRepository.findByUtilisateurIdAndAnnee(uid, anneeFiscale)
+                .stream()
+                .map(this::ecritureToDTO)
+                .collect(Collectors.toList());
+    }
+
     public EcritureComptableDTO createEcritureComptableCharge(String chargeId) {
         Charge charge = chargeRepository.findById(UUID.fromString(chargeId))
                 .orElseThrow(() -> new IllegalArgumentException("Charge introuvable"));

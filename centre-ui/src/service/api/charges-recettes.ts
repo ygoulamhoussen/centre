@@ -247,6 +247,49 @@ export async function fetchEcrituresComptables(proprieteId: string, anneeFiscale
 }
 
 /**
+ * Récupérer toutes les écritures comptables d'un utilisateur
+ * @param utilisateurId ID de l'utilisateur
+ */
+export async function fetchEcrituresComptablesByUtilisateur(utilisateurId: string): Promise<EcritureComptableDTO[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/ecritures-comptables/utilisateur/${utilisateurId}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    }
+  )
+  
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération des écritures comptables')
+  }
+  
+  return response.json()
+}
+
+/**
+ * Récupérer les écritures comptables d'un utilisateur pour une année fiscale
+ * @param utilisateurId ID de l'utilisateur
+ * @param anneeFiscale Année fiscale
+ */
+export async function fetchEcrituresComptablesByUtilisateurAndAnnee(utilisateurId: string, anneeFiscale: number): Promise<EcritureComptableDTO[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/ecritures-comptables/utilisateur/${utilisateurId}/${anneeFiscale}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    }
+  )
+  
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération des écritures comptables')
+  }
+  
+  return response.json()
+}
+
+/**
  * Créer une écriture comptable automatiquement lors de la création d'une charge
  * @param chargeId ID de la charge
  */

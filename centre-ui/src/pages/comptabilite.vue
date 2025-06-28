@@ -39,6 +39,7 @@ import {
   deleteRecette,
   fetchCharges,
   fetchEcrituresComptables,
+  fetchEcrituresComptablesByUtilisateurAndAnnee,
   fetchRecettes,
   updateCharge,
   updateRecette,
@@ -181,9 +182,8 @@ async function chargerDonnees() {
       }))
     }
 
-    if (proprieteSelectionnee.value) {
-      await chargerEcrituresComptables()
-    }
+    // Charger les écritures comptables (toutes par défaut)
+    await chargerEcrituresComptables()
   }
   catch (error: any) {
     message.error(error.message || 'Erreur lors du chargement des données')
@@ -194,11 +194,19 @@ async function chargerDonnees() {
 }
 
 async function chargerEcrituresComptables() {
-  if (!proprieteSelectionnee.value) return
+  if (!authStore.userInfo.userId) return
 
   try {
-    const ecritures = await fetchEcrituresComptables(proprieteSelectionnee.value, anneeFiscale.value)
-    ecrituresComptables.value = ecritures
+    if (proprieteSelectionnee.value) {
+      // Si une propriété est sélectionnée, charger les écritures de cette propriété
+      const ecritures = await fetchEcrituresComptables(proprieteSelectionnee.value, anneeFiscale.value)
+      ecrituresComptables.value = ecritures
+    }
+    else {
+      // Si aucune propriété n'est sélectionnée, charger toutes les écritures de l'utilisateur
+      const ecritures = await fetchEcrituresComptablesByUtilisateurAndAnnee(authStore.userInfo.userId, anneeFiscale.value)
+      ecrituresComptables.value = ecritures
+    }
   }
   catch (error: any) {
     message.error(error.message || 'Erreur lors du chargement des écritures comptables')
@@ -403,8 +411,11 @@ onMounted(() => {
               <NSelect
                 v-model:value="proprieteSelectionnee"
                 placeholder="Sélectionner une propriété"
-                :options="proprietes"
-                style="width: 200px"
+                :options="[
+                  { label: 'Toutes les propriétés', value: '' },
+                  ...proprietes
+                ]"
+                style="width: 250px"
                 @update:value="chargerEcrituresComptables"
               />
               <NInputNumber
@@ -422,6 +433,7 @@ onMounted(() => {
               { title: 'Date', key: 'dateEcriture', width: 120 },
               { title: 'Type', key: 'type', width: 100 },
               { title: 'Montant', key: 'montant', width: 120, render: (row) => `${row.montant} €` },
+              { title: 'Propriété', key: 'proprieteNom', width: 150 },
               { title: 'Commentaire', key: 'commentaire', width: 200 },
             ]"
             :data="ecrituresComptables"

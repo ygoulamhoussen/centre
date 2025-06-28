@@ -85,7 +85,7 @@ async function enregistrer() {
       }
     )
     if (!res.ok) throw new Error('Erreur serveur')
-    message.success('Quittance créée !')
+    message.success('Quittance créée ! Une écriture comptable a été générée automatiquement.')
     store.resetQuittanceDTO()
     router.push('/quittance')
   } catch (e: any) {

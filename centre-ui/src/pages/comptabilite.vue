@@ -21,6 +21,7 @@ import {
   NTabs,
   NText,
   useMessage,
+  NTag,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import {
@@ -38,11 +39,19 @@ import {
   deleteCharge,
   deleteRecette,
   fetchCharges,
+  fetchDocuments,
   fetchEcrituresComptables,
   fetchEcrituresComptablesByUtilisateurAndAnnee,
   fetchRecettes,
+  uploadDocument,
   updateCharge,
   updateRecette,
+  getEcrituresComptablesWithProprieteNom,
+  getChargesWithProprieteNom,
+  getRecettesWithProprieteNom,
+  downloadDocument,
+  updateEcritureComptable,
+  deleteEcritureComptable,
 } from '@/service/api/charges-recettes'
 
 definePage({
@@ -59,6 +68,7 @@ const message = useMessage()
 const charges = ref<ChargeDTO[]>([])
 const recettes = ref<RecetteDTO[]>([])
 const ecrituresComptables = ref<EcritureComptableDTO[]>([])
+const documents = ref<Array<{ label: string; value: string }>>([])
 const proprietes = ref<Array<{ label: string; value: string }>>([])
 const anneeFiscale = ref(new Date().getFullYear())
 const proprieteSelectionnee = ref<string>('')
@@ -67,9 +77,17 @@ const chargement = ref(false)
 // États pour les modales
 const modalChargeVisible = ref(false)
 const modalRecetteVisible = ref(false)
+const modalEcritureVisible = ref(false)
 const modeEdition = ref(false)
 const chargeEnCours = ref<Partial<ChargeDTO>>({})
 const recetteEnCours = ref<Partial<RecetteDTO>>({})
+const ecritureEnCours = ref<Partial<EcritureComptableDTO>>({})
+
+// États pour l'upload de fichiers
+const fichierCharge = ref<File | null>(null)
+const fichierRecette = ref<File | null>(null)
+const uploadEnCours = ref(false)
+const maxFileSize = 10 * 1024 * 1024 // 10MB
 
 // Options pour les natures de charges
 const naturesCharges = [
@@ -95,10 +113,25 @@ const typesRecettes = [
 // Colonnes pour les tableaux
 const colonnesCharges = [
   { title: 'Date', key: 'dateCharge', width: 120 },
+  { title: 'Propriété', key: 'proprieteNom', width: 200 },
   { title: 'Intitulé', key: 'intitule', width: 200 },
   { title: 'Nature', key: 'nature', width: 150 },
   { title: 'Montant', key: 'montant', width: 120, render: (row: ChargeDTO) => `${row.montant} €` },
-  { title: 'Propriété', key: 'proprieteId', width: 150 },
+  {
+    title: 'Document',
+    key: 'documentNom',
+    width: 150,
+    render: (row: ChargeDTO) => {
+      if (row.documentId && row.documentNom) {
+        return h(NButton, {
+          size: 'small',
+          type: 'primary',
+          onClick: () => handleDownloadDocument(row.documentId!, row.documentNom!),
+        }, { default: () => row.documentNom })
+      }
+      return h('span', { style: { color: '#999' } }, 'Aucun document')
+    },
+  },
   {
     title: 'Actions',
     key: 'actions',
@@ -122,10 +155,25 @@ const colonnesCharges = [
 
 const colonnesRecettes = [
   { title: 'Date', key: 'dateRecette', width: 120 },
+  { title: 'Propriété', key: 'proprieteNom', width: 200 },
   { title: 'Intitulé', key: 'intitule', width: 200 },
   { title: 'Type', key: 'type', width: 120 },
   { title: 'Montant', key: 'montant', width: 120, render: (row: RecetteDTO) => `${row.montant} €` },
-  { title: 'Propriété', key: 'proprieteId', width: 150 },
+  {
+    title: 'Document',
+    key: 'documentNom',
+    width: 150,
+    render: (row: RecetteDTO) => {
+      if (row.documentId && row.documentNom) {
+        return h(NButton, {
+          size: 'small',
+          type: 'primary',
+          onClick: () => handleDownloadDocument(row.documentId!, row.documentNom!),
+        }, { default: () => row.documentNom })
+      }
+      return h('span', { style: { color: '#999' } }, 'Aucun document')
+    },
+  },
   {
     title: 'Actions',
     key: 'actions',
@@ -147,6 +195,47 @@ const colonnesRecettes = [
   },
 ]
 
+const colonnesEcritures = [
+  { title: 'Date', key: 'dateEcriture', width: 120 },
+  { title: 'Propriété', key: 'proprieteNom', width: 200 },
+  {
+    title: 'Type',
+    key: 'type',
+    width: 100,
+    render: (row: EcritureComptableDTO) => {
+      const type = row.type
+      const color = type === 'CHARGE' ? 'error' : 'success'
+      return h(NTag, { color }, { default: () => type })
+    },
+  },
+  {
+    title: 'Montant',
+    key: 'montant',
+    width: 120,
+    render: (row: EcritureComptableDTO) => {
+      const montant = parseFloat(row.montant)
+      const color = row.type === 'CHARGE' ? '#ff4d4f' : '#52c41a'
+      return h('span', { style: { color, fontWeight: 'bold' } }, `${montant.toFixed(2)} €`)
+    },
+  },
+  { title: 'Description', key: 'commentaire', width: 300 },
+  {
+    title: 'Document',
+    key: 'documentNom',
+    width: 150,
+    render: (row: EcritureComptableDTO) => {
+      if (row.documentId && row.documentNom) {
+        return h(NButton, {
+          size: 'small',
+          type: 'primary',
+          onClick: () => handleDownloadDocument(row.documentId!, row.documentNom!),
+        }, { default: () => row.documentNom })
+      }
+      return h('span', { style: { color: '#999' } }, 'Aucun document')
+    },
+  },
+]
+
 // Calculs
 const totalCharges = computed(() => {
   return charges.value.reduce((sum, charge) => sum + Number.parseFloat(charge.montant), 0)
@@ -164,9 +253,10 @@ async function chargerDonnees() {
 
   chargement.value = true
   try {
-    const [chargesData, recettesData] = await Promise.all([
-      fetchCharges(authStore.userInfo.userId),
-      fetchRecettes(authStore.userInfo.userId),
+    const [chargesData, recettesData, documentsData] = await Promise.all([
+      getChargesWithProprieteNom(authStore.userInfo.userId),
+      getRecettesWithProprieteNom(authStore.userInfo.userId),
+      fetchDocuments(authStore.userInfo.userId),
     ])
 
     charges.value = chargesData
@@ -181,6 +271,12 @@ async function chargerDonnees() {
         value: prop.id,
       }))
     }
+
+    // Charger les documents
+    documents.value = documentsData.map((doc: any) => ({
+      label: doc.titre || doc.nomFichier,
+      value: doc.id,
+    }))
 
     // Charger les écritures comptables (toutes par défaut)
     await chargerEcrituresComptables()
@@ -197,14 +293,14 @@ async function chargerEcrituresComptables() {
   if (!authStore.userInfo.userId) return
 
   try {
-    if (proprieteSelectionnee.value) {
+    if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
       // Si une propriété est sélectionnée, charger les écritures de cette propriété
       const ecritures = await fetchEcrituresComptables(proprieteSelectionnee.value, anneeFiscale.value)
       ecrituresComptables.value = ecritures
     }
     else {
       // Si aucune propriété n'est sélectionnée, charger toutes les écritures de l'utilisateur
-      const ecritures = await fetchEcrituresComptablesByUtilisateurAndAnnee(authStore.userInfo.userId, anneeFiscale.value)
+      const ecritures = await getEcrituresComptablesWithProprieteNom(authStore.userInfo.userId)
       ecrituresComptables.value = ecritures
     }
   }
@@ -239,6 +335,20 @@ async function sauvegarderCharge() {
   }
 
   try {
+    uploadEnCours.value = true
+    
+    // Upload du document si un fichier est sélectionné
+    if (fichierCharge.value) {
+      const documentUploaded = await uploadDocument(
+        fichierCharge.value,
+        `Document - ${chargeEnCours.value.intitule}`,
+        authStore.userInfo.userId,
+        chargeEnCours.value.proprieteId,
+        'JUSTIFICATIF'
+      )
+      chargeEnCours.value.documentId = documentUploaded.id
+    }
+
     if (modeEdition.value && chargeEnCours.value.id) {
       await updateCharge(chargeEnCours.value.id, chargeEnCours.value)
       message.success('Charge mise à jour avec succès')
@@ -252,10 +362,14 @@ async function sauvegarderCharge() {
     }
 
     modalChargeVisible.value = false
+    fichierCharge.value = null
     await chargerDonnees()
   }
   catch (error: any) {
     message.error(error.message || 'Erreur lors de la sauvegarde')
+  }
+  finally {
+    uploadEnCours.value = false
   }
 }
 
@@ -296,6 +410,20 @@ async function sauvegarderRecette() {
   }
 
   try {
+    uploadEnCours.value = true
+    
+    // Upload du document si un fichier est sélectionné
+    if (fichierRecette.value) {
+      const documentUploaded = await uploadDocument(
+        fichierRecette.value,
+        `Document - ${recetteEnCours.value.intitule}`,
+        authStore.userInfo.userId,
+        recetteEnCours.value.proprieteId,
+        'JUSTIFICATIF'
+      )
+      recetteEnCours.value.documentId = documentUploaded.id
+    }
+
     if (modeEdition.value && recetteEnCours.value.id) {
       await updateRecette(recetteEnCours.value.id, recetteEnCours.value)
       message.success('Recette mise à jour avec succès')
@@ -309,21 +437,188 @@ async function sauvegarderRecette() {
     }
 
     modalRecetteVisible.value = false
+    fichierRecette.value = null
     await chargerDonnees()
   }
   catch (error: any) {
     message.error(error.message || 'Erreur lors de la sauvegarde')
+  }
+  finally {
+    uploadEnCours.value = false
   }
 }
 
 async function supprimerRecette(id: string) {
   try {
     await deleteRecette(id)
-    message.success('Recette supprimée avec succès')
+    message.success('Recette supprimée')
     await chargerDonnees()
-  }
-  catch (error: any) {
+  } catch (error: any) {
     message.error(error.message || 'Erreur lors de la suppression')
+  }
+}
+
+function editerEcriture(ecriture: EcritureComptableDTO) {
+  modeEdition.value = true
+  ecritureEnCours.value = { ...ecriture }
+  modalEcritureVisible.value = true
+}
+
+async function supprimerEcriture(id: string) {
+  try {
+    await deleteEcritureComptable(id)
+    message.success('Écriture comptable supprimée')
+    await chargerDonnees()
+  } catch (error: any) {
+    message.error(error.message || 'Erreur lors de la suppression')
+  }
+}
+
+async function sauvegarderEcriture() {
+  if (!ecritureEnCours.value.dateEcriture || !ecritureEnCours.value.montant) {
+    message.error('Veuillez remplir tous les champs obligatoires')
+    return
+  }
+
+  try {
+    if (modeEdition.value) {
+      await updateEcritureComptable(ecritureEnCours.value)
+      message.success('Écriture comptable modifiée')
+    }
+    modalEcritureVisible.value = false
+    await chargerDonnees()
+  } catch (error: any) {
+    message.error(error.message || 'Erreur lors de la sauvegarde')
+  }
+}
+
+const loadEcrituresComptables = async () => {
+  try {
+    chargement.value = true
+    if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
+      // Charger les écritures pour une propriété spécifique
+      const anneeCourante = new Date().getFullYear()
+      ecrituresComptables.value = await getEcrituresComptablesWithProprieteNom(authStore.userInfo.userId)
+    } else {
+      // Charger toutes les écritures avec les noms de propriétés
+      ecrituresComptables.value = await getEcrituresComptablesWithProprieteNom(authStore.userInfo.userId)
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des écritures comptables:', error)
+    message.error('Erreur lors du chargement des écritures comptables')
+  } finally {
+    chargement.value = false
+  }
+}
+
+const loadCharges = async () => {
+  try {
+    chargement.value = true
+    if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
+      charges.value = await getChargesWithProprieteNom(authStore.userInfo.userId)
+    } else {
+      charges.value = await getChargesWithProprieteNom(authStore.userInfo.userId)
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des charges:', error)
+    message.error('Erreur lors du chargement des charges')
+  } finally {
+    chargement.value = false
+  }
+}
+
+const loadRecettes = async () => {
+  try {
+    chargement.value = true
+    if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
+      recettes.value = await getRecettesWithProprieteNom(authStore.userInfo.userId)
+    } else {
+      recettes.value = await getRecettesWithProprieteNom(authStore.userInfo.userId)
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des recettes:', error)
+    message.error('Erreur lors du chargement des recettes')
+  } finally {
+    chargement.value = false
+  }
+}
+
+async function handleDownloadDocument(documentId: string, documentNom: string) {
+  try {
+    // Récupérer les métadonnées du document pour avoir le nom de fichier correct
+    const metadataResponse = await fetch(
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/documents/${documentId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    )
+
+    if (!metadataResponse.ok) {
+      throw new Error('Erreur lors de la récupération des métadonnées du document')
+    }
+
+    const metadata = await metadataResponse.json()
+    const fileName = metadata.nomFichier || documentNom || 'document'
+
+    const blob = await downloadDocument(documentId)
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    message.success('Document téléchargé avec succès')
+  } catch (error) {
+    console.error('Erreur lors du téléchargement du document:', error)
+    message.error('Erreur lors du téléchargement du document')
+  }
+}
+
+// Fonction pour valider la taille du fichier
+function validateFileSize(file: File): boolean {
+  if (file.size > maxFileSize) {
+    message.error(`Le fichier est trop volumineux. Taille maximum autorisée : 10MB. Taille actuelle : ${formatFileSize(file.size)}`)
+    return false
+  }
+  return true
+}
+
+// Fonction pour formater la taille du fichier
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+  return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB'
+}
+
+// Fonction pour gérer la sélection de fichier pour les charges
+function handleFileSelectCharge(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    if (validateFileSize(file)) {
+      fichierCharge.value = file
+    } else {
+      // Réinitialiser l'input
+      target.value = ''
+    }
+  }
+}
+
+// Fonction pour gérer la sélection de fichier pour les recettes
+function handleFileSelectRecette(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    if (validateFileSize(file)) {
+      fichierRecette.value = file
+    } else {
+      // Réinitialiser l'input
+      target.value = ''
+    }
   }
 }
 
@@ -416,26 +711,20 @@ onMounted(() => {
                   ...proprietes
                 ]"
                 style="width: 250px"
-                @update:value="chargerEcrituresComptables"
+                @update:value="loadEcrituresComptables"
               />
               <NInputNumber
                 v-model:value="anneeFiscale"
                 placeholder="Année fiscale"
                 :min="2020"
                 :max="2030"
-                @update:value="chargerEcrituresComptables"
+                @update:value="loadEcrituresComptables"
               />
             </NSpace>
           </div>
 
           <NDataTable
-            :columns="[
-              { title: 'Date', key: 'dateEcriture', width: 120 },
-              { title: 'Type', key: 'type', width: 100 },
-              { title: 'Montant', key: 'montant', width: 120, render: (row) => `${row.montant} €` },
-              { title: 'Propriété', key: 'proprieteNom', width: 150 },
-              { title: 'Commentaire', key: 'commentaire', width: 200 },
-            ]"
+            :columns="colonnesEcritures"
             :data="ecrituresComptables"
             :loading="chargement"
             :pagination="{ pageSize: 10 }"
@@ -487,6 +776,34 @@ onMounted(() => {
             </NFormItem>
           </NGi>
           <NGi :span="2">
+            <NFormItem label="Document associé">
+              <NSelect
+                v-model:value="chargeEnCours.documentId"
+                :options="[
+                  { label: 'Aucun document', value: '' },
+                  ...documents
+                ]"
+                placeholder="Sélectionner un document (optionnel)"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Document (optionnel)">
+              <input
+                type="file"
+                @change="handleFileSelectCharge"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                class="w-full p-2 border border-gray-300 rounded"
+              />
+              <div class="text-sm text-gray-500 mt-1">
+                Formats acceptés : PDF, JPG, PNG, DOC, DOCX. Taille maximum : 10MB
+              </div>
+              <div v-if="fichierCharge" class="text-sm text-green-600 mt-1">
+                Fichier sélectionné : {{ fichierCharge.name }} ({{ formatFileSize(fichierCharge.size) }})
+              </div>
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
             <NFormItem label="Commentaire">
               <NInput
                 v-model:value="chargeEnCours.commentaire"
@@ -502,7 +819,7 @@ onMounted(() => {
       <template #footer>
         <NSpace justify="end">
           <NButton @click="modalChargeVisible = false">Annuler</NButton>
-          <NButton type="primary" @click="sauvegarderCharge">
+          <NButton type="primary" :loading="uploadEnCours" @click="sauvegarderCharge">
             {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
           </NButton>
         </NSpace>
@@ -551,6 +868,34 @@ onMounted(() => {
             </NFormItem>
           </NGi>
           <NGi :span="2">
+            <NFormItem label="Document associé">
+              <NSelect
+                v-model:value="recetteEnCours.documentId"
+                :options="[
+                  { label: 'Aucun document', value: '' },
+                  ...documents
+                ]"
+                placeholder="Sélectionner un document (optionnel)"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Document (optionnel)">
+              <input
+                type="file"
+                @change="handleFileSelectRecette"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                class="w-full p-2 border border-gray-300 rounded"
+              />
+              <div class="text-sm text-gray-500 mt-1">
+                Formats acceptés : PDF, JPG, PNG, DOC, DOCX. Taille maximum : 10MB
+              </div>
+              <div v-if="fichierRecette" class="text-sm text-green-600 mt-1">
+                Fichier sélectionné : {{ fichierRecette.name }} ({{ formatFileSize(fichierRecette.size) }})
+              </div>
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
             <NFormItem label="Commentaire">
               <NInput
                 v-model:value="recetteEnCours.commentaire"
@@ -566,7 +911,97 @@ onMounted(() => {
       <template #footer>
         <NSpace justify="end">
           <NButton @click="modalRecetteVisible = false">Annuler</NButton>
-          <NButton type="primary" @click="sauvegarderRecette">
+          <NButton type="primary" :loading="uploadEnCours" @click="sauvegarderRecette">
+            {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
+          </NButton>
+        </NSpace>
+      </template>
+    </NModal>
+
+    <!-- Modal Écriture -->
+    <NModal v-model:show="modalEcritureVisible" preset="card" title="Écriture Comptable" style="width: 600px">
+      <NForm :model="ecritureEnCours" label-placement="top">
+        <NGrid :cols="2" :x-gap="16">
+          <NGi>
+            <NFormItem label="Date" required>
+              <NInput v-model:value="ecritureEnCours.dateEcriture" type="text" />
+            </NFormItem>
+          </NGi>
+          <NGi>
+            <NFormItem label="Montant" required>
+              <NInput
+                v-model:value="ecritureEnCours.montant"
+                placeholder="0.00"
+                type="text"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Type" required>
+              <NSelect
+                v-model:value="ecritureEnCours.type"
+                :options="[
+                  { label: 'Charge', value: 'CHARGE' },
+                  { label: 'Recette', value: 'RECETTE' }
+                ]"
+                placeholder="Sélectionner un type"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Propriété" required>
+              <NSelect
+                v-model:value="ecritureEnCours.proprieteId"
+                :options="proprietes"
+                placeholder="Sélectionner une propriété"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Description">
+              <NInput
+                v-model:value="ecritureEnCours.commentaire"
+                type="textarea"
+                placeholder="Description de l'écriture"
+                :rows="3"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Document associé">
+              <NSelect
+                v-model:value="ecritureEnCours.documentId"
+                :options="[
+                  { label: 'Aucun document', value: '' },
+                  ...documents
+                ]"
+                placeholder="Sélectionner un document (optionnel)"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Document (optionnel)">
+              <input
+                type="file"
+                @change="handleFileSelectCharge"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                class="w-full p-2 border border-gray-300 rounded"
+              />
+              <div class="text-sm text-gray-500 mt-1">
+                Formats acceptés : PDF, JPG, PNG, DOC, DOCX. Taille maximum : 10MB
+              </div>
+              <div v-if="fichierCharge" class="text-sm text-green-600 mt-1">
+                Fichier sélectionné : {{ fichierCharge.name }} ({{ formatFileSize(fichierCharge.size) }})
+              </div>
+            </NFormItem>
+          </NGi>
+        </NGrid>
+      </NForm>
+
+      <template #footer>
+        <NSpace justify="end">
+          <NButton @click="modalEcritureVisible = false">Annuler</NButton>
+          <NButton type="primary" :loading="uploadEnCours" @click="sauvegarderEcriture">
             {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
           </NButton>
         </NSpace>

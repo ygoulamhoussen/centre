@@ -11,7 +11,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -50,10 +49,6 @@ public class DocumentEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "immobilisation_id")
     private Immobilisation immobilisation;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ecriture_id")
-    private EcritureComptable ecriture;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type_document")
@@ -149,14 +144,6 @@ public class DocumentEntity {
 
     public void setImmobilisation(Immobilisation immobilisation) {
         this.immobilisation = immobilisation;
-    }
-
-    public EcritureComptable getEcriture() {
-        return ecriture;
-    }
-
-    public void setEcriture(EcritureComptable ecriture) {
-        this.ecriture = ecriture;
     }
 
     public TypeDocument getTypeDocument() {

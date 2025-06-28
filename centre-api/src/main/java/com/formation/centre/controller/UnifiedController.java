@@ -2,6 +2,8 @@ package com.formation.centre.controller;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -316,18 +319,69 @@ public ResponseEntity<byte[]> generateQuittancePdf(@PathVariable String quittanc
 @PostMapping("/uploadDocument")
 public ResponseEntity<DocumentDTO> uploadDocument(@RequestBody DocumentDTO dto) {
     try {
-        // Valider les données requises
-        if (dto.getContenu() == null || dto.getContenu().isEmpty()) {
-            return ResponseEntity.badRequest().body(null);
-        }
-        
-        // Appeler le service pour sauvegarder le document
         DocumentDTO savedDocument = unifiedService.saveDocument(dto);
         return ResponseEntity.ok(savedDocument);
     } catch (Exception e) {
         e.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+}
+
+@PostMapping("/uploadDocumentFile")
+public ResponseEntity<DocumentDTO> uploadDocumentFile(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam("titre") String titre,
+        @RequestParam("utilisateurId") String utilisateurId,
+        @RequestParam(value = "proprieteId", required = false) String proprieteId,
+        @RequestParam(value = "typeDocument", required = false) String typeDocument) {
+    try {
+        // Validation de la taille du fichier (10MB = 10 * 1024 * 1024 bytes)
+        long maxFileSize = 10 * 1024 * 1024; // 10MB en bytes
+        if (file.getSize() > maxFileSize) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Fichier trop volumineux");
+            errorResponse.put("message", "La taille du fichier (" + formatFileSize(file.getSize()) + 
+                           ") dépasse la limite autorisée (10MB maximum)");
+            errorResponse.put("fileSize", file.getSize());
+            errorResponse.put("maxSize", maxFileSize);
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(null);
+        }
+
+        // Validation du type de fichier
+        if (file.isEmpty()) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Fichier vide");
+            errorResponse.put("message", "Le fichier uploadé est vide");
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        DocumentDTO dto = new DocumentDTO();
+        dto.setTitre(titre);
+        dto.setUtilisateurId(utilisateurId);
+        dto.setProprieteId(proprieteId);
+        dto.setTypeDocument(typeDocument);
+        dto.setNomFichier(file.getOriginalFilename());
+        dto.setMimeType(file.getContentType());
+        dto.setTaille(file.getSize());
+        
+        // Convertir le fichier en base64 pour le stockage
+        String contenu = Base64.getEncoder().encodeToString(file.getBytes());
+        dto.setContenu(contenu);
+        
+        DocumentDTO savedDocument = unifiedService.saveDocument(dto);
+        return ResponseEntity.ok(savedDocument);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+// Méthode utilitaire pour formater la taille du fichier
+private String formatFileSize(long bytes) {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+    if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
+    return String.format("%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0));
 }
 
 @GetMapping("/documents/{id}")
@@ -422,6 +476,11 @@ public ResponseEntity<Void> deleteDocument(@PathVariable String id) {
 
 @GetMapping("/getDocumentsByUtilisateur/{utilisateurId}")
 public ResponseEntity<List<DocumentDTO>> getDocumentsByUtilisateur(@PathVariable String utilisateurId) {
+    return ResponseEntity.ok(unifiedService.getDocumentsByUtilisateur(utilisateurId));
+}
+
+@GetMapping("/documents/utilisateur/{utilisateurId}")
+public ResponseEntity<List<DocumentDTO>> getDocumentsByUtilisateurAlt(@PathVariable String utilisateurId) {
     return ResponseEntity.ok(unifiedService.getDocumentsByUtilisateur(utilisateurId));
 }
 
@@ -612,6 +671,37 @@ public ResponseEntity<EcritureComptableDTO> createEcritureComptableCharge(@PathV
 @PostMapping("/ecritures-comptables/recette/{recetteId}")
 public ResponseEntity<EcritureComptableDTO> createEcritureComptableRecette(@PathVariable String recetteId) {
     return ResponseEntity.ok(unifiedService.createEcritureComptableRecette(recetteId));
+}
+
+@PostMapping("/ecritures-comptables/quittance/{quittanceId}")
+public ResponseEntity<?> createEcritureComptableQuittance(@PathVariable String quittanceId) {
+    try {
+        EcritureComptableDTO result = unifiedService.createEcritureComptableQuittance(quittanceId);
+        return ResponseEntity.ok(result);
+    } catch (IllegalArgumentException e) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Erreur de création");
+        errorResponse.put("message", e.getMessage());
+        errorResponse.put("quittanceId", quittanceId);
+        return ResponseEntity.badRequest().body(errorResponse);
+    } catch (Exception e) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Erreur interne");
+        errorResponse.put("message", e.getMessage());
+        errorResponse.put("quittanceId", quittanceId);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+}
+
+@PutMapping("/ecritures-comptables")
+public ResponseEntity<EcritureComptableDTO> updateEcritureComptable(@RequestBody EcritureComptableDTO dto) {
+    return ResponseEntity.ok(unifiedService.updateEcritureComptable(dto));
+}
+
+@DeleteMapping("/ecritures-comptables/{id}")
+public ResponseEntity<Void> deleteEcritureComptable(@PathVariable String id) {
+    unifiedService.deleteEcritureComptable(id);
+    return ResponseEntity.noContent().build();
 }
 
 } 

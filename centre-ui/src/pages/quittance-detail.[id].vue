@@ -2,7 +2,8 @@
 import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NH1, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpin, NTabPane, NTabs, useMessage, NH2, NEmpty, NIcon } from 'naive-ui'
 import { h, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Add24Filled, ArrowLeft24Filled, Delete24Filled, Dismiss24Filled, Edit24Filled, Info24Filled, Save24Filled } from '@vicons/fluent'
+import { Add24Filled, ArrowLeft24Filled, Delete24Filled, Dismiss24Filled, Edit24Filled, Info24Filled, Save24Filled, Calculator24Filled } from '@vicons/fluent'
+import { createEcritureComptableQuittance } from '@/service/api/charges-recettes'
 
 definePage({
   meta: {
@@ -185,6 +186,15 @@ async function deletePaiement(row: any) {
   }
 }
 
+async function creerEcritureComptable() {
+  try {
+    await createEcritureComptableQuittance(quittanceId)
+    message.success('Écriture comptable créée avec succès !')
+  } catch (e: any) {
+    message.error(e.message || 'Erreur lors de la création de l\'écriture comptable')
+  }
+}
+
 function centerActiveTab() {
   nextTick(() => {
     const wrapper = tabsWrapperRef.value
@@ -269,6 +279,10 @@ const paiementColumns = [
                   <template #icon><NIcon :component="ArrowLeft24Filled" /></template>
                 </NButton>
                 <div class="flex gap-2">
+                  <NButton type="info" ghost @click="creerEcritureComptable" title="Créer écriture comptable">
+                    <template #icon><NIcon :component="Calculator24Filled" /></template>
+                    Écriture comptable
+                  </NButton>
                   <NPopconfirm @positive-click="supprimer" positive-text="Supprimer" negative-text="Annuler">
                     <template #trigger>
                       <NButton type="error" ghost title="Supprimer">

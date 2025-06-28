@@ -14,7 +14,6 @@ DROP TABLE IF EXISTS quittance CASCADE;
 DROP TABLE IF EXISTS location CASCADE;
 DROP TABLE IF EXISTS locataire CASCADE;
 DROP TABLE IF EXISTS composition_acquisition CASCADE;
-DROP TABLE IF EXISTS document CASCADE;
 DROP TABLE IF EXISTS propriete CASCADE;
 
 DROP TABLE IF EXISTS utilisateur_role CASCADE;
@@ -24,12 +23,10 @@ DROP TABLE IF EXISTS role CASCADE;
 
 DROP TABLE IF EXISTS utilisateur CASCADE;
 
-
-
 -- UTILISATEUR
 CREATE TABLE utilisateur (
     id UUID PRIMARY KEY,
-    user_name TEXT UNIQUE, -- ← ajouté
+    user_name TEXT UNIQUE,
     nom TEXT,
     prenom TEXT,
     email TEXT UNIQUE,
@@ -82,10 +79,9 @@ CREATE TABLE composition_acquisition (
 );
 
 -- LOCATAIRE
--- LOCATAIRE
 CREATE TABLE locataire (
     id UUID PRIMARY KEY,
-    utilisateur_id UUID REFERENCES utilisateur(id), -- ← C'est cette ligne qui manque
+    utilisateur_id UUID REFERENCES utilisateur(id),
     nom TEXT,
     telephone TEXT,
     email TEXT,
@@ -96,7 +92,6 @@ CREATE TABLE locataire (
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
-
 
 -- LOCATION
 CREATE TABLE location (
@@ -125,6 +120,10 @@ CREATE TABLE quittance (
     montant_charges DECIMAL,
     montant_total DECIMAL,
     statut TEXT,
+    date_echeance DATE,
+    depot_garantie DECIMAL,
+    montant_caution DECIMAL,
+    inclure_caution BOOLEAN NOT NULL DEFAULT FALSE,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
@@ -198,7 +197,24 @@ CREATE TABLE echeance_credit (
     total_echeance DECIMAL
 );
 
-
+-- DOCUMENT
+CREATE TABLE document (
+    id UUID PRIMARY KEY,
+    utilisateur_id UUID REFERENCES utilisateur(id),
+    propriete_id UUID REFERENCES propriete(id),
+    locataire_id UUID REFERENCES locataire(id),
+    immobilisation_id UUID REFERENCES immobilisation(id),
+    type_document TEXT,
+    titre TEXT,
+    url_fichier TEXT,
+    contenu TEXT,
+    mime_type VARCHAR(255),
+    nom_fichier VARCHAR(255),
+    taille BIGINT,
+    date_document DATE,
+    cree_le TIMESTAMP,
+    modifie_le TIMESTAMP
+);
 
 -- CHARGE
 CREATE TABLE charges (
@@ -210,6 +226,7 @@ CREATE TABLE charges (
     nature TEXT NOT NULL,
     commentaire TEXT,
     utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
+    document_id UUID REFERENCES document(id),
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
@@ -225,6 +242,7 @@ CREATE TABLE recettes (
     quittance_id UUID REFERENCES quittance(id),
     commentaire TEXT,
     utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
+    document_id UUID REFERENCES document(id),
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
@@ -240,6 +258,7 @@ CREATE TABLE ecriture_comptable (
     recette_id UUID REFERENCES recettes(id),
     commentaire TEXT,
     utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
+    document_id UUID REFERENCES document(id),
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
@@ -258,31 +277,3 @@ CREATE TABLE cloture_exercice (
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
-
--- DOCUMENT
-CREATE TABLE document (
-    id UUID PRIMARY KEY,
-    utilisateur_id UUID REFERENCES utilisateur(id),
-    propriete_id UUID REFERENCES propriete(id),
-    locataire_id UUID REFERENCES locataire(id),
-    immobilisation_id UUID REFERENCES immobilisation(id),
-    ecriture_id UUID REFERENCES ecriture_comptable(id),
-    type_document TEXT,
-    titre TEXT,
-    url_fichier TEXT,
-    contenu TEXT,
-    mime_type VARCHAR(255),
-    nom_fichier VARCHAR(255),
-    taille BIGINT,
-    date_document DATE,
-    cree_le TIMESTAMP,
-    modifie_le TIMESTAMP
-);
-
-
-
-ALTER TABLE quittance
-  ADD COLUMN date_echeance DATE,
-  ADD COLUMN depot_garantie DECIMAL,
-  ADD COLUMN montant_caution DECIMAL,
-  ADD COLUMN inclure_caution BOOLEAN NOT NULL DEFAULT FALSE;

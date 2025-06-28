@@ -1,4 +1,4 @@
-import type { ChargeDTO, RecetteDTO, EcritureComptableDTO } from '@/types/dto'
+import type { ChargeDTO, DocumentDTO, EcritureComptableDTO, RecetteDTO } from '@/types/dto'
 
 const API_BASE_URL = import.meta.env.VITE_SERVICE_BASE_URL
 
@@ -14,14 +14,14 @@ export async function fetchCharges(utilisateurId: string): Promise<ChargeDTO[]> 
     {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
+      credentials: 'include',
     }
   )
-  
+
   if (!response.ok) {
     throw new Error('Erreur lors de la récupération des charges')
   }
-  
+
   return response.json()
 }
 
@@ -35,14 +35,14 @@ export async function fetchChargesByPropriete(proprieteId: string): Promise<Char
     {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
+      credentials: 'include',
     }
   )
-  
+
   if (!response.ok) {
     throw new Error('Erreur lors de la récupération des charges de la propriété')
   }
-  
+
   return response.json()
 }
 
@@ -330,5 +330,254 @@ export async function createEcritureComptableRecette(recetteId: string): Promise
     throw new Error(error.message || 'Erreur lors de la création de l\'écriture comptable')
   }
   
+  return response.json()
+}
+
+/**
+ * Créer une écriture comptable automatiquement lors de la création d'une quittance
+ * @param quittanceId ID de la quittance
+ */
+export async function createEcritureComptableQuittance(quittanceId: string): Promise<EcritureComptableDTO> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/ecritures-comptables/quittance/${quittanceId}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    }
+  )
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error.message || 'Erreur lors de la création de l\'écriture comptable')
+  }
+  
+  return response.json()
+}
+
+/**
+ * Modifier une écriture comptable
+ * @param data Données de l'écriture comptable à modifier
+ */
+export async function updateEcritureComptable(data: Partial<EcritureComptableDTO>): Promise<EcritureComptableDTO> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/ecritures-comptables`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data)
+    }
+  )
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error.message || 'Erreur lors de la modification de l\'écriture comptable')
+  }
+  
+  return response.json()
+}
+
+/**
+ * Supprimer une écriture comptable
+ * @param id ID de l'écriture comptable à supprimer
+ */
+export async function deleteEcritureComptable(id: string): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/ecritures-comptables/${id}`,
+    {
+      method: 'DELETE',
+      credentials: 'include'
+    }
+  )
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error.message || 'Erreur lors de la suppression de l\'écriture comptable')
+  }
+}
+
+/**
+ * Récupérer les documents d'un utilisateur
+ * @param utilisateurId ID de l'utilisateur
+ */
+export async function fetchDocuments(utilisateurId: string): Promise<DocumentDTO[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/documents/utilisateur/${utilisateurId}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    }
+  )
+  
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération des documents')
+  }
+  
+  return response.json()
+}
+
+/**
+ * Uploader un nouveau document
+ * @param file Fichier à uploader
+ * @param titre Titre du document
+ * @param utilisateurId ID de l'utilisateur
+ * @param proprieteId ID de la propriété (optionnel)
+ * @param typeDocument Type de document (optionnel)
+ */
+export async function uploadDocument(
+  file: File,
+  titre: string,
+  utilisateurId: string,
+  proprieteId?: string,
+  typeDocument?: string
+): Promise<DocumentDTO> {
+  // Validation côté client de la taille du fichier
+  const maxFileSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxFileSize) {
+    throw new Error(`Le fichier est trop volumineux. Taille maximum autorisée : 10MB. Taille actuelle : ${formatFileSize(file.size)}`)
+  }
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('titre', titre)
+  formData.append('utilisateurId', utilisateurId)
+  if (proprieteId) {
+    formData.append('proprieteId', proprieteId)
+  }
+  if (typeDocument) {
+    formData.append('typeDocument', typeDocument)
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/uploadDocumentFile`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    }
+  )
+
+  if (!response.ok) {
+    let errorMessage = 'Erreur lors de l\'upload du document'
+    
+    if (response.status === 413) {
+      errorMessage = 'Le fichier est trop volumineux. Taille maximum autorisée : 10MB.'
+    } else {
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.message || errorMessage
+      } catch (e) {
+        // Si on ne peut pas parser la réponse JSON, on utilise le message par défaut
+      }
+    }
+    
+    throw new Error(errorMessage)
+  }
+
+  return response.json()
+}
+
+// Fonction utilitaire pour formater la taille du fichier
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+  return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB'
+}
+
+export async function downloadDocument(documentId: string): Promise<Blob> {
+  // D'abord récupérer les métadonnées du document pour avoir le type MIME
+  const metadataResponse = await fetch(
+    `${API_BASE_URL}/api/documents/${documentId}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    }
+  )
+
+  if (!metadataResponse.ok) {
+    throw new Error('Erreur lors de la récupération des métadonnées du document')
+  }
+
+  const metadata = await metadataResponse.json()
+  const mimeType = metadata.mimeType || 'application/octet-stream'
+
+  // Ensuite récupérer le contenu base64
+  const contentResponse = await fetch(
+    `${API_BASE_URL}/api/documents/${documentId}/content`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    }
+  )
+
+  if (!contentResponse.ok) {
+    throw new Error('Erreur lors du téléchargement du document')
+  }
+
+  // Le backend renvoie le contenu en base64, on doit le décoder
+  const base64Content = await contentResponse.text()
+  
+  // Décoder le base64 en bytes
+  const binaryString = atob(base64Content)
+  const bytes = new Uint8Array(binaryString.length)
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i)
+  }
+  
+  // Créer un blob avec le bon type MIME
+  return new Blob([bytes], { type: mimeType })
+}
+
+export async function getEcrituresComptablesWithProprieteNom(utilisateurId: string): Promise<Api.EcritureComptable[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/ecritures-comptables/utilisateur/${utilisateurId}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération des écritures comptables')
+  }
+
+  return response.json()
+}
+
+export async function getChargesWithProprieteNom(utilisateurId: string): Promise<Api.Charge[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/charges/${utilisateurId}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération des charges')
+  }
+
+  return response.json()
+}
+
+export async function getRecettesWithProprieteNom(utilisateurId: string): Promise<Api.Recette[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/recettes/${utilisateurId}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération des recettes')
+  }
+
   return response.json()
 } 

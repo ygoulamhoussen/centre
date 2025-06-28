@@ -8,10 +8,13 @@ public class EcritureComptableDTO {
     private String montant;
     private String type;
     private String proprieteId;
+    private String proprieteNom;
     private String chargeId;
     private String recetteId;
     private String commentaire;
     private String utilisateurId;
+    private String documentId;
+    private String documentNom;
     private String createdAt;
     private String updatedAt;
 
@@ -19,17 +22,21 @@ public class EcritureComptableDTO {
     public EcritureComptableDTO() {}
 
     public EcritureComptableDTO(String id, String dateEcriture, String montant, String type, 
-                               String proprieteId, String chargeId, String recetteId, String commentaire, 
-                               String utilisateurId, String createdAt, String updatedAt) {
+                               String proprieteId, String proprieteNom, String chargeId, String recetteId, 
+                               String commentaire, String utilisateurId, String documentId, String documentNom,
+                               String createdAt, String updatedAt) {
         this.id = id;
         this.dateEcriture = dateEcriture;
         this.montant = montant;
         this.type = type;
         this.proprieteId = proprieteId;
+        this.proprieteNom = proprieteNom;
         this.chargeId = chargeId;
         this.recetteId = recetteId;
         this.commentaire = commentaire;
         this.utilisateurId = utilisateurId;
+        this.documentId = documentId;
+        this.documentNom = documentNom;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -46,10 +53,13 @@ public class EcritureComptableDTO {
         dto.setMontant(ecriture.getMontant() != null ? ecriture.getMontant().toPlainString() : null);
         dto.setType(ecriture.getType() != null ? ecriture.getType().name() : null);
         dto.setProprieteId(ecriture.getPropriete() != null ? ecriture.getPropriete().getId().toString() : null);
+        dto.setProprieteNom(ecriture.getPropriete() != null ? ecriture.getPropriete().getNom() : null);
         dto.setChargeId(ecriture.getCharge() != null ? ecriture.getCharge().getId().toString() : null);
         dto.setRecetteId(ecriture.getRecette() != null ? ecriture.getRecette().getId().toString() : null);
         dto.setCommentaire(ecriture.getCommentaire());
         dto.setUtilisateurId(ecriture.getUtilisateur() != null ? ecriture.getUtilisateur().getId().toString() : null);
+        dto.setDocumentId(ecriture.getDocument() != null ? ecriture.getDocument().getId().toString() : null);
+        dto.setDocumentNom(ecriture.getDocument() != null ? ecriture.getDocument().getTitre() : null);
         dto.setCreatedAt(ecriture.getCreeLe() != null ? ecriture.getCreeLe().toString() : null);
         dto.setUpdatedAt(ecriture.getModifieLe() != null ? ecriture.getModifieLe().toString() : null);
 
@@ -97,6 +107,14 @@ public class EcritureComptableDTO {
         this.proprieteId = proprieteId;
     }
 
+    public String getProprieteNom() {
+        return proprieteNom;
+    }
+
+    public void setProprieteNom(String proprieteNom) {
+        this.proprieteNom = proprieteNom;
+    }
+
     public String getChargeId() {
         return chargeId;
     }
@@ -127,6 +145,22 @@ public class EcritureComptableDTO {
 
     public void setUtilisateurId(String utilisateurId) {
         this.utilisateurId = utilisateurId;
+    }
+
+    public String getDocumentId() {
+        return documentId;
+    }
+
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
+    }
+
+    public String getDocumentNom() {
+        return documentNom;
+    }
+
+    public void setDocumentNom(String documentNom) {
+        this.documentNom = documentNom;
     }
 
     public String getCreatedAt() {

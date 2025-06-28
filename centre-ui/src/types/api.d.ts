@@ -129,4 +129,57 @@ declare namespace Api {
     /** user list */
     type UserList = Common.PaginatingQueryRecord<User>
   }
+
+  export interface Document {
+    id: string
+    titre: string
+    nomFichier: string
+    mimeType: string
+    taille: number
+    typeDocument?: string
+    dateCreation: string
+    utilisateurId: string
+    proprieteId?: string
+    contenu?: string
+  }
+
+  export interface EcritureComptable {
+    id: string
+    dateEcriture: string
+    montant: number
+    type: 'CHARGE' | 'RECETTE'
+    description: string
+    proprieteId: string
+    proprieteNom?: string
+    chargeId?: string
+    recetteId?: string
+    documentId?: string
+    document?: Document
+    anneeFiscale: number
+    mois: number
+  }
+
+  export interface Charge {
+    id: string
+    dateCharge: string
+    montant: number
+    description: string
+    proprieteId: string
+    proprieteNom?: string
+    documentId?: string
+    document?: Document
+    utilisateurId: string
+  }
+
+  export interface Recette {
+    id: string
+    dateRecette: string
+    montant: number
+    description: string
+    proprieteId: string
+    proprieteNom?: string
+    documentId?: string
+    document?: Document
+    utilisateurId: string
+  }
 }

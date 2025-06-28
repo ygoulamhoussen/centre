@@ -21,6 +21,8 @@ export interface ChargeDTO {
   nature: string;
   commentaire?: string;
   utilisateurId?: string;
+  documentId?: string;
+  documentNom?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -35,6 +37,8 @@ export interface RecetteDTO {
   quittanceId?: string;
   commentaire?: string;
   utilisateurId?: string;
+  documentId?: string;
+  documentNom?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -48,6 +52,23 @@ export interface EcritureComptableDTO {
   chargeId?: string;
   recetteId?: string;
   commentaire?: string;
+  utilisateurId?: string;
+  documentId?: string;
+  documentNom?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DocumentDTO {
+  id?: string;
+  titre?: string;
+  nomFichier?: string;
+  mimeType?: string;
+  taille?: number;
+  urlFichier?: string;
+  dateDocument?: string;
+  typeDocument?: string;
+  proprieteId?: string;
   utilisateurId?: string;
   createdAt?: string;
   updatedAt?: string;

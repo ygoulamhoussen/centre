@@ -48,6 +48,10 @@ public class Charge {
     @JoinColumn(name = "utilisateur_id", nullable = false)
     private Utilisateur utilisateur;
 
+    @ManyToOne
+    @JoinColumn(name = "document_id")
+    private DocumentEntity document;
+
     @Column(name = "cree_le")
     private LocalDateTime creeLe;
 
@@ -120,6 +124,14 @@ public class Charge {
 
     public void setUtilisateur(Utilisateur utilisateur) {
         this.utilisateur = utilisateur;
+    }
+
+    public DocumentEntity getDocument() {
+        return document;
+    }
+
+    public void setDocument(DocumentEntity document) {
+        this.document = document;
     }
 
     public LocalDateTime getCreeLe() {

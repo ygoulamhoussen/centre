@@ -420,6 +420,7 @@ public class UnifiedService {
 
     public QuittanceDTO saveQuittance(QuittanceDTO dto) {
         Quittance q;
+        boolean isNew = false;
         if (dto.getId()!=null && !dto.getId().isEmpty()) {
             q = quittanceRepository.findById(UUID.fromString(dto.getId()))
                     .orElseThrow(() -> new IllegalArgumentException("Quittance introuvable"));
@@ -427,6 +428,7 @@ public class UnifiedService {
             q = new Quittance();
             q.setId(UUID.randomUUID());
             q.setCreeLe(LocalDateTime.now());
+            isNew = true;
         }
         q.setLocation(locationRepository.findById(UUID.fromString(dto.getLocationId())).orElseThrow());
         q.setDateDebut(LocalDate.parse(dto.getDateDebut()));
@@ -442,6 +444,12 @@ public class UnifiedService {
         q.setModifieLe(LocalDateTime.now());
 
         Quittance saved = quittanceRepository.save(q);
+        
+        // Créer automatiquement l'écriture comptable pour une nouvelle quittance
+        if (isNew) {
+            createEcritureComptableQuittance(saved.getId().toString());
+        }
+        
         return toDto(saved);
     }
 
@@ -1155,6 +1163,14 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
         c.setNature(Charge.NatureCharge.valueOf(dto.getNature()));
         c.setCommentaire(dto.getCommentaire());
         c.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
+        
+        // Gérer le document associé
+        if (dto.getDocumentId() != null && !dto.getDocumentId().isEmpty()) {
+            c.setDocument(documentEntityRepository.findById(UUID.fromString(dto.getDocumentId())).orElse(null));
+        } else {
+            c.setDocument(null);
+        }
+        
         c.setModifieLe(LocalDateTime.now());
 
         Charge saved = chargeRepository.save(c);
@@ -1168,6 +1184,11 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
     }
 
     public void deleteCharge(String id) {
+        // Supprimer l'écriture comptable associée s'il y en a une
+        EcritureComptable ecriture = ecritureComptableRepository.findByChargeId(UUID.fromString(id));
+        if (ecriture != null) {
+            ecritureComptableRepository.deleteById(ecriture.getId());
+        }
         chargeRepository.deleteById(UUID.fromString(id));
     }
 
@@ -1207,7 +1228,7 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
         r.setMontant(new BigDecimal(dto.getMontant()));
         r.setDateRecette(LocalDate.parse(dto.getDateRecette()));
         r.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
-        r.setType(Recette.TypeRecette.valueOf(dto.getType()));
+        r.setType(Recette.TypeRecette.QUITTANCE);
         
         if (dto.getQuittanceId() != null && !dto.getQuittanceId().isEmpty()) {
             r.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElse(null));
@@ -1215,6 +1236,14 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
         
         r.setCommentaire(dto.getCommentaire());
         r.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
+        
+        // Gérer le document associé
+        if (dto.getDocumentId() != null && !dto.getDocumentId().isEmpty()) {
+            r.setDocument(documentEntityRepository.findById(UUID.fromString(dto.getDocumentId())).orElse(null));
+        } else {
+            r.setDocument(null);
+        }
+        
         r.setModifieLe(LocalDateTime.now());
 
         Recette saved = recetteRepository.save(r);
@@ -1228,6 +1257,11 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
     }
 
     public void deleteRecette(String id) {
+        // Supprimer l'écriture comptable associée s'il y en a une
+        EcritureComptable ecriture = ecritureComptableRepository.findByRecetteId(UUID.fromString(id));
+        if (ecriture != null) {
+            ecritureComptableRepository.deleteById(ecriture.getId());
+        }
         recetteRepository.deleteById(UUID.fromString(id));
     }
 
@@ -1273,6 +1307,7 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
         ecriture.setCharge(charge);
         ecriture.setCommentaire("Charge: " + charge.getIntitule());
         ecriture.setUtilisateur(charge.getUtilisateur());
+        ecriture.setDocument(charge.getDocument());
         ecriture.setCreeLe(LocalDateTime.now());
         ecriture.setModifieLe(LocalDateTime.now());
 
@@ -1292,11 +1327,110 @@ public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> pla
         ecriture.setRecette(recette);
         ecriture.setCommentaire("Recette: " + recette.getIntitule());
         ecriture.setUtilisateur(recette.getUtilisateur());
+        ecriture.setDocument(recette.getDocument());
         ecriture.setCreeLe(LocalDateTime.now());
         ecriture.setModifieLe(LocalDateTime.now());
 
         EcritureComptable saved = ecritureComptableRepository.save(ecriture);
         return ecritureToDTO(saved);
+    }
+
+    public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId) {
+        System.out.println("Début de création d'écriture comptable pour quittance: " + quittanceId);
+        
+        Quittance quittance = quittanceRepository.findById(UUID.fromString(quittanceId))
+                .orElseThrow(() -> new IllegalArgumentException("Quittance introuvable avec l'ID: " + quittanceId));
+
+        System.out.println("Quittance trouvée: " + quittance.getId() + " - Locataire: " + quittance.getLocation().getLocataire().getNom());
+
+        // Vérifier si une écriture comptable existe déjà pour cette quittance
+        // (via la recette liée à la quittance)
+        List<Recette> recettesExistentes = recetteRepository.findByQuittanceId(quittance.getId());
+        System.out.println("Recettes existantes trouvées: " + recettesExistentes.size());
+        
+        if (!recettesExistentes.isEmpty()) {
+            // Une recette existe déjà, vérifier si elle a une écriture comptable
+            for (Recette recetteExistante : recettesExistentes) {
+                EcritureComptable ecritureExistante = ecritureComptableRepository.findByRecetteId(recetteExistante.getId());
+                if (ecritureExistante != null) {
+                    System.out.println("Écriture comptable existante trouvée pour recette: " + recetteExistante.getId());
+                    throw new IllegalArgumentException("Une écriture comptable existe déjà pour cette quittance");
+                }
+            }
+        }
+
+        // Calculer le montant total de la quittance
+        BigDecimal montantTotal = quittance.getMontantLoyer()
+                .add(quittance.getMontantCharges())
+                .add(Boolean.TRUE.equals(quittance.getInclureCaution()) && quittance.getDepotGarantie() != null 
+                    ? quittance.getDepotGarantie() : BigDecimal.ZERO);
+
+        System.out.println("Montant total calculé: " + montantTotal);
+
+        // Créer d'abord une recette automatiquement
+        Recette recette = new Recette();
+        // Ne pas définir l'ID manuellement, laisser Hibernate le gérer
+        recette.setIntitule("Loyer - " + quittance.getLocation().getLocataire().getNom() + 
+                           " - Période: " + quittance.getDateDebut() + " à " + 
+                           (quittance.getDateFin() != null ? quittance.getDateFin() : "en cours"));
+        recette.setMontant(montantTotal);
+        recette.setDateRecette(quittance.getDateDebut());
+        recette.setPropriete(quittance.getLocation().getPropriete());
+        recette.setType(Recette.TypeRecette.QUITTANCE);
+        recette.setQuittance(quittance); // Lier la recette à la quittance
+        recette.setCommentaire("Recette générée automatiquement depuis la quittance #" + quittance.getId());
+        recette.setUtilisateur(quittance.getLocation().getPropriete().getUtilisateur());
+        recette.setCreeLe(LocalDateTime.now());
+        recette.setModifieLe(LocalDateTime.now());
+
+        System.out.println("Sauvegarde de la recette...");
+        Recette savedRecette = recetteRepository.save(recette);
+        System.out.println("Recette sauvegardée avec ID: " + savedRecette.getId());
+
+        // Créer ensuite l'écriture comptable liée à cette recette
+        EcritureComptable ecriture = new EcritureComptable();
+        ecriture.setDateEcriture(quittance.getDateDebut());
+        ecriture.setMontant(montantTotal);
+        ecriture.setType(EcritureComptable.TypeEcriture.RECETTE);
+        ecriture.setPropriete(quittance.getLocation().getPropriete());
+        ecriture.setRecette(savedRecette);
+        ecriture.setCommentaire("Quittance de loyer - " + quittance.getLocation().getLocataire().getNom() + 
+                               " - Période: " + quittance.getDateDebut() + " à " + 
+                               (quittance.getDateFin() != null ? quittance.getDateFin() : "en cours"));
+        ecriture.setUtilisateur(quittance.getLocation().getPropriete().getUtilisateur());
+        ecriture.setCreeLe(LocalDateTime.now());
+        ecriture.setModifieLe(LocalDateTime.now());
+
+        System.out.println("Sauvegarde de l'écriture comptable...");
+        EcritureComptable saved = ecritureComptableRepository.save(ecriture);
+        System.out.println("Écriture comptable sauvegardée avec ID: " + saved.getId());
+        
+        return ecritureToDTO(saved);
+    }
+
+    public EcritureComptableDTO updateEcritureComptable(EcritureComptableDTO dto) {
+        EcritureComptable ecriture = ecritureComptableRepository.findById(UUID.fromString(dto.getId()))
+                .orElseThrow(() -> new IllegalArgumentException("Écriture comptable introuvable"));
+
+        ecriture.setDateEcriture(LocalDate.parse(dto.getDateEcriture()));
+        ecriture.setMontant(new BigDecimal(dto.getMontant()));
+        ecriture.setCommentaire(dto.getCommentaire());
+        ecriture.setModifieLe(LocalDateTime.now());
+
+        EcritureComptable saved = ecritureComptableRepository.save(ecriture);
+        return ecritureToDTO(saved);
+    }
+
+    public void deleteEcritureComptable(String id) {
+        EcritureComptable ecriture = ecritureComptableRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new IllegalArgumentException("Écriture comptable introuvable"));
+        
+        // Supprimer aussi la recette associée si elle existe
+        if (ecriture.getRecette() != null) {
+            recetteRepository.deleteById(ecriture.getRecette().getId());
+        }
+        
+        ecritureComptableRepository.deleteById(UUID.fromString(id));
     }
 
     private EcritureComptableDTO ecritureToDTO(EcritureComptable e) {

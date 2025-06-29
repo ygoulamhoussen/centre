@@ -121,6 +121,15 @@ import type { CategorieFiscale, TypeImmobilisation } from '@/types/immobilisatio
 import { CATEGORIE_FISCALE_DUREES, CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
 import { immobilisationApi } from '@/service/api/immobilisation'
 
+definePage({
+  meta: {
+    title: 'Nouvelle Immobilisation',
+    icon: 'material-symbols:add-circle',
+    order: 9,
+    hideInMenu: true,
+  },
+})
+
 const router = useRouter()
 const message = useMessage()
 

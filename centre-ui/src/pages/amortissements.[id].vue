@@ -71,6 +71,15 @@ import type { Amortissement, Immobilisation } from '@/types/immobilisation'
 import { amortissementApi, immobilisationApi } from '@/service/api/immobilisation'
 import { CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
 
+definePage({
+  meta: {
+    title: 'Plan d\'Amortissement',
+    icon: 'material-symbols:schedule',
+    order: 10,
+    hideInMenu: true,
+  },
+})
+
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()

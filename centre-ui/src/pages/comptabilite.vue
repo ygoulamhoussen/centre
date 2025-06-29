@@ -56,8 +56,9 @@ import {
 
 definePage({
   meta: {
-    title: 'Comptabilité - Charges et Recettes',
-    icon: 'Calculator24Filled',
+    title: 'Comptabilité',
+    icon: 'material-symbols:account-balance',
+    order: 6,
   },
 })
 

@@ -49,6 +49,8 @@ import {
 definePage({
   meta: {
     title: 'Comptabilité - Détail Propriété',
+    icon: 'material-symbols:account-balance',
+    order: 8,
     hideInMenu: true,
   },
 })

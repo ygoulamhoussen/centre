@@ -1,53 +1,3 @@
-<template>
-  <div class="immobilisations-page">
-    <div class="page-header">
-      <h1>Gestion des Immobilisations</h1>
-      <NButton type="primary" @click="navigateToCreate">
-        <template #icon>
-          <Icon icon="material-symbols:add" />
-        </template>
-        Nouvelle Immobilisation
-      </NButton>
-    </div>
-
-    <!-- Filtres -->
-    <div class="filters">
-      <NSelect
-        v-model:value="filters.proprieteId"
-        :options="proprieteOptions"
-        placeholder="Filtrer par propriété"
-        clearable
-        style="width: 200px"
-      />
-      <NSelect
-        v-model:value="filters.typeImmobilisation"
-        :options="typeOptions"
-        placeholder="Filtrer par type"
-        clearable
-        style="width: 200px"
-      />
-      <NSelect
-        v-model:value="filters.categorieFiscale"
-        :options="categorieOptions"
-        placeholder="Filtrer par catégorie"
-        clearable
-        style="width: 200px"
-      />
-      <NButton @click="clearFilters">Effacer les filtres</NButton>
-    </div>
-
-    <!-- Tableau des immobilisations -->
-    <NDataTable
-      :columns="columns"
-      :data="filteredImmobilisations"
-      :pagination="pagination"
-      :loading="loading"
-      :bordered="false"
-      striped
-    />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed, h, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -58,7 +8,13 @@ import { NButton, NDataTable, NSelect, useMessage } from 'naive-ui'
 import type { Immobilisation } from '@/types/immobilisation'
 import { immobilisationApi } from '@/service/api/immobilisation'
 import { CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
-
+definePage({
+  meta: {
+    title: 'Immobilisations',
+    icon: 'material-symbols:real-estate-agent',
+    order: 7,
+  },
+})
 const router = useRouter()
 const message = useMessage()
 
@@ -225,7 +181,6 @@ const columns: DataTableColumns<Immobilisation> = [
         quaternary: true,
         onClick: () => viewAmortissements(row),
       }, { 
-        default: () => h(Icon, { icon: 'material-symbols:schedule' }),
         icon: () => h(Icon, { icon: 'material-symbols:schedule' }),
       }),
       h(NButton, {
@@ -234,7 +189,6 @@ const columns: DataTableColumns<Immobilisation> = [
         type: 'error',
         onClick: () => deleteImmobilisation(row.id),
       }, { 
-        default: () => h(Icon, { icon: 'material-symbols:delete-outline' }),
         icon: () => h(Icon, { icon: 'material-symbols:delete-outline' }),
       }),
     ]),
@@ -261,6 +215,56 @@ onMounted(async () => {
   await Promise.all([loadImmobilisations(), loadProprietes()])
 })
 </script>
+
+<template>
+  <div class="immobilisations-page">
+    <div class="page-header">
+      <h1>Gestion des Immobilisations</h1>
+      <NButton type="primary" @click="navigateToCreate">
+        <template #icon>
+          <Icon icon="material-symbols:add" />
+        </template>
+        Nouvelle Immobilisation
+      </NButton>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters">
+      <NSelect
+        v-model:value="filters.proprieteId"
+        :options="proprieteOptions"
+        placeholder="Filtrer par propriété"
+        clearable
+        style="width: 200px"
+      />
+      <NSelect
+        v-model:value="filters.typeImmobilisation"
+        :options="typeOptions"
+        placeholder="Filtrer par type"
+        clearable
+        style="width: 200px"
+      />
+      <NSelect
+        v-model:value="filters.categorieFiscale"
+        :options="categorieOptions"
+        placeholder="Filtrer par catégorie"
+        clearable
+        style="width: 200px"
+      />
+      <NButton @click="clearFilters">Effacer les filtres</NButton>
+    </div>
+
+    <!-- Tableau des immobilisations -->
+    <NDataTable
+      :columns="columns"
+      :data="filteredImmobilisations"
+      :pagination="pagination"
+      :loading="loading"
+      :bordered="false"
+      striped
+    />
+  </div>
+</template>
 
 <style scoped>
 .immobilisations-page {

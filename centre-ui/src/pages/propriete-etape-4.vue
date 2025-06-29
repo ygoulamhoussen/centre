@@ -2,6 +2,10 @@
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
 import {
+  ArrowLeft24Filled,
+  Save24Filled,
+} from '@vicons/fluent'
+import {
   NAlert,
   NButton,
   NCard,
@@ -22,10 +26,6 @@ import {
   useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import {
-  ArrowLeft24Filled,
-  Save24Filled,
-} from '@vicons/fluent'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -43,48 +43,16 @@ const authStore = useAuthStore()
 const router = useRouter()
 const message = useMessage()
 
-const immobilisation = ref<'oui' | 'non'>('non')
 const chargement = ref(false)
-
-const decompositions = ref([
-  { categorie: 'Terrains', duree: null as number | null, quotePart: 15 as number | null, description: 'Non amortissable', pourcentageMin: 10, pourcentageMax: 20 },
-  { categorie: 'Bâti (gros œuvre)', duree: 35 as number | null, quotePart: 55 as number | null, description: 'Amortissement sur 35 ans', pourcentageMin: 50, pourcentageMax: 60 },
-  { categorie: 'Agencements et second œuvre', duree: 12 as number | null, quotePart: 20 as number | null, description: 'Amortissement sur 12 ans', pourcentageMin: 20, pourcentageMax: 30 },
-  { categorie: 'Mobilier et électroménager', duree: 7 as number | null, quotePart: 10 as number | null, description: 'Amortissement sur 7 ans', pourcentageMin: 0, pourcentageMax: 100 },
-  { categorie: 'Frais d\'acquisition', duree: 5 as number | null, quotePart: null as number | null, description: 'Amortissement sur 5 ans', pourcentageMin: 0, pourcentageMax: 100 },
-])
-
-const sommePourcentages = computed(() => {
-  return decompositions.value.reduce((sum, item) => sum + (item.quotePart || 0), 0)
-})
-
-function validerPourcentages() {
-  if (sommePourcentages.value !== 100) {
-    message.error(`La somme des pourcentages doit être de 100% (actuellement ${sommePourcentages.value}%)`)
-    return false
-  }
-  return true
-}
 
 function precedent() {
   router.push('/propriete-etape-3')
 }
 
 async function enregistrer() {
-  if (immobilisation.value === 'oui' && !validerPourcentages()) {
-    return
-  }
-
   chargement.value = true
   try {
     const utilisateurId = authStore.userInfo.userId
-
-    // Calculer le montant total d'acquisition
-    const montantAcquisition = Number.parseFloat(proprieteDTO.value.montantAcquisition || '0')
-    const fraisNotaire = Number.parseFloat(proprieteDTO.value.fraisNotaire || '0')
-    const fraisAgence = Number.parseFloat(proprieteDTO.value.fraisAgence || '0')
-    const montantTotal = montantAcquisition + fraisNotaire + fraisAgence
-
     const finalDTO = {
       ...proprieteDTO.value,
       dateAcquisition: proprieteDTO.value.dateAcquisition || null,
@@ -92,18 +60,7 @@ async function enregistrer() {
       fraisNotaire: proprieteDTO.value.fraisNotaire || '0',
       fraisAgence: proprieteDTO.value.fraisAgence || '0',
       tantieme: proprieteDTO.value.tantieme || '0',
-      compositions: immobilisation.value === 'oui'
-        ? decompositions.value
-            .filter(r => r.quotePart != null && r.quotePart > 0)
-            .map(r => ({
-              categorie: r.categorie,
-              montant: ((r.quotePart! / 100) * montantTotal).toFixed(2),
-              description: r.description,
-              duree: r.duree,
-            }))
-        : [],
     }
-
     const response = await fetch(
       `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createPropriete/${utilisateurId}`,
       {
@@ -112,12 +69,10 @@ async function enregistrer() {
         body: JSON.stringify(finalDTO),
       },
     )
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.message || 'Erreur lors de la sauvegarde de la propriété')
     }
-
     store.resetProprieteDTO()
     message.success('Propriété créée avec succès')
     router.push('/propriete')
@@ -170,59 +125,6 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
         <NDescriptionsItem label="Frais d'agence">{{ proprieteDTO.fraisAgence || 0 }} €</NDescriptionsItem>
         <NDescriptionsItem label="Tantième">{{ proprieteDTO.tantieme || 'Non spécifié' }}</NDescriptionsItem>
       </NDescriptions>
-
-      <div class="mt-8">
-        <NCard title="Amortissement comptable" :bordered="true">
-          <NFormItem label="Souhaitez-vous créer une immobilisation comptable pour ce bien ?">
-            <NRadioGroup v-model:value="immobilisation" name="immobilisation-group">
-              <NRadio value="oui">Oui</NRadio>
-              <NRadio value="non">Non</NRadio>
-            </NRadioGroup>
-          </NFormItem>
-
-          <template v-if="immobilisation === 'oui'">
-            <NAlert title="Répartition par composantes" type="info" class="mb-4">
-              Décomposez le coût d'acquisition selon les catégories d'amortissement standard. La somme des pourcentages doit être égale à 100%.
-            </NAlert>
-            <NGrid :x-gap="16" :y-gap="16" :cols="isMobile ? 1 : 3" :item-responsive="true" class="form-grid">
-              <NGi v-for="item in decompositions" :key="item.categorie">
-                <NCard :title="item.categorie" size="small">
-                  <NFormItem label="Quote-part (%)">
-                    <NInputNumber
-                      v-model:value="item.quotePart"
-                      :min="0"
-                      :max="100"
-                      placeholder="%"
-                      style="width: 100%;"
-                    >
-                      <template #suffix>%</template>
-                    </NInputNumber>
-                  </NFormItem>
-                  <NFormItem label="Durée (années)">
-                    <NInputNumber
-                      v-model:value="item.duree"
-                      :min="1"
-                      :max="100"
-                      placeholder="Durée"
-                      style="width: 100%;"
-                    />
-                  </NFormItem>
-                  <template #footer>
-                    <NText depth="3" class="text-xs">{{ item.description }}</NText>
-                  </template>
-                </NCard>
-              </NGi>
-            </NGrid>
-            <NAlert
-              title="Validation"
-              :type="sommePourcentages === 100 ? 'success' : 'error'"
-              class="mt-4"
-            >
-              Total des pourcentages : {{ sommePourcentages }}%
-            </NAlert>
-          </template>
-        </NCard>
-      </div>
 
       <NSpace class="mt-8" justify="space-between">
         <NButton @click="precedent" title="Précédent">

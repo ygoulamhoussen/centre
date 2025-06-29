@@ -693,6 +693,15 @@ public ResponseEntity<Void> deleteCharge(@PathVariable String id) {
     return ResponseEntity.noContent().build();
 }
 
+@GetMapping("/charge/{id}")
+public ResponseEntity<ChargeDTO> getChargeById(@PathVariable String id) {
+    ChargeDTO dto = unifiedService.getChargeById(id);
+    if (dto == null) {
+        return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(dto);
+}
+
 // ===== ENDPOINTS POUR LES RECETTES =====
 
 @GetMapping("/getRecettesByUtilisateur/{utilisateurId}")
@@ -712,11 +721,17 @@ public ResponseEntity<List<RecetteDTO>> getRecettesByPropriete(@PathVariable Str
 
 @PostMapping("/recettes")
 public ResponseEntity<RecetteDTO> createRecette(@RequestBody RecetteDTO dto) {
+    if (dto.getType() == null || dto.getType().trim().isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le champ 'type' de la recette est obligatoire.");
+    }
     return ResponseEntity.ok(unifiedService.saveRecette(dto));
 }
 
 @PutMapping("/recettes")
 public ResponseEntity<RecetteDTO> updateRecette(@RequestBody RecetteDTO dto) {
+    if (dto.getType() == null || dto.getType().trim().isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le champ 'type' de la recette est obligatoire.");
+    }
     return ResponseEntity.ok(unifiedService.saveRecette(dto));
 }
 
@@ -724,6 +739,15 @@ public ResponseEntity<RecetteDTO> updateRecette(@RequestBody RecetteDTO dto) {
 public ResponseEntity<Void> deleteRecette(@PathVariable String id) {
     unifiedService.deleteRecette(id);
     return ResponseEntity.noContent().build();
+}
+
+@GetMapping("/recette/{id}")
+public ResponseEntity<RecetteDTO> getRecetteById(@PathVariable String id) {
+    RecetteDTO dto = unifiedService.getRecetteById(id);
+    if (dto == null) {
+        return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(dto);
 }
 
 // ===== ENDPOINTS POUR LES ÉCRITURES COMPTABLES =====

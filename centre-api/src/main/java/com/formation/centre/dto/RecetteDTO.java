@@ -54,7 +54,7 @@ public class RecetteDTO {
         dto.setDateRecette(recette.getDateRecette() != null ? recette.getDateRecette().toString() : null);
         dto.setProprieteId(recette.getPropriete() != null ? recette.getPropriete().getId().toString() : null);
         dto.setProprieteNom(recette.getPropriete() != null ? recette.getPropriete().getNom() : null);
-        dto.setType(recette.getType() != null ? recette.getType().name() : null);
+        dto.setType(recette.getType());
         dto.setQuittanceId(recette.getQuittance() != null ? recette.getQuittance().getId().toString() : null);
         dto.setCommentaire(recette.getCommentaire());
         dto.setUtilisateurId(recette.getUtilisateur() != null ? recette.getUtilisateur().getId().toString() : null);

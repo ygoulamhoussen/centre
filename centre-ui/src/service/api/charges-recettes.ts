@@ -112,6 +112,25 @@ export async function deleteCharge(id: string): Promise<void> {
   }
 }
 
+/**
+ * Récupérer une charge par son ID
+ * @param id ID de la charge
+ */
+export async function fetchChargeById(id: string): Promise<ChargeDTO> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/charge/${id}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    }
+  )
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération de la charge')
+  }
+  return response.json()
+}
+
 // ===== SERVICES POUR LES RECETTES =====
 
 /**
@@ -220,6 +239,25 @@ export async function deleteRecette(id: string): Promise<void> {
     const error = await response.json().catch(() => ({}))
     throw new Error(error.message || 'Erreur lors de la suppression de la recette')
   }
+}
+
+/**
+ * Récupérer une recette par son ID
+ * @param id ID de la recette
+ */
+export async function fetchRecetteById(id: string): Promise<RecetteDTO> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/recette/${id}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    }
+  )
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération de la recette')
+  }
+  return response.json()
 }
 
 // ===== SERVICES POUR LES ÉCRITURES COMPTABLES =====

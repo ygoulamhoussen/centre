@@ -45,6 +45,7 @@ import {
   updateCharge,
   updateRecette,
 } from '@/service/api/charges-recettes'
+import { naturesCharges, typesRecettes } from '@/constants/compta'
 
 definePage({
   meta: {
@@ -69,34 +70,6 @@ const ecrituresComptables = ref<EcritureComptableDTO[]>([])
 const propriete = ref<any>(null)
 const anneeFiscale = ref(new Date().getFullYear())
 const chargement = ref(false)
-
-// États pour les modales
-const modalChargeVisible = ref(false)
-const modalRecetteVisible = ref(false)
-const modeEdition = ref(false)
-const chargeEnCours = ref<Partial<ChargeDTO>>({})
-const recetteEnCours = ref<Partial<RecetteDTO>>({})
-
-// Options pour les natures de charges
-const naturesCharges = [
-  { label: 'Travaux et réparations', value: 'TRAVAUX' },
-  { label: 'Charges de copropriété', value: 'COPROPRIETE' },
-  { label: 'Taxes foncières', value: 'TAXES' },
-  { label: 'Assurance', value: 'ASSURANCE' },
-  { label: 'Gestion locative', value: 'GESTION' },
-  { label: 'Électricité', value: 'ELECTRICITE' },
-  { label: 'Eau', value: 'EAU' },
-  { label: 'Chauffage', value: 'CHAUFFAGE' },
-  { label: 'Entretien', value: 'ENTRETIEN' },
-  { label: 'Autres', value: 'AUTRES' },
-]
-
-// Options pour les types de recettes
-const typesRecettes = [
-  { label: 'Loyers', value: 'LOCATION' },
-  { label: 'Exceptionnelle', value: 'EXCEPTIONNELLE' },
-  { label: 'Quittance', value: 'QUITTANCE' },
-]
 
 // Colonnes pour les tableaux
 const colonnesCharges = [
@@ -199,22 +172,11 @@ function retour() {
 }
 
 function nouvelleCharge() {
-  modeEdition.value = false
-  chargeEnCours.value = {
-    intitule: '',
-    montant: '',
-    dateCharge: new Date().toISOString().split('T')[0],
-    proprieteId: proprieteId,
-    nature: '',
-    commentaire: '',
-  }
-  modalChargeVisible.value = true
+  router.push(`/comptabilite-propriete/${proprieteId}/charge-create`)
 }
 
 function editerCharge(charge: ChargeDTO) {
-  modeEdition.value = true
-  chargeEnCours.value = { ...charge }
-  modalChargeVisible.value = true
+  router.push(`/comptabilite-propriete/${proprieteId}/charge-edit/${charge.id}`)
 }
 
 async function sauvegarderCharge() {
@@ -257,22 +219,11 @@ async function supprimerCharge(id: string) {
 }
 
 function nouvelleRecette() {
-  modeEdition.value = false
-  recetteEnCours.value = {
-    intitule: '',
-    montant: '',
-    dateRecette: new Date().toISOString().split('T')[0],
-    proprieteId: proprieteId,
-    type: 'LOCATION',
-    commentaire: '',
-  }
-  modalRecetteVisible.value = true
+  router.push(`/comptabilite-propriete/${proprieteId}/recette-create`)
 }
 
 function editerRecette(recette: RecetteDTO) {
-  modeEdition.value = true
-  recetteEnCours.value = { ...recette }
-  modalRecetteVisible.value = true
+  router.push(`/recette-edit/${recette.id}`)
 }
 
 async function sauvegarderRecette() {
@@ -438,120 +389,6 @@ onMounted(() => {
         </NTabPane>
       </NTabs>
     </NCard>
-
-    <!-- Modal Charge -->
-    <NModal v-model:show="modalChargeVisible" preset="card" title="Charge" style="width: 600px">
-      <NForm :model="chargeEnCours" label-placement="top">
-        <NGrid :cols="2" :x-gap="16">
-          <NGi>
-            <NFormItem label="Intitulé" required>
-              <NInput v-model:value="chargeEnCours.intitule" placeholder="Ex: Réparation chaudière" />
-            </NFormItem>
-          </NGi>
-          <NGi>
-            <NFormItem label="Montant (€)" required>
-              <NInputNumber
-                v-model:value="chargeEnCours.montant"
-                placeholder="0.00"
-                :precision="2"
-                :min="0"
-                style="width: 100%"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi>
-            <NFormItem label="Date" required>
-              <NInput v-model:value="chargeEnCours.dateCharge" type="date" />
-            </NFormItem>
-          </NGi>
-          <NGi>
-            <NFormItem label="Nature" required>
-              <NSelect
-                v-model:value="chargeEnCours.nature"
-                :options="naturesCharges"
-                placeholder="Sélectionner une nature"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Commentaire">
-              <NInput
-                v-model:value="chargeEnCours.commentaire"
-                type="textarea"
-                placeholder="Commentaire optionnel"
-                :rows="3"
-              />
-            </NFormItem>
-          </NGi>
-        </NGrid>
-      </NForm>
-
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="modalChargeVisible = false">Annuler</NButton>
-          <NButton type="primary" @click="sauvegarderCharge">
-            {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
-          </NButton>
-        </NSpace>
-      </template>
-    </NModal>
-
-    <!-- Modal Recette -->
-    <NModal v-model:show="modalRecetteVisible" preset="card" title="Recette" style="width: 600px">
-      <NForm :model="recetteEnCours" label-placement="top">
-        <NGrid :cols="2" :x-gap="16">
-          <NGi>
-            <NFormItem label="Intitulé" required>
-              <NInput v-model:value="recetteEnCours.intitule" placeholder="Ex: Loyer janvier 2024" />
-            </NFormItem>
-          </NGi>
-          <NGi>
-            <NFormItem label="Montant (€)" required>
-              <NInputNumber
-                v-model:value="recetteEnCours.montant"
-                placeholder="0.00"
-                :precision="2"
-                :min="0"
-                style="width: 100%"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi>
-            <NFormItem label="Date" required>
-              <NInput v-model:value="recetteEnCours.dateRecette" type="date" />
-            </NFormItem>
-          </NGi>
-          <NGi>
-            <NFormItem label="Type" required>
-              <NSelect
-                v-model:value="recetteEnCours.type"
-                :options="typesRecettes"
-                placeholder="Sélectionner un type"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Commentaire">
-              <NInput
-                v-model:value="recetteEnCours.commentaire"
-                type="textarea"
-                placeholder="Commentaire optionnel"
-                :rows="3"
-              />
-            </NFormItem>
-          </NGi>
-        </NGrid>
-      </NForm>
-
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="modalRecetteVisible = false">Annuler</NButton>
-          <NButton type="primary" @click="sauvegarderRecette">
-            {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
-          </NButton>
-        </NSpace>
-      </template>
-    </NModal>
   </div>
 </template>
 

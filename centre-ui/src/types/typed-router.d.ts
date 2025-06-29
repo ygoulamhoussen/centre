@@ -25,6 +25,8 @@ declare module 'vue-router/auto-routes' {
     '/500': RouteRecordInfo<'/500', '/500', Record<never, never>, Record<never, never>>,
     '/about': RouteRecordInfo<'/about', '/about', Record<never, never>, Record<never, never>>,
     '/amortissements.[id]': RouteRecordInfo<'/amortissements.[id]', '/amortissements/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    '/charge-create': RouteRecordInfo<'/charge-create', '/charge-create', Record<never, never>, Record<never, never>>,
+    '/charge-edit.[id]': RouteRecordInfo<'/charge-edit.[id]', '/charge-edit/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/comptabilite': RouteRecordInfo<'/comptabilite', '/comptabilite', Record<never, never>, Record<never, never>>,
     '/comptabilite-propriete.[id]': RouteRecordInfo<'/comptabilite-propriete.[id]', '/comptabilite-propriete/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/document/naive': RouteRecordInfo<'/document/naive', '/document/naive', Record<never, never>, Record<never, never>>,
@@ -96,6 +98,8 @@ declare module 'vue-router/auto-routes' {
     '/quittance-etape-1': RouteRecordInfo<'/quittance-etape-1', '/quittance-etape-1', Record<never, never>, Record<never, never>>,
     '/quittance-etape-2': RouteRecordInfo<'/quittance-etape-2', '/quittance-etape-2', Record<never, never>, Record<never, never>>,
     '/quittance-etape-3': RouteRecordInfo<'/quittance-etape-3', '/quittance-etape-3', Record<never, never>, Record<never, never>>,
+    '/recette-create': RouteRecordInfo<'/recette-create', '/recette-create', Record<never, never>, Record<never, never>>,
+    '/recette-edit.[id]': RouteRecordInfo<'/recette-edit.[id]', '/recette-edit/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/user-center': RouteRecordInfo<'/user-center', '/user-center', Record<never, never>, Record<never, never>>,
   }
 }

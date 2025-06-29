@@ -41,7 +41,7 @@ public interface RecetteRepository extends JpaRepository<Recette, UUID> {
      * Récupérer les recettes par type
      */
     @Query("SELECT r FROM Recette r WHERE r.utilisateur.id = :utilisateurId AND r.type = :type ORDER BY r.dateRecette DESC")
-    List<Recette> findByUtilisateurIdAndType(@Param("utilisateurId") UUID utilisateurId, @Param("type") Recette.TypeRecette type);
+    List<Recette> findByUtilisateurIdAndType(@Param("utilisateurId") UUID utilisateurId, @Param("type") String type);
 
     /**
      * Récupérer les recettes liées à une quittance

@@ -51,20 +51,18 @@ definePage({
 })
 const route = useRoute()
 const router = useRouter()
-const store = useUnifiedStore()
 const message = useMessage()
 
 // États
 const loading = ref(true)
 const saving = ref(false)
 const editingInfos = ref(false)
-const showCompositionModal = ref(false)
 const showDocumentModal = ref(false)
 const uploading = ref(false)
 const proprieteDetail = ref<any | null>(null)
 
 // Récupérer l'ID de la propriété depuis les paramètres de route
-const proprieteId = String(route.params.id || '')
+const proprieteId = (route.params && (route.params as any).id) ? String((route.params as any).id) : ''
 
 // Formulaires
 const editForm = ref({
@@ -79,15 +77,6 @@ const editForm = ref({
   tantieme: 0,
   fraisNotaire: 0,
   fraisAgence: 0,
-})
-
-const compositionForm = ref({
-  id: '',
-  categorie: '',
-  pourcentage: 0,
-  montant: 0,
-  description: '',
-  proprieteId: '',
 })
 
 // Formulaire de document
@@ -116,50 +105,8 @@ const documentTypes = [
   { value: 'AUTRE', label: 'Autre document' },
 ]
 
-const categoriesAmortissement = [
-  { value: 'terrain', label: 'Terrains (non amortissable, 10-20%)' },
-  { value: 'bati', label: 'Bâti (gros œuvre, 50-60%, 35 ans)' },
-  { value: 'agencement', label: 'Agencements et second œuvre (20-30%, 12 ans)' },
-  { value: 'mobilier', label: 'Mobilier et électroménager (variable, 7 ans)' },
-  { value: 'frais', label: 'Frais d\'acquisition (5 ans)' },
-]
-
 // Ajouter la ref pour le champ nom
 const nomInputRef = ref<HTMLInputElement | null>(null)
-
-function calculerMontant() {
-  if (proprieteDetail.value?.propriete && compositionForm.value.pourcentage) {
-    const montantTotal = Number.parseFloat(proprieteDetail.value.propriete.montantAcquisition) || 0
-    compositionForm.value.montant = (montantTotal * compositionForm.value.pourcentage) / 100
-  }
-}
-
-// Colonnes du tableau des compositions
-// Tableau des colonnes pour le tableau des compositions
-const _compositionColumns = [
-  { title: 'Catégorie', key: 'categorie' },
-  {
-    title: 'Montant',
-    key: 'montant',
-    render: (row: any) => formatCurrency(row.montant),
-  },
-  { title: 'Description', key: 'description' },
-  {
-    title: 'Actions',
-    key: 'actions',
-    render: (row: any) => h('div', { class: 'actions' }, [
-      h(NButton, {
-        size: 'small',
-        onClick: () => editComposition(row),
-      }, 'Modifier'),
-      h(NButton, {
-        size: 'small',
-        type: 'error',
-        onClick: () => deleteComposition(row.id),
-      }, 'Supprimer'),
-    ]),
-  },
-]
 
 // Méthodes
 async function supprimerPropriete(id: string) {
@@ -295,135 +242,6 @@ function cancelEditing() {
   editingInfos.value = false
 }
 
-function addComposition() {
-  compositionForm.value = {
-    id: '',
-    categorie: '',
-    pourcentage: 0,
-    montant: 0,
-    description: '',
-    proprieteId: String(store.selectedProprieteId || ''),
-  }
-  showCompositionModal.value = true
-}
-
-function editComposition(composition: any) {
-  compositionForm.value = { ...composition, pourcentage: 0 }
-  // Si on édite une composition existante, on calcule le pourcentage
-  if (proprieteDetail.value?.propriete && composition.montant) {
-    const montantTotal = Number.parseFloat(proprieteDetail.value.propriete.montantAcquisition) || 1 // Éviter la division par zéro
-    compositionForm.value.pourcentage = (Number.parseFloat(composition.montant) / montantTotal) * 100
-  }
-  showCompositionModal.value = true
-}
-
-async function saveComposition() {
-  try {
-    saving.value = true
-    
-    // S'assurer que le montant est à jour avant sauvegarde
-    if (compositionForm.value.pourcentage) {
-      calculerMontant()
-    }
-    
-    // Préparer la composition
-    const compositionToSave = {
-      id: compositionForm.value.id || undefined,
-      categorie: compositionForm.value.categorie,
-      montant: compositionForm.value.montant.toString(),
-      description: compositionForm.value.description,
-    };
-    
-    // Récupérer la propriété actuelle
-    const propriete = { ...proprieteDetail.value.propriete };
-    
-    // Mettre à jour ou ajouter la composition
-    if (compositionForm.value.id) {
-      // Mise à jour d'une composition existante
-      const index = propriete.compositions.findIndex((c: any) => c.id === compositionForm.value.id);
-      if (index !== -1) {
-        propriete.compositions[index] = {
-          ...propriete.compositions[index],
-          ...compositionToSave
-        };
-      }
-    } else {
-      // Ajout d'une nouvelle composition
-      if (!propriete.compositions) {
-        propriete.compositions = [];
-      }
-      propriete.compositions.push({
-        ...compositionToSave,
-        id: '' // L'ID sera généré par le backend
-      });
-    }
-    
-    // Mettre à jour la propriété avec les nouvelles compositions
-    const authStore = useAuthStore();
-    const userId = authStore.userInfo.userId;
-    
-    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/updatePropriete/${userId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(propriete),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || 'Erreur lors de la mise à jour de la propriété');
-    }
-
-    message.success('Composition enregistrée avec succès');
-    showCompositionModal.value = false;
-    await fetchProprieteDetails();
-  } catch (error) {
-    console.error('Erreur:', error);
-    message.error(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde de la composition');
-  } finally {
-    saving.value = false;
-  }
-}
-
-async function deleteComposition(id: string) {
-  try {
-    if (!proprieteDetail.value?.propriete) return;
-    
-    // Créer une copie de la propriété
-    const propriete = { ...proprieteDetail.value.propriete };
-    
-    // Filtrer pour supprimer la composition
-    if (propriete.compositions) {
-      propriete.compositions = propriete.compositions.filter((c: any) => c.id !== id);
-      
-      // Mettre à jour la propriété
-      const authStore = useAuthStore();
-      const userId = authStore.userInfo.userId;
-      
-      const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/updatePropriete/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(propriete),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Erreur lors de la suppression de la composition');
-      }
-      
-      // Recharger les données
-      await fetchProprieteDetails();
-      message.success('Composition supprimée avec succès');
-    }
-  } catch (error) {
-    console.error('Erreur lors de la suppression :', error);
-    message.error(error instanceof Error ? error.message : 'Erreur lors de la suppression de la composition');
-  }
-}
-
 // Utilitaires
 function formatCurrency(value: string | number | null | undefined) {
   if (value === null || value === undefined)
@@ -442,13 +260,9 @@ function formatDate(dateString: string | null | undefined) {
 }
 
 // Gestion des documents
-function getDocumentIcon(type: string) {
+function getDocumentIcon() {
   // Utilisez Document24Filled pour tous les types de documents
   return Document24Filled
-}
-
-function getFileExtension(filename: string) {
-  return filename.split('.').pop()?.toUpperCase() || ''
 }
 
 function handleDrop(event: DragEvent) {
@@ -664,7 +478,14 @@ function nouveauDocument() {
     id: '',
     type: 'AUTRE',
     fichier: null,
+    contenu: '',
     proprieteId,
+    locataireId: '',
+    titre: '',
+    nomFichier: '',
+    mimeType: '',
+    taille: 0,
+    dateDocument: new Date().toISOString().split('T')[0],
   }
   showDocumentModal.value = true
 }
@@ -678,90 +499,7 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
   throw new Error('Function not implemented.')
 }
 
-// --- Amortissement ---
-const amortissements = ref<any[]>([])
-const amortissementLoading = ref(false)
-const selectedCategorie = ref('')
-const amortissementCategoriesList = computed((): string[] => {
-  const cats = amortissements.value.map((a: any) => a.categorie).filter(Boolean)
-  return Array.from(new Set(cats))
-})
-const amortissementSelectOptions = computed(() => [
-  { label: 'Tous', value: '' },
-  ...amortissementCategoriesList.value.map((c: string) => ({ label: c, value: c }))
-])
-const filteredAmortissements = computed(() => {
-  if (!selectedCategorie.value) return amortissements.value
-  return amortissements.value.filter((a: any) => a.categorie === selectedCategorie.value)
-})
-const fetchAmortissement = async () => {
-  if (amortissementLoading.value) return
-  amortissementLoading.value = true
-  try {
-    if (typeof (store as any).getAmortissement === 'function') {
-      const data = await (store as any).getAmortissement(
-        proprieteId,
-        selectedCategorie.value || '',
-      )
-      amortissements.value = data
-    } else {
-      amortissements.value = []
-    }
-  } catch (e) {
-    amortissements.value = []
-  } finally {
-    amortissementLoading.value = false
-  }
-}
-async function saveAmortissement() {
-  if (!proprieteId || !amortissements.value.length) {
-    message.warning('Aucun plan à sauvegarder')
-    return
-  }
-  amortissementLoading.value = true
-  try {
-    const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/saveAmortissement/${proprieteId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(amortissements.value),
-    })
-    if (!res.ok) throw new Error('Erreur serveur')
-    message.success('Plan d\'amortissement sauvegardé')
-  } catch (e) {
-    message.error('Erreur lors de la sauvegarde')
-  } finally {
-    amortissementLoading.value = false
-  }
-}
-const activeTab = ref('infos')
-watch(activeTab, (tab) => {
-  if (tab === 'amortissement' && amortissements.value.length === 0) fetchAmortissement()
-})
-
-const tabsWrapperRef = ref<HTMLElement | null>(null)
-
-// Centrage automatique de l'onglet sélectionné
-function centerActiveTab() {
-  nextTick(() => {
-    const wrapper = tabsWrapperRef.value
-    if (!wrapper) return
-    const activeTab = wrapper.querySelector('.n-tabs-tab.n-tabs-tab--active') as HTMLElement
-    if (activeTab && wrapper) {
-      const wrapperRect = wrapper.getBoundingClientRect()
-      const tabRect = activeTab.getBoundingClientRect()
-      const scrollLeft = activeTab.offsetLeft - (wrapperRect.width / 2) + (tabRect.width / 2)
-      wrapper.scrollTo({ left: scrollLeft, behavior: 'smooth' })
-    }
-  })
-}
-
-watch(activeTab, () => {
-  centerActiveTab()
-})
-
-onMounted(() => {
-  centerActiveTab()
-})
+// Suppression de toute la logique d'amortissement et de centrage d'onglet (plus d'onglet composant)
 </script>
 
 <template>
@@ -901,7 +639,7 @@ onMounted(() => {
                   Date acquisition :
                 </div>
                 <div class="info-value-edit">
-                  <NDatePicker v-model:value="editForm.dateAcquisition" size="large" style="width: 100%" />
+                  <NDatePicker v-model:formatted-value="editForm.dateAcquisition" value-format="yyyy-MM-dd" size="large" style="width: 100%" />
                 </div>
 
                 <div class="info-label">
@@ -912,100 +650,6 @@ onMounted(() => {
                 </div>
               </div>
             </NForm>
-          </NTabPane>
-
-          <!-- Onglet Compositions -->
-          <NTabPane name="compositions" :tab="() => h('span', [h(NIcon, { component: ChartMultiple24Filled, size: 20, class: 'mr-1' }), ' Compositions'])" title="Compositions">
-            <div class="action-buttons">
-              <NButton type="primary" @click="addComposition" class="action-button" title="Ajouter une composition">
-                <template #icon>
-                  <NIcon :component="Add24Filled" />
-                </template>
-              </NButton>
-            </div>
-
-            <NH3 class="sous-titre mb-4">Composants de la propriété</NH3>
-            <div class="composition-cards">
-              <NCard
-                v-for="composition in proprieteDetail?.compositions || []"
-                :key="composition.id"
-                class="composition-card"
-                :bordered="true"
-                size="medium"
-              >
-                <div class="flex justify-between items-center mb-2">
-                  <div class="font-bold">{{ composition.categorie }}</div>
-                  <div class="flex gap-2">
-                    <NButton size="small" @click="editComposition(composition)" title="Modifier">
-                      <NIcon :component="Edit24Filled" />
-                    </NButton>
-                    <NButton size="small" type="error" @click="deleteComposition(composition.id)" title="Supprimer">
-                      <NIcon :component="Delete24Filled" />
-                    </NButton>
-                  </div>
-                </div>
-                <div class="mb-1"><span class="label">Montant :</span> {{ formatCurrency(composition.montant) }}</div>
-                <div><span class="label">Description :</span> {{ composition.description }}</div>
-              </NCard>
-              <NEmpty v-if="!proprieteDetail?.compositions || proprieteDetail.compositions.length === 0" description="Aucune composition trouvée" />
-            </div>
-
-            <!-- Modal d'édition de composition -->
-            <NModal v-model:show="showCompositionModal">
-              <NCard
-                style="width: 600px"
-                title="Édition de composition"
-                :bordered="false"
-                size="huge"
-                role="dialog"
-                aria-modal="true"
-              >
-                <NForm :model="compositionForm">
-                  <NFormItem label="Catégorie">
-                    <NSelect
-                      v-model:value="compositionForm.categorie"
-                      :options="categoriesAmortissement"
-                      placeholder="Sélectionnez une catégorie"
-                      clearable
-                    />
-                  </NFormItem>
-                  <NFormItem label="Pourcentage du coût total">
-                    <NInputNumber 
-                      v-model:value="compositionForm.pourcentage"
-                      :min="0"
-                      :max="100"
-                      :step="0.01"
-                      @update:value="calculerMontant"
-                      :suffix="'%'"
-                    />
-                  </NFormItem>
-                  <NFormItem label="Montant calculé">
-                    <NInputNumber 
-                      :value="compositionForm.montant" 
-                      :disabled="true"
-                      :formatter="value => formatCurrency(value)"
-                    />
-                  </NFormItem>
-                  <NFormItem label="Description">
-                    <NInput
-                      v-model:value="compositionForm.description"
-                      type="textarea"
-                      :autosize="{ minRows: 3 }"
-                    />
-                  </NFormItem>
-                </NForm>
-                <template #footer>
-                  <NSpace justify="end">
-                    <NButton @click="showCompositionModal = false">
-                      Annuler
-                    </NButton>
-                    <NButton type="primary" :loading="saving" @click="saveComposition">
-                      Enregistrer
-                    </NButton>
-                  </NSpace>
-                </template>
-              </NCard>
-            </NModal>
           </NTabPane>
 
           <!-- Onglet Documents -->
@@ -1029,7 +673,7 @@ onMounted(() => {
               >
                 <div class="flex justify-between items-center mb-2">
                   <div class="flex items-center gap-2">
-                    <NIcon :component="getDocumentIcon(getFileExtension(doc.nomFichier || ''))" size="22" />
+                    <NIcon :component="getDocumentIcon()" size="22" />
                     <span class="font-bold">{{ doc.titre || doc.nomFichier || 'Sans nom' }}</span>
                   </div>
                   <div class="flex gap-2">
@@ -1050,41 +694,6 @@ onMounted(() => {
                 <div class="mb-1"><span class="label">Date :</span> {{ formatDate(doc.dateDocument) }}</div>
               </NCard>
               <NEmpty v-if="!proprieteDetail?.documents || proprieteDetail.documents.length === 0" description="Aucun document pour le moment" />
-            </div>
-          </NTabPane>
-
-          <!-- Onglet Amortissement -->
-          <NTabPane name="amortissement" :tab="() => h('span', [h(NIcon, { component: Money24Filled, size: 20, class: 'mr-1' }), ' Amortissement'])" title="Amortissement">
-            <div class="action-buttons" style="gap: 12px; display: flex; align-items: center;">
-              <NSelect v-model:value="selectedCategorie as string | null | undefined" :options="amortissementSelectOptions" placeholder="Filtrer par composant" style="max-width: 300px;" :disabled="amortissementLoading || amortissements.length === 0" clearable />
-              <NButton type="primary" :loading="amortissementLoading" @click="() => { fetchAmortissement(); }" title="Générer le plan d'amortissement">
-                <template #icon>
-                  <NIcon :component="Money24Filled" />
-                </template>
-              </NButton>
-              <NButton type="success" :loading="amortissementLoading" @click="saveAmortissement" :disabled="amortissements.length === 0" title="Sauvegarder le plan">
-                <template #icon>
-                  <NIcon :component="Save24Filled" />
-                </template>
-              </NButton>
-            </div>
-            <NH3 class="sous-titre mb-4">Plan d'amortissement</NH3>
-            <div class="amortissement-cards">
-              <NCard
-                v-for="item in filteredAmortissements"
-                :key="item.id ? item.id + '-' + item.annee : item.categorie + '-' + item.annee"
-                class="amortissement-card"
-                :bordered="true"
-                size="medium"
-              >
-                <div class="flex gap-2 mb-1" v-if="!selectedCategorie">
-                  <span class="label">Composant :</span> <span class="font-bold">{{ item.categorie }}</span>
-                </div>
-                <div class="mb-1"><span class="label">Année :</span> {{ item.annee }}</div>
-                <div class="mb-1"><span class="label">Annuité :</span> {{ formatCurrency(item.montantAmorti) }}</div>
-                <div><span class="label">Valeur nette comptable :</span> {{ formatCurrency(item.valeurResiduelle) }}</div>
-              </NCard>
-              <NEmpty v-if="filteredAmortissements.length === 0" description="Aucun plan d'amortissement généré" />
             </div>
           </NTabPane>
         </NTabs>
@@ -1146,7 +755,7 @@ onMounted(() => {
                 <div v-if="documentForm.fichier" class="mt-4 p-3 border rounded">
                   <div class="flex justify-between items-center">
                     <div class="flex items-center">
-                      <NIcon :component="getDocumentIcon(documentForm.fichier.name)" size="24" class="mr-2" />
+                      <NIcon :component="getDocumentIcon()" size="24" class="mr-2" />
                       <span>{{ documentForm.fichier.name }}</span>
                     </div>
                     <NButton text @click="() => { documentForm.fichier = null; documentForm.contenu = ''; if (fileInput) fileInput.value = ''; }">

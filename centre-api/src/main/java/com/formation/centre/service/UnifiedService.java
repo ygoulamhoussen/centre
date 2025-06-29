@@ -1319,6 +1319,14 @@ public RecetteDTO saveRecette(RecetteDTO dto) {
     if (dto.getId() != null && !dto.getId().isEmpty()) {
         r = recetteRepository.findById(UUID.fromString(dto.getId()))
                 .orElseThrow(() -> new IllegalArgumentException("Recette introuvable"));
+        // Valeur par défaut pour le type si non fourni
+        if (dto.getType() == null || dto.getType().trim().isEmpty()) {
+            dto.setType(r.getType());
+        }
+        // Valeur par défaut pour la propriété si non fournie
+        if (dto.getProprieteId() == null || dto.getProprieteId().trim().isEmpty()) {
+            dto.setProprieteId(r.getPropriete() != null ? r.getPropriete().getId().toString() : null);
+        }
     } else {
         r = new Recette();
         r.setCreeLe(LocalDateTime.now());
@@ -1328,7 +1336,7 @@ public RecetteDTO saveRecette(RecetteDTO dto) {
     r.setMontant(new BigDecimal(dto.getMontant()));
     r.setDateRecette(LocalDate.parse(dto.getDateRecette()));
     r.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
-    r.setType(Recette.TypeRecette.QUITTANCE);
+    r.setType(dto.getType());
     
     if (dto.getQuittanceId() != null && !dto.getQuittanceId().isEmpty()) {
         r.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElse(null));
@@ -1476,7 +1484,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         recette.setMontant(montantTotal);
         recette.setDateRecette(quittance.getDateDebut());
         recette.setPropriete(quittance.getLocation().getPropriete());
-        recette.setType(Recette.TypeRecette.QUITTANCE);
+        recette.setType(quittance.getLocation().getPropriete().getTypeBien().toString());
         recette.setQuittance(quittance); // Lier la recette à la quittance
         recette.setCommentaire("Recette générée automatiquement depuis la quittance #" + quittance.getId());
         recette.setUtilisateur(quittance.getLocation().getPropriete().getUtilisateur());
@@ -1535,6 +1543,18 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
 
     private EcritureComptableDTO ecritureToDTO(EcritureComptable e) {
         return EcritureComptableDTO.fromEntity(e);
+    }
+
+    public RecetteDTO getRecetteById(String id) {
+        return recetteRepository.findById(UUID.fromString(id))
+            .map(this::recetteToDTO)
+            .orElse(null);
+    }
+
+    public ChargeDTO getChargeById(String id) {
+        return chargeRepository.findById(UUID.fromString(id))
+            .map(this::chargeToDTO)
+            .orElse(null);
     }
 
 

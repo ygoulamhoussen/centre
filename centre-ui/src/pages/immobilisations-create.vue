@@ -97,23 +97,23 @@
             
             <div class="component-details">
               <div class="detail-item">
-                <span class="detail-label">Montant :</span>
+                <span class="detail-label">Pourcentage :</span>
                 <NInputNumber
-                  v-model:value="component.montant"
-                  :precision="2"
+                  v-model:value="component.percent"
                   :min="0"
-                  :max="formData.montant"
-                  style="width: 100%"
-                  @update:value="updateTotalMontant"
+                  :max="100"
+                  :precision="2"
+                  suffix="%"
                 />
               </div>
               
               <div class="detail-item">
                 <span class="detail-label">Durée d'amortissement :</span>
                 <NSelect
-                  v-model:value="component.dureeAmortissement"
+                  :value="String(component.dureeAmortissement)"
                   :options="getDureeOptions(component)"
                   style="width: 100%"
+                  @update:value="val => component.dureeAmortissement = String(val)"
                 />
               </div>
               
@@ -123,9 +123,12 @@
                   v-model:value="component.typeImmobilisation"
                   :options="typeImmobilisationOptions"
                   style="width: 100%"
+                  @update:value="val => component.typeImmobilisation = val"
                 />
               </div>
             </div>
+
+            <div class="component-montant">Montant : {{ formatCurrency(Number(component.percent) * formData.montant / 100) }}</div>
           </div>
         </div>
 
@@ -145,8 +148,13 @@
             </div>
             <div class="summary-item">
               <span>Pourcentage utilisé :</span>
-              <span class="summary-value">{{ ((totalComponents / formData.montant) * 100).toFixed(1) }}%</span>
+              <span class="summary-value">{{ totalPercent }}%</span>
             </div>
+            <div class="summary-item" :class="{ 'error': Math.abs(totalPercent - 100) > 0.01 }">
+              <span>Total des pourcentages :</span>
+              <span class="summary-value">{{ totalPercent }} %</span>
+            </div>
+            <div v-if="Math.abs(totalPercent - 100) > 0.01" class="summary-item error">⚠️ La somme des pourcentages doit faire 100 %</div>
           </div>
         </div>
       </div>
@@ -162,8 +170,8 @@
           label-width="auto"
           require-mark-placement="right-hanging"
         >
-          <NFormItem label="Intitulé global" path="intitule">
-            <NInput v-model:value="formData.intitule" placeholder="Ex: Rénovation complète" />
+          <NFormItem label="Montant d'acquisition de la propriété">
+            <NInput :value="formData.montant" readonly />
           </NFormItem>
 
           <NFormItem label="Date d'acquisition" path="dateAcquisition">
@@ -194,7 +202,7 @@
         </NButton>
         <NButton 
           type="primary" 
-          :disabled="totalComponents !== formData.montant"
+          :disabled="Math.abs(totalPercent - 100) > 0.01"
           @click="nextStep"
         >
           Suivant
@@ -218,31 +226,37 @@
       </div>
 
       <div class="recap-section">
-        <h3>Détails de l'immobilisation</h3>
-        <div class="recap-item">
-          <strong>Intitulé :</strong> {{ formData.intitule }}
-        </div>
-        <div class="recap-item">
-          <strong>Montant :</strong> {{ formatCurrency(formData.montant) }}
-        </div>
-        <div class="recap-item">
-          <strong>Date d'acquisition :</strong> {{ formatDate(formData.dateAcquisition) }}
-        </div>
-        <div class="recap-item">
-          <strong>Type :</strong> {{ TYPE_IMMOBILISATION_LABELS[formData.typeImmobilisation] }}
-        </div>
-        <div class="recap-item">
-          <strong>Catégorie fiscale :</strong> {{ CATEGORIE_FISCALE_LABELS[formData.categorieFiscale] }}
-        </div>
-        <div class="recap-item">
-          <strong>Durée d'amortissement :</strong> {{ formData.dureeAmortissement }} ans
-        </div>
-        <div v-if="formData.valeurTerrain" class="recap-item">
-          <strong>Valeur du terrain :</strong> {{ formatCurrency(formData.valeurTerrain) }}
-        </div>
-        <div v-if="formData.commentaire" class="recap-item">
-          <strong>Commentaire :</strong> {{ formData.commentaire }}
-        </div>
+        <h3>Décomposition de l'immobilisation</h3>
+        <table class="recap-table">
+          <thead>
+            <tr>
+              <th>Composant</th>
+              <th>%</th>
+              <th>Montant</th>
+              <th>Durée</th>
+              <th>Type</th>
+              <th>Catégorie fiscale</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="component in immobilisationComponents" :key="component.key">
+              <td>{{ component.label }}</td>
+              <td>{{ component.percent }}</td>
+              <td>{{ formatCurrency(component.percent * formData.montant / 100) }}</td>
+              <td>{{ component.dureeAmortissement || '—' }}</td>
+              <td>{{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation] || '—' }}</td>
+              <td>{{ CATEGORIE_FISCALE_LABELS[getCategorieFiscaleFromDuree(String(component.dureeAmortissement))] || '—' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th>Total</th>
+              <th>{{ totalPercent }}</th>
+              <th>{{ formatCurrency(totalComponents) }}</th>
+              <th colspan="3"></th>
+            </tr>
+          </tfoot>
+        </table>
       </div>
 
       <div class="step-actions">
@@ -283,7 +297,7 @@ import {
   useMessage 
 } from 'naive-ui'
 
-import type { CategorieFiscale, TypeImmobilisation } from '@/types/immobilisation.d'
+import { CategorieFiscale, TypeImmobilisation } from '@/types/immobilisation.d'
 import { CATEGORIE_FISCALE_DUREES, CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
 import { immobilisationApi } from '@/service/api/immobilisation'
 
@@ -311,16 +325,16 @@ const immobilisationComponents = ref([
     key: 'terrain',
     label: 'Terrain',
     defaultPercentage: 15,
-    montant: 0,
-    dureeAmortissement: null,
-    typeImmobilisation: null,
+    percent: 15,
+    dureeAmortissement: '',
+    typeImmobilisation: '',
     amortissable: false,
   },
   {
     key: 'structure',
     label: 'Structure / Gros œuvre',
-    defaultPercentage: 55,
-    montant: 0,
+    defaultPercentage: 50,
+    percent: 50,
     dureeAmortissement: '40',
     typeImmobilisation: 'BIEN_IMMOBILIER',
     amortissable: true,
@@ -329,7 +343,7 @@ const immobilisationComponents = ref([
     key: 'toiture',
     label: 'Toiture',
     defaultPercentage: 7,
-    montant: 0,
+    percent: 7,
     dureeAmortissement: '25',
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
@@ -338,7 +352,7 @@ const immobilisationComponents = ref([
     key: 'installations',
     label: 'Installations techniques',
     defaultPercentage: 8,
-    montant: 0,
+    percent: 8,
     dureeAmortissement: '15',
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
@@ -347,7 +361,7 @@ const immobilisationComponents = ref([
     key: 'menuiseries',
     label: 'Menuiseries / Huisseries',
     defaultPercentage: 7,
-    montant: 0,
+    percent: 7,
     dureeAmortissement: '18',
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
@@ -356,7 +370,7 @@ const immobilisationComponents = ref([
     key: 'revetements',
     label: 'Revêtements sols/murs',
     defaultPercentage: 3,
-    montant: 0,
+    percent: 3,
     dureeAmortissement: '12',
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
@@ -364,8 +378,8 @@ const immobilisationComponents = ref([
   {
     key: 'mobilier',
     label: 'Mobilier et électroménager',
-    defaultPercentage: 7,
-    montant: 0,
+    defaultPercentage: 5,
+    percent: 5,
     dureeAmortissement: '8',
     typeImmobilisation: 'MOBILIER',
     amortissable: true,
@@ -373,8 +387,8 @@ const immobilisationComponents = ref([
   {
     key: 'frais',
     label: 'Frais d\'acquisition',
-    defaultPercentage: 8,
-    montant: 0,
+    defaultPercentage: 5,
+    percent: 5,
     dureeAmortissement: '8',
     typeImmobilisation: 'FRAIS',
     amortissable: true,
@@ -459,9 +473,14 @@ const categorieFiscaleOptions = computed(() =>
   Object.entries(CATEGORIE_FISCALE_LABELS).map(([value, label]) => ({ label, value })),
 )
 
-// Calcul du total des composants
+// Calcul du total des composants (en montant)
 const totalComponents = computed(() =>
-  immobilisationComponents.value.reduce((total, component) => total + (component.montant || 0), 0),
+  immobilisationComponents.value.reduce((total, component) => total + (Number(component.percent) * formData.value.montant / 100), 0),
+)
+
+// Calcul du total des pourcentages
+const totalPercent = computed(() =>
+  immobilisationComponents.value.reduce((total, component) => total + Number(component.percent || 0), 0),
 )
 
 // Fonctions utilitaires
@@ -501,13 +520,14 @@ function onProprieteSelect(proprieteId: string) {
   selectedPropriete.value = proprieteId
   formData.value.proprieteId = proprieteId
   
-  // Initialiser les valeurs par défaut
+  // Récupérer le montant d'acquisition de la propriété
+  const montantAcquisition = selectedProprieteInfo.value?.montantAcquisition || 0
   formData.value.intitule = `Immobilisation - ${selectedProprieteInfo.value?.nom || 'Propriété'}`
   formData.value.dateAcquisition = Date.now()
   formData.value.typeImmobilisation = 'TRAVAUX' as TypeImmobilisation
   formData.value.categorieFiscale = 'TRAVAUX_5_ANS' as CategorieFiscale
   formData.value.dureeAmortissement = '10'
-  formData.value.montant = 0
+  formData.value.montant = montantAcquisition
   formData.value.valeurTerrain = 0
   formData.value.commentaire = ''
   
@@ -537,16 +557,17 @@ async function saveImmobilisation() {
     }
 
     // Créer une immobilisation pour chaque composant amortissable
-    const composantsAmortissables = immobilisationComponents.value.filter(c => c.amortissable && c.montant > 0)
+    const composantsAmortissables = immobilisationComponents.value.filter(c => c.amortissable && Number(c.percent) > 0)
     
     for (const composant of composantsAmortissables) {
+      const montant = (Number(composant.percent) * formData.value.montant) / 100
       const data = {
         intitule: `${formData.value.intitule} - ${composant.label}`,
-        montant: composant.montant.toString(),
+        montant: montant.toString(),
         dateAcquisition: formData.value.dateAcquisition ? new Date(formData.value.dateAcquisition).toISOString().split('T')[0] : '',
         typeImmobilisation: composant.typeImmobilisation as TypeImmobilisation,
-        categorieFiscale: getCategorieFiscaleFromDuree(composant.dureeAmortissement),
-        dureeAmortissement: composant.dureeAmortissement,
+        categorieFiscale: getCategorieFiscaleFromDuree(String(composant.dureeAmortissement)),
+        dureeAmortissement: String(composant.dureeAmortissement),
         proprieteId: formData.value.proprieteId,
         commentaire: formData.value.commentaire,
         utilisateurId: formData.value.utilisateurId,
@@ -571,15 +592,10 @@ async function saveImmobilisation() {
   }
 }
 
-function getCategorieFiscaleFromDuree(duree: string | null): CategorieFiscale {
-  if (!duree) return 'TRAVAUX_5_ANS'
-  
+function getCategorieFiscaleFromDuree(duree: string): CategorieFiscale {
   const dureeNum = parseInt(duree)
-  if (dureeNum >= 30) return 'BIEN_IMMOBILIER_30_ANS'
-  if (dureeNum >= 20) return 'TRAVAUX_20_ANS'
-  if (dureeNum >= 15) return 'TRAVAUX_15_ANS'
-  if (dureeNum >= 10) return 'TRAVAUX_10_ANS'
-  return 'TRAVAUX_5_ANS'
+  if (dureeNum >= 10) return CategorieFiscale.TRAVAUX_10_ANS
+  return CategorieFiscale.TRAVAUX_5_ANS
 }
 
 function onTypeChange(_value: TypeImmobilisation) {
@@ -596,9 +612,8 @@ function onCategorieChange(value: CategorieFiscale) {
 
 // Fonctions pour la décomposition
 function applyDefaultDecomposition() {
-  const totalMontant = formData.value.montant
   immobilisationComponents.value.forEach(component => {
-    component.montant = (totalMontant * component.defaultPercentage) / 100
+    component.percent = component.defaultPercentage
   })
 }
 
@@ -609,9 +624,8 @@ function updateTotalMontant() {
 
 function getDureeOptions(component: any) {
   if (!component.amortissable) {
-    return [{ label: 'Non amortissable', value: null }]
+    return [{ label: 'Non amortissable', value: '' }]
   }
-  
   const durees = []
   if (component.key === 'structure') {
     durees.push({ label: '30 ans', value: '30' })
@@ -638,7 +652,6 @@ function getDureeOptions(component: any) {
     durees.push({ label: '8 ans', value: '8' })
     durees.push({ label: '10 ans', value: '10' })
   }
-  
   return durees
 }
 
@@ -913,5 +926,23 @@ onMounted(async () => {
   color: #374151;
   font-size: 16px;
   font-weight: 600;
+}
+
+.recap-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+.recap-table th, .recap-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  text-align: left;
+}
+.recap-table th {
+  background: #f3f4f6;
+}
+.recap-table tfoot th {
+  font-weight: bold;
+  background: #f9fafb;
 }
 </style> 

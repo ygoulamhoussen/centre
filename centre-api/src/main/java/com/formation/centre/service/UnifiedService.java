@@ -1095,7 +1095,7 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
     i.setMontant(new BigDecimal(dto.getMontant()));
     i.setDateAcquisition(LocalDate.parse(dto.getDateAcquisition()));
     i.setDureeAmortissement(Integer.valueOf(dto.getDureeAmortissement()));
-    i.setTypeImmobilisation(Immobilisation.TypeImmobilisation.valueOf(dto.getTypeImmobilisation()));
+    i.setTypeImmobilisation(dto.getTypeImmobilisation());
     i.setCategorieFiscale(Immobilisation.CategorieFiscale.valueOf(dto.getCategorieFiscale()));
     
     if (dto.getValeurTerrain() != null && !dto.getValeurTerrain().isEmpty()) {
@@ -1182,7 +1182,7 @@ public void genererPlanAmortissement(String immobilisationId) {
     
     // Calculer la base amortissable (montant - valeur terrain pour les biens immobiliers)
     BigDecimal baseAmortissable = immobilisation.getMontant();
-    if (immobilisation.getValeurTerrain() != null && immobilisation.getTypeImmobilisation() == Immobilisation.TypeImmobilisation.BIEN_IMMOBILIER) {
+    if ("BIEN_IMMOBILIER".equals(immobilisation.getTypeImmobilisation()) && immobilisation.getValeurTerrain() != null) {
         baseAmortissable = baseAmortissable.subtract(immobilisation.getValeurTerrain());
     }
     

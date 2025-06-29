@@ -33,7 +33,7 @@ public class ImmobilisationDTO {
         dto.setMontant(immobilisation.getMontant() != null ? immobilisation.getMontant().toPlainString() : null);
         dto.setDateAcquisition(immobilisation.getDateAcquisition() != null ? immobilisation.getDateAcquisition().toString() : null);
         dto.setDureeAmortissement(immobilisation.getDureeAmortissement() != null ? immobilisation.getDureeAmortissement().toString() : null);
-        dto.setTypeImmobilisation(immobilisation.getTypeImmobilisation() != null ? immobilisation.getTypeImmobilisation().name() : null);
+        dto.setTypeImmobilisation(immobilisation.getTypeImmobilisation());
         dto.setCategorieFiscale(immobilisation.getCategorieFiscale() != null ? immobilisation.getCategorieFiscale().name() : null);
         dto.setValeurTerrain(immobilisation.getValeurTerrain() != null ? immobilisation.getValeurTerrain().toPlainString() : null);
         dto.setCommentaire(immobilisation.getCommentaire());

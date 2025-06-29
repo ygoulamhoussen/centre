@@ -23,7 +23,7 @@ public interface ImmobilisationRepository extends JpaRepository<Immobilisation, 
     List<Immobilisation> findByUtilisateurIdAndProprieteId(@Param("utilisateurId") UUID utilisateurId, @Param("proprieteId") UUID proprieteId);
 
     @Query("SELECT i FROM Immobilisation i WHERE i.utilisateur.id = :utilisateurId AND i.typeImmobilisation = :type ORDER BY i.creeLe DESC")
-    List<Immobilisation> findByUtilisateurIdAndType(@Param("utilisateurId") UUID utilisateurId, @Param("type") Immobilisation.TypeImmobilisation type);
+    List<Immobilisation> findByUtilisateurIdAndType(@Param("utilisateurId") UUID utilisateurId, @Param("type") String type);
 
     @Query("SELECT i FROM Immobilisation i WHERE i.utilisateur.id = :utilisateurId AND i.categorieFiscale = :categorie ORDER BY i.creeLe DESC")
     List<Immobilisation> findByUtilisateurIdAndCategorieFiscale(@Param("utilisateurId") UUID utilisateurId, @Param("categorie") Immobilisation.CategorieFiscale categorie);

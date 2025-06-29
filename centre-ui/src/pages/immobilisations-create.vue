@@ -82,6 +82,12 @@
             </template>
             Appliquer la décomposition standard
           </NButton>
+          <NButton size="small" @click="setAllToZero">
+            <template #icon>
+              <Icon icon="material-symbols:close" />
+            </template>
+            Tout mettre à 0
+          </NButton>
         </div>
 
         <div class="components-grid">
@@ -614,6 +620,12 @@ function onCategorieChange(value: CategorieFiscale) {
 function applyDefaultDecomposition() {
   immobilisationComponents.value.forEach(component => {
     component.percent = component.defaultPercentage
+  })
+}
+
+function setAllToZero() {
+  immobilisationComponents.value.forEach(component => {
+    component.percent = 0
   })
 }
 

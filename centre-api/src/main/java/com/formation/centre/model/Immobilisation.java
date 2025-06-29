@@ -36,9 +36,8 @@ public class Immobilisation {
     @Column(name = "duree_amortissement", nullable = false)
     private Integer dureeAmortissement; // en années
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "type_immobilisation", nullable = false)
-    private TypeImmobilisation typeImmobilisation;
+    private String typeImmobilisation;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "categorie_fiscale", nullable = false)
@@ -108,11 +107,11 @@ public class Immobilisation {
         this.dureeAmortissement = dureeAmortissement;
     }
 
-    public TypeImmobilisation getTypeImmobilisation() {
+    public String getTypeImmobilisation() {
         return typeImmobilisation;
     }
 
-    public void setTypeImmobilisation(TypeImmobilisation typeImmobilisation) {
+    public void setTypeImmobilisation(String typeImmobilisation) {
         this.typeImmobilisation = typeImmobilisation;
     }
 
@@ -170,24 +169,6 @@ public class Immobilisation {
 
     public void setModifieLe(LocalDateTime modifieLe) {
         this.modifieLe = modifieLe;
-    }
-
-    public enum TypeImmobilisation {
-        BIEN_IMMOBILIER("Bien immobilier"),
-        MOBILIER("Mobilier"),
-        TRAVAUX("Travaux"),
-        EQUIPEMENT("Équipement"),
-        AUTRE("Autre");
-
-        private final String libelle;
-
-        TypeImmobilisation(String libelle) {
-            this.libelle = libelle;
-        }
-
-        public String getLibelle() {
-            return libelle;
-        }
     }
 
     public enum CategorieFiscale {

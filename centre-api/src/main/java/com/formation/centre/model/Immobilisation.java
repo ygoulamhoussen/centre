@@ -1,33 +1,62 @@
 package com.formation.centre.model;
-import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "immobilisation")
 public class Immobilisation {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "propriete_id")
-    private Propriete propriete;
+    @Column(name = "intitule", nullable = false)
+    private String intitule;
 
-    private String nom;
+    @Column(name = "montant", nullable = false, precision = 10, scale = 2)
+    private BigDecimal montant;
+
+    @Column(name = "date_acquisition", nullable = false)
+    private LocalDate dateAcquisition;
+
+    @Column(name = "duree_amortissement", nullable = false)
+    private Integer dureeAmortissement; // en années
 
     @Enumerated(EnumType.STRING)
-    private CategorieImmobilisation categorie;
+    @Column(name = "type_immobilisation", nullable = false)
+    private TypeImmobilisation typeImmobilisation;
 
-    private BigDecimal valeur;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "categorie_fiscale", nullable = false)
+    private CategorieFiscale categorieFiscale;
 
-    @Column(name = "duree_amortissement")
-    private Integer dureeAmortissement;
+    @Column(name = "valeur_terrain", precision = 10, scale = 2)
+    private BigDecimal valeurTerrain; // Pour les biens immobiliers
 
-    @Column(name = "date_mise_en_service")
-    private LocalDate dateMiseEnService;
+    @Column(name = "commentaire", columnDefinition = "TEXT")
+    private String commentaire;
+
+    @ManyToOne
+    @JoinColumn(name = "propriete_id", nullable = false)
+    private Propriete propriete;
+
+    @ManyToOne
+    @JoinColumn(name = "utilisateur_id", nullable = false)
+    private Utilisateur utilisateur;
 
     @Column(name = "cree_le")
     private LocalDateTime creeLe;
@@ -35,23 +64,10 @@ public class Immobilisation {
     @Column(name = "modifie_le")
     private LocalDateTime modifieLe;
 
-    public enum CategorieImmobilisation {
-        Terrain,
-        Structure,
-        Façades,
-        Toiture,
-        InstallationsElectriques,
-        Plomberie,
-        Chauffage,
-        AgencementsInterieurs,
-        CuisineEquipee,
-        Mobilier,
-        Ascenseur,
-        Autre
-    }
+    // Constructeurs
+    public Immobilisation() {}
 
-    // Getters & Setters
-
+    // Getters et Setters
     public UUID getId() {
         return id;
     }
@@ -60,36 +76,28 @@ public class Immobilisation {
         this.id = id;
     }
 
-    public Propriete getPropriete() {
-        return propriete;
+    public String getIntitule() {
+        return intitule;
     }
 
-    public void setPropriete(Propriete propriete) {
-        this.propriete = propriete;
+    public void setIntitule(String intitule) {
+        this.intitule = intitule;
     }
 
-    public String getNom() {
-        return nom;
+    public BigDecimal getMontant() {
+        return montant;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public void setMontant(BigDecimal montant) {
+        this.montant = montant;
     }
 
-    public CategorieImmobilisation getCategorie() {
-        return categorie;
+    public LocalDate getDateAcquisition() {
+        return dateAcquisition;
     }
 
-    public void setCategorie(CategorieImmobilisation categorie) {
-        this.categorie = categorie;
-    }
-
-    public BigDecimal getValeur() {
-        return valeur;
-    }
-
-    public void setValeur(BigDecimal valeur) {
-        this.valeur = valeur;
+    public void setDateAcquisition(LocalDate dateAcquisition) {
+        this.dateAcquisition = dateAcquisition;
     }
 
     public Integer getDureeAmortissement() {
@@ -100,12 +108,52 @@ public class Immobilisation {
         this.dureeAmortissement = dureeAmortissement;
     }
 
-    public LocalDate getDateMiseEnService() {
-        return dateMiseEnService;
+    public TypeImmobilisation getTypeImmobilisation() {
+        return typeImmobilisation;
     }
 
-    public void setDateMiseEnService(LocalDate dateMiseEnService) {
-        this.dateMiseEnService = dateMiseEnService;
+    public void setTypeImmobilisation(TypeImmobilisation typeImmobilisation) {
+        this.typeImmobilisation = typeImmobilisation;
+    }
+
+    public CategorieFiscale getCategorieFiscale() {
+        return categorieFiscale;
+    }
+
+    public void setCategorieFiscale(CategorieFiscale categorieFiscale) {
+        this.categorieFiscale = categorieFiscale;
+    }
+
+    public BigDecimal getValeurTerrain() {
+        return valeurTerrain;
+    }
+
+    public void setValeurTerrain(BigDecimal valeurTerrain) {
+        this.valeurTerrain = valeurTerrain;
+    }
+
+    public String getCommentaire() {
+        return commentaire;
+    }
+
+    public void setCommentaire(String commentaire) {
+        this.commentaire = commentaire;
+    }
+
+    public Propriete getPropriete() {
+        return propriete;
+    }
+
+    public void setPropriete(Propriete propriete) {
+        this.propriete = propriete;
+    }
+
+    public Utilisateur getUtilisateur() {
+        return utilisateur;
+    }
+
+    public void setUtilisateur(Utilisateur utilisateur) {
+        this.utilisateur = utilisateur;
     }
 
     public LocalDateTime getCreeLe() {
@@ -122,5 +170,58 @@ public class Immobilisation {
 
     public void setModifieLe(LocalDateTime modifieLe) {
         this.modifieLe = modifieLe;
+    }
+
+    public enum TypeImmobilisation {
+        BIEN_IMMOBILIER("Bien immobilier"),
+        MOBILIER("Mobilier"),
+        TRAVAUX("Travaux"),
+        EQUIPEMENT("Équipement"),
+        AUTRE("Autre");
+
+        private final String libelle;
+
+        TypeImmobilisation(String libelle) {
+            this.libelle = libelle;
+        }
+
+        public String getLibelle() {
+            return libelle;
+        }
+    }
+
+    public enum CategorieFiscale {
+        BATIMENT_50_ANS("Bâtiment (50 ans)"),
+        BATIMENT_25_ANS("Bâtiment (25 ans)"),
+        MOBILIER_10_ANS("Mobilier (10 ans)"),
+        MOBILIER_5_ANS("Mobilier (5 ans)"),
+        TRAVAUX_10_ANS("Travaux (10 ans)"),
+        TRAVAUX_5_ANS("Travaux (5 ans)"),
+        EQUIPEMENT_5_ANS("Équipement (5 ans)"),
+        EQUIPEMENT_3_ANS("Équipement (3 ans)");
+
+        private final String libelle;
+
+        CategorieFiscale(String libelle) {
+            this.libelle = libelle;
+        }
+
+        public String getLibelle() {
+            return libelle;
+        }
+
+        public int getDureeAnnees() {
+            switch (this) {
+                case BATIMENT_50_ANS: return 50;
+                case BATIMENT_25_ANS: return 25;
+                case MOBILIER_10_ANS: return 10;
+                case MOBILIER_5_ANS: return 5;
+                case TRAVAUX_10_ANS: return 10;
+                case TRAVAUX_5_ANS: return 5;
+                case EQUIPEMENT_5_ANS: return 5;
+                case EQUIPEMENT_3_ANS: return 3;
+                default: return 10;
+            }
+        }
     }
 }

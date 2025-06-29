@@ -28,6 +28,7 @@ import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
 import com.formation.centre.dto.EcritureComptableDTO;
+import com.formation.centre.dto.ImmobilisationDTO;
 import com.formation.centre.dto.LocataireDTO;
 import com.formation.centre.dto.LocataireDetailDTO;
 import com.formation.centre.dto.LocationDTO;
@@ -43,6 +44,7 @@ import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Credit;
 import com.formation.centre.model.DocumentEntity;
 import com.formation.centre.model.EcritureComptable;
+import com.formation.centre.model.Immobilisation;
 import com.formation.centre.model.Locataire;
 import com.formation.centre.model.Location;
 import com.formation.centre.model.Paiement;
@@ -55,6 +57,7 @@ import com.formation.centre.repository.ChargeRepository;
 import com.formation.centre.repository.CreditRepository;
 import com.formation.centre.repository.DocumentEntityRepository;
 import com.formation.centre.repository.EcritureComptableRepository;
+import com.formation.centre.repository.ImmobilisationRepository;
 import com.formation.centre.repository.LocataireRepository;
 import com.formation.centre.repository.LocationRepository;
 import com.formation.centre.repository.PaiementRepository;
@@ -84,6 +87,7 @@ public class UnifiedService {
     @Autowired private ChargeRepository chargeRepository;
     @Autowired private EcritureComptableRepository ecritureComptableRepository;
     @Autowired private RecetteRepository recetteRepository;
+    @Autowired private ImmobilisationRepository immobilisationRepository;
 
 
 
@@ -1053,319 +1057,415 @@ public QuittanceDTO getQuittanceById(String id) {
 }
 
 public List<QuittanceDTO> getQuittancesByLocation(String locationId) {
-    UUID locId = UUID.fromString(locationId);
-    return quittanceRepository.findByLocation_Id(locId)
+    return quittanceRepository.findByLocation_Id(UUID.fromString(locationId))
         .stream()
         .map(this::toDto)
         .collect(Collectors.toList());
 }
 
-public List<AmortissementDTO> genererAmortissement(String proprieteId, int dureeDefaut) {
-    Propriete propriete = proprieteRepository.findById(UUID.fromString(proprieteId))
-        .orElseThrow(() -> new IllegalArgumentException("Propriété non trouvée"));
-    List<AmortissementDTO> plan = new ArrayList<>();
-    if (propriete.getCompositions() == null || propriete.getCompositions().isEmpty()) {
-        // fallback : amortissement global si pas de composition
-        java.math.BigDecimal montant = propriete.getMontantAcquisition();
-        if (montant == null) throw new IllegalArgumentException("Montant d'acquisition non renseigné");
-        java.math.BigDecimal annuite = montant.divide(new java.math.BigDecimal(dureeDefaut), 2, java.math.RoundingMode.HALF_UP);
-        java.math.BigDecimal valeurNette = montant;
-        for (int annee = 1; annee <= dureeDefaut; annee++) {
-            AmortissementDTO dto = new AmortissementDTO();
-            dto.setId(null);
-            dto.setImmobilisationId(proprieteId);
-            dto.setAnnee(String.valueOf(annee));
-            dto.setMontantAmorti(annuite.toPlainString());
-            valeurNette = valeurNette.subtract(annuite);
-            dto.setValeurResiduelle(valeurNette.max(java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString());
-            dto.setCategorie("Global");
-            plan.add(dto);
-        }
-        return plan;
-    }
-    // Amortissement par composant
-    for (CompositionAcquisition comp : propriete.getCompositions()) {
-        if (comp.getMontant() == null || comp.getMontant().compareTo(java.math.BigDecimal.ZERO) <= 0) continue;
-        int duree = comp.getDuree() != null && comp.getDuree() > 0 ? comp.getDuree() : dureeDefaut;
-        java.math.BigDecimal annuite = comp.getMontant().divide(new java.math.BigDecimal(duree), 2, java.math.RoundingMode.HALF_UP);
-        java.math.BigDecimal valeurNette = comp.getMontant();
-        for (int annee = 1; annee <= duree; annee++) {
-            AmortissementDTO dto = new AmortissementDTO();
-            dto.setId(null);
-            dto.setImmobilisationId(proprieteId);
-            dto.setAnnee(String.valueOf(annee));
-            dto.setMontantAmorti(annuite.toPlainString());
-            valeurNette = valeurNette.subtract(annuite);
-            dto.setValeurResiduelle(valeurNette.max(java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString());
-            dto.setCategorie(comp.getCategorie());
-            plan.add(dto);
-        }
-    }
-    return plan;
+// ===== SERVICES POUR LES IMMOBILISATIONS =====
+
+public List<ImmobilisationDTO> getImmobilisationsByUtilisateur(String utilisateurId) {
+    UUID uid = UUID.fromString(utilisateurId);
+    return immobilisationRepository.findByUtilisateurId(uid)
+            .stream()
+            .map(ImmobilisationDTO::fromEntity)
+            .collect(Collectors.toList());
 }
 
-public void saveAmortissementPlan(String proprieteId, List<AmortissementDTO> plan) {
-    UUID propId = UUID.fromString(proprieteId);
-    // Supprimer les anciens amortissements de la propriété
-    amortissementRepository.deleteAll(amortissementRepository.findByPropriete_Id(propId));
-    // Insérer les nouveaux
-    for (AmortissementDTO dto : plan) {
-        Amortissement a = new Amortissement();
-        a.setPropriete(proprieteRepository.findById(propId).orElse(null));
-        if (dto.getCompositionId() != null) {
-            try {
-                a.setComposition(proprieteRepository.findCompositionById(UUID.fromString(dto.getCompositionId())).orElse(null));
-            } catch (Exception ignore) {}
-        }
-        a.setAnnee(dto.getAnnee() != null ? Integer.valueOf(dto.getAnnee()) : null);
-        a.setMontantAmorti(dto.getMontantAmorti() != null ? new java.math.BigDecimal(dto.getMontantAmorti()) : null);
-        a.setValeurResiduelle(dto.getValeurResiduelle() != null ? new java.math.BigDecimal(dto.getValeurResiduelle()) : null);
-        a.setCategorie(dto.getCategorie());
-        a.setCreeLe(java.time.LocalDateTime.now());
-        a.setModifieLe(java.time.LocalDateTime.now());
-        System.out.println("Insertion amortissement : " + a);
-        amortissementRepository.save(a);
-    }
+public List<ImmobilisationDTO> getImmobilisationsByPropriete(String proprieteId) {
+    UUID pid = UUID.fromString(proprieteId);
+    return immobilisationRepository.findByProprieteId(pid)
+            .stream()
+            .map(ImmobilisationDTO::fromEntity)
+            .collect(Collectors.toList());
 }
 
-    // ===== SERVICES POUR LES CHARGES =====
-
-    public List<ChargeDTO> getChargesByUtilisateur(String utilisateurId) {
-        UUID uid = UUID.fromString(utilisateurId);
-        return chargeRepository.findByUtilisateurId(uid)
-                .stream()
-                .map(this::chargeToDTO)
-                .collect(Collectors.toList());
+public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
+    Immobilisation i;
+    if (dto.getId() != null && !dto.getId().isEmpty()) {
+        i = immobilisationRepository.findById(UUID.fromString(dto.getId()))
+                .orElseThrow(() -> new IllegalArgumentException("Immobilisation introuvable"));
+    } else {
+        i = new Immobilisation();
+        i.setCreeLe(LocalDateTime.now());
     }
 
-    public List<ChargeDTO> getChargesByPropriete(String proprieteId) {
-        UUID pid = UUID.fromString(proprieteId);
-        return chargeRepository.findByProprieteId(pid)
-                .stream()
-                .map(this::chargeToDTO)
-                .collect(Collectors.toList());
+    i.setIntitule(dto.getIntitule());
+    i.setMontant(new BigDecimal(dto.getMontant()));
+    i.setDateAcquisition(LocalDate.parse(dto.getDateAcquisition()));
+    i.setDureeAmortissement(Integer.valueOf(dto.getDureeAmortissement()));
+    i.setTypeImmobilisation(Immobilisation.TypeImmobilisation.valueOf(dto.getTypeImmobilisation()));
+    i.setCategorieFiscale(Immobilisation.CategorieFiscale.valueOf(dto.getCategorieFiscale()));
+    
+    if (dto.getValeurTerrain() != null && !dto.getValeurTerrain().isEmpty()) {
+        i.setValeurTerrain(new BigDecimal(dto.getValeurTerrain()));
     }
+    
+    i.setCommentaire(dto.getCommentaire());
+    i.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+    i.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
+    i.setModifieLe(LocalDateTime.now());
 
-    public ChargeDTO saveCharge(ChargeDTO dto) {
-        Charge c;
-        if (dto.getId() != null && !dto.getId().isEmpty()) {
-            c = chargeRepository.findById(UUID.fromString(dto.getId()))
-                    .orElseThrow(() -> new IllegalArgumentException("Charge introuvable"));
-        } else {
-            c = new Charge();
-            c.setCreeLe(LocalDateTime.now());
-        }
+    Immobilisation saved = immobilisationRepository.save(i);
+    
+    // Générer automatiquement le plan d'amortissement
+    try {
+        genererPlanAmortissement(saved.getId().toString());
+        System.out.println("Plan d'amortissement généré avec succès pour l'immobilisation: " + saved.getId());
+    } catch (Exception e) {
+        System.err.println("Erreur lors de la génération du plan d'amortissement: " + e.getMessage());
+        e.printStackTrace();
+        // Ne pas faire échouer la sauvegarde de l'immobilisation si la génération du plan échoue
+    }
+    
+    return ImmobilisationDTO.fromEntity(saved);
+}
 
-        c.setIntitule(dto.getIntitule());
-        c.setMontant(new BigDecimal(dto.getMontant()));
-        c.setDateCharge(LocalDate.parse(dto.getDateCharge()));
-        c.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
-        c.setNature(Charge.NatureCharge.valueOf(dto.getNature()));
-        c.setCommentaire(dto.getCommentaire());
-        c.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
+public void deleteImmobilisation(String id) {
+    // Supprimer les amortissements associés
+    List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(UUID.fromString(id));
+    amortissementRepository.deleteAll(amortissements);
+    
+    // Supprimer l'immobilisation
+    immobilisationRepository.deleteById(UUID.fromString(id));
+}
+
+// ===== SERVICES POUR LES AMORTISSEMENTS =====
+
+public List<AmortissementDTO> getAmortissementsByUtilisateur(String utilisateurId) {
+    UUID uid = UUID.fromString(utilisateurId);
+    return amortissementRepository.findByUtilisateurId(uid)
+            .stream()
+            .map(AmortissementDTO::fromEntity)
+            .collect(Collectors.toList());
+}
+
+public List<AmortissementDTO> getAmortissementsByPropriete(String proprieteId) {
+    UUID pid = UUID.fromString(proprieteId);
+    return amortissementRepository.findByProprieteId(pid)
+            .stream()
+            .map(AmortissementDTO::fromEntity)
+            .collect(Collectors.toList());
+}
+
+public List<AmortissementDTO> getAmortissementsByImmobilisation(String immobilisationId) {
+    UUID iid = UUID.fromString(immobilisationId);
+    return amortissementRepository.findByImmobilisationId(iid)
+            .stream()
+            .map(AmortissementDTO::fromEntity)
+            .collect(Collectors.toList());
+}
+
+public List<AmortissementDTO> getAmortissementsByUtilisateurAndAnnee(String utilisateurId, int annee) {
+    UUID uid = UUID.fromString(utilisateurId);
+    return amortissementRepository.findByUtilisateurIdAndAnnee(uid, annee)
+            .stream()
+            .map(AmortissementDTO::fromEntity)
+            .collect(Collectors.toList());
+}
+
+@Transactional
+public void genererPlanAmortissement(String immobilisationId) {
+    System.out.println("=== GÉNÉRATION PLAN AMORTISSEMENT ===");
+    System.out.println("Immobilisation ID: " + immobilisationId);
+    
+    Immobilisation immobilisation = immobilisationRepository.findById(UUID.fromString(immobilisationId))
+            .orElseThrow(() -> new IllegalArgumentException("Immobilisation introuvable"));
+    
+    System.out.println("Immobilisation trouvée: " + immobilisation.getIntitule());
+    
+    // Supprimer les anciens amortissements
+    List<Amortissement> anciensAmortissements = amortissementRepository.findByImmobilisationId(immobilisation.getId());
+    System.out.println("Anciens amortissements à supprimer: " + anciensAmortissements.size());
+    amortissementRepository.deleteAll(anciensAmortissements);
+    
+    // Calculer la base amortissable (montant - valeur terrain pour les biens immobiliers)
+    BigDecimal baseAmortissable = immobilisation.getMontant();
+    if (immobilisation.getValeurTerrain() != null && immobilisation.getTypeImmobilisation() == Immobilisation.TypeImmobilisation.BIEN_IMMOBILIER) {
+        baseAmortissable = baseAmortissable.subtract(immobilisation.getValeurTerrain());
+    }
+    
+    System.out.println("Base amortissable: " + baseAmortissable);
+    
+    // Calculer le taux d'amortissement
+    BigDecimal tauxAnnuel = BigDecimal.valueOf(100.0)
+            .divide(BigDecimal.valueOf(immobilisation.getDureeAmortissement()), 2, BigDecimal.ROUND_HALF_UP);
+    
+    System.out.println("Taux annuel: " + tauxAnnuel + "%");
+    
+    // Calculer l'annuité d'amortissement
+    BigDecimal annuite = baseAmortissable
+            .multiply(tauxAnnuel)
+            .divide(BigDecimal.valueOf(100.0), 2, BigDecimal.ROUND_HALF_UP);
+    
+    System.out.println("Annuité: " + annuite);
+    
+    // Générer le plan d'amortissement
+    BigDecimal valeurResiduelle = baseAmortissable;
+    BigDecimal cumulAmortissements = BigDecimal.ZERO;
+    
+    for (int annee = 1; annee <= immobilisation.getDureeAmortissement(); annee++) {
+        Amortissement amortissement = new Amortissement();
+        amortissement.setImmobilisation(immobilisation);
+        amortissement.setAnnee(immobilisation.getDateAcquisition().getYear() + annee - 1);
+        amortissement.setMontantAmortissement(annuite);
+        amortissement.setTauxAmortissement(tauxAnnuel);
         
-        // Gérer le document associé
-        if (dto.getDocumentId() != null && !dto.getDocumentId().isEmpty()) {
-            c.setDocument(documentEntityRepository.findById(UUID.fromString(dto.getDocumentId())).orElse(null));
-        } else {
-            c.setDocument(null);
-        }
+        cumulAmortissements = cumulAmortissements.add(annuite);
+        amortissement.setCumulAmortissements(cumulAmortissements);
         
-        c.setModifieLe(LocalDateTime.now());
-
-        Charge saved = chargeRepository.save(c);
+        valeurResiduelle = baseAmortissable.subtract(cumulAmortissements);
+        amortissement.setValeurResiduelle(valeurResiduelle.max(BigDecimal.ZERO));
         
-        // Créer automatiquement l'écriture comptable pour une nouvelle charge
-        if (dto.getId() == null || dto.getId().isEmpty()) {
-            createEcritureComptableCharge(saved.getId().toString());
-        }
+        amortissement.setCreeLe(LocalDateTime.now());
+        amortissement.setModifieLe(LocalDateTime.now());
         
-        return chargeToDTO(saved);
+        Amortissement saved = amortissementRepository.save(amortissement);
+        System.out.println("Amortissement créé pour l'année " + amortissement.getAnnee() + ": " + saved.getId());
     }
+    
+    System.out.println("Plan d'amortissement généré avec succès");
+}
 
-    public void deleteCharge(String id) {
-        // Supprimer l'écriture comptable associée s'il y en a une
-        EcritureComptable ecriture = ecritureComptableRepository.findByChargeId(UUID.fromString(id));
-        if (ecriture != null) {
-            ecritureComptableRepository.deleteById(ecriture.getId());
-        }
-        chargeRepository.deleteById(UUID.fromString(id));
-    }
+// ===== SERVICES POUR LES CHARGES =====
 
-    private ChargeDTO chargeToDTO(Charge c) {
-        return ChargeDTO.fromEntity(c);
-    }
+public List<ChargeDTO> getChargesByUtilisateur(String utilisateurId) {
+    UUID uid = UUID.fromString(utilisateurId);
+    return chargeRepository.findByUtilisateurId(uid)
+            .stream()
+            .map(this::chargeToDTO)
+            .collect(Collectors.toList());
+}
 
-    // ===== SERVICES POUR LES RECETTES =====
+public List<ChargeDTO> getChargesByPropriete(String proprieteId) {
+    UUID pid = UUID.fromString(proprieteId);
+    return chargeRepository.findByProprieteId(pid)
+            .stream()
+            .map(this::chargeToDTO)
+            .collect(Collectors.toList());
+}
 
-    public List<RecetteDTO> getRecettesByUtilisateur(String utilisateurId) {
-        UUID uid = UUID.fromString(utilisateurId);
-        return recetteRepository.findByUtilisateurId(uid)
-                .stream()
-                .map(this::recetteToDTO)
-                .collect(Collectors.toList());
-    }
-
-    public List<RecetteDTO> getRecettesByPropriete(String proprieteId) {
-        UUID pid = UUID.fromString(proprieteId);
-        return recetteRepository.findByProprieteId(pid)
-                .stream()
-                .map(this::recetteToDTO)
-                .collect(Collectors.toList());
-    }
-
-    public RecetteDTO saveRecette(RecetteDTO dto) {
-        Recette r;
-        if (dto.getId() != null && !dto.getId().isEmpty()) {
-            r = recetteRepository.findById(UUID.fromString(dto.getId()))
-                    .orElseThrow(() -> new IllegalArgumentException("Recette introuvable"));
-        } else {
-            r = new Recette();
-            r.setCreeLe(LocalDateTime.now());
-        }
-
-        r.setIntitule(dto.getIntitule());
-        r.setMontant(new BigDecimal(dto.getMontant()));
-        r.setDateRecette(LocalDate.parse(dto.getDateRecette()));
-        r.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
-        r.setType(Recette.TypeRecette.QUITTANCE);
-        
-        if (dto.getQuittanceId() != null && !dto.getQuittanceId().isEmpty()) {
-            r.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElse(null));
-        }
-        
-        r.setCommentaire(dto.getCommentaire());
-        r.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
-        
-        // Gérer le document associé
-        if (dto.getDocumentId() != null && !dto.getDocumentId().isEmpty()) {
-            r.setDocument(documentEntityRepository.findById(UUID.fromString(dto.getDocumentId())).orElse(null));
-        } else {
-            r.setDocument(null);
-        }
-        
-        r.setModifieLe(LocalDateTime.now());
-
-        Recette saved = recetteRepository.save(r);
-        
-        // Créer automatiquement l'écriture comptable pour une nouvelle recette
-        if (dto.getId() == null || dto.getId().isEmpty()) {
-            createEcritureComptableRecette(saved.getId().toString());
-        }
-        
-        return recetteToDTO(saved);
-    }
-
-    public void deleteRecette(String id) {
-        // Supprimer l'écriture comptable associée s'il y en a une
-        EcritureComptable ecriture = ecritureComptableRepository.findByRecetteId(UUID.fromString(id));
-        if (ecriture != null) {
-            ecritureComptableRepository.deleteById(ecriture.getId());
-        }
-        recetteRepository.deleteById(UUID.fromString(id));
-    }
-
-    private RecetteDTO recetteToDTO(Recette r) {
-        return RecetteDTO.fromEntity(r);
-    }
-
-    // ===== SERVICES POUR LES ÉCRITURES COMPTABLES =====
-
-    public List<EcritureComptableDTO> getEcrituresComptables(String proprieteId, int anneeFiscale) {
-        UUID pid = UUID.fromString(proprieteId);
-        return ecritureComptableRepository.findByProprieteIdAndAnnee(pid, anneeFiscale)
-                .stream()
-                .map(this::ecritureToDTO)
-                .collect(Collectors.toList());
-    }
-
-    public List<EcritureComptableDTO> getEcrituresComptablesByUtilisateur(String utilisateurId) {
-        UUID uid = UUID.fromString(utilisateurId);
-        return ecritureComptableRepository.findByUtilisateurId(uid)
-                .stream()
-                .map(this::ecritureToDTO)
-                .collect(Collectors.toList());
-    }
-
-    public List<EcritureComptableDTO> getEcrituresComptablesByUtilisateurAndAnnee(String utilisateurId, int anneeFiscale) {
-        UUID uid = UUID.fromString(utilisateurId);
-        return ecritureComptableRepository.findByUtilisateurIdAndAnnee(uid, anneeFiscale)
-                .stream()
-                .map(this::ecritureToDTO)
-                .collect(Collectors.toList());
-    }
-
-    public EcritureComptableDTO createEcritureComptableCharge(String chargeId) {
-        Charge charge = chargeRepository.findById(UUID.fromString(chargeId))
+public ChargeDTO saveCharge(ChargeDTO dto) {
+    Charge c;
+    if (dto.getId() != null && !dto.getId().isEmpty()) {
+        c = chargeRepository.findById(UUID.fromString(dto.getId()))
                 .orElseThrow(() -> new IllegalArgumentException("Charge introuvable"));
-
-        EcritureComptable ecriture = new EcritureComptable();
-        ecriture.setDateEcriture(charge.getDateCharge());
-        ecriture.setMontant(charge.getMontant());
-        ecriture.setType(EcritureComptable.TypeEcriture.CHARGE);
-        ecriture.setPropriete(charge.getPropriete());
-        ecriture.setCharge(charge);
-        ecriture.setCommentaire("Charge: " + charge.getIntitule());
-        ecriture.setUtilisateur(charge.getUtilisateur());
-        ecriture.setDocument(charge.getDocument());
-        ecriture.setCreeLe(LocalDateTime.now());
-        ecriture.setModifieLe(LocalDateTime.now());
-
-        EcritureComptable saved = ecritureComptableRepository.save(ecriture);
-        return ecritureToDTO(saved);
+    } else {
+        c = new Charge();
+        c.setCreeLe(LocalDateTime.now());
     }
 
-    public EcritureComptableDTO createEcritureComptableRecette(String recetteId) {
-        Recette recette = recetteRepository.findById(UUID.fromString(recetteId))
+    c.setIntitule(dto.getIntitule());
+    c.setMontant(new BigDecimal(dto.getMontant()));
+    c.setDateCharge(LocalDate.parse(dto.getDateCharge()));
+    c.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+    c.setNature(Charge.NatureCharge.valueOf(dto.getNature()));
+    c.setCommentaire(dto.getCommentaire());
+    c.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
+    
+    // Gérer le document associé
+    if (dto.getDocumentId() != null && !dto.getDocumentId().isEmpty()) {
+        c.setDocument(documentEntityRepository.findById(UUID.fromString(dto.getDocumentId())).orElse(null));
+    } else {
+        c.setDocument(null);
+    }
+    
+    c.setModifieLe(LocalDateTime.now());
+
+    Charge saved = chargeRepository.save(c);
+    
+    // Créer automatiquement l'écriture comptable pour une nouvelle charge
+    if (dto.getId() == null || dto.getId().isEmpty()) {
+        createEcritureComptableCharge(saved.getId().toString());
+    }
+    
+    return chargeToDTO(saved);
+}
+
+public void deleteCharge(String id) {
+    // Supprimer l'écriture comptable associée s'il y en a une
+    EcritureComptable ecriture = ecritureComptableRepository.findByChargeId(UUID.fromString(id));
+    if (ecriture != null) {
+        ecritureComptableRepository.deleteById(ecriture.getId());
+    }
+    chargeRepository.deleteById(UUID.fromString(id));
+}
+
+private ChargeDTO chargeToDTO(Charge c) {
+    return ChargeDTO.fromEntity(c);
+}
+
+// ===== SERVICES POUR LES RECETTES =====
+
+public List<RecetteDTO> getRecettesByUtilisateur(String utilisateurId) {
+    UUID uid = UUID.fromString(utilisateurId);
+    return recetteRepository.findByUtilisateurId(uid)
+            .stream()
+            .map(this::recetteToDTO)
+            .collect(Collectors.toList());
+}
+
+public List<RecetteDTO> getRecettesByPropriete(String proprieteId) {
+    UUID pid = UUID.fromString(proprieteId);
+    return recetteRepository.findByProprieteId(pid)
+            .stream()
+            .map(this::recetteToDTO)
+            .collect(Collectors.toList());
+}
+
+public RecetteDTO saveRecette(RecetteDTO dto) {
+    Recette r;
+    if (dto.getId() != null && !dto.getId().isEmpty()) {
+        r = recetteRepository.findById(UUID.fromString(dto.getId()))
                 .orElseThrow(() -> new IllegalArgumentException("Recette introuvable"));
-
-        EcritureComptable ecriture = new EcritureComptable();
-        ecriture.setDateEcriture(recette.getDateRecette());
-        ecriture.setMontant(recette.getMontant());
-        ecriture.setType(EcritureComptable.TypeEcriture.RECETTE);
-        ecriture.setPropriete(recette.getPropriete());
-        ecriture.setRecette(recette);
-        ecriture.setCommentaire("Recette: " + recette.getIntitule());
-        ecriture.setUtilisateur(recette.getUtilisateur());
-        ecriture.setDocument(recette.getDocument());
-        ecriture.setCreeLe(LocalDateTime.now());
-        ecriture.setModifieLe(LocalDateTime.now());
-
-        EcritureComptable saved = ecritureComptableRepository.save(ecriture);
-        return ecritureToDTO(saved);
+    } else {
+        r = new Recette();
+        r.setCreeLe(LocalDateTime.now());
     }
 
-    public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId) {
-        System.out.println("Début de création d'écriture comptable pour quittance: " + quittanceId);
-        
-        Quittance quittance = quittanceRepository.findById(UUID.fromString(quittanceId))
-                .orElseThrow(() -> new IllegalArgumentException("Quittance introuvable avec l'ID: " + quittanceId));
+    r.setIntitule(dto.getIntitule());
+    r.setMontant(new BigDecimal(dto.getMontant()));
+    r.setDateRecette(LocalDate.parse(dto.getDateRecette()));
+    r.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
+    r.setType(Recette.TypeRecette.QUITTANCE);
+    
+    if (dto.getQuittanceId() != null && !dto.getQuittanceId().isEmpty()) {
+        r.setQuittance(quittanceRepository.findById(UUID.fromString(dto.getQuittanceId())).orElse(null));
+    }
+    
+    r.setCommentaire(dto.getCommentaire());
+    r.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
+    
+    // Gérer le document associé
+    if (dto.getDocumentId() != null && !dto.getDocumentId().isEmpty()) {
+        r.setDocument(documentEntityRepository.findById(UUID.fromString(dto.getDocumentId())).orElse(null));
+    } else {
+        r.setDocument(null);
+    }
+    
+    r.setModifieLe(LocalDateTime.now());
 
-        System.out.println("Quittance trouvée: " + quittance.getId() + " - Locataire: " + quittance.getLocation().getLocataire().getNom());
+    Recette saved = recetteRepository.save(r);
+    
+    // Créer automatiquement l'écriture comptable pour une nouvelle recette
+    if (dto.getId() == null || dto.getId().isEmpty()) {
+        createEcritureComptableRecette(saved.getId().toString());
+    }
+    
+    return recetteToDTO(saved);
+}
 
-        // Vérifier si une écriture comptable existe déjà pour cette quittance
-        // (via la recette liée à la quittance)
-        List<Recette> recettesExistentes = recetteRepository.findByQuittanceId(quittance.getId());
-        System.out.println("Recettes existantes trouvées: " + recettesExistentes.size());
-        
-        if (!recettesExistentes.isEmpty()) {
-            // Une recette existe déjà, vérifier si elle a une écriture comptable
-            for (Recette recetteExistante : recettesExistentes) {
-                EcritureComptable ecritureExistante = ecritureComptableRepository.findByRecetteId(recetteExistante.getId());
-                if (ecritureExistante != null) {
-                    System.out.println("Écriture comptable existante trouvée pour recette: " + recetteExistante.getId());
-                    throw new IllegalArgumentException("Une écriture comptable existe déjà pour cette quittance");
-                }
+public void deleteRecette(String id) {
+    // Supprimer l'écriture comptable associée s'il y en a une
+    EcritureComptable ecriture = ecritureComptableRepository.findByRecetteId(UUID.fromString(id));
+    if (ecriture != null) {
+        ecritureComptableRepository.deleteById(ecriture.getId());
+    }
+    recetteRepository.deleteById(UUID.fromString(id));
+}
+
+private RecetteDTO recetteToDTO(Recette r) {
+    return RecetteDTO.fromEntity(r);
+}
+
+// ===== SERVICES POUR LES ÉCRITURES COMPTABLES =====
+
+public List<EcritureComptableDTO> getEcrituresComptables(String proprieteId, int anneeFiscale) {
+    UUID pid = UUID.fromString(proprieteId);
+    return ecritureComptableRepository.findByProprieteIdAndAnnee(pid, anneeFiscale)
+            .stream()
+            .map(this::ecritureToDTO)
+            .collect(Collectors.toList());
+}
+
+public List<EcritureComptableDTO> getEcrituresComptablesByUtilisateur(String utilisateurId) {
+    UUID uid = UUID.fromString(utilisateurId);
+    return ecritureComptableRepository.findByUtilisateurId(uid)
+            .stream()
+            .map(this::ecritureToDTO)
+            .collect(Collectors.toList());
+}
+
+public List<EcritureComptableDTO> getEcrituresComptablesByUtilisateurAndAnnee(String utilisateurId, int anneeFiscale) {
+    UUID uid = UUID.fromString(utilisateurId);
+    return ecritureComptableRepository.findByUtilisateurIdAndAnnee(uid, anneeFiscale)
+            .stream()
+            .map(this::ecritureToDTO)
+            .collect(Collectors.toList());
+}
+
+public EcritureComptableDTO createEcritureComptableCharge(String chargeId) {
+    Charge charge = chargeRepository.findById(UUID.fromString(chargeId))
+            .orElseThrow(() -> new IllegalArgumentException("Charge introuvable"));
+
+    EcritureComptable ecriture = new EcritureComptable();
+    ecriture.setDateEcriture(charge.getDateCharge());
+    ecriture.setMontant(charge.getMontant());
+    ecriture.setType(EcritureComptable.TypeEcriture.CHARGE);
+    ecriture.setPropriete(charge.getPropriete());
+    ecriture.setCharge(charge);
+    ecriture.setCommentaire("Charge: " + charge.getIntitule());
+    ecriture.setUtilisateur(charge.getUtilisateur());
+    ecriture.setDocument(charge.getDocument());
+    ecriture.setCreeLe(LocalDateTime.now());
+    ecriture.setModifieLe(LocalDateTime.now());
+
+    EcritureComptable saved = ecritureComptableRepository.save(ecriture);
+    return ecritureToDTO(saved);
+}
+
+public EcritureComptableDTO createEcritureComptableRecette(String recetteId) {
+    Recette recette = recetteRepository.findById(UUID.fromString(recetteId))
+            .orElseThrow(() -> new IllegalArgumentException("Recette introuvable"));
+
+    EcritureComptable ecriture = new EcritureComptable();
+    ecriture.setDateEcriture(recette.getDateRecette());
+    ecriture.setMontant(recette.getMontant());
+    ecriture.setType(EcritureComptable.TypeEcriture.RECETTE);
+    ecriture.setPropriete(recette.getPropriete());
+    ecriture.setRecette(recette);
+    ecriture.setCommentaire("Recette: " + recette.getIntitule());
+    ecriture.setUtilisateur(recette.getUtilisateur());
+    ecriture.setDocument(recette.getDocument());
+    ecriture.setCreeLe(LocalDateTime.now());
+    ecriture.setModifieLe(LocalDateTime.now());
+
+    EcritureComptable saved = ecritureComptableRepository.save(ecriture);
+    return ecritureToDTO(saved);
+}
+
+public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId) {
+    System.out.println("Début de création d'écriture comptable pour quittance: " + quittanceId);
+    
+    Quittance quittance = quittanceRepository.findById(UUID.fromString(quittanceId))
+            .orElseThrow(() -> new IllegalArgumentException("Quittance introuvable avec l'ID: " + quittanceId));
+
+    System.out.println("Quittance trouvée: " + quittance.getId() + " - Locataire: " + quittance.getLocation().getLocataire().getNom());
+
+    // Vérifier si une écriture comptable existe déjà pour cette quittance
+    // (via la recette liée à la quittance)
+    List<Recette> recettesExistentes = recetteRepository.findByQuittanceId(quittance.getId());
+    System.out.println("Recettes existantes trouvées: " + recettesExistentes.size());
+    
+    if (!recettesExistentes.isEmpty()) {
+        // Une recette existe déjà, vérifier si elle a une écriture comptable
+        for (Recette recetteExistante : recettesExistentes) {
+            EcritureComptable ecritureExistante = ecritureComptableRepository.findByRecetteId(recetteExistante.getId());
+            if (ecritureExistante != null) {
+                System.out.println("Écriture comptable existante trouvée pour recette: " + recetteExistante.getId());
+                throw new IllegalArgumentException("Une écriture comptable existe déjà pour cette quittance");
             }
         }
+    }
 
-        // Calculer le montant total de la quittance
-        BigDecimal montantTotal = quittance.getMontantLoyer()
-                .add(quittance.getMontantCharges())
-                .add(Boolean.TRUE.equals(quittance.getInclureCaution()) && quittance.getDepotGarantie() != null 
-                    ? quittance.getDepotGarantie() : BigDecimal.ZERO);
+    // Calculer le montant total de la quittance
+    BigDecimal montantTotal = quittance.getMontantLoyer()
+            .add(quittance.getMontantCharges())
+            .add(Boolean.TRUE.equals(quittance.getInclureCaution()) && quittance.getDepotGarantie() != null 
+                ? quittance.getDepotGarantie() : BigDecimal.ZERO);
 
-        System.out.println("Montant total calculé: " + montantTotal);
+    System.out.println("Montant total calculé: " + montantTotal);
 
         // Créer d'abord une recette automatiquement
         Recette recette = new Recette();

@@ -38,6 +38,7 @@ import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
 import com.formation.centre.dto.EcritureComptableDTO;
+import com.formation.centre.dto.ImmobilisationDTO;
 import com.formation.centre.dto.LocataireDTO;
 import com.formation.centre.dto.LocataireDetailDTO;
 import com.formation.centre.dto.LocationDTO;
@@ -51,8 +52,6 @@ import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Propriete;
 import com.formation.centre.repository.ProprieteRepository;
 import com.formation.centre.service.UnifiedService;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @CrossOrigin(
     origins = {"http://localhost:9135", "http://localhost:8080"},
@@ -70,22 +69,13 @@ public class UnifiedController {
     @Autowired
     private ProprieteRepository proprieteRepository;
 
-    @RequestMapping(value = "/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
-    public ResponseEntity<?> handleAll(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        String method = request.getMethod();
-        System.out.println("\n=== REQUÊTE NON GÉRÉE DÉTECTÉE ===");
-        System.out.println("Méthode: " + method);
-        System.out.println("URL: " + path);
-        System.out.println("Headers: " + request.getHeaderNames());
-        System.out.println("=== FIN REQUÊTE NON GÉRÉE ===\n");
-        
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body("Endpoint non trouvé: " + method + " " + path);
-    }
-
     @Autowired
     private UnifiedService unifiedService;
+
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("Backend is running!");
+    }
 
     @GetMapping("/getProprietesByUtilisateur/{utilisateurId}")
     public ResponseEntity<List<ProprieteDTO>> getProprietesByUtilisateur(@PathVariable String utilisateurId) {
@@ -551,22 +541,117 @@ public ResponseEntity<List<QuittanceDTO>> getQuittancesByLocation(@PathVariable 
     return ResponseEntity.ok(unifiedService.getQuittancesByLocation(locationId));
 }
 
-@GetMapping("/genererAmortissement/{proprieteId}")
-public ResponseEntity<List<AmortissementDTO>> genererAmortissement(
-        @PathVariable String proprieteId,
-        @RequestParam(name = "duree", required = false, defaultValue = "25") int duree
-) {
-    return ResponseEntity.ok(unifiedService.genererAmortissement(proprieteId, duree));
+// ===== ENDPOINTS POUR LES IMMOBILISATIONS =====
+
+@GetMapping("/immobilisations/{utilisateurId}")
+public ResponseEntity<List<ImmobilisationDTO>> getImmobilisationsByUtilisateur(@PathVariable String utilisateurId) {
+    try {
+        List<ImmobilisationDTO> immobilisations = unifiedService.getImmobilisationsByUtilisateur(utilisateurId);
+        return ResponseEntity.ok(immobilisations);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
 }
 
-@PostMapping("/saveAmortissement/{proprieteId}")
-public ResponseEntity<Void> saveAmortissement(@PathVariable String proprieteId, @RequestBody List<AmortissementDTO> plan) {
+@GetMapping("/immobilisations/propriete/{proprieteId}")
+public ResponseEntity<List<ImmobilisationDTO>> getImmobilisationsByPropriete(@PathVariable String proprieteId) {
     try {
-        unifiedService.saveAmortissementPlan(proprieteId, plan);
+        List<ImmobilisationDTO> immobilisations = unifiedService.getImmobilisationsByPropriete(proprieteId);
+        return ResponseEntity.ok(immobilisations);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@PostMapping("/immobilisations")
+public ResponseEntity<ImmobilisationDTO> createImmobilisation(@RequestBody ImmobilisationDTO dto) {
+    try {
+        System.out.println("=== CRÉATION IMMOBILISATION ===");
+        System.out.println("Données reçues: " + dto);
+        
+        ImmobilisationDTO saved = unifiedService.saveImmobilisation(dto);
+        System.out.println("Immobilisation sauvegardée: " + saved);
+        
+        return ResponseEntity.ok(saved);
+    } catch (Exception e) {
+        System.err.println("Erreur lors de la création de l'immobilisation:");
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(null);
+    }
+}
+
+@PutMapping("/immobilisations")
+public ResponseEntity<ImmobilisationDTO> updateImmobilisation(@RequestBody ImmobilisationDTO dto) {
+    try {
+        ImmobilisationDTO saved = unifiedService.saveImmobilisation(dto);
+        return ResponseEntity.ok(saved);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@DeleteMapping("/immobilisations/{id}")
+public ResponseEntity<Void> deleteImmobilisation(@PathVariable String id) {
+    try {
+        unifiedService.deleteImmobilisation(id);
+        return ResponseEntity.noContent().build();
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+// ===== ENDPOINTS POUR LES AMORTISSEMENTS =====
+
+@GetMapping("/amortissements/{utilisateurId}")
+public ResponseEntity<List<AmortissementDTO>> getAmortissementsByUtilisateur(@PathVariable String utilisateurId) {
+    try {
+        List<AmortissementDTO> amortissements = unifiedService.getAmortissementsByUtilisateur(utilisateurId);
+        return ResponseEntity.ok(amortissements);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@GetMapping("/amortissements/propriete/{proprieteId}")
+public ResponseEntity<List<AmortissementDTO>> getAmortissementsByPropriete(@PathVariable String proprieteId) {
+    try {
+        List<AmortissementDTO> amortissements = unifiedService.getAmortissementsByPropriete(proprieteId);
+        return ResponseEntity.ok(amortissements);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@GetMapping("/amortissements/immobilisation/{immobilisationId}")
+public ResponseEntity<List<AmortissementDTO>> getAmortissementsByImmobilisation(@PathVariable String immobilisationId) {
+    try {
+        List<AmortissementDTO> amortissements = unifiedService.getAmortissementsByImmobilisation(immobilisationId);
+        return ResponseEntity.ok(amortissements);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@GetMapping("/amortissements/{utilisateurId}/{annee}")
+public ResponseEntity<List<AmortissementDTO>> getAmortissementsByUtilisateurAndAnnee(
+        @PathVariable String utilisateurId,
+        @PathVariable int annee) {
+    try {
+        List<AmortissementDTO> amortissements = unifiedService.getAmortissementsByUtilisateurAndAnnee(utilisateurId, annee);
+        return ResponseEntity.ok(amortissements);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@PostMapping("/amortissements/generer/{immobilisationId}")
+public ResponseEntity<Void> genererPlanAmortissement(@PathVariable String immobilisationId) {
+    try {
+        unifiedService.genererPlanAmortissement(immobilisationId);
         return ResponseEntity.ok().build();
     } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(500).build();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 }
 

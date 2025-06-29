@@ -145,12 +145,16 @@ CREATE TABLE paiement (
 -- IMMOBILISATION
 CREATE TABLE immobilisation (
     id UUID PRIMARY KEY,
-    propriete_id UUID REFERENCES propriete(id),
-    nom TEXT,
-    categorie TEXT,
-    valeur DECIMAL,
-    duree_amortissement INT,
-    date_mise_en_service DATE,
+    utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
+    propriete_id UUID REFERENCES propriete(id) NOT NULL,
+    intitule TEXT NOT NULL,
+    montant DECIMAL(10,2) NOT NULL,
+    date_acquisition DATE NOT NULL,
+    duree_amortissement INTEGER NOT NULL,
+    type_immobilisation TEXT NOT NULL,
+    categorie_fiscale TEXT NOT NULL,
+    valeur_terrain DECIMAL(10,2),
+    commentaire TEXT,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
@@ -158,12 +162,12 @@ CREATE TABLE immobilisation (
 -- AMORTISSEMENT
 CREATE TABLE amortissement (
     id UUID PRIMARY KEY,
-    propriete_id UUID REFERENCES propriete(id),
-    composition_id UUID,
-    annee INT,
-    montant_amorti DECIMAL,
-    valeur_residuelle DECIMAL,
-    categorie TEXT,
+    immobilisation_id UUID REFERENCES immobilisation(id) NOT NULL,
+    annee INTEGER NOT NULL,
+    montant_amortissement DECIMAL(10,2) NOT NULL,
+    valeur_residuelle DECIMAL(10,2) NOT NULL,
+    cumul_amortissements DECIMAL(10,2) NOT NULL,
+    taux_amortissement DECIMAL(5,2) NOT NULL,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );

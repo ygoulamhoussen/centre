@@ -1,16 +1,52 @@
 package com.formation.centre.dto;
 
+import com.formation.centre.model.Immobilisation;
+
 public class ImmobilisationDTO {
     private String id;
-    private String proprieteId;
-    private String nom;
-    private String categorie;
-    private String valeur;
+    private String intitule;
+    private String montant;
+    private String dateAcquisition;
     private String dureeAmortissement;
-    private String dateMiseEnService;
+    private String typeImmobilisation;
+    private String categorieFiscale;
+    private String valeurTerrain;
+    private String commentaire;
+    private String proprieteId;
+    private String proprieteNom;
+    private String utilisateurId;
+    private String createdAt;
+    private String updatedAt;
 
-    // Getters & Setters
+    // Constructeurs
+    public ImmobilisationDTO() {}
 
+    // Méthode de conversion depuis l'entité
+    public static ImmobilisationDTO fromEntity(Immobilisation immobilisation) {
+        if (immobilisation == null) {
+            return null;
+        }
+
+        ImmobilisationDTO dto = new ImmobilisationDTO();
+        dto.setId(immobilisation.getId() != null ? immobilisation.getId().toString() : null);
+        dto.setIntitule(immobilisation.getIntitule());
+        dto.setMontant(immobilisation.getMontant() != null ? immobilisation.getMontant().toPlainString() : null);
+        dto.setDateAcquisition(immobilisation.getDateAcquisition() != null ? immobilisation.getDateAcquisition().toString() : null);
+        dto.setDureeAmortissement(immobilisation.getDureeAmortissement() != null ? immobilisation.getDureeAmortissement().toString() : null);
+        dto.setTypeImmobilisation(immobilisation.getTypeImmobilisation() != null ? immobilisation.getTypeImmobilisation().name() : null);
+        dto.setCategorieFiscale(immobilisation.getCategorieFiscale() != null ? immobilisation.getCategorieFiscale().name() : null);
+        dto.setValeurTerrain(immobilisation.getValeurTerrain() != null ? immobilisation.getValeurTerrain().toPlainString() : null);
+        dto.setCommentaire(immobilisation.getCommentaire());
+        dto.setProprieteId(immobilisation.getPropriete() != null ? immobilisation.getPropriete().getId().toString() : null);
+        dto.setProprieteNom(immobilisation.getPropriete() != null ? immobilisation.getPropriete().getNom() : null);
+        dto.setUtilisateurId(immobilisation.getUtilisateur() != null ? immobilisation.getUtilisateur().getId().toString() : null);
+        dto.setCreatedAt(immobilisation.getCreeLe() != null ? immobilisation.getCreeLe().toString() : null);
+        dto.setUpdatedAt(immobilisation.getModifieLe() != null ? immobilisation.getModifieLe().toString() : null);
+
+        return dto;
+    }
+
+    // Getters et Setters
     public String getId() {
         return id;
     }
@@ -19,36 +55,28 @@ public class ImmobilisationDTO {
         this.id = id;
     }
 
-    public String getProprieteId() {
-        return proprieteId;
+    public String getIntitule() {
+        return intitule;
     }
 
-    public void setProprieteId(String proprieteId) {
-        this.proprieteId = proprieteId;
+    public void setIntitule(String intitule) {
+        this.intitule = intitule;
     }
 
-    public String getNom() {
-        return nom;
+    public String getMontant() {
+        return montant;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public void setMontant(String montant) {
+        this.montant = montant;
     }
 
-    public String getCategorie() {
-        return categorie;
+    public String getDateAcquisition() {
+        return dateAcquisition;
     }
 
-    public void setCategorie(String categorie) {
-        this.categorie = categorie;
-    }
-
-    public String getValeur() {
-        return valeur;
-    }
-
-    public void setValeur(String valeur) {
-        this.valeur = valeur;
+    public void setDateAcquisition(String dateAcquisition) {
+        this.dateAcquisition = dateAcquisition;
     }
 
     public String getDureeAmortissement() {
@@ -59,11 +87,75 @@ public class ImmobilisationDTO {
         this.dureeAmortissement = dureeAmortissement;
     }
 
-    public String getDateMiseEnService() {
-        return dateMiseEnService;
+    public String getTypeImmobilisation() {
+        return typeImmobilisation;
     }
 
-    public void setDateMiseEnService(String dateMiseEnService) {
-        this.dateMiseEnService = dateMiseEnService;
+    public void setTypeImmobilisation(String typeImmobilisation) {
+        this.typeImmobilisation = typeImmobilisation;
+    }
+
+    public String getCategorieFiscale() {
+        return categorieFiscale;
+    }
+
+    public void setCategorieFiscale(String categorieFiscale) {
+        this.categorieFiscale = categorieFiscale;
+    }
+
+    public String getValeurTerrain() {
+        return valeurTerrain;
+    }
+
+    public void setValeurTerrain(String valeurTerrain) {
+        this.valeurTerrain = valeurTerrain;
+    }
+
+    public String getCommentaire() {
+        return commentaire;
+    }
+
+    public void setCommentaire(String commentaire) {
+        this.commentaire = commentaire;
+    }
+
+    public String getProprieteId() {
+        return proprieteId;
+    }
+
+    public void setProprieteId(String proprieteId) {
+        this.proprieteId = proprieteId;
+    }
+
+    public String getProprieteNom() {
+        return proprieteNom;
+    }
+
+    public void setProprieteNom(String proprieteNom) {
+        this.proprieteNom = proprieteNom;
+    }
+
+    public String getUtilisateurId() {
+        return utilisateurId;
+    }
+
+    public void setUtilisateurId(String utilisateurId) {
+        this.utilisateurId = utilisateurId;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

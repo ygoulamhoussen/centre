@@ -1,16 +1,44 @@
 package com.formation.centre.dto;
 
+import com.formation.centre.model.Amortissement;
+
 public class AmortissementDTO {
     private String id;
     private String immobilisationId;
+    private String immobilisationIntitule;
     private String annee;
-    private String montantAmorti;
+    private String montantAmortissement;
     private String valeurResiduelle;
-    private String categorie;
-    private String compositionId;
+    private String cumulAmortissements;
+    private String tauxAmortissement;
+    private String createdAt;
+    private String updatedAt;
 
-    // Getters & Setters
+    // Constructeurs
+    public AmortissementDTO() {}
 
+    // Méthode de conversion depuis l'entité
+    public static AmortissementDTO fromEntity(Amortissement amortissement) {
+        if (amortissement == null) {
+            return null;
+        }
+
+        AmortissementDTO dto = new AmortissementDTO();
+        dto.setId(amortissement.getId() != null ? amortissement.getId().toString() : null);
+        dto.setImmobilisationId(amortissement.getImmobilisation() != null ? amortissement.getImmobilisation().getId().toString() : null);
+        dto.setImmobilisationIntitule(amortissement.getImmobilisation() != null ? amortissement.getImmobilisation().getIntitule() : null);
+        dto.setAnnee(amortissement.getAnnee() != null ? amortissement.getAnnee().toString() : null);
+        dto.setMontantAmortissement(amortissement.getMontantAmortissement() != null ? amortissement.getMontantAmortissement().toPlainString() : null);
+        dto.setValeurResiduelle(amortissement.getValeurResiduelle() != null ? amortissement.getValeurResiduelle().toPlainString() : null);
+        dto.setCumulAmortissements(amortissement.getCumulAmortissements() != null ? amortissement.getCumulAmortissements().toPlainString() : null);
+        dto.setTauxAmortissement(amortissement.getTauxAmortissement() != null ? amortissement.getTauxAmortissement().toPlainString() : null);
+        dto.setCreatedAt(amortissement.getCreeLe() != null ? amortissement.getCreeLe().toString() : null);
+        dto.setUpdatedAt(amortissement.getModifieLe() != null ? amortissement.getModifieLe().toString() : null);
+
+        return dto;
+    }
+
+    // Getters et Setters
     public String getId() {
         return id;
     }
@@ -27,6 +55,14 @@ public class AmortissementDTO {
         this.immobilisationId = immobilisationId;
     }
 
+    public String getImmobilisationIntitule() {
+        return immobilisationIntitule;
+    }
+
+    public void setImmobilisationIntitule(String immobilisationIntitule) {
+        this.immobilisationIntitule = immobilisationIntitule;
+    }
+
     public String getAnnee() {
         return annee;
     }
@@ -35,12 +71,12 @@ public class AmortissementDTO {
         this.annee = annee;
     }
 
-    public String getMontantAmorti() {
-        return montantAmorti;
+    public String getMontantAmortissement() {
+        return montantAmortissement;
     }
 
-    public void setMontantAmorti(String montantAmorti) {
-        this.montantAmorti = montantAmorti;
+    public void setMontantAmortissement(String montantAmortissement) {
+        this.montantAmortissement = montantAmortissement;
     }
 
     public String getValeurResiduelle() {
@@ -51,19 +87,35 @@ public class AmortissementDTO {
         this.valeurResiduelle = valeurResiduelle;
     }
 
-    public String getCategorie() {
-        return categorie;
+    public String getCumulAmortissements() {
+        return cumulAmortissements;
     }
 
-    public void setCategorie(String categorie) {
-        this.categorie = categorie;
+    public void setCumulAmortissements(String cumulAmortissements) {
+        this.cumulAmortissements = cumulAmortissements;
     }
 
-    public String getCompositionId() {
-        return compositionId;
+    public String getTauxAmortissement() {
+        return tauxAmortissement;
     }
 
-    public void setCompositionId(String compositionId) {
-        this.compositionId = compositionId;
+    public void setTauxAmortissement(String tauxAmortissement) {
+        this.tauxAmortissement = tauxAmortissement;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

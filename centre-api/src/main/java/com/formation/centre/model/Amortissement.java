@@ -8,6 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -18,21 +19,27 @@ import jakarta.persistence.Table;
 public class Amortissement {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "propriete_id")
-    private Propriete propriete;
+    @JoinColumn(name = "immobilisation_id", nullable = false)
+    private Immobilisation immobilisation;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "composition_id", nullable = true)
-    private CompositionAcquisition composition;
-
+    @Column(name = "annee", nullable = false)
     private Integer annee;
-    private BigDecimal montantAmorti;
+
+    @Column(name = "montant_amortissement", nullable = false, precision = 10, scale = 2)
+    private BigDecimal montantAmortissement;
+
+    @Column(name = "valeur_residuelle", nullable = false, precision = 10, scale = 2)
     private BigDecimal valeurResiduelle;
-    private String categorie;
+
+    @Column(name = "cumul_amortissements", nullable = false, precision = 10, scale = 2)
+    private BigDecimal cumulAmortissements;
+
+    @Column(name = "taux_amortissement", nullable = false, precision = 5, scale = 2)
+    private BigDecimal tauxAmortissement;
 
     @Column(name = "cree_le")
     private LocalDateTime creeLe;
@@ -40,8 +47,10 @@ public class Amortissement {
     @Column(name = "modifie_le")
     private LocalDateTime modifieLe;
 
-    // Getters & Setters
+    // Constructeurs
+    public Amortissement() {}
 
+    // Getters et Setters
     public UUID getId() {
         return id;
     }
@@ -50,20 +59,12 @@ public class Amortissement {
         this.id = id;
     }
 
-    public Propriete getPropriete() {
-        return propriete;
+    public Immobilisation getImmobilisation() {
+        return immobilisation;
     }
 
-    public void setPropriete(Propriete propriete) {
-        this.propriete = propriete;
-    }
-
-    public CompositionAcquisition getComposition() {
-        return composition;
-    }
-
-    public void setComposition(CompositionAcquisition composition) {
-        this.composition = composition;
+    public void setImmobilisation(Immobilisation immobilisation) {
+        this.immobilisation = immobilisation;
     }
 
     public Integer getAnnee() {
@@ -74,12 +75,12 @@ public class Amortissement {
         this.annee = annee;
     }
 
-    public BigDecimal getMontantAmorti() {
-        return montantAmorti;
+    public BigDecimal getMontantAmortissement() {
+        return montantAmortissement;
     }
 
-    public void setMontantAmorti(BigDecimal montantAmorti) {
-        this.montantAmorti = montantAmorti;
+    public void setMontantAmortissement(BigDecimal montantAmortissement) {
+        this.montantAmortissement = montantAmortissement;
     }
 
     public BigDecimal getValeurResiduelle() {
@@ -90,12 +91,20 @@ public class Amortissement {
         this.valeurResiduelle = valeurResiduelle;
     }
 
-    public String getCategorie() {
-        return categorie;
+    public BigDecimal getCumulAmortissements() {
+        return cumulAmortissements;
     }
 
-    public void setCategorie(String categorie) {
-        this.categorie = categorie;
+    public void setCumulAmortissements(BigDecimal cumulAmortissements) {
+        this.cumulAmortissements = cumulAmortissements;
+    }
+
+    public BigDecimal getTauxAmortissement() {
+        return tauxAmortissement;
+    }
+
+    public void setTauxAmortissement(BigDecimal tauxAmortissement) {
+        this.tauxAmortissement = tauxAmortissement;
     }
 
     public LocalDateTime getCreeLe() {

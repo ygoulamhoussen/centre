@@ -27,6 +27,7 @@ import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
+import com.formation.centre.dto.EcheanceCreditDTO;
 import com.formation.centre.dto.EcritureComptableDTO;
 import com.formation.centre.dto.ImmobilisationDTO;
 import com.formation.centre.dto.LocataireDTO;
@@ -43,6 +44,7 @@ import com.formation.centre.model.Charge;
 import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Credit;
 import com.formation.centre.model.DocumentEntity;
+import com.formation.centre.model.EcheanceCredit;
 import com.formation.centre.model.EcritureComptable;
 import com.formation.centre.model.Immobilisation;
 import com.formation.centre.model.Locataire;
@@ -56,6 +58,7 @@ import com.formation.centre.repository.AmortissementRepository;
 import com.formation.centre.repository.ChargeRepository;
 import com.formation.centre.repository.CreditRepository;
 import com.formation.centre.repository.DocumentEntityRepository;
+import com.formation.centre.repository.EcheanceCreditRepository;
 import com.formation.centre.repository.EcritureComptableRepository;
 import com.formation.centre.repository.ImmobilisationRepository;
 import com.formation.centre.repository.LocataireRepository;
@@ -88,6 +91,7 @@ public class UnifiedService {
     @Autowired private EcritureComptableRepository ecritureComptableRepository;
     @Autowired private RecetteRepository recetteRepository;
     @Autowired private ImmobilisationRepository immobilisationRepository;
+    @Autowired private EcheanceCreditRepository echeanceCreditRepository;
 
 
 
@@ -1555,6 +1559,44 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         return chargeRepository.findById(UUID.fromString(id))
             .map(this::chargeToDTO)
             .orElse(null);
+    }
+
+    public EcheanceCreditDTO saveEcheanceCredit(EcheanceCreditDTO dto) {
+        EcheanceCredit e;
+        if (dto.getId() != null && !dto.getId().isEmpty()) {
+            e = echeanceCreditRepository.findById(UUID.fromString(dto.getId())).orElse(new EcheanceCredit());
+        } else {
+            e = new EcheanceCredit();
+            e.setId(UUID.randomUUID());
+        }
+        e.setCredit(creditRepository.findById(UUID.fromString(dto.getCreditId())).orElseThrow());
+        e.setDateEcheance(LocalDate.parse(dto.getDateEcheance()));
+        e.setInteret(new BigDecimal(dto.getInteret()));
+        e.setCapitalRembourse(new BigDecimal(dto.getCapitalRembourse()));
+        e.setAssurance(new BigDecimal(dto.getAssurance()));
+        e.setTotalEcheance(new BigDecimal(dto.getTotalEcheance()));
+        EcheanceCredit saved = echeanceCreditRepository.save(e);
+        return toEcheanceCreditDto(saved);
+    }
+
+    private EcheanceCreditDTO toEcheanceCreditDto(EcheanceCredit e) {
+        EcheanceCreditDTO dto = new EcheanceCreditDTO();
+        dto.setId(e.getId() != null ? e.getId().toString() : null);
+        dto.setCreditId(e.getCredit() != null ? e.getCredit().getId().toString() : null);
+        dto.setDateEcheance(e.getDateEcheance() != null ? e.getDateEcheance().toString() : null);
+        dto.setInteret(e.getInteret() != null ? e.getInteret().toPlainString() : null);
+        dto.setCapitalRembourse(e.getCapitalRembourse() != null ? e.getCapitalRembourse().toPlainString() : null);
+        dto.setAssurance(e.getAssurance() != null ? e.getAssurance().toPlainString() : null);
+        dto.setTotalEcheance(e.getTotalEcheance() != null ? e.getTotalEcheance().toPlainString() : null);
+        return dto;
+    }
+
+    public List<EcheanceCreditDTO> getEcheancesByCredit(String creditId) {
+        UUID cid = UUID.fromString(creditId);
+        return echeanceCreditRepository.findByCredit_Id(cid)
+            .stream()
+            .map(this::toEcheanceCreditDto)
+            .collect(java.util.stream.Collectors.toList());
     }
 
 

@@ -37,6 +37,7 @@ import com.formation.centre.dto.CompositionAcquisitionDTO;
 import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
+import com.formation.centre.dto.EcheanceCreditDTO;
 import com.formation.centre.dto.EcritureComptableDTO;
 import com.formation.centre.dto.ImmobilisationDTO;
 import com.formation.centre.dto.LocataireDTO;
@@ -811,6 +812,18 @@ public ResponseEntity<EcritureComptableDTO> updateEcritureComptable(@RequestBody
 public ResponseEntity<Void> deleteEcritureComptable(@PathVariable String id) {
     unifiedService.deleteEcritureComptable(id);
     return ResponseEntity.noContent().build();
+}
+
+@PostMapping("/createEcheanceCredit")
+public ResponseEntity<EcheanceCreditDTO> createEcheanceCredit(@RequestBody EcheanceCreditDTO dto) {
+    return ResponseEntity.ok(unifiedService.saveEcheanceCredit(dto));
+}
+
+@GetMapping("/getEcheancesByCredit/{creditId}")
+public ResponseEntity<List<EcheanceCreditDTO>> getEcheancesByCredit(@PathVariable String creditId) {
+    List<EcheanceCreditDTO> result = unifiedService.getEcheancesByCredit(creditId);
+    if (result == null) result = new ArrayList<>();
+    return ResponseEntity.ok(result);
 }
 
 } 

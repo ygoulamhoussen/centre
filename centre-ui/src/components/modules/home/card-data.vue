@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/store/modules/auth'
 import { NCard, NGi, NGrid, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 interface CardData {
   key: string
@@ -17,6 +18,7 @@ interface CardData {
 
 const authStore = useAuthStore()
 const message = useMessage()
+const router = useRouter()
 
 interface DashboardData {
   nombreBiens: number
@@ -77,6 +79,23 @@ function getGradientColor(color: CardData['color']) {
   return `linear-gradient(to bottom right, ${color.start}, ${color.end})`
 }
 
+function handleCardClick(key: string) {
+  switch (key) {
+    case 'nombreBiens':
+      router.push('/propriete')
+      break
+    case 'tauxOccupation':
+      router.push('/location')
+      break
+    case 'resultatFiscalEstime':
+      router.push('/resultat-fiscal')
+      break
+    case 'alertesImpaye':
+      router.push('/quittance')
+      break
+  }
+}
+
 onMounted(async () => {
   try {
     const res = await fetch(
@@ -101,8 +120,9 @@ onMounted(async () => {
     <NGrid cols="s:1 m:2 l:4" responsive="screen" :x-gap="16" :y-gap="16">
       <NGi v-for="item in cardData" :key="item.key">
         <div
-          class="rd-8px px-16px pb-4px pt-8px text-white"
+          class="rd-8px px-16px pb-4px pt-8px text-white card-link"
           :style="{ backgroundImage: getGradientColor(item.color) }"
+          @click="handleCardClick(item.key)"
         >
           <h3 class="text-16px">
             {{ item.title }}
@@ -185,5 +205,16 @@ onMounted(async () => {
 
 .pt-12px {
   padding-top: 12px;
+}
+
+.card-link {
+  cursor: pointer;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+.card-link:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px) scale(1.02);
 }
 </style>

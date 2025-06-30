@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 export const useUnifiedStore = defineStore('unified', {
   state: () => ({
     selectedProprieteId: null as string | null,
+    locations: [] as any[],
 
     proprieteDTO: {
       id: null as string | null,
@@ -19,6 +20,7 @@ export const useUnifiedStore = defineStore('unified', {
       fraisNotaire: null as string | null,
       fraisAgence: null as string | null,
       compositions: [] as any[],
+      fraisGarantie: null as string | null,
     },
     locataireDTO: {
       id: null as string | null,
@@ -51,11 +53,13 @@ export const useUnifiedStore = defineStore('unified', {
       dateDebut: null as string | null,
       dateFin: null as string | null,
       dateEmission: null as string | null,
-      montantLoyer: null as string | null,
-      montantCharges: null as string | null,
-      montantTotal: null as string | null,
-      statut: null as string | null,
-      inclure_caution: false as boolean,
+      dateEcheance: null as string | null,
+      montantLoyer: '0' as string | null,
+      montantCharges: '0' as string | null,
+      montantTotal: '0' as string | null,
+      statut: 'IMPAYEE' as string | null,
+      inclureCaution: false,
+      depotGarantie: '0' as string | null,
     },
     paiementDTO: {
       id: null as string | null,
@@ -84,6 +88,9 @@ export const useUnifiedStore = defineStore('unified', {
   }),
 
   actions: {
+    setLocations(locations: any[]) {
+      this.locations = locations
+    },
     setSelectedProprieteId(id: string | null) {
       this.selectedProprieteId = id
     },
@@ -105,7 +112,8 @@ export const useUnifiedStore = defineStore('unified', {
         tantieme: null,
         fraisNotaire: null,
         fraisAgence: null,
-        compositions: []
+        compositions: [],
+        fraisGarantie: null,
       }
     },
     updateLocataireField(field: string, value: any) {
@@ -124,7 +132,20 @@ export const useUnifiedStore = defineStore('unified', {
       (this.quittanceDTO as any)[field] = value
     },
     resetQuittanceDTO() {
-      Object.assign(this.quittanceDTO, this.$state.quittanceDTO)
+      this.quittanceDTO = {
+        id: null,
+        locationId: null,
+        dateDebut: null,
+        dateFin: null,
+        dateEmission: null,
+        dateEcheance: null,
+        montantLoyer: '0',
+        montantCharges: '0',
+        montantTotal: '0',
+        statut: 'IMPAYEE',
+        inclureCaution: false,
+        depotGarantie: '0',
+      }
     },
     updatePaiementField(field: string, value: any) {
       (this.paiementDTO as any)[field] = value
@@ -140,12 +161,16 @@ export const useUnifiedStore = defineStore('unified', {
     },
     async getAmortissement(proprieteId: string, categorie: string = '') {
       let url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/genererAmortissement/${proprieteId}`
-      if (categorie) url += `?categorie=${encodeURIComponent(categorie)}`
+      if (categorie) {
+        url += `?categorie=${encodeURIComponent(categorie)}`
+      }
       const res = await fetch(url, {
         credentials: 'include',
       })
-      if (!res.ok) throw new Error('Erreur lors de la génération du plan')
-      return await res.json()
-    }
-  }
+      if (!res.ok) {
+        throw new Error('Erreur lors de la génération du plan')
+      }
+      return res.json()
+    },
+  },
 })

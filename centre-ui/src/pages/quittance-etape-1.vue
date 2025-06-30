@@ -117,7 +117,9 @@ watch(() => quittanceDTO.value.locationId, () => {
 async function fetchLocations() {
   try {
     const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocationsByUtilisateur/${userId}`)
-    locations.value = await res.json()
+    const data = await res.json()
+    locations.value = data
+    store.setLocations(data)
   } catch (e) {
     console.error(e)
     message.error('Erreur de chargement des locations')

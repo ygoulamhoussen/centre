@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
+import { ArrowRight24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -10,17 +11,16 @@ import {
   NFormItemGi,
   NGrid,
   NH2,
+  NIcon,
   NSelect,
   NSpace,
   NStep,
   NSteps,
   useMessage,
-  NIcon
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight24Filled } from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -31,7 +31,6 @@ definePage({
   },
 })
 
-
 const router = useRouter()
 const message = useMessage()
 const store = useUnifiedStore()
@@ -40,6 +39,80 @@ const locations = ref<any[]>([])
 const authStore = useAuthStore()
 const userId = authStore.userInfo.userId
 const isMobile = ref(window.innerWidth < 768)
+
+// --- Logique pour la sélection de période dynamique ---
+const selectedLocation = computed(() => locations.value.find(l => l.id === quittanceDTO.value.locationId))
+const frequence = computed(() => selectedLocation.value?.frequenceLoyer)
+
+const selectedYear = ref(new Date().getFullYear())
+const selectedMonth = ref<number | null>(null)
+const selectedQuarter = ref<number | null>(null)
+
+const currentYear = new Date().getFullYear()
+const yearOptions = Array.from({ length: 10 }, (_, i) => ({
+  label: (currentYear - 5 + i).toString(),
+  value: currentYear - 5 + i,
+})).reverse()
+
+const monthOptions = Array.from({ length: 12 }, (_, i) => ({
+  label: new Date(2000, i).toLocaleString('fr-FR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
+  value: i,
+}))
+
+const quarterOptions = [
+  { label: 'Trimestre 1 (Jan-Mar)', value: 1 },
+  { label: 'Trimestre 2 (Avr-Juin)', value: 2 },
+  { label: 'Trimestre 3 (Juil-Sep)', value: 3 },
+  { label: 'Trimestre 4 (Oct-Déc)', value: 4 },
+]
+
+watch(
+  [selectedYear, selectedMonth, selectedQuarter, frequence],
+  ([year, month, quarter, freq]) => {
+    let startDate: Date | null = null
+    let endDate: Date | null = null
+
+    const formatDate = (date: Date) => {
+      const y = date.getFullYear()
+      const m = String(date.getMonth() + 1).padStart(2, '0')
+      const d = String(date.getDate()).padStart(2, '0')
+      return `${y}-${m}-${d}`
+    }
+
+    if (year) {
+      switch (freq) {
+        case 'MENSUEL':
+          if (month !== null) {
+            startDate = new Date(year, month, 1)
+            endDate = new Date(year, month + 1, 0)
+          }
+          break
+        case 'TRIMESTRIEL':
+          if (quarter !== null) {
+            const startMonth = (quarter - 1) * 3
+            startDate = new Date(year, startMonth, 1)
+            endDate = new Date(year, startMonth + 3, 0)
+          }
+          break
+        case 'ANNUEL':
+          startDate = new Date(year, 0, 1)
+          endDate = new Date(year, 11, 31)
+          break
+      }
+    }
+
+    quittanceDTO.value.dateDebut = startDate ? formatDate(startDate) : null
+    quittanceDTO.value.dateFin = endDate ? formatDate(endDate) : null
+  },
+  { immediate: true },
+)
+
+// Réinitialiser la période si la location change
+watch(() => quittanceDTO.value.locationId, () => {
+  selectedMonth.value = null
+  selectedQuarter.value = null
+})
+// --- Fin de la logique de période ---
 
 async function fetchLocations() {
   try {
@@ -89,21 +162,40 @@ onUnmounted(() => {
           <NFormItemGi :span="2" label="Location">
             <NSelect
               v-model:value="quittanceDTO.locationId"
-              :options="locations.map(l => ({ label: l.proprieteNom + ' - ' + l.locataireNom, value: l.id }))"
+              :options="locations.map(l => ({ label: `${l.proprieteNom} - ${l.locataireNom}`, value: l.id }))"
               placeholder="Choisir une location"
               size="large"
             />
           </NFormItemGi>
-          <NFormItemGi label="Période début">
-            <NDatePicker v-model:formatted-value="quittanceDTO.dateDebut" value-format="yyyy-MM-dd" type="date" clearable size="large" />
+          
+          <NFormItemGi v-if="frequence" label="Année">
+            <NSelect v-model:value="selectedYear" :options="yearOptions" size="large" />
           </NFormItemGi>
-          <NFormItemGi label="Période fin">
-            <NDatePicker v-model:formatted-value="quittanceDTO.dateFin" value-format="yyyy-MM-dd" type="date" clearable size="large" />
+
+          <NFormItemGi v-if="frequence === 'MENSUEL'" label="Mois">
+            <NSelect
+              v-model:value="selectedMonth"
+              :options="monthOptions"
+              clearable
+              placeholder="Choisir un mois"
+              size="large"
+            />
           </NFormItemGi>
+          
+          <NFormItemGi v-if="frequence === 'TRIMESTRIEL'" label="Trimestre">
+            <NSelect
+              v-model:value="selectedQuarter"
+              :options="quarterOptions"
+              clearable
+              placeholder="Choisir un trimestre"
+              size="large"
+            />
+          </NFormItemGi>
+
         </NGrid>
       </NForm>
       <div class="flex justify-end mt-8">
-        <NButton type="primary" @click="suivant" :loading="chargement" title="Suivant">
+        <NButton type="primary" @click="suivant" title="Suivant">
           <template #icon>
             <NIcon :component="ArrowRight24Filled" />
           </template>

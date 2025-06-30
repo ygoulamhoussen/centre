@@ -463,12 +463,11 @@ public class UnifiedService {
 
         Quittance saved = quittanceRepository.save(q);
         
-        // Créer automatiquement l'écriture comptable pour une nouvelle quittance
+        // Créer automatiquement l'écriture comptable et la recette uniquement si la quittance est PAYEE
         if (isNew) {
-            createEcritureComptableQuittance(saved.getId().toString());
-            // Création automatique du paiement si statut PAYEE
             if (saved.getStatut() == Quittance.StatutQuittance.PAYEE) {
-                // Paiement
+                createEcritureComptableQuittance(saved.getId().toString());
+                // Création automatique du paiement si statut PAYEE
                 PaiementDTO paiementDTO = new PaiementDTO();
                 paiementDTO.setQuittanceId(saved.getId().toString());
                 paiementDTO.setDatePaiement(saved.getDateEmission() != null ? saved.getDateEmission().toString() : LocalDate.now().toString());

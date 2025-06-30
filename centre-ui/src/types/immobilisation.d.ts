@@ -45,4 +45,20 @@ export enum CategorieFiscale {
   TRAVAUX_5_ANS = 'TRAVAUX_5_ANS',
   EQUIPEMENT_5_ANS = 'EQUIPEMENT_5_ANS',
   EQUIPEMENT_3_ANS = 'EQUIPEMENT_3_ANS'
+}
+
+export interface Credit {
+  id: string;
+  banque: string;
+  montantEmprunte: number;
+  dureeMois: number;
+  tauxInteretAnnuel: number;
+  tauxAssuranceAnnuel: number;
+  dateDebut: string;
+  intitule: string;
+  proprieteId: string;
+  proprieteNom?: string;
+  utilisateurId: string;
+  createdAt?: string;
+  updatedAt?: string;
 } 

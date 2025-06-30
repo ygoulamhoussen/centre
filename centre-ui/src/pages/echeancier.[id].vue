@@ -1,3 +1,151 @@
+<script setup lang="ts">
+// @ts-expect-error - definePage is a macro
+import { definePage } from 'vue-router'
+import { computed, h, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Icon } from '@iconify/vue'
+import { NButton, NCard, NDataTable, NTabPane, NTabs, useMessage } from 'naive-ui'
+import type { ChargeDTO } from '@/types/dto'
+import { createCharge, createEcritureComptableCharge } from '@/service/api/charges-recettes'
+
+const route = useRoute()
+const router = useRouter()
+const credit = ref<any>(null)
+const echeancier = ref<any[]>([])
+const message = useMessage()
+const writingInProgress = ref<Record<number, boolean>>({})
+
+definePage({
+  meta: {
+    title: 'Échéancier Crédit',
+    icon: 'material-symbols:calendar-month',
+    hideInMenu: true,
+  },
+})
+
+function goBack() {
+  router.push('/credits')
+}
+
+function formatDate(date: number | string | null) {
+  if (!date) {
+    return ''
+  }
+  const d = typeof date === 'number' ? new Date(date) : new Date(date)
+  return d.toLocaleDateString('fr-FR')
+}
+
+onMounted(async () => {
+  const id = route.params.id as string | undefined
+  const utilisateurId = '00000000-0000-0000-0000-000000000003' // ID utilisateur codé en dur pour l'exemple
+  if (!id) {
+    message.error('ID du crédit manquant')
+    console.error('ID du crédit manquant')
+    return
+  }
+  try {
+    // Charger le crédit
+    const creditRes = await fetch(`http://localhost:8080/api/getCreditsByUtilisateur/${utilisateurId}`)
+    if (!creditRes.ok) {
+      throw new Error('Erreur lors du chargement du crédit')
+    }
+    const credits = await creditRes.json()
+    const foundCredit = credits.find((c: any) => c.id === id)
+    if (!foundCredit) {
+      throw new Error('Crédit non trouvé')
+    }
+    // Assurer la présence de proprieteId et utilisateurId
+    credit.value = { ...foundCredit, proprieteId: foundCredit.proprieteId, utilisateurId }
+
+    // Charger les échéances
+    const echeancesRes = await fetch(`http://localhost:8080/api/getEcheancesByCredit/${id}`)
+    if (!echeancesRes.ok) {
+      throw new Error('Erreur lors du chargement des échéances')
+    }
+    echeancier.value = await echeancesRes.json()
+  }
+  catch (e: any) {
+    message.error(`Erreur lors du chargement : ${e.message}`)
+    console.error('Erreur de chargement', e)
+  }
+})
+
+const echeancierColumns = [
+  { title: 'N°', key: 'numero', width: 60, render: (_row: any, index: number) => index + 1 },
+  { title: 'Date', key: 'dateEcheance', width: 120, render: (row: any) => formatDate(row.dateEcheance) },
+  { title: 'Capital remboursé', key: 'capitalRembourse', width: 120 },
+  { title: 'Intérêts', key: 'interet', width: 100 },
+  { title: 'Assurance', key: 'assurance', width: 100 },
+  { title: 'Total échéance', key: 'totalEcheance', width: 120 },
+]
+
+const chargesAnnuelles = computed(() => {
+  const charges: { [year: number]: { year: number, totalInterets: number, totalAssurance: number, totalCharges: number } } = {}
+
+  echeancier.value.forEach((e) => {
+    const year = new Date(e.dateEcheance).getFullYear()
+    if (!charges[year]) {
+      charges[year] = { year, totalInterets: 0, totalAssurance: 0, totalCharges: 0 }
+    }
+    charges[year].totalInterets += Number(e.interet) || 0
+    charges[year].totalAssurance += Number(e.assurance) || 0
+    charges[year].totalCharges = charges[year].totalInterets + charges[year].totalAssurance
+  })
+
+  return Object.values(charges).sort((a, b) => a.year - b.year)
+})
+
+async function passerEcriture(chargeAnnuelle: { year: number, totalCharges: number }) {
+  if (!credit.value || !credit.value.proprieteId || !credit.value.utilisateurId) {
+    message.error('Impossible de trouver les informations du crédit pour ce crédit.')
+    return
+  }
+
+  writingInProgress.value[chargeAnnuelle.year] = true
+  try {
+    const chargeData: Partial<ChargeDTO> = {
+      proprieteId: credit.value.proprieteId,
+      utilisateurId: credit.value.utilisateurId,
+      nature: 'INTERETS_EMPRUNT',
+      dateCharge: `${chargeAnnuelle.year}-12-31`,
+      montant: chargeAnnuelle.totalCharges.toString(),
+      intitule: `Charges financières crédit ${credit.value.intitule || ''} ${chargeAnnuelle.year}`,
+      commentaire: `Charges financières (intérêts + assurance) pour le crédit ${credit.value.intitule || ''} - Année ${chargeAnnuelle.year}`,
+      statut: 'PAYEE',
+    }
+
+    await createCharge(chargeData)
+    message.success(`Écriture comptable pour ${chargeAnnuelle.year} passée avec succès.`)
+  }
+  catch (error: any) {
+    message.error(`Erreur lors de l'écriture comptable : ${error.message}`)
+  }
+  finally {
+    writingInProgress.value[chargeAnnuelle.year] = false
+  }
+}
+
+const chargesAnnuellesColumns = [
+  { title: 'Année', key: 'year' },
+  { title: 'Total Intérêts', key: 'totalInterets', render: (row: { totalInterets: number }) => `${row.totalInterets.toFixed(2)} €` },
+  { title: 'Total Assurance', key: 'totalAssurance', render: (row: { totalAssurance: number }) => `${row.totalAssurance.toFixed(2)} €` },
+  { title: 'Total Charges', key: 'totalCharges', render: (row: { totalCharges: number }) => `${row.totalCharges.toFixed(2)} €` },
+  {
+    title: 'Actions',
+    key: 'actions',
+    render: (row: { year: number, totalCharges: number }) => {
+      return h(NButton, {
+        size: 'small',
+        type: 'primary',
+        ghost: true,
+        onClick: () => passerEcriture(row),
+        loading: writingInProgress.value[row.year] || false,
+      }, { default: () => "Passer l'écriture" })
+    },
+  },
+]
+</script>
+
 <template>
   <div class="echeancier-page">
     <div class="page-header">
@@ -20,75 +168,18 @@
         <div class="info-item"><strong>Propriété :</strong> {{ credit.proprieteNom }}</div>
       </div>
     </NCard>
-    <NCard title="Échéancier" class="table-card">
-      <NDataTable :columns="echeancierColumns" :data="echeancier" striped />
+    <NCard class="table-card">
+      <NTabs type="line" animated>
+        <NTabPane name="echeancier" tab="Échéancier">
+          <NDataTable :columns="echeancierColumns" :data="echeancier" striped />
+        </NTabPane>
+        <NTabPane name="charges" tab="Charges Financières Annuelles">
+          <NDataTable :columns="chargesAnnuellesColumns" :data="chargesAnnuelles" />
+        </NTabPane>
+      </NTabs>
     </NCard>
   </div>
 </template>
-
-<script setup lang="ts">
-import { definePage } from 'vue-router'
-import { h, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Icon } from '@iconify/vue'
-import { NButton, NCard, NDataTable, useMessage } from 'naive-ui'
-
-const route = useRoute()
-const router = useRouter()
-const credit = ref<any>(null)
-const echeancier = ref<any[]>([])
-const message = useMessage()
-
-definePage({
-  meta: {
-    title: 'Échéancier Crédit',
-    icon: 'material-symbols:calendar-month',
-    hideInMenu: true,
-  },
-})
-
-function goBack() {
-  router.push('/credits')
-}
-function formatDate(date: number | string | null) {
-  if (!date) return ''
-  const d = typeof date === 'number' ? new Date(date) : new Date(date)
-  return d.toLocaleDateString('fr-FR')
-}
-onMounted(async () => {
-  const id = route.params.id as string | undefined
-  console.log('ID du crédit demandé pour échéancier:', id)
-  if (!id) {
-    message.error('ID du crédit manquant')
-    console.error('ID du crédit manquant')
-    return
-  }
-  try {
-    // Charger le crédit (on récupère tous les crédits de l'utilisateur et on filtre)
-    const creditRes = await fetch('http://localhost:8080/api/getCreditsByUtilisateur/00000000-0000-0000-0000-000000000003')
-    if (!creditRes.ok) throw new Error('Erreur lors du chargement du crédit')
-    const credits = await creditRes.json()
-    credit.value = credits.find((c: any) => c.id === id) || null
-    if (!credit.value) throw new Error('Crédit non trouvé')
-    // Charger les échéances du crédit
-    const echeancesRes = await fetch(`http://localhost:8080/api/getEcheancesByCredit/${id}`)
-    if (!echeancesRes.ok) throw new Error('Erreur lors du chargement des échéances')
-    echeancier.value = await echeancesRes.json()
-  } catch (e: any) {
-    message.error('Erreur lors du chargement du crédit ou des échéances : ' + (e?.message || e))
-    console.error('Erreur lors du chargement du crédit ou des échéances', e)
-  }
-})
-
-const echeancierColumns = [
-  { title: 'N°', key: 'numero', width: 60, render: (_row, index) => index + 1 },
-  { title: 'Date', key: 'dateEcheance', width: 120, render: row => formatDate(row.dateEcheance) },
-  { title: 'Capital remboursé', key: 'capitalRembourse', width: 120 },
-  { title: 'Intérêts', key: 'interet', width: 100 },
-  { title: 'Assurance', key: 'assurance', width: 100 },
-  { title: 'Total échéance', key: 'totalEcheance', width: 120 },
-]
-</script>
 
 <style scoped>
 .echeancier-page {
@@ -123,4 +214,4 @@ const echeancierColumns = [
 .table-card {
   margin-bottom: 20px;
 }
-</style> 
+</style>

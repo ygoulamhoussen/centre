@@ -1,4 +1,5 @@
-import type { Amortissement, Immobilisation } from '@/types/immobilisation'
+import type { Amortissement, Credit, Immobilisation } from '@/types/immobilisation'
+import { request } from '../request'
 
 const API_BASE_URL = import.meta.env.VITE_SERVICE_BASE_URL
 
@@ -203,4 +204,42 @@ export const amortissementApi = {
       throw new Error(error.message || 'Erreur lors de la génération du plan d\'amortissement')
     }
   },
+}
+
+export async function getCreditsByUtilisateur(utilisateurId: string): Promise<Credit[]> {
+  const response = await fetch(`${API_BASE_URL}/api/getCreditsByUtilisateur/${utilisateurId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération des crédits');
+  }
+  return response.json();
+}
+
+export async function createCredit(credit: Partial<Credit>): Promise<Credit> {
+  const response = await fetch(`${API_BASE_URL}/api/credits`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(credit),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Erreur lors de la création du crédit');
+  }
+  return response.json();
+}
+
+export async function deleteCreditById(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/credits/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Erreur lors de la suppression du crédit');
+  }
 } 

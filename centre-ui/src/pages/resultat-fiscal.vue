@@ -23,7 +23,7 @@ definePage({
   meta: {
     title: 'Résultat Fiscal',
     icon: 'material-symbols:account-balance-outline',
-    order: 8,
+    order: 10,
   },
 });
 

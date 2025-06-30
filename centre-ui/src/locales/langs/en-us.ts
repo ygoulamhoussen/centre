@@ -141,6 +141,7 @@ const local: App.I18n.Schema = {
     '/credits':'Crédits',
     '/immobilisations': 'Immobilisation',
     '/comptabilite': 'Comptabilite',
+    '/resultat-fiscal': 'Résultat fiscal',
     '/document': 'Documentation',
     '/document/naive': 'Document Naive UI',
     '/document/unocss': 'Document UnoCSS',

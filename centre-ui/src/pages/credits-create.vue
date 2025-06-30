@@ -37,7 +37,7 @@ const periodiciteOptions = [
   { label: 'Mensuelle', value: 'MENSUELLE' },
   { label: 'Trimestrielle', value: 'TRIMESTRIELLE' },
 ]
-const proprieteOptions = ref<{ label: string; value: string }[]>([])
+const proprieteOptions = ref<Array<{ label: string; value: string }>>([])
 
 const echeancier = ref<any[]>([])
 
@@ -633,4 +633,5 @@ definePage({
 .recap-section {
   margin-bottom: 24px;
 }
-</style> 
+</style>
+<!-- test --> 

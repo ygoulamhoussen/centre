@@ -7,8 +7,6 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -37,9 +35,8 @@ public class Charge {
     @JoinColumn(name = "propriete_id", nullable = false)
     private Propriete propriete;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "nature", nullable = false)
-    private NatureCharge nature;
+    private String nature;
 
     @Column(name = "commentaire", columnDefinition = "TEXT")
     private String commentaire;
@@ -102,11 +99,11 @@ public class Charge {
         this.propriete = propriete;
     }
 
-    public NatureCharge getNature() {
+    public String getNature() {
         return nature;
     }
 
-    public void setNature(NatureCharge nature) {
+    public void setNature(String nature) {
         this.nature = nature;
     }
 

@@ -1267,7 +1267,7 @@ public ChargeDTO saveCharge(ChargeDTO dto) {
     c.setMontant(new BigDecimal(dto.getMontant()));
     c.setDateCharge(LocalDate.parse(dto.getDateCharge()));
     c.setPropriete(proprieteRepository.findById(UUID.fromString(dto.getProprieteId())).orElseThrow());
-    c.setNature(Charge.NatureCharge.valueOf(dto.getNature()));
+    c.setNature(dto.getNature());
     c.setCommentaire(dto.getCommentaire());
     c.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
     
@@ -1627,7 +1627,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
             .collect(Collectors.toList());
 
         List<ChargeDetailDTO> chargesDetail = charges.stream()
-            .map(c -> new ChargeDetailDTO(c.getIntitule(), c.getDateCharge(), c.getMontant(), c.getPropriete().getNom(), c.getNature().getLibelle()))
+            .map(c -> new ChargeDetailDTO(c.getIntitule(), c.getDateCharge(), c.getMontant(), c.getPropriete().getNom(), c.getNature()))
             .collect(Collectors.toList());
             
         List<AmortissementDetailDTO> amortissementsDetail = amortissements.stream()

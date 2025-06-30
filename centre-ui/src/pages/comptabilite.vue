@@ -59,8 +59,8 @@ import { naturesCharges, typesRecettes } from '@/constants/compta'
 definePage({
   meta: {
     title: 'Comptabilité',
-    icon: 'material-symbols:account-balance',
-    order: 6,
+    icon: 'material-symbols:calculate',
+    order: 9,
   },
 })
 

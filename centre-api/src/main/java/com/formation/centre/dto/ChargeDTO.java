@@ -52,7 +52,7 @@ public class ChargeDTO {
         dto.setDateCharge(charge.getDateCharge() != null ? charge.getDateCharge().toString() : null);
         dto.setProprieteId(charge.getPropriete() != null ? charge.getPropriete().getId().toString() : null);
         dto.setProprieteNom(charge.getPropriete() != null ? charge.getPropriete().getNom() : null);
-        dto.setNature(charge.getNature() != null ? charge.getNature().name() : null);
+        dto.setNature(charge.getNature());
         dto.setCommentaire(charge.getCommentaire());
         dto.setUtilisateurId(charge.getUtilisateur() != null ? charge.getUtilisateur().getId().toString() : null);
         dto.setDocumentId(charge.getDocument() != null ? charge.getDocument().getId().toString() : null);

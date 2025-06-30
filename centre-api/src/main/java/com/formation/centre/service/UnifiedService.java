@@ -444,8 +444,15 @@ public class UnifiedService {
         q.setLocation(locationRepository.findById(UUID.fromString(dto.getLocationId())).orElseThrow());
         q.setDateDebut(LocalDate.parse(dto.getDateDebut()));
         q.setDateFin(dto.getDateFin()!=null?LocalDate.parse(dto.getDateFin()):null);
+        // Calcul automatique de la date d'échéance selon le mois sélectionné (dateDebut) et le jour d'échéance de la location
+        Integer jourEcheance = q.getLocation().getJourEcheance() != null ? q.getLocation().getJourEcheance() : 1;
+        LocalDate dateDebut = LocalDate.parse(dto.getDateDebut());
+        int annee = dateDebut.getYear();
+        int mois = dateDebut.getMonthValue();
+        int jour = Math.min(jourEcheance, dateDebut.lengthOfMonth());
+        LocalDate dateEcheance = LocalDate.of(annee, mois, jour);
+        q.setDateEcheance(dateEcheance);
         //q.setDateEmission(LocalDate.parse(dto.getDateEmission()));
-        q.setDateEcheance(dto.getDateEcheance()!=null?LocalDate.parse(dto.getDateEcheance()):null);
         q.setMontantLoyer(dto.getMontantLoyer()!=null ? new BigDecimal(dto.getMontantLoyer()) : BigDecimal.ZERO);
         q.setMontantCharges(dto.getMontantCharges()!=null ? new BigDecimal(dto.getMontantCharges()) : BigDecimal.ZERO);
         //q.setMontantTotal(dto.getMontantTotal()!=null ? new BigDecimal(dto.getMontantTotal()) : BigDecimal.ZERO);
@@ -459,6 +466,24 @@ public class UnifiedService {
         // Créer automatiquement l'écriture comptable pour une nouvelle quittance
         if (isNew) {
             createEcritureComptableQuittance(saved.getId().toString());
+            // Création automatique du paiement si statut PAYEE
+            if (saved.getStatut() == Quittance.StatutQuittance.PAYEE) {
+                // Paiement
+                PaiementDTO paiementDTO = new PaiementDTO();
+                paiementDTO.setQuittanceId(saved.getId().toString());
+                paiementDTO.setDatePaiement(saved.getDateEmission() != null ? saved.getDateEmission().toString() : LocalDate.now().toString());
+                // Montant total = loyer + charges + caution si incluse
+                BigDecimal montantTotal = saved.getMontantLoyer().add(saved.getMontantCharges());
+                if (Boolean.TRUE.equals(saved.getInclureCaution()) && saved.getDepotGarantie() != null) {
+                    montantTotal = montantTotal.add(saved.getDepotGarantie());
+                }
+                paiementDTO.setMontant(montantTotal.toPlainString());
+                paiementDTO.setMoyenPaiement("VIREMENT");
+                paiementDTO.setEstValide("true");
+                paiementDTO.setReference(null);
+                paiementDTO.setCommentaire("Paiement auto. généré pour quittance payée");
+                savePaiement(paiementDTO);
+            }
         }
         
         return toDto(saved);

@@ -68,27 +68,25 @@ function getToday() {
   return format(new Date(), 'yyyy-MM-dd')
 }
 
-// Calcul automatique de la date d'échéance
-function computeEcheance(dateRef: string, jourEcheance: string) {
-  if (!dateRef || !jourEcheance) {
-    return ''
-  }
-  const ref = new Date(dateRef)
-  let annee = ref.getFullYear()
-  let mois = ref.getMonth()
-  const jour = Number.parseInt(jourEcheance, 10)
-  // Si le jour d'échéance est avant la date de référence, passer au mois suivant
-  if (jour <= ref.getDate()) {
-    mois += 1
-    if (mois > 11) {
-      mois = 0
-      annee += 1
-    }
-  }
-  // Gérer les dépassements de jours (ex: 31 février)
-  const dateEcheance = new Date(annee, mois, jour)
-  return format(dateEcheance, 'yyyy-MM-dd')
+// Calcul automatique de la date d'échéance côté frontend
+function computeEcheanceFromDebut(dateDebut: string, jourEcheance: number | string) {
+  if (!dateDebut) return ''
+  const ref = new Date(dateDebut)
+  const annee = ref.getFullYear()
+  const mois = ref.getMonth() + 1 // JS: 0-based
+  const jour = Math.min(Number(jourEcheance || 1), new Date(annee, mois, 0).getDate())
+  return `${annee}-${mois.toString().padStart(2, '0')}-${jour.toString().padStart(2, '0')}`
 }
+
+watch(
+  [() => quittanceDTO.value.dateDebut, selectedLocation],
+  ([dateDebut, loc]) => {
+    if (dateDebut && loc) {
+      quittanceDTO.value.dateEcheance = computeEcheanceFromDebut(dateDebut, loc.jourEcheance)
+    }
+  },
+  { immediate: true }
+)
 
 // pré-remplir les champs quand la location est trouvée
 watch(
@@ -97,17 +95,19 @@ watch(
     if (newLocation) {
       // La caution NE DOIT JAMAIS être multipliée, même pour un loyer trimestriel
       const freq = (newLocation.frequenceLoyer || '').toString().trim().toLowerCase()
-      const loyerMensuel = newLocation.loyerMensuel
-      quittanceDTO.value.montantCharges = newLocation.chargesMensuelles
+      const loyerMensuel = Number.parseFloat(newLocation.loyerMensuel || '0')
+      const chargesMensuelles = Number.parseFloat(newLocation.chargesMensuelles || '0')
       quittanceDTO.value.depotGarantie = newLocation.depotGarantie
       if (freq === 'trimestriel') {
-        quittanceDTO.value.montantLoyer = String(Number.parseFloat(loyerMensuel || '0') * 3)
+        quittanceDTO.value.montantLoyer = String(loyerMensuel * 3)
+        quittanceDTO.value.montantCharges = String(chargesMensuelles * 3)
       } else {
-        quittanceDTO.value.montantLoyer = loyerMensuel
+        quittanceDTO.value.montantLoyer = String(loyerMensuel)
+        quittanceDTO.value.montantCharges = String(chargesMensuelles)
       }
       quittanceDTO.value.dateEmission = getToday()
-      quittanceDTO.value.dateEcheance = computeEcheance(
-        quittanceDTO.value.dateEmission,
+      quittanceDTO.value.dateEcheance = computeEcheanceFromDebut(
+        quittanceDTO.value.dateDebut,
         newLocation.jourEcheance || '1'
       )
     }

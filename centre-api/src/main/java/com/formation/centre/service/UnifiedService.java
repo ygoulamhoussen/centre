@@ -69,16 +69,21 @@ import com.formation.centre.repository.QuittanceRepository;
 import com.formation.centre.repository.RecetteRepository;
 import com.formation.centre.repository.UtilisateurRepository;
 import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
 import com.lowagie.text.Font;
 import com.lowagie.text.Image;
 import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.formation.centre.dto.ResultatFiscalDTO;
 import lombok.RequiredArgsConstructor;
 import com.formation.centre.dto.ResultatFiscalDetailDTOs;
+import com.lowagie.text.Element;
+import com.lowagie.text.FontFactory;
+import java.awt.Color;
 
 @Service
-@RequiredArgsConstructor
 public class UnifiedService {
 
     @Autowired private UtilisateurRepository utilisateurRepository;
@@ -1678,10 +1683,99 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         return new ResultatFiscalDTO(totalRecettes, totalCharges, totalAmortissements, resultatFiscal, recettesDetail, chargesDetail, amortissementsDetail);
     }
 
+    public byte[] genererJournalComptablePdf(String proprieteId, String utilisateurId, int annee) {
+        List<EcritureComptable> ecritures;
+        if (proprieteId != null && !proprieteId.isEmpty()) {
+            ecritures = ecritureComptableRepository.findByProprieteIdAndAnnee(UUID.fromString(proprieteId), annee);
+        } else if (utilisateurId != null && !utilisateurId.isEmpty()) {
+            ecritures = ecritureComptableRepository.findByUtilisateurIdAndAnnee(UUID.fromString(utilisateurId), annee);
+        } else {
+            throw new IllegalArgumentException("proprieteId ou utilisateurId requis");
+        }
+        System.out.println("Nombre d'écritures trouvées pour le PDF : " + ecritures.size());
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Document document = new Document();
+            PdfWriter.getInstance(document, baos);
+            document.open();
 
+            // Titre centré et en gras
+            Font titreFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+            Paragraph titre = new Paragraph("Journal comptable - Année " + annee, titreFont);
+            titre.setAlignment(Element.ALIGN_CENTER);
+            document.add(titre);
+            document.add(new Paragraph(" "));
 
+            // Tableau avec en-têtes stylées
+            PdfPTable table = new PdfPTable(5);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
+            table.setWidths(new float[]{2.2f, 1.5f, 1.5f, 2.5f, 4f});
 
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.WHITE);
+            Color headerBg = new Color(60, 60, 60);
+            String[] headers = {"Date", "Type", "Montant", "Propriété", "Commentaire"};
+            for (String h : headers) {
+                PdfPCell cell = new PdfPCell(new Paragraph(h, headerFont));
+                cell.setBackgroundColor(headerBg);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setPadding(6f);
+                cell.setBorderWidth(0.5f);
+                table.addCell(cell);
+            }
+
+            Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 11);
+            if (ecritures.isEmpty()) {
+                PdfPCell cell = new PdfPCell(new Paragraph("Aucune écriture comptable pour cette période.", cellFont));
+                cell.setColspan(5);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setPadding(8f);
+                table.addCell(cell);
+            } else {
+                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                for (EcritureComptable e : ecritures) {
+                    PdfPCell dateCell = new PdfPCell(new Paragraph(
+                        e.getDateEcriture() != null ? e.getDateEcriture().format(dateFormatter) : "",
+                        cellFont));
+                    dateCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    dateCell.setPadding(5f);
+                    dateCell.setBorderWidth(0.5f);
+                    table.addCell(dateCell);
+
+                    PdfPCell typeCell = new PdfPCell(new Paragraph(e.getType() != null ? e.getType().toString() : "", cellFont));
+                    typeCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    typeCell.setPadding(5f);
+                    typeCell.setBorderWidth(0.5f);
+                    table.addCell(typeCell);
+
+                    PdfPCell montantCell = new PdfPCell(new Paragraph(e.getMontant() != null ? e.getMontant().toPlainString() + " €" : "", cellFont));
+                    montantCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    montantCell.setPadding(5f);
+                    montantCell.setBorderWidth(0.5f);
+                    table.addCell(montantCell);
+
+                    PdfPCell propCell = new PdfPCell(new Paragraph(e.getPropriete() != null ? e.getPropriete().getNom() : "", cellFont));
+                    propCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+                    propCell.setPadding(5f);
+                    propCell.setBorderWidth(0.5f);
+                    table.addCell(propCell);
+
+                    PdfPCell commCell = new PdfPCell(new Paragraph(e.getCommentaire() != null ? e.getCommentaire() : "", cellFont));
+                    commCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+                    commCell.setPadding(5f);
+                    commCell.setBorderWidth(0.5f);
+                    table.addCell(commCell);
+                }
+            }
+            document.add(table);
+            document.close();
+            return baos.toByteArray();
+        } catch (DocumentException e) {
+            throw new RuntimeException("Erreur lors de la génération du PDF", e);
+        }
     }
+
+}
 
 
 

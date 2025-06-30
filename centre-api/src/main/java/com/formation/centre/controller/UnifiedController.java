@@ -838,4 +838,20 @@ public ResponseEntity<ResultatFiscalDTO> getResultatFiscal(
     return ResponseEntity.ok(resultat);
 }
 
+@GetMapping("/journal-comptable/pdf")
+public ResponseEntity<byte[]> genererJournalComptablePdf(
+        @RequestParam(value = "proprieteId", required = false) String proprieteId,
+        @RequestParam(value = "utilisateurId", required = false) String utilisateurId,
+        @RequestParam("annee") int annee) {
+    try {
+        byte[] pdf = unifiedService.genererJournalComptablePdf(proprieteId, utilisateurId, annee);
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=journal-comptable-" + annee + ".pdf")
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(pdf);
+    } catch (Exception e) {
+        return ResponseEntity.status(500).build();
+    }
+}
+
 } 

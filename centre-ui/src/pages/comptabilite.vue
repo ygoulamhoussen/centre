@@ -800,6 +800,34 @@ const modalEcritureVisible = ref(false)
 onMounted(() => {
   chargerDonnees()
 })
+
+async function editerJournalComptable() {
+  try {
+    const userId = authStore.userInfo.userId
+    const annee = anneeSelectionnee.value
+    const proprieteId = proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all' ? proprieteSelectionnee.value : null
+    let url = ''
+    if (proprieteId) {
+      url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/journal-comptable/pdf?proprieteId=${proprieteId}&annee=${annee}`
+    } else {
+      url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/journal-comptable/pdf?utilisateurId=${userId}&annee=${annee}`
+    }
+    const response = await fetch(url, { method: 'GET', credentials: 'include' })
+    if (!response.ok) throw new Error('Erreur lors de la génération du PDF')
+    const blob = await response.blob()
+    const urlBlob = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = urlBlob
+    a.download = `journal-comptable-${annee}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(urlBlob)
+    document.body.removeChild(a)
+    message.success('PDF du journal comptable généré et téléchargé')
+  } catch (error) {
+    message.error('Erreur lors de la génération du PDF du journal comptable')
+  }
+}
 </script>
 
 <template>
@@ -828,6 +856,14 @@ onMounted(() => {
 
       <!-- Résumé financier -->
       <NCard title="Résumé financier" class="mb-6">
+        <template #header-extra>
+          <NButton type="primary" @click="editerJournalComptable">
+            <template #icon>
+              <NIcon :component="Edit24Filled" />
+            </template>
+            Éditer le journal comptable
+          </NButton>
+        </template>
         <div class="flex items-center mb-4">
           <span class="mr-2">Année :</span>
           <NSelect

@@ -251,9 +251,6 @@ const anneesDisponibles = computed(() => {
 
 const anneeSelectionnee = ref<number | null>(null)
 
-// Filtre indépendant pour l'onglet Écritures Comptables
-const anneeEcritureSelectionnee = ref<number>(new Date().getFullYear())
-
 // Années disponibles pour les écritures (on peut réutiliser anneesDisponibles ou en calculer un spécifique si besoin)
 const anneesEcrituresDisponibles = computed(() => anneesDisponibles.value.filter(a => a !== null))
 
@@ -391,7 +388,7 @@ async function chargerEcrituresComptables() {
   try {
     if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
       // Si une propriété est sélectionnée, charger les écritures de cette propriété et de l'année sélectionnée
-      const ecritures = await fetchEcrituresComptables(proprieteSelectionnee.value, anneeEcritureSelectionnee.value)
+      const ecritures = await fetchEcrituresComptables(proprieteSelectionnee.value, anneeSelectionnee.value)
       ecrituresComptables.value = (ecritures as any[]).map((e: any) => ({
         id: e.id,
         dateEcriture: e.dateEcriture ?? '',
@@ -411,7 +408,7 @@ async function chargerEcrituresComptables() {
     else {
       // Si aucune propriété n'est sélectionnée, charger toutes les écritures de l'utilisateur pour l'année sélectionnée
       const ecritures = await fetch(
-        `${import.meta.env.VITE_SERVICE_BASE_URL}/api/ecritures-comptables/utilisateur/${authStore.userInfo.userId}/${anneeEcritureSelectionnee.value}`
+        `${import.meta.env.VITE_SERVICE_BASE_URL}/api/ecritures-comptables/utilisateur/${authStore.userInfo.userId}/${anneeSelectionnee.value}`
       ).then(res => res.json())
       ecrituresComptables.value = (ecritures as any[]).map((e: any) => ({
         id: e.id,
@@ -436,7 +433,7 @@ async function chargerEcrituresComptables() {
 }
 
 // Watcher combiné pour le filtre d'année et de propriété dans l'onglet Écritures Comptables
-watch([anneeEcritureSelectionnee, proprieteSelectionnee], () => {
+watch([anneeSelectionnee, proprieteSelectionnee], () => {
   chargerEcrituresComptables()
 })
 
@@ -828,6 +825,20 @@ async function editerJournalComptable() {
     message.error('Erreur lors de la génération du PDF du journal comptable')
   }
 }
+
+// Ajout des computed pour filtrer selon l'année sélectionnée
+const chargesFiltrees = computed(() => {
+  if (!anneeSelectionnee.value) return []
+  return charges.value.filter(c => c.dateCharge && new Date(c.dateCharge).getFullYear() === anneeSelectionnee.value)
+})
+const recettesFiltrees = computed(() => {
+  if (!anneeSelectionnee.value) return []
+  return recettes.value.filter(r => r.dateRecette && new Date(r.dateRecette).getFullYear() === anneeSelectionnee.value)
+})
+const amortissementsFiltres = computed(() => {
+  if (!anneeSelectionnee.value) return []
+  return amortissements.value.filter(a => a.annee === anneeSelectionnee.value)
+})
 </script>
 
 <template>
@@ -908,7 +919,7 @@ async function editerJournalComptable() {
         <NTabPane name="charges" tab="Charges">
           <NDataTable
             :columns="colonnesCharges"
-            :data="charges"
+            :data="chargesFiltrees"
             :loading="chargement"
             :pagination="{ pageSize: 10 }"
             striped
@@ -918,7 +929,7 @@ async function editerJournalComptable() {
         <NTabPane name="recettes" tab="Recettes">
           <NDataTable
             :columns="colonnesRecettes"
-            :data="recettes"
+            :data="recettesFiltrees"
             :loading="chargement"
             :pagination="{ pageSize: 10 }"
             striped
@@ -928,7 +939,7 @@ async function editerJournalComptable() {
         <NTabPane name="amortissements" tab="Amortissements">
           <NDataTable
             :columns="colonnesAmortissements"
-            :data="amortissements"
+            :data="amortissementsFiltres"
             :loading="chargement"
             :pagination="{ pageSize: 10 }"
             striped
@@ -946,17 +957,6 @@ async function editerJournalComptable() {
                   ...proprietes
                 ]"
                 style="width: 250px"
-              />
-            </NSpace>
-          </div>
-
-          <div class="mb-4">
-            <NSpace>
-              <NSelect
-                v-model:value="anneeEcritureSelectionnee"
-                :options="anneesEcrituresDisponibles.map(a => ({ label: a.toString(), value: a }))"
-                placeholder="Année"
-                style="width: 120px"
               />
             </NSpace>
           </div>

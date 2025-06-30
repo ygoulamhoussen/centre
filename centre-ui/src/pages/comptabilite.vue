@@ -22,6 +22,7 @@ import {
   NTag,
   NText,
   useMessage,
+  NDatePicker,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import {
@@ -383,11 +384,9 @@ async function chargerDonnees() {
 }
 
 async function chargerEcrituresComptables() {
-  if (!authStore.userInfo.userId) return
-
+  if (!authStore.userInfo.userId || !anneeSelectionnee.value) return
   try {
     if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
-      // Si une propriété est sélectionnée, charger les écritures de cette propriété et de l'année sélectionnée
       const ecritures = await fetchEcrituresComptables(proprieteSelectionnee.value, anneeSelectionnee.value)
       ecrituresComptables.value = (ecritures as any[]).map((e: any) => ({
         id: e.id,
@@ -406,7 +405,6 @@ async function chargerEcrituresComptables() {
       })) as EcritureComptableDTO[]
     }
     else {
-      // Si aucune propriété n'est sélectionnée, charger toutes les écritures de l'utilisateur pour l'année sélectionnée
       const ecritures = await fetch(
         `${import.meta.env.VITE_SERVICE_BASE_URL}/api/ecritures-comptables/utilisateur/${authStore.userInfo.userId}/${anneeSelectionnee.value}`
       ).then(res => res.json())
@@ -432,23 +430,36 @@ async function chargerEcrituresComptables() {
   }
 }
 
-// Watcher combiné pour le filtre d'année et de propriété dans l'onglet Écritures Comptables
 watch([anneeSelectionnee, proprieteSelectionnee], () => {
-  chargerEcrituresComptables()
+  if (anneeSelectionnee.value) {
+    chargerEcrituresComptables()
+  }
 })
 
 function nouvelleCharge() {
-  router.push(`/charge-create${proprieteSelectionnee.value ? '?proprieteId=' + proprieteSelectionnee.value : ''}`)
+  chargeEnCours.value = {}
+  fichierCharge.value = null
+  modeEdition.value = false
+  modalChargeVisible.value = true
 }
 
 function editerCharge(charge: ChargeDTO) {
-  router.push(`/charge-edit/${charge.id}`)
+  chargeEnCours.value = { ...charge }
+  fichierCharge.value = null
+  modeEdition.value = true
+  modalChargeVisible.value = true
 }
 
 async function sauvegarderCharge() {
   if (!chargeEnCours.value.intitule || !chargeEnCours.value.montant || !chargeEnCours.value.dateCharge || !chargeEnCours.value.proprieteId || !chargeEnCours.value.nature) {
     message.error('Veuillez remplir tous les champs obligatoires')
     return
+  }
+
+  // Conversion dateCharge en string yyyy-MM-dd si c'est un timestamp
+  if (typeof chargeEnCours.value.dateCharge === 'number') {
+    const d = new Date(chargeEnCours.value.dateCharge)
+    chargeEnCours.value.dateCharge = d.toISOString().slice(0, 10)
   }
 
   try {
@@ -502,17 +513,29 @@ async function supprimerCharge(id: string) {
 }
 
 function nouvelleRecette() {
-  router.push(`/recette-create${proprieteSelectionnee.value ? '?proprieteId=' + proprieteSelectionnee.value : ''}`)
+  recetteEnCours.value = {}
+  fichierRecette.value = null
+  modeEdition.value = false
+  modalRecetteVisible.value = true
 }
 
 function editerRecette(recette: RecetteDTO) {
-  router.push(`/recette-edit/${recette.id}`)
+  recetteEnCours.value = { ...recette }
+  fichierRecette.value = null
+  modeEdition.value = true
+  modalRecetteVisible.value = true
 }
 
 async function sauvegarderRecette() {
   if (!recetteEnCours.value.intitule || !recetteEnCours.value.montant || !recetteEnCours.value.dateRecette || !recetteEnCours.value.proprieteId || !recetteEnCours.value.type) {
     message.error('Veuillez remplir tous les champs obligatoires')
     return
+  }
+
+  // Conversion dateRecette en string yyyy-MM-dd si c'est un timestamp
+  if (typeof recetteEnCours.value.dateRecette === 'number') {
+    const d = new Date(recetteEnCours.value.dateRecette)
+    recetteEnCours.value.dateRecette = d.toISOString().slice(0, 10)
   }
 
   try {
@@ -742,7 +765,7 @@ async function handleDownloadDocument(documentId: string, documentNom: string) {
 // Fonction pour valider la taille du fichier
 function validateFileSize(file: File): boolean {
   if (file.size > maxFileSize) {
-    message.error(`Le fichier est trop volumineux. Taille maximum autorisée : 10MB. Taille actuelle : ${formatFileSize(file.size)}`)
+    message.error(`Le fichier est trop volumineux. Taille maximum autorisée : 10MB. Taille actuelle : ${formatFileSize(file.size) }`)
     return false
   }
   return true
@@ -978,7 +1001,15 @@ const amortissementsFiltres = computed(() => {
         <NGrid :cols="2" :x-gap="16">
           <NGi>
             <NFormItem label="Date" required>
-              <NInput v-model:value="ecritureEnCours.dateEcriture" type="text" />
+              <NDatePicker
+                v-model:value="ecritureEnCours.dateEcriture"
+                type="date"
+                format="dd/MM/yyyy"
+                value-format="yyyy-MM-dd"
+                clearable
+                style="width: 100%"
+                placeholder="Choisir une date"
+              />
             </NFormItem>
           </NGi>
           <NGi>
@@ -1056,6 +1087,188 @@ const amortissementsFiltres = computed(() => {
         <NSpace justify="end">
           <NButton @click="modalEcritureVisible = false">Annuler</NButton>
           <NButton type="primary" :loading="uploadEnCours" @click="sauvegarderEcriture">
+            {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
+          </NButton>
+        </NSpace>
+      </template>
+    </NModal>
+
+    <!-- Modal Charge -->
+    <NModal v-model:show="modalChargeVisible" preset="card" title="Charge" style="width: 600px">
+      <NForm :model="chargeEnCours" label-placement="top">
+        <NGrid :cols="2" :x-gap="16">
+          <NGi>
+            <NFormItem label="Date" required>
+              <NDatePicker
+                v-model:value="chargeEnCours.dateCharge"
+                type="date"
+                format="dd/MM/yyyy"
+                value-format="yyyy-MM-dd"
+                clearable
+                style="width: 100%"
+                placeholder="Choisir une date"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi>
+            <NFormItem label="Montant" required>
+              <NInput
+                v-model:value="chargeEnCours.montant"
+                placeholder="0.00"
+                type="text"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Nature" required>
+              <NSelect
+                v-model:value="chargeEnCours.nature"
+                :options="naturesCharges"
+                placeholder="Sélectionner une nature"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Propriété" required>
+              <NSelect
+                v-model:value="chargeEnCours.proprieteId"
+                :options="proprietes"
+                placeholder="Sélectionner une propriété"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem :label="['Intitulé', h('span', { style: { color: 'red', marginLeft: '2px' } }, '*')]" required>
+              <NInput
+                v-model:value="chargeEnCours.intitule"
+                type="text"
+                placeholder="Intitulé de la charge"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Description">
+              <NInput
+                v-model:value="chargeEnCours.commentaire"
+                type="textarea"
+                placeholder="Description de la charge"
+                :rows="3"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Document (optionnel)">
+              <input
+                type="file"
+                @change="handleFileSelectCharge"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                class="w-full p-2 border border-gray-300 rounded"
+              />
+              <div class="text-sm text-gray-500 mt-1">
+                Formats acceptés : PDF, JPG, PNG, DOC, DOCX. Taille maximum : 10MB
+              </div>
+              <div v-if="fichierCharge" class="text-sm text-green-600 mt-1">
+                Fichier sélectionné : {{ fichierCharge.name }} ({{ formatFileSize(fichierCharge.size) }})
+              </div>
+            </NFormItem>
+          </NGi>
+        </NGrid>
+      </NForm>
+      <template #footer>
+        <NSpace justify="end">
+          <NButton @click="modalChargeVisible = false">Annuler</NButton>
+          <NButton type="primary" :loading="uploadEnCours" @click="sauvegarderCharge">
+            {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
+          </NButton>
+        </NSpace>
+      </template>
+    </NModal>
+
+    <!-- Modal Recette -->
+    <NModal v-model:show="modalRecetteVisible" preset="card" title="Recette" style="width: 600px">
+      <NForm :model="recetteEnCours" label-placement="top">
+        <NGrid :cols="2" :x-gap="16">
+          <NGi>
+            <NFormItem label="Date" required>
+              <NDatePicker
+                v-model:value="recetteEnCours.dateRecette"
+                type="date"
+                format="dd/MM/yyyy"
+                value-format="yyyy-MM-dd"
+                clearable
+                style="width: 100%"
+                placeholder="Choisir une date"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi>
+            <NFormItem label="Montant" required>
+              <NInput
+                v-model:value="recetteEnCours.montant"
+                placeholder="0.00"
+                type="text"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Type" required>
+              <NSelect
+                v-model:value="recetteEnCours.type"
+                :options="typesRecettes"
+                placeholder="Sélectionner un type"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Propriété" required>
+              <NSelect
+                v-model:value="recetteEnCours.proprieteId"
+                :options="proprietes"
+                placeholder="Sélectionner une propriété"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem :label="['Intitulé', h('span', { style: { color: 'red', marginLeft: '2px' } }, '*')]" required>
+              <NInput
+                v-model:value="recetteEnCours.intitule"
+                type="text"
+                placeholder="Intitulé de la recette"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Description">
+              <NInput
+                v-model:value="recetteEnCours.commentaire"
+                type="textarea"
+                placeholder="Description de la recette"
+                :rows="3"
+              />
+            </NFormItem>
+          </NGi>
+          <NGi :span="2">
+            <NFormItem label="Document (optionnel)">
+              <input
+                type="file"
+                @change="handleFileSelectRecette"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                class="w-full p-2 border border-gray-300 rounded"
+              />
+              <div class="text-sm text-gray-500 mt-1">
+                Formats acceptés : PDF, JPG, PNG, DOC, DOCX. Taille maximum : 10MB
+              </div>
+              <div v-if="fichierRecette" class="text-sm text-green-600 mt-1">
+                Fichier sélectionné : {{ fichierRecette.name }} ({{ formatFileSize(fichierRecette.size) }})
+              </div>
+            </NFormItem>
+          </NGi>
+        </NGrid>
+      </NForm>
+      <template #footer>
+        <NSpace justify="end">
+          <NButton @click="modalRecetteVisible = false">Annuler</NButton>
+          <NButton type="primary" :loading="uploadEnCours" @click="sauvegarderRecette">
             {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
           </NButton>
         </NSpace>

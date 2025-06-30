@@ -584,8 +584,11 @@ public class UnifiedService {
         return toDto(saved);
     }
 
+    @Transactional
     public void deleteCredit(String id) {
-        creditRepository.deleteById(UUID.fromString(id));
+        UUID creditId = UUID.fromString(id);
+        echeanceCreditRepository.deleteByCreditId(creditId);
+        creditRepository.deleteById(creditId);
     }
 
     private CreditDTO toDto(Credit c) {

@@ -293,7 +293,7 @@ public class UnifiedController {
         return ResponseEntity.ok(unifiedService.saveCredit(dto));
     }
 
-    @DeleteMapping("/deleteCredit/{creditId}")
+    @DeleteMapping("/credits/{creditId}")
     public ResponseEntity<Void> deleteCredit(@PathVariable String creditId) {
         unifiedService.deleteCredit(creditId);
         return ResponseEntity.noContent().build();

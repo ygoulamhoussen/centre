@@ -1,12 +1,12 @@
 {
-  "name": "vue-naive-admin",
+  "name": "Zimmo",
   "type": "module",
   "version": "1.0.0",
-  "description": "A fresh and elegant admin template, based on Vue 3, Vite 6, TypeScript, Naive UI and UnoCSS.",
+  "description": "Zimmo - Gestion LMNP",
   "author": {
-    "name": "Loic Duong",
-    "email": "dploc96@gmail.com",
-    "url": "https://github.com/loicduong"
+    "name": "Yussouf GOULAMHOUSSEN",
+    "email": "yussouf.goulamhoussen@gmail.com",
+    "url": ""
   },
   "license": "MIT",
   "homepage": "https://github.com/loicduong/vue-naive-admin",

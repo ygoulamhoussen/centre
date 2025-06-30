@@ -75,7 +75,7 @@ import com.lowagie.text.Paragraph;
 import com.lowagie.text.pdf.PdfWriter;
 import com.formation.centre.dto.ResultatFiscalDTO;
 import lombok.RequiredArgsConstructor;
-import com.formation.centre.dto.ResultatFiscalDetailDTOs.*;
+import com.formation.centre.dto.ResultatFiscalDetailDTOs;
 
 @Service
 @RequiredArgsConstructor
@@ -1147,8 +1147,21 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
     try {
         genererPlanAmortissement(saved.getId().toString());
         System.out.println("Plan d'amortissement généré avec succès pour l'immobilisation: " + saved.getId());
+        // Générer automatiquement les charges d'amortissement et les écritures comptables
+        List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(saved.getId());
+        for (Amortissement amortissement : amortissements) {
+            ChargeDTO chargeDTO = new ChargeDTO();
+            chargeDTO.setIntitule("Dotation amortissement " + amortissement.getAnnee() + " - " + saved.getIntitule());
+            chargeDTO.setMontant(amortissement.getMontantAmortissement().toPlainString());
+            chargeDTO.setDateCharge(amortissement.getAnnee() + "-12-31");
+            chargeDTO.setProprieteId(saved.getPropriete().getId().toString());
+            chargeDTO.setUtilisateurId(saved.getUtilisateur().getId().toString());
+            chargeDTO.setNature("AMORTISSEMENT");
+            chargeDTO.setCommentaire("Dotation automatique depuis immobilisation " + saved.getIntitule());
+            saveCharge(chargeDTO);
+        }
     } catch (Exception e) {
-        System.err.println("Erreur lors de la génération du plan d'amortissement: " + e.getMessage());
+        System.err.println("Erreur lors de la génération du plan d'amortissement ou des charges: " + e.getMessage());
         e.printStackTrace();
         // Ne pas faire échouer la sauvegarde de l'immobilisation si la génération du plan échoue
     }
@@ -1649,16 +1662,16 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         List<Amortissement> amortissements = amortissementRepository.findByYearAndProprietes(userUuid, annee, propUuids);
 
         // Conversion en DTOs de détail
-        List<RecetteDetailDTO> recettesDetail = recettes.stream()
-            .map(r -> new RecetteDetailDTO(r.getIntitule(), r.getDateRecette(), r.getMontant(), r.getPropriete().getNom()))
+        List<ResultatFiscalDetailDTOs.RecetteDetailDTO> recettesDetail = recettes.stream()
+            .map(r -> new ResultatFiscalDetailDTOs.RecetteDetailDTO(r.getIntitule(), r.getDateRecette(), r.getMontant(), r.getPropriete().getNom()))
             .collect(Collectors.toList());
 
-        List<ChargeDetailDTO> chargesDetail = charges.stream()
-            .map(c -> new ChargeDetailDTO(c.getIntitule(), c.getDateCharge(), c.getMontant(), c.getPropriete().getNom(), c.getNature()))
+        List<ResultatFiscalDetailDTOs.ChargeDetailDTO> chargesDetail = charges.stream()
+            .map(c -> new ResultatFiscalDetailDTOs.ChargeDetailDTO(c.getIntitule(), c.getDateCharge(), c.getMontant(), c.getPropriete().getNom(), c.getNature()))
             .collect(Collectors.toList());
             
-        List<AmortissementDetailDTO> amortissementsDetail = amortissements.stream()
-            .map(a -> new AmortissementDetailDTO(a.getImmobilisation().getIntitule(), a.getAnnee(), a.getMontantAmortissement(), a.getImmobilisation().getPropriete().getNom()))
+        List<ResultatFiscalDetailDTOs.AmortissementDetailDTO> amortissementsDetail = amortissements.stream()
+            .map(a -> new ResultatFiscalDetailDTOs.AmortissementDetailDTO(a.getImmobilisation().getIntitule(), a.getAnnee(), a.getMontantAmortissement(), a.getImmobilisation().getPropriete().getNom()))
             .collect(Collectors.toList());
 
         // Création du DTO final

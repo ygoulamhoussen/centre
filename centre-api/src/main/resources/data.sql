@@ -225,8 +225,8 @@ INSERT INTO amortissement (id, immobilisation_id, annee, montant_amortissement, 
 
 -- CHARGES supplémentaires pour Yussouf
 INSERT INTO charges (id, utilisateur_id, propriete_id, intitule, montant, date_charge, nature, commentaire, cree_le, modifie_le) VALUES
-('80000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'Taxe foncière 2024', 950.00, '2024-10-15', 'TAXES', 'Taxe foncière pour le studio à Paris', NOW(), NOW()),
-('80000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'Charges copropriété T2 2024', 320.00, '2024-04-20', 'COPROPRIETE', 'Régularisation des charges de copropriété', NOW(), NOW()),
+('80000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'Taxe fonciere 2024', 950.00, '2024-10-15', 'TAXES', 'Taxe foncière pour le studio à Paris', NOW(), NOW()),
+('80000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'Charges copropriete T2 2024', 320.00, '2024-04-20', 'COPROPRIETE', 'Régularisation des charges de copropriété', NOW(), NOW()),
 ('80000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', 'Assurance PNO Bordeaux', 180.00, '2024-01-25', 'ASSURANCE', 'Assurance propriétaire non-occupant', NOW(), NOW());
 
 -- RECETTES pour Yussouf

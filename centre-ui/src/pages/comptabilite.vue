@@ -19,9 +19,9 @@ import {
   NSpace,
   NTabPane,
   NTabs,
+  NTag,
   NText,
   useMessage,
-  NTag,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import {
@@ -31,8 +31,8 @@ import {
   Edit24Filled,
   Money24Filled,
 } from '@vicons/fluent'
-import { computed, onMounted, ref } from 'vue'
-import type { ChargeDTO, RecetteDTO, EcritureComptableDTO } from '@/types/dto'
+import { computed, onMounted, ref, watch } from 'vue'
+import type { ChargeDTO, EcritureComptableDTO, RecetteDTO } from '@/types/dto'
 import {
   createCharge,
   createRecette,
@@ -46,8 +46,8 @@ import {
   uploadDocument,
   updateCharge,
   updateRecette,
-  getEcrituresComptablesWithProprieteNom,
   getChargesWithProprieteNom,
+  getEcrituresComptablesWithProprieteNom,
   getRecettesWithProprieteNom,
   downloadDocument,
   updateEcritureComptable,
@@ -83,6 +83,18 @@ const fichierCharge = ref<File | null>(null)
 const fichierRecette = ref<File | null>(null)
 const uploadEnCours = ref(false)
 const maxFileSize = 10 * 1024 * 1024 // 10MB
+
+// Type local pour les amortissements (à placer avec les autres types)
+type AmortissementDTO = {
+  id?: string
+  annee: number
+  proprieteNom: string
+  immobilisationIntitule: string
+  montantAmortissement: string
+}
+
+// Ajout pour les amortissements
+const amortissements = ref<AmortissementDTO[]>([])
 
 // Colonnes pour les tableaux
 const colonnesCharges = [
@@ -179,7 +191,7 @@ const colonnesEcritures = [
     render: (row: EcritureComptableDTO) => {
       const type = row.type
       const color = type === 'CHARGE' ? 'error' : 'success'
-      return h(NTag, { color }, { default: () => type })
+      return h(NTag, { type: color }, { default: () => type })
     },
   },
   {
@@ -187,9 +199,9 @@ const colonnesEcritures = [
     key: 'montant',
     width: 120,
     render: (row: EcritureComptableDTO) => {
-      const montant = parseFloat(row.montant)
-      const color = row.type === 'CHARGE' ? '#ff4d4f' : '#52c41a'
-      return h('span', { style: { color, fontWeight: 'bold' } }, `${montant.toFixed(2)} €`)
+      const montant = Number.parseFloat(row.montant)
+      const color = row.type === 'CHARGE' ? 'error' : 'success'
+      return h('span', { style: { color: color === 'error' ? '#ff4d4f' : '#52c41a', fontWeight: 'bold' } }, `${montant.toFixed(2)} €`)
     },
   },
   { title: 'Description', key: 'commentaire', width: 300 },
@@ -210,6 +222,14 @@ const colonnesEcritures = [
   },
 ]
 
+// Colonnes pour les amortissements
+const colonnesAmortissements = [
+  { title: 'Année', key: 'annee', width: 100 },
+  { title: 'Propriété', key: 'proprieteNom', width: 200 },
+  { title: 'Immobilisation', key: 'immobilisationIntitule', width: 200 },
+  { title: 'Montant', key: 'montantAmortissement', width: 120, render: (row: AmortissementDTO) => `${row.montantAmortissement} €` },
+]
+
 // Calculs
 const totalCharges = computed(() => {
   return charges.value.reduce((sum, charge) => sum + Number.parseFloat(charge.montant), 0)
@@ -220,6 +240,53 @@ const totalRecettes = computed(() => {
 })
 
 const solde = computed(() => totalRecettes.value - totalCharges.value)
+
+// Calculs groupés par année
+const anneesDisponibles = computed(() => {
+  const anneesCharges = charges.value.map(c => c.dateCharge ? new Date(c.dateCharge).getFullYear() : null)
+  const anneesAmortissements = amortissements.value.map(a => a.annee)
+  const anneesRecettes = recettes.value.map(r => r.dateRecette ? new Date(r.dateRecette).getFullYear() : null)
+  return Array.from(new Set([...anneesCharges, ...anneesAmortissements, ...anneesRecettes].filter(a => !!a))).sort((a, b) => b - a)
+})
+
+const anneeSelectionnee = ref<number | null>(null)
+
+// Filtre indépendant pour l'onglet Écritures Comptables
+const anneeEcritureSelectionnee = ref<number>(new Date().getFullYear())
+
+// Années disponibles pour les écritures (on peut réutiliser anneesDisponibles ou en calculer un spécifique si besoin)
+const anneesEcrituresDisponibles = computed(() => anneesDisponibles.value.filter(a => a !== null))
+
+onMounted(() => {
+  chargerDonnees().then(() => {
+    const currentYear = new Date().getFullYear()
+    if (anneesDisponibles.value.includes(currentYear)) {
+      anneeSelectionnee.value = currentYear
+    } else if (anneesDisponibles.value.length > 0) {
+      anneeSelectionnee.value = anneesDisponibles.value[0]
+    }
+  })
+})
+
+function totalParAnnee(type: 'charges' | 'amortissements' | 'recettes', annee: number) {
+  if (type === 'charges') {
+    return charges.value.filter(c => c.dateCharge && new Date(c.dateCharge).getFullYear() === annee)
+      .reduce((sum, c) => sum + Number.parseFloat(c.montant), 0)
+  }
+  if (type === 'amortissements') {
+    return amortissements.value.filter(a => a.annee === annee)
+      .reduce((sum, a) => sum + Number.parseFloat(a.montantAmortissement), 0)
+  }
+  if (type === 'recettes') {
+    return recettes.value.filter(r => r.dateRecette && new Date(r.dateRecette).getFullYear() === annee)
+      .reduce((sum, r) => sum + Number.parseFloat(r.montant), 0)
+  }
+  return 0
+}
+
+function soldeParAnnee(annee: number) {
+  return totalParAnnee('recettes', annee) - totalParAnnee('charges', annee) - totalParAnnee('amortissements', annee)
+}
 
 // Méthodes
 async function chargerDonnees() {
@@ -233,17 +300,72 @@ async function chargerDonnees() {
       fetchDocuments(authStore.userInfo.userId),
     ])
 
-    charges.value = chargesData
-    recettes.value = recettesData
+    charges.value = (chargesData as any[])
+      .filter((c: any) => c.nature !== 'AMORTISSEMENT')
+      .map((c: any) => ({
+        id: c.id,
+        intitule: c.intitule ?? '',
+        montant: c.montant?.toString() ?? '',
+        dateCharge: c.dateCharge ?? '',
+        proprieteId: c.proprieteId ?? '',
+        proprieteNom: c.proprieteNom ?? proprietes.value.find(p => p.value === c.proprieteId)?.label ?? '',
+        nature: c.nature ?? '',
+        commentaire: c.commentaire,
+        utilisateurId: c.utilisateurId,
+        documentId: c.documentId,
+        documentNom: c.documentNom,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }))
+    recettes.value = (recettesData as any[]).map((r: any) => ({
+      id: r.id,
+      intitule: r.intitule ?? '',
+      montant: r.montant?.toString() ?? '',
+      dateRecette: r.dateRecette ?? '',
+      proprieteId: r.proprieteId ?? '',
+      type: r.type ?? '',
+      commentaire: r.commentaire,
+      utilisateurId: r.utilisateurId,
+      documentId: r.documentId,
+      documentNom: r.documentNom,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    }))
+
+    // Charger les amortissements (API à adapter si besoin)
+    const amortissementsResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/amortissements/byUtilisateur/${authStore.userInfo.userId}`)
+    if (amortissementsResponse.ok) {
+      const data = await amortissementsResponse.json()
+      amortissements.value = (data as any[]).map((a: any) => ({
+        id: a.id,
+        annee: a.annee ? parseInt(a.annee) : 0,
+        proprieteNom: '', // Le DTO ne contient pas ce champ, à compléter si besoin
+        immobilisationIntitule: a.immobilisationIntitule ?? '',
+        montantAmortissement: a.montantAmortissement ?? '',
+      }))
+    } else {
+      // Si pas d'API dédiée, on extrait les amortissements des charges
+      amortissements.value = (chargesData as any[])
+        .filter((c: any) => c.nature === 'AMORTISSEMENT')
+        .map((c: any) => ({
+          id: c.id,
+          annee: c.dateCharge ? new Date(c.dateCharge).getFullYear() : 0,
+          proprieteNom: c.proprieteNom ?? '',
+          immobilisationIntitule: c.commentaire || '',
+          montantAmortissement: c.montant?.toString() ?? '',
+        }))
+    }
 
     // Charger les propriétés
     const propResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/${authStore.userInfo.userId}`)
+    let proprietesMap: Record<string, string> = {}
     if (propResponse.ok) {
       const proprietesData = await propResponse.json()
       proprietes.value = proprietesData.map((prop: any) => ({
         label: prop.nom,
         value: prop.id,
       }))
+      proprietesMap = Object.fromEntries(proprietesData.map((prop: any) => [prop.id, prop.nom]))
     }
 
     // Charger les documents
@@ -268,20 +390,55 @@ async function chargerEcrituresComptables() {
 
   try {
     if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
-      // Si une propriété est sélectionnée, charger les écritures de cette propriété
-      const ecritures = await fetchEcrituresComptables(proprieteSelectionnee.value, anneeFiscale.value)
-      ecrituresComptables.value = ecritures
+      // Si une propriété est sélectionnée, charger les écritures de cette propriété et de l'année sélectionnée
+      const ecritures = await fetchEcrituresComptables(proprieteSelectionnee.value, anneeEcritureSelectionnee.value)
+      ecrituresComptables.value = (ecritures as any[]).map((e: any) => ({
+        id: e.id,
+        dateEcriture: e.dateEcriture ?? '',
+        montant: e.montant !== undefined && e.montant !== null ? e.montant.toString() : '',
+        type: e.type ?? '',
+        proprieteId: e.proprieteId ?? '',
+        chargeId: e.chargeId,
+        recetteId: e.recetteId,
+        commentaire: e.commentaire,
+        documentId: e.documentId,
+        documentNom: e.documentNom,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt,
+        proprieteNom: e.proprieteNom,
+      })) as EcritureComptableDTO[]
     }
     else {
-      // Si aucune propriété n'est sélectionnée, charger toutes les écritures de l'utilisateur
-      const ecritures = await getEcrituresComptablesWithProprieteNom(authStore.userInfo.userId)
-      ecrituresComptables.value = ecritures
+      // Si aucune propriété n'est sélectionnée, charger toutes les écritures de l'utilisateur pour l'année sélectionnée
+      const ecritures = await fetch(
+        `${import.meta.env.VITE_SERVICE_BASE_URL}/api/ecritures-comptables/utilisateur/${authStore.userInfo.userId}/${anneeEcritureSelectionnee.value}`
+      ).then(res => res.json())
+      ecrituresComptables.value = (ecritures as any[]).map((e: any) => ({
+        id: e.id,
+        dateEcriture: e.dateEcriture ?? '',
+        montant: e.montant !== undefined && e.montant !== null ? e.montant.toString() : '',
+        type: e.type ?? '',
+        proprieteId: e.proprieteId ?? '',
+        chargeId: e.chargeId,
+        recetteId: e.recetteId,
+        commentaire: e.commentaire,
+        documentId: e.documentId,
+        documentNom: e.documentNom,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt,
+        proprieteNom: e.proprieteNom,
+      })) as EcritureComptableDTO[]
     }
   }
   catch (error: any) {
     message.error(error.message || 'Erreur lors du chargement des écritures comptables')
   }
 }
+
+// Watcher combiné pour le filtre d'année et de propriété dans l'onglet Écritures Comptables
+watch([anneeEcritureSelectionnee, proprieteSelectionnee], () => {
+  chargerEcrituresComptables()
+})
 
 function nouvelleCharge() {
   router.push(`/charge-create${proprieteSelectionnee.value ? '?proprieteId=' + proprieteSelectionnee.value : ''}`)
@@ -467,9 +624,37 @@ const loadCharges = async () => {
   try {
     chargement.value = true
     if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
-      charges.value = await getChargesWithProprieteNom(authStore.userInfo.userId)
+      const data = await getChargesWithProprieteNom(authStore.userInfo.userId)
+      charges.value = (data as any[]).map((c: any) => ({
+        id: c.id,
+        intitule: c.intitule ?? '',
+        montant: c.montant?.toString() ?? '',
+        dateCharge: c.dateCharge ?? '',
+        proprieteId: c.proprieteId ?? '',
+        nature: c.nature ?? '',
+        commentaire: c.commentaire,
+        utilisateurId: c.utilisateurId,
+        documentId: c.documentId,
+        documentNom: c.documentNom,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }))
     } else {
-      charges.value = await getChargesWithProprieteNom(authStore.userInfo.userId)
+      const data = await getChargesWithProprieteNom(authStore.userInfo.userId)
+      charges.value = (data as any[]).map((c: any) => ({
+        id: c.id,
+        intitule: c.intitule ?? '',
+        montant: c.montant?.toString() ?? '',
+        dateCharge: c.dateCharge ?? '',
+        proprieteId: c.proprieteId ?? '',
+        nature: c.nature ?? '',
+        commentaire: c.commentaire,
+        utilisateurId: c.utilisateurId,
+        documentId: c.documentId,
+        documentNom: c.documentNom,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }))
     }
   } catch (error) {
     console.error('Erreur lors du chargement des charges:', error)
@@ -483,9 +668,37 @@ const loadRecettes = async () => {
   try {
     chargement.value = true
     if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
-      recettes.value = await getRecettesWithProprieteNom(authStore.userInfo.userId)
+      const data = await getRecettesWithProprieteNom(authStore.userInfo.userId)
+      recettes.value = (data as any[]).map((r: any) => ({
+        id: r.id,
+        intitule: r.intitule ?? '',
+        montant: r.montant?.toString() ?? '',
+        dateRecette: r.dateRecette ?? '',
+        proprieteId: r.proprieteId ?? '',
+        type: r.type ?? '',
+        commentaire: r.commentaire,
+        utilisateurId: r.utilisateurId,
+        documentId: r.documentId,
+        documentNom: r.documentNom,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      }))
     } else {
-      recettes.value = await getRecettesWithProprieteNom(authStore.userInfo.userId)
+      const data = await getRecettesWithProprieteNom(authStore.userInfo.userId)
+      recettes.value = (data as any[]).map((r: any) => ({
+        id: r.id,
+        intitule: r.intitule ?? '',
+        montant: r.montant?.toString() ?? '',
+        dateRecette: r.dateRecette ?? '',
+        proprieteId: r.proprieteId ?? '',
+        type: r.type ?? '',
+        commentaire: r.commentaire,
+        utilisateurId: r.utilisateurId,
+        documentId: r.documentId,
+        documentNom: r.documentNom,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      }))
     }
   } catch (error) {
     console.error('Erreur lors du chargement des recettes:', error)
@@ -574,6 +787,15 @@ function handleFileSelectRecette(event: Event) {
   }
 }
 
+// Variables réactives manquantes pour les formulaires
+const chargeEnCours = ref<Partial<ChargeDTO>>({})
+const recetteEnCours = ref<Partial<RecetteDTO>>({})
+const modeEdition = ref(false)
+const modalChargeVisible = ref(false)
+const modalRecetteVisible = ref(false)
+const ecritureEnCours = ref<Partial<EcritureComptableDTO>>({})
+const modalEcritureVisible = ref(false)
+
 // Chargement initial
 onMounted(() => {
   chargerDonnees()
@@ -606,23 +828,38 @@ onMounted(() => {
 
       <!-- Résumé financier -->
       <NCard title="Résumé financier" class="mb-6">
-        <NGrid :cols="3" :x-gap="16">
+        <div class="flex items-center mb-4">
+          <span class="mr-2">Année :</span>
+          <NSelect
+            v-model:value="anneeSelectionnee"
+            :options="anneesDisponibles.map(a => ({ label: a.toString(), value: a }))"
+            placeholder="Choisir une année"
+            style="width: 120px"
+          />
+        </div>
+        <NGrid :cols="4" :x-gap="16">
           <NGi>
             <div class="text-center p-4 bg-red-50 rounded-lg">
-              <div class="text-2xl font-bold text-red-600">{{ totalCharges.toFixed(2) }} €</div>
+              <div class="text-2xl font-bold text-red-600">{{ totalParAnnee('charges', anneeSelectionnee ?? 0).toFixed(2) }} €</div>
               <div class="text-sm text-gray-600">Total Charges</div>
             </div>
           </NGi>
           <NGi>
+            <div class="text-center p-4 bg-yellow-50 rounded-lg">
+              <div class="text-2xl font-bold text-yellow-600">{{ totalParAnnee('amortissements', anneeSelectionnee ?? 0).toFixed(2) }} €</div>
+              <div class="text-sm text-gray-600">Total Amortissements</div>
+            </div>
+          </NGi>
+          <NGi>
             <div class="text-center p-4 bg-green-50 rounded-lg">
-              <div class="text-2xl font-bold text-green-600">{{ totalRecettes.toFixed(2) }} €</div>
+              <div class="text-2xl font-bold text-green-600">{{ totalParAnnee('recettes', anneeSelectionnee ?? 0).toFixed(2) }} €</div>
               <div class="text-sm text-gray-600">Total Recettes</div>
             </div>
           </NGi>
           <NGi>
-            <div class="text-center p-4 rounded-lg" :class="solde >= 0 ? 'bg-blue-50' : 'bg-orange-50'">
-              <div class="text-2xl font-bold" :class="solde >= 0 ? 'text-blue-600' : 'text-orange-600'">
-                {{ solde.toFixed(2) }} €
+            <div class="text-center p-4 rounded-lg" :class="soldeParAnnee(anneeSelectionnee ?? 0) >= 0 ? 'bg-blue-50' : 'bg-orange-50'">
+              <div class="text-2xl font-bold" :class="soldeParAnnee(anneeSelectionnee ?? 0) >= 0 ? 'text-blue-600' : 'text-orange-600'">
+                {{ soldeParAnnee(anneeSelectionnee ?? 0).toFixed(2) }} €
               </div>
               <div class="text-sm text-gray-600">Solde</div>
             </div>
@@ -652,6 +889,16 @@ onMounted(() => {
           />
         </NTabPane>
 
+        <NTabPane name="amortissements" tab="Amortissements">
+          <NDataTable
+            :columns="colonnesAmortissements"
+            :data="amortissements"
+            :loading="chargement"
+            :pagination="{ pageSize: 10 }"
+            striped
+          />
+        </NTabPane>
+
         <NTabPane name="ecritures" tab="Écritures Comptables">
           <div class="mb-4">
             <NSpace>
@@ -663,14 +910,17 @@ onMounted(() => {
                   ...proprietes
                 ]"
                 style="width: 250px"
-                @update:value="loadEcrituresComptables"
               />
-              <NInputNumber
-                v-model:value="anneeFiscale"
-                placeholder="Année fiscale"
-                :min="2020"
-                :max="2030"
-                @update:value="loadEcrituresComptables"
+            </NSpace>
+          </div>
+
+          <div class="mb-4">
+            <NSpace>
+              <NSelect
+                v-model:value="anneeEcritureSelectionnee"
+                :options="anneesEcrituresDisponibles.map(a => ({ label: a.toString(), value: a }))"
+                placeholder="Année"
+                style="width: 120px"
               />
             </NSpace>
           </div>

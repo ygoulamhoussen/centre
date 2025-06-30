@@ -30,6 +30,7 @@ import {
   Calculator24Filled,
   Delete24Filled,
   Edit24Filled,
+  ArrowDownload24Filled,
   Money24Filled,
 } from '@vicons/fluent'
 import { computed, onMounted, ref, watch } from 'vue'
@@ -893,7 +894,7 @@ const amortissementsFiltres = computed(() => {
         <template #header-extra>
           <NButton type="primary" @click="editerJournalComptable">
             <template #icon>
-              <NIcon :component="Edit24Filled" />
+              <NIcon :component="ArrowDownload24Filled" />
             </template>
             Éditer le journal comptable
           </NButton>
@@ -1138,7 +1139,7 @@ const amortissementsFiltres = computed(() => {
             </NFormItem>
           </NGi>
           <NGi :span="2">
-            <NFormItem :label="['Intitulé', h('span', { style: { color: 'red', marginLeft: '2px' } }, '*')]" required>
+            <NFormItem required label="Intitulé">
               <NInput
                 v-model:value="chargeEnCours.intitule"
                 type="text"
@@ -1229,7 +1230,7 @@ const amortissementsFiltres = computed(() => {
             </NFormItem>
           </NGi>
           <NGi :span="2">
-            <NFormItem :label="['Intitulé', h('span', { style: { color: 'red', marginLeft: '2px' } }, '*')]" required>
+            <NFormItem required label="Intitulé">
               <NInput
                 v-model:value="recetteEnCours.intitule"
                 type="text"

@@ -1,3 +1,397 @@
+<script setup lang="ts">
+import { Icon } from '@iconify/vue'
+import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage } from 'naive-ui'
+import { computed, h, onMounted, ref } from 'vue'
+import { definePage, useRouter } from 'vue-router'
+
+const router = useRouter()
+const message = useMessage()
+const currentStep = ref(0)
+const saving = ref(false)
+const generatingEcheancier = ref(false)
+const editingRowsOriginalData = ref<Record<number, any>>({})
+
+const steps = [
+  { label: 'Caractéristiques' },
+  { label: 'Échéancier' },
+  { label: 'Confirmation' },
+]
+
+const formData = ref({
+  intitule: '',
+  montant: 0,
+  duree: 12,
+  taux: 1.5,
+  type: '',
+  dateDebut: null as number | null,
+  periodicite: 'MENSUELLE',
+  proprieteId: '',
+  banque: '',
+})
+
+const typeOptions = [
+  { label: 'Amortissable', value: 'AMORTISSABLE' },
+  { label: 'In fine', value: 'IN_FINE' },
+]
+const periodiciteOptions = [
+  { label: 'Mensuelle', value: 'MENSUELLE' },
+  { label: 'Trimestrielle', value: 'TRIMESTRIELLE' },
+]
+const proprieteOptions = ref<{ label: string; value: string }[]>([])
+
+const echeancier = ref<any[]>([])
+
+function formatDate(date: number | string | null) {
+  if (!date) {
+    return ''
+  }
+  const d = new Date(date)
+  const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' }
+  return d.toLocaleDateString('fr-FR', options)
+}
+
+// Colonnes pour le récapitulatif (non-éditable)
+const recapColumns = [
+  { title: 'N°', key: 'numero', width: 60 },
+  { title: 'Date', key: 'date', width: 120, render: (row: any) => formatDate(row.date) },
+  { title: 'Capital remboursé', key: 'capital', width: 120 },
+  { title: 'Intérêts', key: 'interets', width: 100 },
+  { title: 'Total échéance', key: 'total', width: 120 },
+  { title: 'Solde restant dû', key: 'solde', width: 120 },
+]
+
+function handleEdit(row: any) {
+  editingRowsOriginalData.value[row.numero] = { ...row }
+  const rowToEdit = echeancier.value.find(e => e.numero === row.numero)
+  if (rowToEdit) {
+    rowToEdit.isEditing = true
+  }
+}
+
+function handleSave(row: any) {
+  const rowToSave = echeancier.value.find(e => e.numero === row.numero)
+  if (rowToSave) {
+    rowToSave.isEditing = false
+  }
+  delete editingRowsOriginalData.value[row.numero]
+}
+
+function handleCancel(row: any, index: number) {
+  const originalData = editingRowsOriginalData.value[row.numero]
+  if (originalData) {
+    echeancier.value[index] = { ...originalData, isEditing: false }
+    delete editingRowsOriginalData.value[row.numero]
+  }
+  else {
+    echeancier.value.splice(index, 1)
+  }
+}
+
+function removeEcheance(index: number) {
+  echeancier.value.splice(index, 1)
+}
+
+// Colonnes pour l'édition de l'échéancier (éditable)
+const echeancierColumns = computed(() => [
+  { title: 'N°', key: 'numero', width: 60 },
+  {
+    title: 'Date',
+    key: 'date',
+    width: 150,
+    render: (row: any, index: number) => {
+      if (row.isEditing) {
+        return h(NDatePicker, {
+          value: row.date ? new Date(row.date).getTime() : null,
+          onUpdateValue: (value: number | null) => {
+            echeancier.value[index].date = value ? new Date(value) : null
+          },
+          type: 'date',
+          format: 'dd/MM/yyyy',
+          style: 'width: 100%',
+        })
+      }
+      return formatDate(row.date)
+    },
+  },
+  {
+    title: 'Capital remboursé',
+    key: 'capital',
+    width: 120,
+    render: (row: any, index: number) => {
+      if (row.isEditing) {
+        return h(NInputNumber, {
+          value: row.capital,
+          onUpdateValue: (value: number | null) => (echeancier.value[index].capital = value || 0),
+          style: 'width: 100%',
+        })
+      }
+      return row.capital
+    },
+  },
+  {
+    title: 'Intérêts',
+    key: 'interets',
+    width: 100,
+    render: (row: any, index: number) => {
+      if (row.isEditing) {
+        return h(NInputNumber, {
+          value: row.interets,
+          onUpdateValue: (value: number | null) => (echeancier.value[index].interets = value || 0),
+          style: 'width: 100%',
+        })
+      }
+      return row.interets
+    },
+  },
+  {
+    title: 'Total échéance',
+    key: 'total',
+    width: 120,
+    render: (row: any, index: number) => {
+      if (row.isEditing) {
+        return h(NInputNumber, {
+          value: row.total,
+          onUpdateValue: (value: number | null) => (echeancier.value[index].total = value || 0),
+          style: 'width: 100%',
+        })
+      }
+      return row.total
+    },
+  },
+  {
+    title: 'Solde restant dû',
+    key: 'solde',
+    width: 120,
+    render: (row: any, index: number) => {
+      if (row.isEditing) {
+        return h(NInputNumber, {
+          value: row.solde,
+          onUpdateValue: (value: number | null) => (echeancier.value[index].solde = value || 0),
+          style: 'width: 100%',
+        })
+      }
+      return row.solde
+    },
+  },
+  {
+    title: 'Actions',
+    key: 'actions',
+    width: 180,
+    render: (row: any, index: number) => {
+      const buttons = []
+      if (row.isEditing) {
+        buttons.push(
+          h(NButton, { size: 'small', type: 'primary', onClick: () => handleSave(row) }, { default: () => 'OK' }),
+          h(NButton, { size: 'small', onClick: () => handleCancel(row, index) }, { default: () => 'Annuler' }),
+        )
+      }
+      else {
+        buttons.push(
+          h(NButton, { size: 'small', onClick: () => handleEdit(row) }, { default: () => 'Modifier' }),
+          h(NButton, { size: 'small', onClick: () => removeEcheance(index) }, { default: () => 'Supprimer' }),
+        )
+      }
+      return h('div', { style: 'display: flex; gap: 6px;' }, buttons)
+    },
+  },
+])
+
+const loadingProprietes = ref(false)
+
+function goBack() {
+  router.push('/credits')
+}
+
+const isStep1Valid = computed(() => {
+  const f = formData.value
+  return !!(f.intitule && f.montant > 0 && f.duree > 0 && f.taux >= 0 && f.type && f.dateDebut && f.periodicite && f.proprieteId && f.banque)
+})
+
+function nextStep() {
+  if (currentStep.value === 0 && !isStep1Valid.value) {
+    message.error('Veuillez remplir tous les champs obligatoires')
+    return
+  }
+  if (currentStep.value < steps.length - 1) {
+    currentStep.value++
+  }
+}
+
+function previousStep() {
+  if (currentStep.value > 0) {
+    currentStep.value--
+  }
+}
+
+async function generateEcheancier() {
+  const f = formData.value
+  if (!isStep1Valid.value) {
+    message.error('Veuillez d\'abord remplir toutes les caractéristiques du crédit')
+    return
+  }
+  generatingEcheancier.value = true
+  await new Promise(resolve => setTimeout(resolve, 300))
+  // Génération simple d'un échéancier amortissable (français)
+  const n = Number(f.duree)
+  const tauxMensuel = Number(f.taux) / 100 / (f.periodicite === 'MENSUELLE' ? 12 : 4)
+  const montant = Number(f.montant)
+  let capitalRestant = montant
+  echeancier.value = []
+  if (f.type === 'AMORTISSABLE') {
+    // Formule de mensualité
+    const mensualite = tauxMensuel > 0 ? (montant * tauxMensuel) / (1 - (1 + tauxMensuel) ** -n) : montant / n
+    for (let i = 1; i <= n; i++) {
+      const interets = capitalRestant * tauxMensuel
+      const capital = mensualite - interets
+      capitalRestant -= capital
+      echeancier.value.push({
+        numero: i,
+        date: f.dateDebut ? new Date(new Date(f.dateDebut).setMonth(new Date(f.dateDebut).getMonth() + (f.periodicite === 'MENSUELLE' ? i - 1 : (i - 1) * 3))) : '',
+        capital: Math.round(capital * 100) / 100,
+        interets: Math.round(interets * 100) / 100,
+        total: Math.round(mensualite * 100) / 100,
+        solde: Math.max(0, Math.round(capitalRestant * 100) / 100),
+        isEditing: false,
+      })
+    }
+  }
+  else if (f.type === 'IN_FINE') {
+    // Intérêts constants, capital remboursé à la fin
+    const interets = montant * tauxMensuel
+    for (let i = 1; i <= n; i++) {
+      echeancier.value.push({
+        numero: i,
+        date: f.dateDebut ? new Date(new Date(f.dateDebut).setMonth(new Date(f.dateDebut).getMonth() + (f.periodicite === 'MENSUELLE' ? i - 1 : (i - 1) * 3))) : '',
+        capital: i === n ? montant : 0,
+        interets: Math.round(interets * 100) / 100,
+        total: Math.round((i === n ? montant + interets : interets) * 100) / 100,
+        solde: i === n ? 0 : montant,
+        isEditing: false,
+      })
+    }
+  }
+  generatingEcheancier.value = false
+}
+function addEcheanceManuelle() {
+  const maxNumero = echeancier.value.length > 0 ? Math.max(...echeancier.value.map(e => e.numero)) : 0
+  echeancier.value.push({
+    numero: maxNumero + 1,
+    date: new Date(),
+    capital: 0,
+    interets: 0,
+    total: 0,
+    solde: 0,
+    isEditing: true,
+  })
+}
+
+async function saveCredit() {
+  saving.value = true
+  try {
+    // Calcul de la date de fin à partir de la date de début et de la durée (en mois)
+    const dateDebut = new Date(formData.value.dateDebut!)
+    const dateFin = new Date(dateDebut)
+    dateFin.setMonth(dateFin.getMonth() + Number(formData.value.duree))
+    const dateDebutStr = dateDebut.toISOString().split('T')[0]
+    const dateFinStr = dateFin.toISOString().split('T')[0]
+    // Calcul de la mensualité (prendre la première échéance si dispo, sinon recalculer)
+    let mensualite = '0'
+    if (echeancier.value.length > 0) {
+      mensualite = String(echeancier.value[0].total)
+    }
+    else {
+      // Recalcul simple
+      const montant = Number(formData.value.montant)
+      const tauxMensuel = Number(formData.value.taux) / 100 / 12
+      const n = Number(formData.value.duree)
+      mensualite = tauxMensuel > 0 ? String(Math.round(((montant * tauxMensuel) / (1 - (1 + tauxMensuel) ** -n)) * 100) / 100) : String(Math.round((montant / n) * 100) / 100)
+    }
+    // Construction du DTO
+    const creditDTO = {
+      proprieteId: formData.value.proprieteId,
+      banque: formData.value.banque,
+      montantEmprunte: String(formData.value.montant),
+      dateDebut: dateDebutStr,
+      dateFin: dateFinStr,
+      dureeMois: String(formData.value.duree),
+      tauxInteretAnnuel: String(formData.value.taux),
+      mensualite,
+      assuranceMensuelle: '0', // à ajouter si tu veux gérer l'assurance
+      fraisDossier: '0',
+      fraisGarantie: '0',
+    }
+    const response = await fetch('http://localhost:8080/api/createCredit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(creditDTO),
+    })
+    if (!response.ok) {
+      throw new Error('Erreur lors de la création du crédit')
+    }
+    const creditCreated = await response.json()
+    // Enregistrement des échéances
+    let echeanceError = false
+    for (const e of echeancier.value) {
+      const echeanceDTO = {
+        creditId: creditCreated.id,
+        dateEcheance: e.date ? new Date(e.date).toISOString().split('T')[0] : '',
+        interet: String(e.interets),
+        capitalRembourse: String(e.capital),
+        assurance: '0',
+        totalEcheance: String(e.total),
+      }
+      const res = await fetch('http://localhost:8080/api/createEcheanceCredit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(echeanceDTO),
+      })
+      if (!res.ok) {
+        echeanceError = true
+      }
+    }
+    if (echeanceError) {
+      message.error('Certaines échéances n\'ont pas pu être enregistrées')
+    }
+    else {
+      message.success('Crédit et échéancier créés avec succès !')
+    }
+    router.push('/credits')
+  }
+  catch {
+    message.error('Erreur lors de la création du crédit')
+  }
+  finally {
+    saving.value = false
+  }
+}
+onMounted(async () => {
+  loadingProprietes.value = true
+  try {
+    // Appel API réel pour charger les propriétés de l'utilisateur Yussouf
+    const response = await fetch('http://localhost:8080/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003')
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération des propriétés')
+    }
+    const proprietes = await response.json()
+    proprieteOptions.value = proprietes.map((p: any) => ({ label: p.nom, value: p.id }))
+  }
+  catch {
+    message.error('Erreur lors du chargement des propriétés')
+  }
+  finally {
+    loadingProprietes.value = false
+  }
+})
+
+definePage({
+  meta: {
+    title: 'Création d\'un Crédit',
+    icon: 'material-symbols:edit-square-outline',
+    hideInMenu: true,
+  },
+})
+</script>
+
 <template>
   <div class="credits-create-page">
     <div class="page-header">
@@ -36,7 +430,7 @@
           <NSelect v-model:value="formData.type" :options="typeOptions" style="width: 100%" />
         </NFormItem>
         <NFormItem label="Date de début" required>
-          <NDatePicker v-model:value="formData.dateDebut" type="date" style="width: 100%" />
+          <NDatePicker v-model:value="formData.dateDebut" type="date" style="width: 100%" format="dd/MM/yyyy" />
         </NFormItem>
         <NFormItem label="Périodicité" required>
           <NSelect v-model:value="formData.periodicite" :options="periodiciteOptions" style="width: 100%" />
@@ -84,7 +478,7 @@
       <div class="echeancier-section">
         <NButton @click="generateEcheancier" type="primary">Générer l'échéancier</NButton>
         <NButton @click="addEcheanceManuelle" style="margin-left: 8px;">Ajouter une échéance manuelle</NButton>
-        <NDataTable :columns="echeancierColumns" :data="echeancier" striped />
+        <NDataTable :columns="echeancierColumns" :data="echeancier" :loading="generatingEcheancier" :row-key="(row: any) => row.numero" striped />
       </div>
       <div class="step-actions">
         <NButton @click="previousStep">
@@ -129,7 +523,7 @@
           <li><strong>Périodicité :</strong> {{ formData.periodicite }}</li>
         </ul>
         <h3>Échéancier</h3>
-        <NDataTable :columns="echeancierColumns" :data="echeancier" striped />
+        <NDataTable :columns="recapColumns" :data="echeancier" striped />
       </div>
       <div class="step-actions">
         <NButton @click="previousStep">
@@ -148,233 +542,6 @@
     </NCard>
   </div>
 </template>
-
-<script setup lang="ts">
-import { definePage } from 'vue-router'
-import { computed, h, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { Icon } from '@iconify/vue'
-import { NButton, NCard, NDatePicker, NForm, NFormItem, NInput, NInputNumber, NSelect, NDataTable, useMessage } from 'naive-ui'
-
-const router = useRouter()
-const message = useMessage()
-const currentStep = ref(0)
-const saving = ref(false)
-
-const steps = [
-  { label: 'Caractéristiques' },
-  { label: 'Échéancier' },
-  { label: 'Confirmation' },
-]
-
-const formData = ref({
-  intitule: '',
-  montant: 0 as number,
-  duree: 12 as number,
-  taux: 1.5 as number,
-  type: '',
-  dateDebut: null as number | null,
-  periodicite: 'MENSUELLE',
-  proprieteId: '' as string,
-  banque: '' as string,
-})
-
-const typeOptions = [
-  { label: 'Amortissable', value: 'AMORTISSABLE' },
-  { label: 'In fine', value: 'IN_FINE' },
-]
-const periodiciteOptions = [
-  { label: 'Mensuelle', value: 'MENSUELLE' },
-  { label: 'Trimestrielle', value: 'TRIMESTRIELLE' },
-]
-const proprieteOptions = ref<{ label: string; value: string }[]>([])
-
-const echeancier = ref<any[]>([])
-
-const echeancierColumns = [
-  { title: 'N°', key: 'numero', width: 60 },
-  { title: 'Date', key: 'date', width: 120, render: (row: any) => formatDate(row.date) },
-  { title: 'Capital remboursé', key: 'capital', width: 120 },
-  { title: 'Intérêts', key: 'interets', width: 100 },
-  { title: 'Total échéance', key: 'total', width: 120 },
-  { title: 'Solde restant dû', key: 'solde', width: 120 },
-  { title: 'Actions', key: 'actions', width: 80, render: (_row: any, index: number) => h(NButton, { size: 'small', onClick: () => removeEcheance(index) }, { default: () => 'Supprimer' }) },
-]
-
-const loadingProprietes = ref(false)
-
-function goBack() {
-  router.push('/credits')
-}
-function nextStep() {
-  if (currentStep.value === 0 && !isStep1Valid.value) {
-    message.error('Veuillez remplir tous les champs obligatoires')
-    return
-  }
-  if (currentStep.value < steps.length - 1) currentStep.value++
-}
-function previousStep() {
-  if (currentStep.value > 0) currentStep.value--
-}
-const isStep1Valid = computed(() => {
-  const f = formData.value
-  return !!(f.intitule && f.montant > 0 && f.duree > 0 && f.taux >= 0 && f.type && f.dateDebut && f.periodicite && f.proprieteId && f.banque)
-})
-function formatDate(date: number | string | null) {
-  if (!date) return ''
-  const d = typeof date === 'number' ? new Date(date) : new Date(date)
-  return d.toLocaleDateString('fr-FR')
-}
-function generateEcheancier() {
-  const f = formData.value
-  if (!isStep1Valid.value) {
-    message.error("Veuillez d'abord remplir toutes les caractéristiques du crédit")
-    return
-  }
-  // Génération simple d'un échéancier amortissable (français)
-  const n = Number(f.duree)
-  const tauxMensuel = Number(f.taux) / 100 / (f.periodicite === 'MENSUELLE' ? 12 : 4)
-  const montant = Number(f.montant)
-  let capitalRestant = montant
-  echeancier.value = []
-  if (f.type === 'AMORTISSABLE') {
-    // Formule de mensualité
-    const mensualite = tauxMensuel > 0 ? montant * tauxMensuel / (1 - Math.pow(1 + tauxMensuel, -n)) : montant / n
-    for (let i = 1; i <= n; i++) {
-      const interets = capitalRestant * tauxMensuel
-      const capital = mensualite - interets
-      capitalRestant -= capital
-      echeancier.value.push({
-        numero: i,
-        date: f.dateDebut ? new Date(new Date(f.dateDebut).setMonth(new Date(f.dateDebut).getMonth() + (f.periodicite === 'MENSUELLE' ? i - 1 : (i - 1) * 3)) ) : '',
-        capital: Math.round(capital * 100) / 100,
-        interets: Math.round(interets * 100) / 100,
-        total: Math.round(mensualite * 100) / 100,
-        solde: Math.max(0, Math.round(capitalRestant * 100) / 100),
-      })
-    }
-  } else if (f.type === 'IN_FINE') {
-    // Intérêts constants, capital remboursé à la fin
-    const interets = montant * tauxMensuel
-    for (let i = 1; i <= n; i++) {
-      echeancier.value.push({
-        numero: i,
-        date: f.dateDebut ? new Date(new Date(f.dateDebut).setMonth(new Date(f.dateDebut).getMonth() + (f.periodicite === 'MENSUELLE' ? i - 1 : (i - 1) * 3)) ) : '',
-        capital: i === n ? montant : 0,
-        interets: Math.round(interets * 100) / 100,
-        total: Math.round((i === n ? montant + interets : interets) * 100) / 100,
-        solde: i === n ? 0 : montant,
-      })
-    }
-  }
-}
-function addEcheanceManuelle() {
-  echeancier.value.push({
-    numero: echeancier.value.length + 1,
-    date: null,
-    capital: 0,
-    interets: 0,
-    total: 0,
-    solde: 0,
-  })
-}
-function removeEcheance(index: number) {
-  echeancier.value.splice(index, 1)
-}
-async function saveCredit() {
-  saving.value = true
-  try {
-    // Calcul de la date de fin à partir de la date de début et de la durée (en mois)
-    const dateDebut = new Date(formData.value.dateDebut!)
-    const dateFin = new Date(dateDebut)
-    dateFin.setMonth(dateFin.getMonth() + Number(formData.value.duree))
-    const dateDebutStr = dateDebut.toISOString().split('T')[0]
-    const dateFinStr = dateFin.toISOString().split('T')[0]
-    // Calcul de la mensualité (prendre la première échéance si dispo, sinon recalculer)
-    let mensualite = '0'
-    if (echeancier.value.length > 0) {
-      mensualite = String(echeancier.value[0].total)
-    } else {
-      // Recalcul simple
-      const montant = Number(formData.value.montant)
-      const tauxMensuel = Number(formData.value.taux) / 100 / 12
-      const n = Number(formData.value.duree)
-      mensualite = tauxMensuel > 0 ? String(Math.round((montant * tauxMensuel / (1 - Math.pow(1 + tauxMensuel, -n))) * 100) / 100) : String(Math.round((montant / n) * 100) / 100)
-    }
-    // Construction du DTO
-    const creditDTO = {
-      proprieteId: formData.value.proprieteId,
-      banque: formData.value.banque,
-      montantEmprunte: String(formData.value.montant),
-      dateDebut: dateDebutStr,
-      dateFin: dateFinStr,
-      dureeMois: String(formData.value.duree),
-      tauxInteretAnnuel: String(formData.value.taux),
-      mensualite: mensualite,
-      assuranceMensuelle: '0', // à ajouter si tu veux gérer l'assurance
-      fraisDossier: '0',
-      fraisGarantie: '0',
-    }
-    const response = await fetch('http://localhost:8080/api/createCredit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(creditDTO)
-    })
-    if (!response.ok) throw new Error('Erreur lors de la création du crédit')
-    const creditCreated = await response.json()
-    // Enregistrement des échéances
-    let echeanceError = false
-    for (const e of echeancier.value) {
-      const echeanceDTO = {
-        creditId: creditCreated.id,
-        dateEcheance: e.date ? new Date(e.date).toISOString().split('T')[0] : '',
-        interet: String(e.interets),
-        capitalRembourse: String(e.capital),
-        assurance: '0',
-        totalEcheance: String(e.total),
-      }
-      const res = await fetch('http://localhost:8080/api/createEcheanceCredit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(echeanceDTO)
-      })
-      if (!res.ok) echeanceError = true
-    }
-    if (echeanceError) {
-      message.error('Certaines échéances n\'ont pas pu être enregistrées')
-    } else {
-      message.success('Crédit et échéancier créés avec succès !')
-    }
-    router.push('/credits')
-  } catch (e) {
-    message.error('Erreur lors de la création du crédit')
-  } finally {
-    saving.value = false
-  }
-}
-onMounted(async () => {
-  loadingProprietes.value = true
-  try {
-    // Appel API réel pour charger les propriétés de l'utilisateur Yussouf
-    const response = await fetch('http://localhost:8080/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003')
-    if (!response.ok) throw new Error('Erreur lors de la récupération des propriétés')
-    const proprietes = await response.json()
-    proprieteOptions.value = proprietes.map((p: any) => ({ label: p.nom, value: p.id }))
-  } catch (e) {
-    message.error('Erreur lors du chargement des propriétés')
-  } finally {
-    loadingProprietes.value = false
-  }
-})
-
-definePage({
-  meta: {
-    title: "Création d'un Crédit",
-    icon: 'material-symbols:edit-square-outline',
-    hideInMenu: true,
-  },
-})
-</script>
 
 <style scoped>
 .credits-create-page {

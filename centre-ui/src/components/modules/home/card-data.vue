@@ -25,6 +25,7 @@ interface DashboardData {
   totalLoyersPercus: number
   nombreImpayes: number
   alertesImpaye?: number // Ancienne propriété pour rétrocompatibilité
+  resultatFiscalEstime: number
 }
 
 const dashboardData = ref<DashboardData>({
@@ -34,6 +35,7 @@ const dashboardData = ref<DashboardData>({
   totalLoyersPercus: 0,
   nombreImpayes: 0,
   alertesImpaye: 0,
+  resultatFiscalEstime: 0,
 })
 
 const cardData = computed<CardData[]>(() => [
@@ -54,12 +56,12 @@ const cardData = computed<CardData[]>(() => [
     icon: 'mdi:account-group-outline',
   },
   {
-    key: 'totalLoyersPercus',
-    title: 'Loyers perçus (mois)',
-    value: dashboardData.value.totalLoyersPercus,
+    key: 'resultatFiscalEstime',
+    title: 'Résultat fiscal estimé',
+    value: dashboardData.value.resultatFiscalEstime,
     unit: '€',
     color: { start: 'rgb(var(--primary-color))', end: 'rgb(var(--primary-600-color))' },
-    icon: 'mdi:cash-multiple',
+    icon: 'mdi:calculator-variant',
   },
   {
     key: 'alertesImpaye',

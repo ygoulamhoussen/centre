@@ -999,6 +999,12 @@ public CompositionAcquisitionDTO toDTO(CompositionAcquisition c) {
     dto.setTotalLoyersPercus(totalLoyersPerçus);
     dto.setLoyersMensuels(loyersMensuels);
 
+    // Ajout du résultat fiscal estimé (année en cours)
+    int annee = java.time.LocalDate.now().getYear();
+    java.util.List<String> proprieteIds = proprietes.stream().map(p -> p.getId().toString()).toList();
+    ResultatFiscalDTO resultatFiscal = calculerResultatFiscal(annee, proprieteIds, id);
+    dto.setResultatFiscalEstime(resultatFiscal != null ? resultatFiscal.getResultatFiscal() : 0);
+
     return dto;
 }
 

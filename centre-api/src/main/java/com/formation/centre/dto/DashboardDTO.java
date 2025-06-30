@@ -9,6 +9,7 @@ public class DashboardDTO {
     private double tauxOccupation;
     private int nombreImpayes;
     private BigDecimal totalLoyersPercus;
+    private double resultatFiscalEstime;
     public BigDecimal getTotalLoyersPercus() {
         return totalLoyersPercus;
     }
@@ -60,5 +61,13 @@ public class DashboardDTO {
 
     public void setLoyersMensuels(Map<String, BigDecimal> loyersMensuels) {
         this.loyersMensuels = loyersMensuels;
+    }
+
+    public double getResultatFiscalEstime() {
+        return resultatFiscalEstime;
+    }
+
+    public void setResultatFiscalEstime(double resultatFiscalEstime) {
+        this.resultatFiscalEstime = resultatFiscalEstime;
     }
 }

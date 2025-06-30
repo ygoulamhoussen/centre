@@ -255,9 +255,6 @@ importers:
       sass:
         specifier: 1.86.0
         version: 1.86.0
-      simple-git-hooks:
-        specifier: 2.12.1
-        version: 2.12.1
       tsx:
         specifier: 4.19.3
         version: 4.19.3
@@ -6431,10 +6428,6 @@ packages:
 
   signature_pad@5.0.7:
     resolution: {integrity: sha512-j2C6NTZ3c99G3hvFTsg6oOWy/tmftgwIXrvsr3+99+5SuPW6OdSpo++ZUzLVNfNHYmp2Z2Al76YV/3RhS/nDJg==}
-
-  simple-git-hooks@2.12.1:
-    resolution: {integrity: sha512-NB3V4XyCOrWTIhjh85DyEoVlM3adHWwqQXKYHmuegy/108bJPP6YxuPGm4ZKBq1+GVKRbKJuzNY//09cMJYp+A==}
-    hasBin: true
 
   simple-statistics@6.1.1:
     resolution: {integrity: sha512-zGwn0DDRa9Zel4H4n2pjTFIyGoAGpnpjrGIctreCxj5XWrcx9v7Xy7270FkC967WMmcvuc8ZU7m0ZG+hGN7gAA==}
@@ -14795,8 +14788,6 @@ snapshots:
   signal-exit@4.1.0: {}
 
   signature_pad@5.0.7: {}
-
-  simple-git-hooks@2.12.1: {}
 
   simple-statistics@6.1.1: {}
 

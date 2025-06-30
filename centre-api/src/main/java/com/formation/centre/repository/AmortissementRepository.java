@@ -30,4 +30,24 @@ public interface AmortissementRepository extends JpaRepository<Amortissement, UU
 
     @Query("SELECT a FROM Amortissement a WHERE a.immobilisation.utilisateur.id = :utilisateurId AND a.annee = :annee ORDER BY a.immobilisation.intitule ASC")
     List<Amortissement> findByUtilisateurIdAndAnnee(@Param("utilisateurId") UUID utilisateurId, @Param("annee") Integer annee);
+
+    /**
+     * Sommer les amortissements pour une année et une liste de propriétés données, en excluant le terrain.
+     */
+    @Query("SELECT COALESCE(SUM(a.montantAmortissement), 0) FROM Amortissement a WHERE a.immobilisation.utilisateur.id = :utilisateurId AND a.annee = :annee AND a.immobilisation.propriete.id IN :proprieteIds AND a.immobilisation.typeImmobilisation <> 'TERRAIN'")
+    Double sumAmortissementsByYearAndProprietes(
+        @Param("utilisateurId") UUID utilisateurId,
+        @Param("annee") int annee,
+        @Param("proprieteIds") List<UUID> proprieteIds
+    );
+
+    /**
+     * Récupérer les amortissements pour une année et une liste de propriétés données, en excluant le terrain.
+     */
+    @Query("SELECT a FROM Amortissement a WHERE a.immobilisation.utilisateur.id = :utilisateurId AND a.annee = :annee AND a.immobilisation.propriete.id IN :proprieteIds AND a.immobilisation.typeImmobilisation <> 'TERRAIN' ORDER BY a.immobilisation.intitule ASC")
+    List<Amortissement> findByYearAndProprietes(
+        @Param("utilisateurId") UUID utilisateurId,
+        @Param("annee") int annee,
+        @Param("proprieteIds") List<UUID> proprieteIds
+    );
 }

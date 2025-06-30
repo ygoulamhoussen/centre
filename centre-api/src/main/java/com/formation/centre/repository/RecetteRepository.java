@@ -48,4 +48,24 @@ public interface RecetteRepository extends JpaRepository<Recette, UUID> {
      */
     @Query("SELECT r FROM Recette r WHERE r.quittance.id = :quittanceId")
     List<Recette> findByQuittanceId(@Param("quittanceId") UUID quittanceId);
+
+    /**
+     * Sommer les recettes pour une année et une liste de propriétés données.
+     */
+    @Query("SELECT COALESCE(SUM(r.montant), 0) FROM Recette r WHERE r.utilisateur.id = :utilisateurId AND YEAR(r.dateRecette) = :annee AND r.propriete.id IN :proprieteIds")
+    Double sumRecettesByYearAndProprietes(
+        @Param("utilisateurId") UUID utilisateurId,
+        @Param("annee") int annee,
+        @Param("proprieteIds") List<UUID> proprieteIds
+    );
+
+    /**
+     * Récupérer les recettes pour une année et une liste de propriétés données.
+     */
+    @Query("SELECT r FROM Recette r WHERE r.utilisateur.id = :utilisateurId AND YEAR(r.dateRecette) = :annee AND r.propriete.id IN :proprieteIds ORDER BY r.dateRecette DESC")
+    List<Recette> findByYearAndProprietes(
+        @Param("utilisateurId") UUID utilisateurId,
+        @Param("annee") int annee,
+        @Param("proprieteIds") List<UUID> proprieteIds
+    );
 } 

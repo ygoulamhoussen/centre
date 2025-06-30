@@ -42,4 +42,24 @@ public interface ChargeRepository extends JpaRepository<Charge, UUID> {
      */
     @Query("SELECT c FROM Charge c WHERE c.utilisateur.id = :utilisateurId AND c.nature = :nature ORDER BY c.dateCharge DESC")
     List<Charge> findByUtilisateurIdAndNature(@Param("utilisateurId") UUID utilisateurId, @Param("nature") Charge.NatureCharge nature);
+
+    /**
+     * Sommer les charges déductibles pour une année et une liste de propriétés données.
+     */
+    @Query("SELECT COALESCE(SUM(c.montant), 0) FROM Charge c WHERE c.utilisateur.id = :utilisateurId AND YEAR(c.dateCharge) = :annee AND c.propriete.id IN :proprieteIds")
+    Double sumChargesByYearAndProprietes(
+        @Param("utilisateurId") UUID utilisateurId,
+        @Param("annee") int annee,
+        @Param("proprieteIds") List<UUID> proprieteIds
+    );
+
+    /**
+     * Récupérer les charges pour une année et une liste de propriétés données.
+     */
+    @Query("SELECT c FROM Charge c WHERE c.utilisateur.id = :utilisateurId AND YEAR(c.dateCharge) = :annee AND c.propriete.id IN :proprieteIds ORDER BY c.dateCharge DESC")
+    List<Charge> findByYearAndProprietes(
+        @Param("utilisateurId") UUID utilisateurId,
+        @Param("annee") int annee,
+        @Param("proprieteIds") List<UUID> proprieteIds
+    );
 } 

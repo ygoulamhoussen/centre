@@ -66,7 +66,8 @@ INSERT INTO composition_acquisition (id, propriete_id, categorie, montant, descr
 INSERT INTO credit (id, propriete_id, banque, montant_emprunte, date_debut, date_fin, duree_mois, taux_interet_annuel, mensualite, assurance_mensuelle, frais_dossier, frais_garantie, cree_le, modifie_le) VALUES
 ('50000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Banque A', 200000, '2022-06-01', '2037-06-01', 180, 1.2, 1000, 30, 500, 1000, now(), now()),
 ('50000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000003', 'Banque B', 150000, '2021-05-01', '2036-05-01', 180, 1.5, 800, 25, 400, 900, now(), now()),
-('50000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000004', 'Banque C', 350000, '2020-03-01', '2040-03-01', 240, 1.1, 1400, 40, 600, 1200, now(), now());
+('50000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000004', 'Banque C', 350000, '2020-03-01', '2040-03-01', 240, 1.1, 1400, 40, 600, 1200, now(), now()),
+('50000000-0000-0000-0000-000000000200', '10000000-0000-0000-0000-000000000002', 'Crédit Foncier', 320000, '2023-01-01', '2043-01-01', 240, 2.1, 1530.55, 65.00, 1000, 2500, now(), now());
 
 -- QUITTANCE
 INSERT INTO quittance (id, location_id, date_debut, date_fin, date_emission, montant_loyer, montant_charges, montant_total, statut, cree_le, modifie_le) VALUES
@@ -219,3 +220,28 @@ INSERT INTO amortissement (id, immobilisation_id, annee, montant_amortissement, 
 ('70000000-0000-0000-0000-000000000043', '60000000-0000-0000-0000-000000000004', 2045, 10800.00, 21600.00, 248400.00, 4.00, NOW(), NOW()),
 ('70000000-0000-0000-0000-000000000044', '60000000-0000-0000-0000-000000000004', 2046, 10800.00, 10800.00, 259200.00, 4.00, NOW(), NOW()),
 ('70000000-0000-0000-0000-000000000045', '60000000-0000-0000-0000-000000000004', 2047, 10800.00, 0.00, 270000.00, 4.00, NOW(), NOW());
+
+-- ===== DONNÉES ADDITIONNELLES (CHARGES, RECETTES, CRÉDITS) =====
+
+-- CHARGES supplémentaires pour Yussouf
+INSERT INTO charges (id, utilisateur_id, propriete_id, intitule, montant, date_charge, nature, commentaire, cree_le, modifie_le) VALUES
+('80000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'Taxe foncière 2024', 950.00, '2024-10-15', 'TAXES', 'Taxe foncière pour le studio à Paris', NOW(), NOW()),
+('80000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'Charges copropriété T2 2024', 320.00, '2024-04-20', 'COPROPRIETE', 'Régularisation des charges de copropriété', NOW(), NOW()),
+('80000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', 'Assurance PNO Bordeaux', 180.00, '2024-01-25', 'ASSURANCE', 'Assurance propriétaire non-occupant', NOW(), NOW());
+
+-- RECETTES pour Yussouf
+INSERT INTO recettes (id, utilisateur_id, propriete_id, quittance_id, intitule, date_recette, montant, type, commentaire, cree_le, modifie_le) VALUES
+('90000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000101', '40000000-0000-0000-0000-000000000101', 'Loyer Mai 2024 - Marseille', '2024-05-05', 770.00, 'LOYER', 'Loyer reçu pour le mois de Mai', NOW(), NOW()),
+('90000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000102', '40000000-0000-0000-0000-000000000103', 'Loyer Mai 2024 - Lille', '2024-05-07', 1220.00, 'LOYER', 'Loyer reçu pour le mois de Mai', NOW(), NOW()),
+('90000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', NULL, 'Indemnité assurance DDE', '2024-03-15', 450.00, 'ASSURANCE', 'Remboursement suite à un dégât des eaux', NOW(), NOW());
+
+-- ÉCHÉANCES pour le nouveau crédit
+INSERT INTO echeance_credit (id, credit_id, date_echeance, total_echeance, interet, capital_rembourse, assurance) VALUES
+('A0000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000200', '2023-02-01', 1595.55, 560.00, 970.55, 65.00),
+('A0000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000200', '2023-03-01', 1595.55, 558.29, 972.26, 65.00),
+('A0000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000200', '2023-04-01', 1595.55, 556.58, 973.97, 65.00);
+
+-- ÉCRITURES COMPTABLES (basées sur l'entité EcritureComptable.java)
+INSERT INTO ecriture_comptable (id, date_ecriture, montant, type, propriete_id, charge_id, recette_id, commentaire, utilisateur_id, cree_le, modifie_le) VALUES
+('B0000000-0000-0000-0000-000000000001', '2024-10-15', 950.00, 'CHARGE', '10000000-0000-0000-0000-000000000001', '80000000-0000-0000-0000-000000000001', NULL, 'Ecriture pour la taxe foncière 2024', '00000000-0000-0000-0000-000000000003', NOW(), NOW()),
+('B0000000-0000-0000-0000-000000000002', '2024-05-05', 770.00, 'RECETTE', '10000000-0000-0000-0000-000000000101', NULL, '90000000-0000-0000-0000-000000000001', 'Ecriture pour le loyer de Mai 2024 Marseille', '00000000-0000-0000-0000-000000000003', NOW(), NOW());

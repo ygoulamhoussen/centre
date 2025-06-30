@@ -49,6 +49,9 @@ import com.formation.centre.dto.ProprieteDTO;
 import com.formation.centre.dto.ProprieteDetailDTO;
 import com.formation.centre.dto.QuittanceDTO;
 import com.formation.centre.dto.RecetteDTO;
+import com.formation.centre.dto.ResultatFiscalDTO;
+import com.formation.centre.model.Amortissement;
+import com.formation.centre.model.Charge;
 import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Propriete;
 import com.formation.centre.repository.ProprieteRepository;
@@ -824,6 +827,15 @@ public ResponseEntity<List<EcheanceCreditDTO>> getEcheancesByCredit(@PathVariabl
     List<EcheanceCreditDTO> result = unifiedService.getEcheancesByCredit(creditId);
     if (result == null) result = new ArrayList<>();
     return ResponseEntity.ok(result);
+}
+
+@GetMapping("/resultat-fiscal")
+public ResponseEntity<ResultatFiscalDTO> getResultatFiscal(
+        @RequestParam("annee") int annee,
+        @RequestParam("proprieteIds") List<String> proprieteIds,
+        @RequestParam("utilisateurId") String utilisateurId) {
+    ResultatFiscalDTO resultat = unifiedService.calculerResultatFiscal(annee, proprieteIds, utilisateurId);
+    return ResponseEntity.ok(resultat);
 }
 
 } 

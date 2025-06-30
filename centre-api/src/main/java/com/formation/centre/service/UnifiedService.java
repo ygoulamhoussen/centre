@@ -73,9 +73,12 @@ import com.lowagie.text.Font;
 import com.lowagie.text.Image;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.pdf.PdfWriter;
-
+import com.formation.centre.dto.ResultatFiscalDTO;
+import lombok.RequiredArgsConstructor;
+import com.formation.centre.dto.ResultatFiscalDetailDTOs.*;
 
 @Service
+@RequiredArgsConstructor
 public class UnifiedService {
 
     @Autowired private UtilisateurRepository utilisateurRepository;
@@ -1597,6 +1600,42 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
             .stream()
             .map(this::toEcheanceCreditDto)
             .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<Paiement> findPaiementsByQuittanceId(String quittanceId) {
+        return paiementRepository.findByQuittance_Id(UUID.fromString(quittanceId));
+    }
+
+    public ResultatFiscalDTO calculerResultatFiscal(int annee, List<String> proprieteIds, String utilisateurId) {
+        UUID userUuid = UUID.fromString(utilisateurId);
+        List<UUID> propUuids = proprieteIds.stream().map(UUID::fromString).collect(Collectors.toList());
+
+        // Calculs des totaux (déjà existant)
+        double totalRecettes = recetteRepository.sumRecettesByYearAndProprietes(userUuid, annee, propUuids);
+        double totalCharges = chargeRepository.sumChargesByYearAndProprietes(userUuid, annee, propUuids);
+        double totalAmortissements = amortissementRepository.sumAmortissementsByYearAndProprietes(userUuid, annee, propUuids);
+        double resultatFiscal = totalRecettes - totalCharges - totalAmortissements;
+
+        // Récupération des listes détaillées
+        List<Recette> recettes = recetteRepository.findByYearAndProprietes(userUuid, annee, propUuids);
+        List<Charge> charges = chargeRepository.findByYearAndProprietes(userUuid, annee, propUuids);
+        List<Amortissement> amortissements = amortissementRepository.findByYearAndProprietes(userUuid, annee, propUuids);
+
+        // Conversion en DTOs de détail
+        List<RecetteDetailDTO> recettesDetail = recettes.stream()
+            .map(r -> new RecetteDetailDTO(r.getIntitule(), r.getDateRecette(), r.getMontant(), r.getPropriete().getNom()))
+            .collect(Collectors.toList());
+
+        List<ChargeDetailDTO> chargesDetail = charges.stream()
+            .map(c -> new ChargeDetailDTO(c.getIntitule(), c.getDateCharge(), c.getMontant(), c.getPropriete().getNom(), c.getNature().getLibelle()))
+            .collect(Collectors.toList());
+            
+        List<AmortissementDetailDTO> amortissementsDetail = amortissements.stream()
+            .map(a -> new AmortissementDetailDTO(a.getImmobilisation().getIntitule(), a.getAnnee(), a.getMontantAmortissement(), a.getImmobilisation().getPropriete().getNom()))
+            .collect(Collectors.toList());
+
+        // Création du DTO final
+        return new ResultatFiscalDTO(totalRecettes, totalCharges, totalAmortissements, resultatFiscal, recettesDetail, chargesDetail, amortissementsDetail);
     }
 
 

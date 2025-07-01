@@ -1,4 +1,4 @@
 <svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="192" height="192" fill="black"/>
+  <rect width="192" height="192" fill="currentColor"/>
   <path d="M48 48H144V64H80L144 128V144H48V128H112L48 64V48Z" transform="scale(-1,1) translate(-192,0)" fill="white"/>
 </svg>

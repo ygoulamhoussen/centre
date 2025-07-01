@@ -47,7 +47,7 @@ public interface EcritureComptableRepository extends JpaRepository<EcritureCompt
      * Récupérer l'écriture comptable liée à une charge
      */
     @Query("SELECT e FROM EcritureComptable e WHERE e.charge.id = :chargeId")
-    EcritureComptable findByChargeId(@Param("chargeId") UUID chargeId);
+    List<EcritureComptable> findByChargeId(@Param("chargeId") UUID chargeId);
 
     /**
      * Récupérer l'écriture comptable liée à une recette

@@ -16,6 +16,7 @@ public class ChargeDTO {
     private String documentNom;
     private String createdAt;
     private String updatedAt;
+    private String statut;
 
     // Constructeurs
     public ChargeDTO() {}
@@ -166,5 +167,13 @@ public class ChargeDTO {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
     }
 } 

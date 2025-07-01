@@ -55,6 +55,7 @@ import com.formation.centre.model.Charge;
 import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Propriete;
 import com.formation.centre.repository.ProprieteRepository;
+import com.formation.centre.repository.CreditRepository;
 import com.formation.centre.service.UnifiedService;
 
 
@@ -67,6 +68,9 @@ public class UnifiedController {
     
     @Autowired
     private ProprieteRepository proprieteRepository;
+
+    @Autowired
+    private CreditRepository creditRepository;
 
     @Autowired
     private UnifiedService unifiedService;
@@ -826,9 +830,44 @@ public ResponseEntity<List<EcheanceCreditDTO>> getEcheancesByCredit(@PathVariabl
 
 @PostMapping("/createEcheancesCredit")
 public ResponseEntity<?> createEcheancesCredit(@RequestBody List<EcheanceCreditDTO> echeances) {
-    List<EcheanceCreditDTO> saved = echeances.stream()
-        .map(unifiedService::saveEcheanceCredit)
-        .collect(java.util.stream.Collectors.toList());
+    List<EcheanceCreditDTO> saved = new java.util.ArrayList<>();
+    for (EcheanceCreditDTO echeance : echeances) {
+        EcheanceCreditDTO savedEcheance = unifiedService.saveEcheanceCredit(echeance);
+        saved.add(savedEcheance);
+        // Récupérer le crédit pour proprieteId et utilisateurId
+        var creditOpt = creditRepository.findById(java.util.UUID.fromString(echeance.getCreditId()));
+        if (creditOpt.isPresent()) {
+            var credit = creditOpt.get();
+            String proprieteId = credit.getPropriete().getId().toString();
+            String utilisateurId = credit.getPropriete().getUtilisateur().getId().toString();
+            // Charge d'intérêt
+            if (echeance.getInteret() != null && !echeance.getInteret().equals("0")) {
+                ChargeDTO chargeInteret = new ChargeDTO();
+                chargeInteret.setProprieteId(proprieteId);
+                chargeInteret.setUtilisateurId(utilisateurId);
+                chargeInteret.setNature("INTERETS_EMPRUNT");
+                chargeInteret.setDateCharge(echeance.getDateEcheance());
+                chargeInteret.setMontant(echeance.getInteret());
+                chargeInteret.setIntitule("Intérêts échéance crédit");
+                chargeInteret.setStatut("PAYEE");
+                ChargeDTO savedCharge = unifiedService.saveCharge(chargeInteret);
+                unifiedService.createEcritureComptableCharge(savedCharge.getId());
+            }
+            // Charge d'assurance
+            if (echeance.getAssurance() != null && !echeance.getAssurance().equals("0")) {
+                ChargeDTO chargeAssurance = new ChargeDTO();
+                chargeAssurance.setProprieteId(proprieteId);
+                chargeAssurance.setUtilisateurId(utilisateurId);
+                chargeAssurance.setNature("ASSURANCE_EMPRUNT");
+                chargeAssurance.setDateCharge(echeance.getDateEcheance());
+                chargeAssurance.setMontant(echeance.getAssurance());
+                chargeAssurance.setIntitule("Assurance échéance crédit");
+                chargeAssurance.setStatut("PAYEE");
+                ChargeDTO savedCharge = unifiedService.saveCharge(chargeAssurance);
+                unifiedService.createEcritureComptableCharge(savedCharge.getId());
+            }
+        }
+    }
     return ResponseEntity.ok(saved);
 }
 

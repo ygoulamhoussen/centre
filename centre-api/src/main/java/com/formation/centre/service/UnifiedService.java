@@ -1344,9 +1344,9 @@ public ChargeDTO saveCharge(ChargeDTO dto) {
 }
 
 public void deleteCharge(String id) {
-    // Supprimer l'écriture comptable associée s'il y en a une
-    EcritureComptable ecriture = ecritureComptableRepository.findByChargeId(UUID.fromString(id));
-    if (ecriture != null) {
+    // Supprimer toutes les écritures comptables associées à la charge
+    List<EcritureComptable> ecritures = ecritureComptableRepository.findByChargeId(UUID.fromString(id));
+    for (EcritureComptable ecriture : ecritures) {
         ecritureComptableRepository.deleteById(ecriture.getId());
     }
     chargeRepository.deleteById(UUID.fromString(id));

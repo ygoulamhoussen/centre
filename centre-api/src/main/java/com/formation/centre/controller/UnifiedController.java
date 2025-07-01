@@ -57,12 +57,7 @@ import com.formation.centre.model.Propriete;
 import com.formation.centre.repository.ProprieteRepository;
 import com.formation.centre.service.UnifiedService;
 
-@CrossOrigin(
-    origins = {"http://localhost:9135", "http://localhost:8080"},
-    allowedHeaders = "*",
-    exposedHeaders = "x-user-id",
-    allowCredentials = "true"
-)
+
 @RestController
 @RequestMapping("/api")
 public class UnifiedController {

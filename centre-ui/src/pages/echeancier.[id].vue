@@ -14,6 +14,7 @@ const credit = ref<any>(null)
 const echeancier = ref<any[]>([])
 const message = useMessage()
 const writingInProgress = ref<Record<number, boolean>>({})
+const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
 
 definePage({
   meta: {
@@ -45,7 +46,7 @@ onMounted(async () => {
   }
   try {
     // Charger le crédit
-    const creditRes = await fetch(`http://localhost:8080/api/getCreditsByUtilisateur/${utilisateurId}`)
+    const creditRes = await fetch(`${baseUrl}/api/getCreditsByUtilisateur/${utilisateurId}`)
     if (!creditRes.ok) {
       throw new Error('Erreur lors du chargement du crédit')
     }
@@ -58,7 +59,7 @@ onMounted(async () => {
     credit.value = { ...foundCredit, proprieteId: foundCredit.proprieteId, utilisateurId }
 
     // Charger les échéances
-    const echeancesRes = await fetch(`http://localhost:8080/api/getEcheancesByCredit/${id}`)
+    const echeancesRes = await fetch(`${baseUrl}/api/getEcheancesByCredit/${id}`)
     if (!echeancesRes.ok) {
       throw new Error('Erreur lors du chargement des échéances')
     }

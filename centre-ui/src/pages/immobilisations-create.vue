@@ -463,6 +463,7 @@ const rules = {
 }
 
 // Options pour les selects
+const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
 const proprieteOptions = computed(() =>
   proprietes.value.map((p: any) => ({ label: p.nom, value: p.id })),
 )
@@ -543,7 +544,7 @@ function onProprieteSelect(proprieteId: string) {
 
 async function loadProprietes() {
   try {
-    const response = await fetch('http://localhost:8080/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003')
+    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003`)
     proprietes.value = await response.json()
   } catch (error) {
     message.error('Erreur lors du chargement des propriétés')

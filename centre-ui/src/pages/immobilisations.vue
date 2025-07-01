@@ -18,6 +18,8 @@ definePage({
 const router = useRouter()
 const message = useMessage()
 
+const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
+
 // Fonctions utilitaires
 function formatCurrency(value: string | number) {
   const num = typeof value === 'string' ? Number.parseFloat(value) : value
@@ -104,7 +106,7 @@ async function loadImmobilisations() {
 
 async function loadProprietes() {
   try {
-    const response = await fetch('http://localhost:8080/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003')
+    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003`)
     proprietes.value = await response.json()
   } catch (error) {
     console.error('Erreur lors du chargement des propriétés:', error)

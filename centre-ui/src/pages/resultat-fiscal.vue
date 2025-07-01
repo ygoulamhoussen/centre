@@ -37,6 +37,7 @@ const selectedProprieteIds = ref<string[] | null>(null);
 const proprietes = ref<any[]>([]);
 const resultat = ref<ResultatFiscal | null>(null);
 const utilisateurId = '00000000-0000-0000-0000-000000000003'; // Hardcoded for now
+const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
 
 // Options for selects
 const yearOptions = computed(() => {
@@ -61,7 +62,7 @@ async function loadProprietes() {
   loadingData.value = true;
   try {
     // Assuming a generic API to fetch properties, similar to other pages
-    const response = await fetch(`http://localhost:8080/api/getProprietesByUtilisateur/${utilisateurId}`);
+    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/${utilisateurId}`);
     proprietes.value = await response.json();
     // Select all properties by default
     selectedProprieteIds.value = allProprieteIds.value;

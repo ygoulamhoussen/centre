@@ -307,6 +307,7 @@ async function saveCredit() {
       mensualite = tauxMensuel > 0 ? String(Math.round(((montant * tauxMensuel) / (1 - (1 + tauxMensuel) ** -n)) * 100) / 100) : String(Math.round((montant / n) * 100) / 100)
     }
     // Construction du DTO
+    const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
     const creditDTO = {
       proprieteId: formData.value.proprieteId,
       banque: formData.value.banque,
@@ -320,7 +321,7 @@ async function saveCredit() {
       fraisDossier: '0',
       fraisGarantie: '0',
     }
-    const response = await fetch('http://localhost:8080/api/createCredit', {
+    const response = await fetch(`${baseUrl}/api/createCredit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(creditDTO),
@@ -340,7 +341,7 @@ async function saveCredit() {
         assurance: '0',
         totalEcheance: String(e.total),
       }
-      const res = await fetch('http://localhost:8080/api/createEcheanceCredit', {
+      const res = await fetch(`${baseUrl}/api/createEcheanceCredit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(echeanceDTO),
@@ -368,7 +369,8 @@ onMounted(async () => {
   loadingProprietes.value = true
   try {
     // Appel API réel pour charger les propriétés de l'utilisateur Yussouf
-    const response = await fetch('http://localhost:8080/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003')
+    const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
+    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003`)
     if (!response.ok) {
       throw new Error('Erreur lors de la récupération des propriétés')
     }

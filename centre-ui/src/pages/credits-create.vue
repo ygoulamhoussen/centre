@@ -331,29 +331,22 @@ async function saveCredit() {
     }
     const creditCreated = await response.json()
     // Enregistrement des échéances
-    let echeanceError = false
-    for (const e of echeancier.value) {
-      const echeanceDTO = {
-        creditId: creditCreated.id,
-        dateEcheance: e.date ? new Date(e.date).toISOString().split('T')[0] : '',
-        interet: String(e.interets),
-        capitalRembourse: String(e.capital),
-        assurance: '0',
-        totalEcheance: String(e.total),
-      }
-      const res = await fetch(`${baseUrl}/api/createEcheanceCredit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(echeanceDTO),
-      })
-      if (!res.ok) {
-        echeanceError = true
-      }
-    }
-    if (echeanceError) {
-      message.error('Certaines échéances n\'ont pas pu être enregistrées')
-    }
-    else {
+    const echeancesDTO = echeancier.value.map(e => ({
+      creditId: creditCreated.id,
+      dateEcheance: e.date ? new Date(e.date).toISOString().split('T')[0] : '',
+      interet: String(e.interets),
+      capitalRembourse: String(e.capital),
+      assurance: '0',
+      totalEcheance: String(e.total),
+    }))
+    const res = await fetch(`${baseUrl}/api/createEcheancesCredit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(echeancesDTO),
+    })
+    if (!res.ok) {
+      message.error('Erreur lors de la création des échéances')
+    } else {
       message.success('Crédit et échéancier créés avec succès !')
     }
     router.push('/credits')

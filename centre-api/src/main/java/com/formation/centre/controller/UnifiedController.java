@@ -824,6 +824,14 @@ public ResponseEntity<List<EcheanceCreditDTO>> getEcheancesByCredit(@PathVariabl
     return ResponseEntity.ok(result);
 }
 
+@PostMapping("/createEcheancesCredit")
+public ResponseEntity<?> createEcheancesCredit(@RequestBody List<EcheanceCreditDTO> echeances) {
+    List<EcheanceCreditDTO> saved = echeances.stream()
+        .map(unifiedService::saveEcheanceCredit)
+        .collect(java.util.stream.Collectors.toList());
+    return ResponseEntity.ok(saved);
+}
+
 @GetMapping("/resultat-fiscal")
 public ResponseEntity<ResultatFiscalDTO> getResultatFiscal(
         @RequestParam("annee") int annee,

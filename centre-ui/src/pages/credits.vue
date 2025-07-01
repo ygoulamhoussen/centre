@@ -2,7 +2,7 @@
 import { h, onMounted, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
-import { NButton, NDataTable, NPopconfirm, NSpace, useMessage } from 'naive-ui'
+import { NButton, NDataTable, NPopconfirm, NSpace, useMessage, NCard } from 'naive-ui'
 import { getCreditsByUtilisateur, deleteCreditById } from '@/service/api/immobilisation'
 import { useAuthStore } from '@/store/modules/auth'
 
@@ -29,6 +29,7 @@ const message = useMessage()
 const authStore = useAuthStore()
 const credits = ref<Credit[]>([])
 const loading = ref(false)
+const isMobile = ref(false)
 
 function navigateToCreate() {
   router.push('/credits-create')
@@ -119,21 +120,46 @@ onMounted(async () => {
 <template>
   <div class="credits-page">
     <div class="page-header">
-      <h1>Gestion des Crédits</h1>
-      <NButton type="primary" @click="navigateToCreate">
-        <template #icon>
-          <Icon icon="material-symbols:add" />
-        </template>
-        Nouveau Crédit
-      </NButton>
+      <div v-if="!isMobile" class="page-header-row">
+        <h1>Gestion des Crédits</h1>
+        <NButton type="primary" @click="navigateToCreate">
+          <template #icon>
+            <Icon icon="material-symbols:add" />
+          </template>
+          Nouveau Crédit
+        </NButton>
+      </div>
+      <div v-else class="mobile-header">
+        <h1 class="mobile-title">Crédits</h1>
+        <NButton block size="small" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
+          <template #icon>
+            <Icon icon="material-symbols:add" />
+          </template>
+          Nouveau Crédit
+        </NButton>
+      </div>
     </div>
     <NDataTable
+      v-if="!isMobile"
       :columns="columns"
       :data="credits"
       :loading="loading"
       :bordered="false"
       striped
     />
+    <div v-else>
+      <NCard v-for="credit in credits" :key="credit.id" class="mobile-card">
+        <div><b>Intitulé :</b> {{ credit.intitule }}</div>
+        <div><b>Montant :</b> {{ credit.montant }} €</div>
+        <div><b>Durée :</b> {{ credit.duree }} mois</div>
+        <div><b>Taux :</b> {{ credit.taux }} %</div>
+        <div><b>Propriété :</b> {{ credit.proprieteNom }}</div>
+        <div class="actions">
+          <NButton size="small" @click="viewEcheancier(credit)">Échéancier</NButton>
+          <NButton size="small" type="error" @click="deleteCredit(credit)">Supprimer</NButton>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
@@ -154,5 +180,43 @@ onMounted(async () => {
 .actions {
   display: flex;
   gap: 8px;
+}
+.mobile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+.mobile-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 12px 0 0 0;
+  text-align: center;
+  color: #222;
+}
+.mobile-journal-btn {
+  margin-bottom: 10px;
+  max-width: 320px;
+  width: 100%;
+  align-self: center;
+}
+.mobile-card {
+  margin-bottom: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.mobile-card .actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 </style> 

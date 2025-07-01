@@ -3,6 +3,7 @@ import { Icon } from '@iconify/vue'
 import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { definePage, useRouter } from 'vue-router'
+import { useAppStore } from '@/store/modules/app'
 
 const router = useRouter()
 const message = useMessage()
@@ -10,6 +11,7 @@ const currentStep = ref(0)
 const saving = ref(false)
 const generatingEcheancier = ref(false)
 const editingRowsOriginalData = ref<Record<number, any>>({})
+const isMobile = useAppStore().isMobile
 
 const steps = [
   { label: 'Caractéristiques' },
@@ -390,8 +392,14 @@ definePage({
 <template>
   <div class="credits-create-page">
     <div class="page-header">
-      <h1>Nouveau Crédit</h1>
-      <NButton @click="goBack">
+      <h1 :class="{ 'mobile-title': isMobile }">Nouveau Crédit</h1>
+      <NButton v-if="!isMobile" @click="goBack">
+        <template #icon>
+          <Icon icon="material-symbols:arrow-back" />
+        </template>
+        Retour
+      </NButton>
+      <NButton v-else block size="small" class="mobile-journal-btn" @click="goBack">
         <template #icon>
           <Icon icon="material-symbols:arrow-back" />
         </template>
@@ -399,7 +407,7 @@ definePage({
       </NButton>
     </div>
     <NCard class="progress-card">
-      <div class="progress-steps">
+      <div class="progress-steps" :class="{ 'progress-steps-mobile': isMobile }">
         <div v-for="(step, index) in steps" :key="index" class="step" :class="{ active: currentStep === index, completed: currentStep > index }">
           <div class="step-number">{{ index + 1 }}</div>
           <div class="step-label">{{ step.label }}</div>
@@ -408,7 +416,7 @@ definePage({
     </NCard>
     <!-- Étape 1 : Saisie des caractéristiques -->
     <NCard v-if="currentStep === 0" title="Étape 1 : Caractéristiques du crédit" class="step-card">
-      <NForm label-placement="left" label-width="auto">
+      <NForm :class="{ 'mobile-form': isMobile }" label-placement="left" label-width="auto">
         <NFormItem label="Intitulé" required>
           <NInput v-model:value="formData.intitule" placeholder="Intitulé du crédit" />
         </NFormItem>
@@ -444,7 +452,7 @@ definePage({
           <NInput v-model:value="formData.banque" placeholder="Nom de la banque" />
         </NFormItem>
       </NForm>
-      <div class="step-actions">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
         <NButton @click="goBack">Annuler</NButton>
         <NButton type="primary" :disabled="!isStep1Valid" @click="nextStep">
           Suivant
@@ -456,7 +464,7 @@ definePage({
     </NCard>
     <!-- Étape 2 : Génération de l'échéancier -->
     <NCard v-if="currentStep === 1" title="Étape 2 : Échéancier" class="step-card">
-      <div class="step-actions" style="margin-bottom: 16px;">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]" style="margin-bottom: 16px;">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -473,9 +481,25 @@ definePage({
       <div class="echeancier-section">
         <NButton @click="generateEcheancier" type="primary">Générer l'échéancier</NButton>
         <NButton @click="addEcheanceManuelle" style="margin-left: 8px;">Ajouter une échéance manuelle</NButton>
-        <NDataTable :columns="echeancierColumns" :data="echeancier" :loading="generatingEcheancier" :row-key="(row: any) => row.numero" striped />
+        <NDataTable v-if="!isMobile" :columns="echeancierColumns" :data="echeancier" :loading="generatingEcheancier" :row-key="(row: any) => row.numero" striped />
+        <div v-else>
+          <NCard v-for="(e, idx) in echeancier" :key="e.numero" class="mobile-card">
+            <div><b>N° :</b> {{ e.numero }}</div>
+            <div><b>Date :</b> {{ formatDate(e.date) }}</div>
+            <div><b>Capital remboursé :</b> {{ e.capital }}</div>
+            <div><b>Intérêts :</b> {{ e.interets }}</div>
+            <div><b>Total échéance :</b> {{ e.total }}</div>
+            <div><b>Solde restant dû :</b> {{ e.solde }}</div>
+            <div class="actions">
+              <NButton size="small" v-if="!e.isEditing" @click="handleEdit(e)">Modifier</NButton>
+              <NButton size="small" v-if="!e.isEditing" @click="removeEcheance(idx)">Supprimer</NButton>
+              <NButton size="small" v-if="e.isEditing" type="primary" @click="handleSave(e)">OK</NButton>
+              <NButton size="small" v-if="e.isEditing" @click="handleCancel(e, idx)">Annuler</NButton>
+            </div>
+          </NCard>
+        </div>
       </div>
-      <div class="step-actions">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -492,7 +516,7 @@ definePage({
     </NCard>
     <!-- Étape 3 : Récapitulatif et confirmation -->
     <NCard v-if="currentStep === 2" title="Étape 3 : Confirmation" class="step-card">
-      <div class="step-actions" style="margin-bottom: 16px;">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]" style="margin-bottom: 16px;">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -518,9 +542,19 @@ definePage({
           <li><strong>Périodicité :</strong> {{ formData.periodicite }}</li>
         </ul>
         <h3>Échéancier</h3>
-        <NDataTable :columns="recapColumns" :data="echeancier" striped />
+        <NDataTable v-if="!isMobile" :columns="recapColumns" :data="echeancier" striped />
+        <div v-else>
+          <NCard v-for="(e, idx) in echeancier" :key="e.numero" class="mobile-card">
+            <div><b>N° :</b> {{ e.numero }}</div>
+            <div><b>Date :</b> {{ formatDate(e.date) }}</div>
+            <div><b>Capital remboursé :</b> {{ e.capital }}</div>
+            <div><b>Intérêts :</b> {{ e.interets }}</div>
+            <div><b>Total échéance :</b> {{ e.total }}</div>
+            <div><b>Solde restant dû :</b> {{ e.solde }}</div>
+          </NCard>
+        </div>
       </div>
-      <div class="step-actions">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -556,6 +590,25 @@ definePage({
   justify-content: space-between;
   align-items: center;
   padding: 20px 0;
+}
+.progress-steps-mobile {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 12px 0 12px 4px;
+}
+.progress-steps-mobile .step {
+  min-width: 120px;
+  padding: 8px 6px;
+}
+.progress-steps-mobile .step-number {
+  width: 32px;
+  height: 32px;
+  font-size: 1rem;
+}
+.progress-steps-mobile .step-label {
+  font-size: 12px;
+  text-align: center;
 }
 .step {
   display: flex;
@@ -627,6 +680,51 @@ definePage({
 }
 .recap-section {
   margin-bottom: 24px;
+}
+.mobile-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 12px 0 0 0;
+  text-align: center;
+  color: #222;
+}
+.mobile-journal-btn {
+  margin-bottom: 10px;
+  max-width: 320px;
+  width: 100%;
+  align-self: center;
+}
+.step-actions-mobile {
+  flex-direction: column !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+  margin-bottom: 16px;
+}
+.step-actions-mobile .n-button {
+  width: 100%;
+  max-width: 320px;
+  align-self: center;
+}
+.mobile-card {
+  margin-bottom: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.mobile-card .actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+.mobile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mobile-form .n-form-item {
+  width: 100%;
+  margin-bottom: 0;
 }
 </style>
 <!-- test --> 

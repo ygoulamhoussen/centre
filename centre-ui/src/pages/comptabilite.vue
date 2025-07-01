@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
+import { useAppStore } from '@/store/modules/app'
 import {
   NAlert,
   NButton,
@@ -69,6 +70,8 @@ definePage({
 const authStore = useAuthStore()
 const message = useMessage()
 const router = useRouter()
+const appStore = useAppStore()
+const isMobile = appStore.isMobile
 
 // États réactifs
 const charges = ref<ChargeDTO[]>([])
@@ -865,34 +868,68 @@ const amortissementsFiltres = computed(() => {
   if (!anneeSelectionnee.value) return []
   return amortissements.value.filter(a => a.annee === anneeSelectionnee.value)
 })
+
+// Fonction utilitaire pour obtenir le nom de la propriété
+function getProprieteNom(obj: any) {
+  if (obj.proprieteNom) return obj.proprieteNom
+  if (obj.proprieteId && Array.isArray(proprietes.value)) {
+    const found = proprietes.value.find(p => p.value === obj.proprieteId)
+    return found ? found.label : ''
+  }
+  return ''
+}
 </script>
 
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <h1 class="text-2xl font-bold mb-2">Comptabilité - Charges et Recettes</h1>
-          <p class="text-gray-600">Gestion des charges déductibles et des recettes locatives</p>
+      <div class="page-header mb-6">
+        <div v-if="!isMobile" class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold mb-2">Comptabilité - Charges et Recettes</h1>
+            <p class="text-gray-600">Gestion des charges déductibles et des recettes locatives</p>
+          </div>
+          <NSpace>
+            <NButton type="primary" @click="nouvelleCharge">
+              <template #icon>
+                <NIcon :component="Add24Filled" />
+              </template>
+              Nouvelle Charge
+            </NButton>
+            <NButton type="success" @click="nouvelleRecette">
+              <template #icon>
+                <NIcon :component="Money24Filled" />
+              </template>
+              Nouvelle Recette
+            </NButton>
+          </NSpace>
         </div>
-        <NSpace>
-          <NButton type="primary" @click="nouvelleCharge">
+        <div v-else class="mobile-header">
+          <h1 class="mobile-title">Comptabilité</h1>
+          <NButton block size="small" type="primary" class="mobile-journal-btn" @click="editerJournalComptable">
             <template #icon>
-              <NIcon :component="Add24Filled" />
+              <NIcon :component="ArrowDownload24Filled" />
             </template>
-            Nouvelle Charge
+            Éditer le journal comptable
           </NButton>
-          <NButton type="success" @click="nouvelleRecette">
-            <template #icon>
-              <NIcon :component="Money24Filled" />
-            </template>
-            Nouvelle Recette
-          </NButton>
-        </NSpace>
+          <div class="mobile-actions">
+            <NButton size="small" type="primary" @click="nouvelleCharge">
+              <template #icon>
+                <NIcon :component="Add24Filled" />
+              </template>
+              Charge
+            </NButton>
+            <NButton size="small" type="success" @click="nouvelleRecette">
+              <template #icon>
+                <NIcon :component="Money24Filled" />
+              </template>
+              Recette
+            </NButton>
+          </div>
+        </div>
       </div>
-
       <!-- Résumé financier -->
-      <NCard title="Résumé financier" class="mb-6">
+      <NCard v-if="!isMobile" title="Résumé financier" class="mb-6">
         <template #header-extra>
           <NButton type="primary" @click="editerJournalComptable">
             <template #icon>
@@ -905,37 +942,35 @@ const amortissementsFiltres = computed(() => {
           <span class="mr-2">Année :</span>
           <NSelect
             v-model:value="anneeSelectionnee"
-            :options="anneesDisponibles.map(a => ({ label: a.toString(), value: a }))"
+            :options="anneesDisponibles.map(a => ({ label: a ? a.toString() : '', value: a }))"
             placeholder="Choisir une année"
             style="width: 120px"
           />
         </div>
         <NGrid :cols="4" :x-gap="16">
           <NGi>
-            <div class="text-center p-4 bg-red-50 rounded-lg">
-              <div class="text-2xl font-bold text-red-600">{{ totalParAnnee('charges', anneeSelectionnee ?? 0).toFixed(2) }} €</div>
-              <div class="text-sm text-gray-600">Total Charges</div>
-            </div>
+            <NCard class="resume-card charge">
+              <div class="resume-label">Total Charges</div>
+              <div class="resume-value">{{ totalParAnnee('charges', anneeSelectionnee ?? 0).toFixed(2) }} €</div>
+            </NCard>
           </NGi>
           <NGi>
-            <div class="text-center p-4 bg-yellow-50 rounded-lg">
-              <div class="text-2xl font-bold text-yellow-600">{{ totalParAnnee('amortissements', anneeSelectionnee ?? 0).toFixed(2) }} €</div>
-              <div class="text-sm text-gray-600">Total Amortissements</div>
-            </div>
+            <NCard class="resume-card amortissement">
+              <div class="resume-label">Total Amortissements</div>
+              <div class="resume-value">{{ totalParAnnee('amortissements', anneeSelectionnee ?? 0).toFixed(2) }} €</div>
+            </NCard>
           </NGi>
           <NGi>
-            <div class="text-center p-4 bg-green-50 rounded-lg">
-              <div class="text-2xl font-bold text-green-600">{{ totalParAnnee('recettes', anneeSelectionnee ?? 0).toFixed(2) }} €</div>
-              <div class="text-sm text-gray-600">Total Recettes</div>
-            </div>
+            <NCard class="resume-card recette">
+              <div class="resume-label">Total Recettes</div>
+              <div class="resume-value">{{ totalParAnnee('recettes', anneeSelectionnee ?? 0).toFixed(2) }} €</div>
+            </NCard>
           </NGi>
           <NGi>
-            <div class="text-center p-4 rounded-lg" :class="soldeParAnnee(anneeSelectionnee ?? 0) >= 0 ? 'bg-blue-50' : 'bg-orange-50'">
-              <div class="text-2xl font-bold" :class="soldeParAnnee(anneeSelectionnee ?? 0) >= 0 ? 'text-blue-600' : 'text-orange-600'">
-                {{ soldeParAnnee(anneeSelectionnee ?? 0).toFixed(2) }} €
-              </div>
-              <div class="text-sm text-gray-600">Solde</div>
-            </div>
+            <NCard class="resume-card solde" :class="soldeParAnnee(anneeSelectionnee ?? 0) >= 0 ? 'positif' : 'negatif'">
+              <div class="resume-label">Solde</div>
+              <div class="resume-value">{{ soldeParAnnee(anneeSelectionnee ?? 0).toFixed(2) }} €</div>
+            </NCard>
           </NGi>
         </NGrid>
       </NCard>
@@ -944,32 +979,71 @@ const amortissementsFiltres = computed(() => {
       <NTabs type="line" animated>
         <NTabPane name="charges" tab="Charges">
           <NDataTable
+            v-if="!isMobile"
             :columns="colonnesCharges"
             :data="chargesFiltrees"
             :loading="chargement"
             :pagination="{ pageSize: 10 }"
             striped
           />
+          <div v-else>
+            <NCard v-for="charge in chargesFiltrees" :key="charge.id" class="mobile-card">
+              <div><b>Date :</b> {{ charge.dateCharge }}</div>
+              <div><b>Propriété :</b> {{ getProprieteNom(charge) }}</div>
+              <div><b>Intitulé :</b> {{ charge.intitule }}</div>
+              <div><b>Nature :</b> {{ charge.nature }}</div>
+              <div><b>Montant :</b> {{ charge.montant }} €</div>
+              <div v-if="charge.documentNom"><b>Document :</b> {{ charge.documentNom }}</div>
+              <div class="actions">
+                <NButton size="small" type="primary" @click="editerCharge(charge)">Éditer</NButton>
+                <NButton size="small" type="error" @click="supprimerCharge(charge.id || '')">Supprimer</NButton>
+              </div>
+            </NCard>
+          </div>
         </NTabPane>
 
         <NTabPane name="recettes" tab="Recettes">
           <NDataTable
+            v-if="!isMobile"
             :columns="colonnesRecettes"
             :data="recettesFiltrees"
             :loading="chargement"
             :pagination="{ pageSize: 10 }"
             striped
           />
+          <div v-else>
+            <NCard v-for="recette in recettesFiltrees" :key="recette.id" class="mobile-card">
+              <div><b>Date :</b> {{ recette.dateRecette }}</div>
+              <div><b>Propriété :</b> {{ getProprieteNom(recette) }}</div>
+              <div><b>Intitulé :</b> {{ recette.intitule }}</div>
+              <div><b>Type :</b> {{ recette.type }}</div>
+              <div><b>Montant :</b> {{ recette.montant }} €</div>
+              <div v-if="recette.documentNom"><b>Document :</b> {{ recette.documentNom }}</div>
+              <div class="actions">
+                <NButton size="small" type="primary" @click="editerRecette(recette)">Éditer</NButton>
+                <NButton size="small" type="error" @click="supprimerRecette(recette.id || '')">Supprimer</NButton>
+              </div>
+            </NCard>
+          </div>
         </NTabPane>
 
         <NTabPane name="amortissements" tab="Amortissements">
           <NDataTable
+            v-if="!isMobile"
             :columns="colonnesAmortissements"
             :data="amortissementsFiltres"
             :loading="chargement"
             :pagination="{ pageSize: 10 }"
             striped
           />
+          <div v-else>
+            <NCard v-for="amort in amortissementsFiltres" :key="amort.id" class="mobile-card">
+              <div><b>Année :</b> {{ amort.annee }}</div>
+              <div><b>Propriété :</b> {{ amort.proprieteNom }}</div>
+              <div><b>Immobilisation :</b> {{ amort.immobilisationIntitule }}</div>
+              <div><b>Montant :</b> {{ amort.montantAmortissement }} €</div>
+            </NCard>
+          </div>
         </NTabPane>
 
         <NTabPane name="ecritures" tab="Écritures Comptables">
@@ -988,12 +1062,27 @@ const amortissementsFiltres = computed(() => {
           </div>
 
           <NDataTable
+            v-if="!isMobile"
             :columns="colonnesEcritures"
             :data="ecrituresComptables"
             :loading="chargement"
             :pagination="{ pageSize: 10 }"
             striped
           />
+          <div v-else>
+            <NCard v-for="ecriture in ecrituresComptables" :key="ecriture.id" class="mobile-card">
+              <div><b>Date :</b> {{ ecriture.dateEcriture }}</div>
+              <div><b>Propriété :</b> {{ getProprieteNom(ecriture) }}</div>
+              <div><b>Type :</b> {{ ecriture.type }}</div>
+              <div><b>Montant :</b> {{ ecriture.montant }} €</div>
+              <div><b>Description :</b> {{ ecriture.commentaire }}</div>
+              <div v-if="ecriture.documentNom"><b>Document :</b> {{ ecriture.documentNom }}</div>
+              <div class="actions">
+                <NButton size="small" type="primary" @click="editerEcriture(ecriture)">Éditer</NButton>
+                <NButton size="small" type="error" @click="supprimerEcriture(ecriture.id || '')">Supprimer</NButton>
+              </div>
+            </NCard>
+          </div>
         </NTabPane>
       </NTabs>
     </NCard>
@@ -1363,5 +1452,68 @@ const amortissementsFiltres = computed(() => {
 
 .text-sm {
   font-size: 0.875rem;
+}
+
+.mobile-card {
+  margin-bottom: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.mobile-card .actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.resume-card {
+  margin-bottom: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px #0001;
+  border-radius: 10px;
+  padding: 16px 0;
+}
+.resume-label {
+  font-size: 1rem;
+  color: #888;
+}
+.resume-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 4px;
+}
+.resume-card.charge .resume-value { color: #dc2626; }
+.resume-card.amortissement .resume-value { color: #eab308; }
+.resume-card.recette .resume-value { color: #16a34a; }
+.resume-card.solde.positif .resume-value { color: #2563eb; }
+.resume-card.solde.negatif .resume-value { color: #ea580c; }
+.page-header {
+  margin-bottom: 1.5rem;
+}
+.mobile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+.mobile-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 12px 0 0 0;
+  text-align: center;
+  color: #222;
+}
+.mobile-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.mobile-journal-btn {
+  margin-bottom: 10px;
+  max-width: 320px;
+  width: 100%;
+  align-self: center;
 }
 </style> 

@@ -3,7 +3,8 @@ import { computed, h, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import type { DataTableColumns } from 'naive-ui'
-import { NButton, NDataTable, NSelect, useMessage } from 'naive-ui'
+import { NButton, NDataTable, NSelect, useMessage, NCard } from 'naive-ui'
+import { useAppStore } from '@/store/modules/app'
 
 import type { Immobilisation } from '@/types/immobilisation'
 import { immobilisationApi } from '@/service/api/immobilisation'
@@ -17,6 +18,7 @@ definePage({
 })
 const router = useRouter()
 const message = useMessage()
+const isMobile = useAppStore().isMobile
 
 const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
 
@@ -221,43 +223,34 @@ onMounted(async () => {
 <template>
   <div class="immobilisations-page">
     <div class="page-header">
-      <h1>Gestion des Immobilisations</h1>
-      <NButton type="primary" @click="navigateToCreate">
-        <template #icon>
-          <Icon icon="material-symbols:add" />
-        </template>
-        Nouvelle Immobilisation
-      </NButton>
+      <div v-if="!isMobile" class="page-header-row">
+        <h1>Gestion des Immobilisations</h1>
+        <NButton type="primary" @click="navigateToCreate">
+          <template #icon>
+            <Icon icon="material-symbols:add" />
+          </template>
+          Nouvelle Immobilisation
+        </NButton>
+      </div>
+      <div v-else class="mobile-header">
+        <h1 class="mobile-title">Immobilisations</h1>
+        <NButton block size="small" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
+          <template #icon>
+            <Icon icon="material-symbols:add" />
+          </template>
+          Nouvelle Immobilisation
+        </NButton>
+      </div>
     </div>
-
-    <!-- Filtres -->
-    <div class="filters">
-      <NSelect
-        v-model:value="filters.proprieteId"
-        :options="proprieteOptions"
-        placeholder="Filtrer par propriété"
-        clearable
-        style="width: 200px"
-      />
-      <NSelect
-        v-model:value="filters.typeImmobilisation"
-        :options="typeOptions"
-        placeholder="Filtrer par type"
-        clearable
-        style="width: 200px"
-      />
-      <NSelect
-        v-model:value="filters.categorieFiscale"
-        :options="categorieOptions"
-        placeholder="Filtrer par catégorie"
-        clearable
-        style="width: 200px"
-      />
+    <div v-if="!isMobile" class="filters">
+      <!-- Filtres desktop -->
+      <NSelect v-model:value="filters.proprieteId" :options="proprieteOptions" placeholder="Filtrer par propriété" clearable style="width: 200px" />
+      <NSelect v-model:value="filters.typeImmobilisation" :options="typeOptions" placeholder="Filtrer par type" clearable style="width: 200px" />
+      <NSelect v-model:value="filters.categorieFiscale" :options="categorieOptions" placeholder="Filtrer par catégorie" clearable style="width: 200px" />
       <NButton @click="clearFilters">Effacer les filtres</NButton>
     </div>
-
-    <!-- Tableau des immobilisations -->
     <NDataTable
+      v-if="!isMobile"
       :columns="columns"
       :data="filteredImmobilisations"
       :pagination="pagination"
@@ -265,6 +258,19 @@ onMounted(async () => {
       :bordered="false"
       striped
     />
+    <div v-else>
+      <NCard v-for="immobilisation in filteredImmobilisations" :key="immobilisation.id" class="mobile-card">
+        <div><b>Intitulé :</b> {{ immobilisation.intitule }}</div>
+        <div><b>Montant :</b> {{ formatCurrency(immobilisation.montant) }}</div>
+        <div><b>Type :</b> {{ TYPE_IMMOBILISATION_LABELS[immobilisation.typeImmobilisation] }}</div>
+        <div><b>Catégorie fiscale :</b> {{ CATEGORIE_FISCALE_LABELS[immobilisation.categorieFiscale] }}</div>
+        <div><b>Date d'acquisition :</b> {{ formatDate(immobilisation.dateAcquisition) }}</div>
+        <div class="actions">
+          <NButton size="small" @click="viewAmortissements(immobilisation)">Amortissements</NButton>
+          <NButton size="small" type="error" @click="deleteImmobilisation(immobilisation.id)">Supprimer</NButton>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
@@ -302,5 +308,44 @@ onMounted(async () => {
 .actions {
   display: flex;
   gap: 8px;
+}
+
+.mobile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+.mobile-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 12px 0 0 0;
+  text-align: center;
+  color: #222;
+}
+.mobile-journal-btn {
+  margin-bottom: 10px;
+  max-width: 320px;
+  width: 100%;
+  align-self: center;
+}
+.mobile-card {
+  margin-bottom: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.mobile-card .actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 </style> 

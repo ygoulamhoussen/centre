@@ -7,6 +7,7 @@ import { Icon } from '@iconify/vue'
 import { NButton, NCard, NDataTable, NTabPane, NTabs, useMessage } from 'naive-ui'
 import type { ChargeDTO } from '@/types/dto'
 import { createCharge, createEcritureComptableCharge } from '@/service/api/charges-recettes'
+import { useAppStore } from '@/store/modules/app'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +16,7 @@ const echeancier = ref<any[]>([])
 const message = useMessage()
 const writingInProgress = ref<Record<number, boolean>>({})
 const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
+const isMobile = useAppStore().isMobile
 
 definePage({
   meta: {
@@ -159,16 +161,27 @@ const chargesAnnuellesColumns = [
 <template>
   <div class="echeancier-page">
     <div class="page-header">
-      <NButton @click="goBack" quaternary>
-        <template #icon>
-          <Icon icon="material-symbols:arrow-back" />
-        </template>
-        Retour
-      </NButton>
-      <h1>Échéancier du Crédit</h1>
+      <div v-if="!isMobile" class="flex justify-between items-center">
+        <NButton @click="goBack" quaternary>
+          <template #icon>
+            <Icon icon="material-symbols:arrow-back" />
+          </template>
+          Retour
+        </NButton>
+        <h1>Échéancier du Crédit</h1>
+      </div>
+      <div v-else class="mobile-header">
+        <h1 class="mobile-title">Échéancier</h1>
+        <NButton block size="small" quaternary class="mobile-journal-btn" @click="goBack">
+          <template #icon>
+            <Icon icon="material-symbols:arrow-back" />
+          </template>
+          Retour
+        </NButton>
+      </div>
     </div>
     <NCard v-if="credit" title="Informations du crédit" class="info-card">
-      <div class="credit-info">
+      <div v-if="!isMobile" class="credit-info">
         <div class="info-item"><strong>Intitulé :</strong> {{ credit.intitule }}</div>
         <div class="info-item"><strong>Montant :</strong> {{ credit.montant }} €</div>
         <div class="info-item"><strong>Durée :</strong> {{ credit.duree }} mois</div>
@@ -177,14 +190,46 @@ const chargesAnnuellesColumns = [
         <div class="info-item"><strong>Date de début :</strong> {{ formatDate(credit.dateDebut) }}</div>
         <div class="info-item"><strong>Propriété :</strong> {{ credit.proprieteNom }}</div>
       </div>
+      <div v-else class="mobile-card">
+        <div><b>Intitulé :</b> {{ credit.intitule }}</div>
+        <div><b>Montant :</b> {{ credit.montant }} €</div>
+        <div><b>Durée :</b> {{ credit.duree }} mois</div>
+        <div><b>Taux :</b> {{ credit.taux }} %</div>
+        <div><b>Type :</b> {{ credit.typeBien }}</div>
+        <div><b>Date de début :</b> {{ formatDate(credit.dateDebut) }}</div>
+        <div><b>Propriété :</b> {{ credit.proprieteNom }}</div>
+      </div>
     </NCard>
     <NCard class="table-card">
       <NTabs type="line" animated>
         <NTabPane name="echeancier" tab="Échéancier">
-          <NDataTable :columns="echeancierColumns" :data="echeancier" striped />
+          <NDataTable v-if="!isMobile" :columns="echeancierColumns" :data="echeancier" striped />
+          <div v-else>
+            <NCard v-for="(e, idx) in echeancier" :key="idx" class="mobile-card">
+              <div><b>N° :</b> {{ idx + 1 }}</div>
+              <div><b>Date :</b> {{ formatDate(e.dateEcheance) }}</div>
+              <div><b>Capital remboursé :</b> {{ e.capitalRembourse }}</div>
+              <div><b>Intérêts :</b> {{ e.interet }}</div>
+              <div><b>Assurance :</b> {{ e.assurance }}</div>
+              <div><b>Total échéance :</b> {{ e.totalEcheance }}</div>
+            </NCard>
+          </div>
         </NTabPane>
         <NTabPane name="charges" tab="Charges Financières Annuelles">
-          <NDataTable :columns="chargesAnnuellesColumns" :data="chargesAnnuelles" />
+          <NDataTable v-if="!isMobile" :columns="chargesAnnuellesColumns" :data="chargesAnnuelles" />
+          <div v-else>
+            <NCard v-for="(c, idx) in chargesAnnuelles" :key="idx" class="mobile-card">
+              <div><b>Année :</b> {{ c.year }}</div>
+              <div><b>Total Intérêts :</b> {{ c.totalInterets.toFixed(2) }} €</div>
+              <div><b>Total Assurance :</b> {{ c.totalAssurance.toFixed(2) }} €</div>
+              <div><b>Total Charges :</b> {{ c.totalCharges.toFixed(2) }} €</div>
+              <div class="actions">
+                <NButton size="small" type="primary" ghost @click="passerEcriture(c)">
+                  Passer l'écriture
+                </NButton>
+              </div>
+            </NCard>
+          </div>
         </NTabPane>
       </NTabs>
     </NCard>
@@ -196,19 +241,39 @@ const chargesAnnuellesColumns = [
   padding: 20px;
 }
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
-.header-left {
+.mobile-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  margin-bottom: 1.5rem;
 }
-.header-left h1 {
-  margin: 0;
-  color: #333;
+.mobile-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 12px 0 0 0;
+  text-align: center;
+  color: #222;
+}
+.mobile-journal-btn {
+  margin-bottom: 10px;
+  max-width: 320px;
+  width: 100%;
+  align-self: center;
+}
+.mobile-card {
+  margin-bottom: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.mobile-card .actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
 }
 .info-card {
   margin-bottom: 20px;

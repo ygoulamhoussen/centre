@@ -12,7 +12,7 @@
 
     <!-- Indicateur de progression -->
     <NCard class="progress-card">
-      <div class="progress-steps">
+      <div class="progress-steps" :class="{ 'progress-steps-mobile': isMobile }">
         <div 
           v-for="(step, index) in steps" 
           :key="index"
@@ -72,25 +72,40 @@
         </p>
       </div>
 
-      <!-- Décomposition automatique -->
       <div class="decomposition-section">
-        <div class="section-header">
-          <h3>Décomposition par composants</h3>
-          <NButton size="small" @click="applyDefaultDecomposition">
-            <template #icon>
-              <Icon icon="material-symbols:refresh" />
-            </template>
-            Appliquer la décomposition standard
-          </NButton>
-          <NButton size="small" @click="setAllToZero">
-            <template #icon>
-              <Icon icon="material-symbols:close" />
-            </template>
-            Tout mettre à 0
-          </NButton>
+        <div :class="['section-header', { 'section-header-mobile': isMobile }]">
+          <h3 :class="{ 'mobile-title': isMobile }">Décomposition par composants</h3>
+          <div v-if="isMobile" class="section-header-actions">
+            <NButton size="small" @click="applyDefaultDecomposition">
+              <template #icon>
+                <Icon icon="material-symbols:refresh" />
+              </template>
+              Appliquer la décomposition standard
+            </NButton>
+            <NButton size="small" @click="setAllToZero">
+              <template #icon>
+                <Icon icon="material-symbols:close" />
+              </template>
+              Tout mettre à 0
+            </NButton>
+          </div>
+          <template v-else>
+            <NButton size="small" @click="applyDefaultDecomposition">
+              <template #icon>
+                <Icon icon="material-symbols:refresh" />
+              </template>
+              Appliquer la décomposition standard
+            </NButton>
+            <NButton size="small" @click="setAllToZero">
+              <template #icon>
+                <Icon icon="material-symbols:close" />
+              </template>
+              Tout mettre à 0
+            </NButton>
+          </template>
         </div>
 
-        <div class="components-grid">
+        <div :class="['components-grid', { 'components-grid-mobile': isMobile }]">
           <div 
             v-for="component in immobilisationComponents" 
             :key="component.key"
@@ -199,7 +214,7 @@
         </NForm>
       </div>
 
-      <div class="step-actions">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -233,39 +248,41 @@
 
       <div class="recap-section">
         <h3>Décomposition de l'immobilisation</h3>
-        <table class="recap-table">
-          <thead>
-            <tr>
-              <th>Composant</th>
-              <th>%</th>
-              <th>Montant</th>
-              <th>Durée</th>
-              <th>Type</th>
-              <th>Catégorie fiscale</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="component in immobilisationComponents" :key="component.key">
-              <td>{{ component.label }}</td>
-              <td>{{ component.percent }}</td>
-              <td>{{ formatCurrency(component.percent * formData.montant / 100) }}</td>
-              <td>{{ component.dureeAmortissement || '—' }}</td>
-              <td>{{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation] || '—' }}</td>
-              <td>{{ CATEGORIE_FISCALE_LABELS[getCategorieFiscaleFromDuree(String(component.dureeAmortissement))] || '—' }}</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr>
-              <th>Total</th>
-              <th>{{ totalPercent }}</th>
-              <th>{{ formatCurrency(totalComponents) }}</th>
-              <th colspan="3"></th>
-            </tr>
-          </tfoot>
-        </table>
+        <div class="recap-table-wrapper">
+          <table class="recap-table">
+            <thead>
+              <tr>
+                <th>Composant</th>
+                <th>%</th>
+                <th>Montant</th>
+                <th>Durée</th>
+                <th>Type</th>
+                <th>Catégorie fiscale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="component in immobilisationComponents" :key="component.key">
+                <td>{{ component.label }}</td>
+                <td>{{ component.percent }}</td>
+                <td>{{ formatCurrency(component.percent * formData.montant / 100) }}</td>
+                <td>{{ component.dureeAmortissement || '—' }}</td>
+                <td>{{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation] || '—' }}</td>
+                <td>{{ CATEGORIE_FISCALE_LABELS[getCategorieFiscaleFromDuree(String(component.dureeAmortissement))] || '—' }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th>Total</th>
+                <th>{{ totalPercent }}</th>
+                <th>{{ formatCurrency(totalComponents) }}</th>
+                <th colspan="3"></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
 
-      <div class="step-actions">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -277,10 +294,10 @@
           :loading="saving"
           @click="saveImmobilisation"
         >
+          Valider
           <template #icon>
             <Icon icon="material-symbols:check" />
           </template>
-          Créer l'immobilisation
         </NButton>
       </div>
     </NCard>
@@ -306,6 +323,7 @@ import {
 import { CategorieFiscale, TypeImmobilisation } from '@/types/immobilisation.d'
 import { CATEGORIE_FISCALE_DUREES, CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
 import { immobilisationApi } from '@/service/api/immobilisation'
+import { useAppStore } from '@/store/modules/app'
 
 definePage({
   meta: {
@@ -318,6 +336,7 @@ definePage({
 
 const router = useRouter()
 const message = useMessage()
+const isMobile = useAppStore().isMobile
 
 // État réactif
 const saving = ref(false)
@@ -957,5 +976,77 @@ onMounted(async () => {
 .recap-table tfoot th {
   font-weight: bold;
   background: #f9fafb;
+}
+
+.section-header-mobile {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.section-header-mobile h3,
+.mobile-title {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+.section-header-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.components-grid-mobile {
+  display: flex !important;
+  flex-direction: column;
+  gap: 12px !important;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.components-grid-mobile .component-card {
+  min-width: 220px;
+  max-width: 100%;
+  padding: 10px;
+}
+.step-actions-mobile {
+  flex-direction: column !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+}
+.step-actions-mobile .n-button {
+  width: 100%;
+  max-width: 320px;
+  align-self: center;
+}
+.recap-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 600px) {
+  .recap-table th, .recap-table td {
+    font-size: 12px;
+    padding: 6px 6px;
+  }
+  .recap-table {
+    min-width: 500px;
+  }
+}
+.progress-steps-mobile {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 12px 0 12px 4px;
+}
+.progress-steps-mobile .step {
+  min-width: 120px;
+  padding: 8px 6px;
+}
+.progress-steps-mobile .step-number {
+  width: 32px;
+  height: 32px;
+  font-size: 1rem;
+}
+.progress-steps-mobile .step-label {
+  font-size: 12px;
+  text-align: center;
 }
 </style> 

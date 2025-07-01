@@ -13,6 +13,8 @@ public class CreditDTO {
     private String assuranceMensuelle;
     private String fraisDossier;
     private String fraisGarantie;
+    private String proprieteNom;
+    private String typeBien;
 
     // Getters & Setters
 
@@ -110,5 +112,21 @@ public class CreditDTO {
 
     public void setFraisGarantie(String fraisGarantie) {
         this.fraisGarantie = fraisGarantie;
+    }
+
+    public String getProprieteNom() {
+        return proprieteNom;
+    }
+
+    public void setProprieteNom(String proprieteNom) {
+        this.proprieteNom = proprieteNom;
+    }
+
+    public String getTypeBien() {
+        return typeBien;
+    }
+
+    public void setTypeBien(String typeBien) {
+        this.typeBien = typeBien;
     }
 }

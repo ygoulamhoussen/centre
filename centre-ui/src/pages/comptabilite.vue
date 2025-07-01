@@ -332,7 +332,9 @@ async function chargerDonnees() {
     }))
 
     // Charger les amortissements (API à adapter si besoin)
-    const amortissementsResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/amortissements/byUtilisateur/${authStore.userInfo.userId}`)
+    const annee = anneeSelectionnee.value || new Date().getFullYear()
+    const utilisateurId = authStore.userInfo.userId
+    const amortissementsResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/amortissements/${utilisateurId}/${annee}`)
     if (amortissementsResponse.ok) {
       const data = await amortissementsResponse.json()
       amortissements.value = (data as any[]).map((a: any) => ({

@@ -608,7 +608,6 @@ public class UnifiedService {
         c.setFraisDossier(new BigDecimal(dto.getFraisDossier()));
         c.setFraisGarantie(new BigDecimal(dto.getFraisGarantie()));
         c.setModifieLe(LocalDateTime.now());
-
         Credit saved = creditRepository.save(c);
         return toDto(saved);
     }
@@ -634,6 +633,9 @@ public class UnifiedService {
         dto.setAssuranceMensuelle(c.getAssuranceMensuelle().toPlainString());
         dto.setFraisDossier(c.getFraisDossier().toPlainString());
         dto.setFraisGarantie(c.getFraisGarantie().toPlainString());
+        // Ajout des champs pour le front
+        dto.setProprieteNom(c.getPropriete() != null ? c.getPropriete().getNom() : null);
+        dto.setTypeBien(c.getPropriete() != null && c.getPropriete().getTypeBien() != null ? c.getPropriete().getTypeBien().toString() : null);
         return dto;
     }
 

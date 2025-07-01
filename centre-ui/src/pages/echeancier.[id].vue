@@ -55,8 +55,17 @@ onMounted(async () => {
     if (!foundCredit) {
       throw new Error('Crédit non trouvé')
     }
-    // Assurer la présence de proprieteId et utilisateurId
-    credit.value = { ...foundCredit, proprieteId: foundCredit.proprieteId, utilisateurId }
+    // Adapter les champs pour l'affichage
+    credit.value = {
+      intitule: foundCredit.intitule || (foundCredit.banque ? `Crédit ${foundCredit.banque}` : 'Crédit'),
+      montant: foundCredit.montantEmprunte,
+      duree: foundCredit.dureeMois,
+      taux: foundCredit.tauxInteretAnnuel,
+      typeBien: foundCredit.typeBien,
+      dateDebut: foundCredit.dateDebut,
+      proprieteNom: foundCredit.proprieteNom,
+      // Ajoute d'autres champs si besoin
+    }
 
     // Charger les échéances
     const echeancesRes = await fetch(`${baseUrl}/api/getEcheancesByCredit/${id}`)
@@ -164,7 +173,7 @@ const chargesAnnuellesColumns = [
         <div class="info-item"><strong>Montant :</strong> {{ credit.montant }} €</div>
         <div class="info-item"><strong>Durée :</strong> {{ credit.duree }} mois</div>
         <div class="info-item"><strong>Taux :</strong> {{ credit.taux }} %</div>
-        <div class="info-item"><strong>Type :</strong> {{ credit.type }}</div>
+        <div class="info-item"><strong>Type :</strong> {{ credit.typeBien }}</div>
         <div class="info-item"><strong>Date de début :</strong> {{ formatDate(credit.dateDebut) }}</div>
         <div class="info-item"><strong>Propriété :</strong> {{ credit.proprieteNom }}</div>
       </div>

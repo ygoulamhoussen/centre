@@ -97,12 +97,15 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
   <div class="p-4">
     <NCard :bordered="false">
       <div class="steps-wrapper" style="overflow-x:auto;">
-        <NSteps :current="4" class="mb-8">
+        <NSteps v-if="!isMobile" :current="4" class="mb-8">
           <NStep title="Type et Nom" description="Identification du bien" />
           <NStep title="Adresse" description="Localisation du bien" />
           <NStep title="Détails" description="Informations financières" />
           <NStep title="Récapitulatif" description="Vérification et sauvegarde" />
         </NSteps>
+        <div v-else class="stepper-mobile mb-8">
+          Étape 4/4 : Récapitulatif
+        </div>
       </div>
 
       <NH2 class="titre-principal mb-6">Étape 4: Récapitulatif et Amortissement</NH2>
@@ -150,16 +153,28 @@ h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
+.stepper-mobile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  background: var(--n-color-embedded, #f5f5fa);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--n-text-color);
+}
 @media (max-width: 768px) {
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+  .steps-wrapper {
+    overflow-x: auto !important;
+  }
   .n-steps {
     font-size: 12px !important;
     min-width: 400px;
-  }
-  .n-steps,
-  .n-steps .n-steps-main {
     overflow-x: auto !important;
     white-space: nowrap !important;
     display: block !important;
@@ -184,6 +199,11 @@ h3 {
   }
   .form-grid .n-form-item-gi {
     grid-column: 1 !important;
+  }
+  .mb-4,
+  .mb-6,
+  .mb-8 {
+    margin-bottom: 1rem !important;
   }
 }
 </style>

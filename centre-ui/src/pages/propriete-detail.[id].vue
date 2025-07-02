@@ -812,7 +812,6 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
 .back-button:hover {
   color: var(--n-text-color-hover);
 }
-
 .action-buttons {
   display: flex;
   gap: 0.5rem;
@@ -846,7 +845,6 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
   background-color: var(--n-color-error-hover);
   color: white;
 }
-
 .info-label {
   font-weight: bold;
   padding: 12px;
@@ -889,13 +887,17 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
 .n-form-item {
   margin-bottom: 0;
 }
-.composition-cards, .document-cards, .amortissement-cards {
+.composition-cards,
+.document-cards,
+.amortissement-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
-.composition-card, .document-card, .amortissement-card {
+.composition-card,
+.document-card,
+.amortissement-card {
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
@@ -942,7 +944,7 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
 .propriete-info-card {
   margin-bottom: 24px;
   background: var(--n-color-embedded);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 .propriete-info-grid {
   display: grid;
@@ -952,6 +954,7 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
 .propriete-info-item {
   display: flex;
   flex-direction: column;
+  margin-bottom: 0;
 }
 .propriete-info-label {
   color: var(--n-text-color-disabled);
@@ -960,10 +963,114 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
   display: flex;
   align-items: center;
   gap: 4px;
+  font-weight: 600;
 }
 .propriete-info-value {
   color: var(--n-text-color);
   font-size: 1.15rem;
   font-weight: 500;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .propriete-detail {
+    padding: 8px;
+  }
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .titre-principal {
+    font-size: 1.3rem !important;
+    text-align: center;
+    width: 100%;
+    margin: 0.5rem 0 1rem 0;
+  }
+  .back-button {
+    margin-bottom: 8px;
+    margin-right: 0;
+    font-size: 1.2rem;
+  }
+  .n-tabs {
+    font-size: 0.98rem;
+    padding: 0 2px;
+    overflow-x: auto !important;
+    white-space: nowrap;
+    min-width: 0;
+    max-width: 100vw;
+  }
+  .tabs-scrollable {
+    margin-bottom: 8px;
+    padding-bottom: 2px;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .n-tabs-tab {
+    padding: 0 8px !important;
+    font-size: 0.98rem;
+  }
+  .action-buttons {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .action-buttons .n-button {
+    width: 100%;
+    max-width: 100%;
+  }
+  .propriete-info-card {
+    margin-bottom: 16px;
+    padding: 12px 8px;
+  }
+  .propriete-info-grid {
+    grid-template-columns: 1fr !important;
+    gap: 22px 0 !important;
+  }
+  .propriete-info-item {
+    margin-bottom: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ececec;
+  }
+  .propriete-info-item:last-child {
+    border-bottom: none;
+  }
+  .propriete-info-label {
+    font-size: 1.13rem;
+    margin-bottom: 2px;
+    font-weight: 700;
+  }
+  .propriete-info-value {
+    font-size: 1.15rem;
+    font-weight: 600;
+    word-break: break-word;
+    line-height: 1.5;
+    margin-bottom: 0.2rem;
+  }
+  .composition-cards,
+  .document-cards,
+  .amortissement-cards {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .composition-card,
+  .document-card,
+  .amortissement-card {
+    padding: 10px 6px;
+    font-size: 1rem;
+  }
+  .label {
+    font-size: 1.05rem;
+  }
+  .n-form {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  .n-form-item {
+    margin-bottom: 0;
+  }
 }
 </style>

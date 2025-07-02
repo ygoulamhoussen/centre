@@ -6,7 +6,9 @@ import {
   ArrowRight24Filled,
   City24Filled,
   Home24Filled,
-  Location24Filled
+  Location24Filled,
+  Tag24Filled,
+  Edit24Filled,
 } from '@vicons/fluent'
 import {
   NButton,
@@ -14,12 +16,9 @@ import {
   NForm,
   NFormItemGi,
   NGrid,
-  NH2,
   NIcon,
   NInput,
   NSpace,
-  NStep,
-  NSteps
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
@@ -51,24 +50,38 @@ function precedent() {
 function valider() {
   router.push('/propriete-etape-3')
 }
+
+const steps = [
+  { label: 'Type et Nom' },
+  { label: 'Adresse' },
+  { label: 'Détails' },
+  { label: 'Récapitulatif' },
+]
+const currentStep = 1
 </script>
 
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="steps-wrapper" style="overflow-x:auto;">
-        <NSteps v-if="!isMobile" :current="2" class="mb-8">
-          <NStep title="Type et Nom" description="Identification du bien" />
-          <NStep title="Adresse" description="Localisation du bien" />
-          <NStep title="Détails" description="Informations techniques" />
-          <NStep title="Récapitulatif" description="Vérification finale" />
-        </NSteps>
-        <div v-else class="stepper-mobile mb-8">
-          Étape 2/4 : Adresse
+      <div v-if="!isMobile" class="progress-steps mb-8">
+        <div 
+          v-for="(step, index) in steps" 
+          :key="index"
+          class="step"
+          :class="{ 
+            'active': currentStep === index,
+            'completed': currentStep > index,
+            'disabled': currentStep < index
+          }"
+        >
+          <div class="step-number">{{ index + 1 }}</div>
+          <div class="step-label">{{ step.label }}</div>
         </div>
       </div>
-
-      <NH2 class="titre-principal mb-4">Étape 2: Adresse de la propriété</NH2>
+      <div v-else class="progress-steps-mobile-simple mb-8">
+        <span class="step-mobile-number">Étape {{ currentStep + 1 }}/{{ steps.length }}</span>
+        <span class="step-mobile-label">{{ steps[currentStep].label }}</span>
+      </div>
 
       <NForm>
         <NGrid :x-gap="24" :y-gap="24" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
@@ -107,7 +120,7 @@ function valider() {
         </NGrid>
       </NForm>
 
-      <NSpace class="mt-8" justify="space-between">
+      <NSpace class="mt-8" :class="[isMobile ? 'flex-center' : 'flex-end']" justify="space-between">
         <NButton @click="precedent" title="Précédent">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
@@ -123,51 +136,83 @@ function valider() {
   </div>
 </template>
 
-<style scoped>
-.titre-principal,
-h1,
-h2,
-h3 {
-  color: var(--n-text-color) !important;
-  font-weight: bold;
-}
-.stepper-mobile {
+<style>
+.progress-steps {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 1.1rem;
-  background: var(--n-color-embedded, #f5f5fa);
+  gap: 32px;
+  padding: 16px 0;
+  background: transparent;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 90px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.step.active, .step.completed {
+  opacity: 1;
+}
+.step-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1976d2;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+  border: 2px solid #1565c0;
+}
+.step.completed .step-number {
+  background: #1565c0;
+}
+.step-label {
+  font-size: 1rem;
+  color: #1565c0;
+  text-align: center;
+  font-weight: 500;
+}
+.progress-steps-mobile-simple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  gap: 4px;
+  background: transparent;
   border-radius: 12px;
-  padding: 0.75rem 1.25rem;
   margin-bottom: 1rem;
-  color: var(--n-text-color);
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1rem;
+  color: #1565c0;
+  text-align: center;
 }
 @media (max-width: 768px) {
   .mb-8 {
     margin-bottom: 1rem !important;
   }
-  .steps-wrapper {
-    overflow-x: auto !important;
-  }
-  .n-steps {
-    font-size: 12px !important;
-    min-width: 400px;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    display: block !important;
-  }
-  .n-step {
-    min-width: 120px !important;
-  }
-  .n-step__description {
+  .progress-steps {
     display: none !important;
   }
-  .titre-principal,
-  h1,
-  h2,
-  h3 {
-    font-size: 1.25rem !important;
+  .progress-steps-mobile-simple {
+    font-size: 1.15rem !important;
+    padding: 1rem 1.25rem !important;
+    margin-bottom: 1.5rem !important;
   }
   .p-4 {
     padding: 1rem !important;
@@ -178,10 +223,9 @@ h3 {
   .form-grid .n-form-item-gi {
     grid-column: 1 !important;
   }
-  .mb-4,
-  .mb-6,
-  .mb-8 {
-    margin-bottom: 1rem !important;
+  .flex-center, .flex-end {
+    justify-content: center !important;
+    margin-top: 1.5rem !important;
   }
 }
 </style>

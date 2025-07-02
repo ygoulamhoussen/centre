@@ -4,6 +4,10 @@ import { useUnifiedStore } from '@/store/unifiedStore'
 import {
   ArrowLeft24Filled,
   Save24Filled,
+  Tag24Filled,
+  Home24Filled,
+  Edit24Filled,
+  ArrowRight24Filled,
 } from '@vicons/fluent'
 import {
   NAlert,
@@ -20,8 +24,6 @@ import {
   NRadio,
   NRadioGroup,
   NSpace,
-  NStep,
-  NSteps,
   NText,
   useMessage,
 } from 'naive-ui'
@@ -44,6 +46,14 @@ const router = useRouter()
 const message = useMessage()
 
 const chargement = ref(false)
+
+const steps = [
+  { label: 'Type et Nom' },
+  { label: 'Adresse' },
+  { label: 'Détails' },
+  { label: 'Récapitulatif' },
+]
+const currentStep = 3
 
 function precedent() {
   router.push('/propriete-etape-3')
@@ -96,19 +106,25 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="steps-wrapper" style="overflow-x:auto;">
-        <NSteps v-if="!isMobile" :current="4" class="mb-8">
-          <NStep title="Type et Nom" description="Identification du bien" />
-          <NStep title="Adresse" description="Localisation du bien" />
-          <NStep title="Détails" description="Informations financières" />
-          <NStep title="Récapitulatif" description="Vérification et sauvegarde" />
-        </NSteps>
-        <div v-else class="stepper-mobile mb-8">
-          Étape 4/4 : Récapitulatif
+      <div v-if="!isMobile" class="progress-steps mb-8">
+        <div 
+          v-for="(step, index) in steps" 
+          :key="index"
+          class="step"
+          :class="{ 
+            'active': currentStep === index,
+            'completed': currentStep > index,
+            'disabled': currentStep < index
+          }"
+        >
+          <div class="step-number">{{ index + 1 }}</div>
+          <div class="step-label">{{ step.label }}</div>
         </div>
       </div>
-
-      <NH2 class="titre-principal mb-6">Étape 4: Récapitulatif et Amortissement</NH2>
+      <div v-else class="progress-steps-mobile-simple mb-8">
+        <span class="step-mobile-number">Étape {{ currentStep + 1 }}/{{ steps.length }}</span>
+        <span class="step-mobile-label">{{ steps[currentStep].label }}</span>
+      </div>
 
       <NDescriptions label-placement="top" bordered :columns="2" title="Récapitulatif de la propriété">
         <NDescriptionsItem label="Nom de la propriété" :label-style="{ fontWeight: 'bold' }">{{
@@ -129,7 +145,7 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
         <NDescriptionsItem label="Tantième">{{ proprieteDTO.tantieme || 'Non spécifié' }}</NDescriptionsItem>
       </NDescriptions>
 
-      <NSpace class="mt-8" justify="space-between">
+      <NSpace class="mt-8" :class="[isMobile ? 'flex-center' : 'flex-end']" justify="space-between">
         <NButton @click="precedent" title="Précédent">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
@@ -145,51 +161,83 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
   </div>
 </template>
 
-<style scoped>
-.titre-principal,
-h1,
-h2,
-h3 {
-  color: var(--n-text-color) !important;
-  font-weight: bold;
-}
-.stepper-mobile {
+<style>
+.progress-steps {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 1.1rem;
-  background: var(--n-color-embedded, #f5f5fa);
+  gap: 32px;
+  padding: 16px 0;
+  background: transparent;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 90px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.step.active, .step.completed {
+  opacity: 1;
+}
+.step-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1976d2;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+  border: 2px solid #1565c0;
+}
+.step.completed .step-number {
+  background: #1565c0;
+}
+.step-label {
+  font-size: 1rem;
+  color: #1565c0;
+  text-align: center;
+  font-weight: 500;
+}
+.progress-steps-mobile-simple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  gap: 4px;
+  background: transparent;
   border-radius: 12px;
-  padding: 0.75rem 1.25rem;
   margin-bottom: 1rem;
-  color: var(--n-text-color);
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1rem;
+  color: #1565c0;
+  text-align: center;
 }
 @media (max-width: 768px) {
   .mb-8 {
     margin-bottom: 1rem !important;
   }
-  .steps-wrapper {
-    overflow-x: auto !important;
-  }
-  .n-steps {
-    font-size: 12px !important;
-    min-width: 400px;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    display: block !important;
-  }
-  .n-step {
-    min-width: 120px !important;
-  }
-  .n-step__description {
+  .progress-steps {
     display: none !important;
   }
-  .titre-principal,
-  h1,
-  h2,
-  h3 {
-    font-size: 1.25rem !important;
+  .progress-steps-mobile-simple {
+    font-size: 1.15rem !important;
+    padding: 1rem 1.25rem !important;
+    margin-bottom: 1.5rem !important;
   }
   .p-4 {
     padding: 1rem !important;
@@ -200,10 +248,9 @@ h3 {
   .form-grid .n-form-item-gi {
     grid-column: 1 !important;
   }
-  .mb-4,
-  .mb-6,
-  .mb-8 {
-    margin-bottom: 1rem !important;
+  .flex-center, .flex-end {
+    justify-content: center !important;
+    margin-top: 1.5rem !important;
   }
 }
 </style>

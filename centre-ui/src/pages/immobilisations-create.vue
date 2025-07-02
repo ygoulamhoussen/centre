@@ -184,40 +184,6 @@
         </div>
       </div>
 
-      <!-- Informations générales -->
-      <div class="general-info">
-        <h3>Informations générales</h3>
-        <NForm
-          ref="formRef"
-          :model="formData"
-          :rules="rules"
-          label-placement="left"
-          label-width="auto"
-          require-mark-placement="right-hanging"
-        >
-          <NFormItem label="Montant d'acquisition de la propriété">
-            <NInput :value="formData.montant" readonly />
-          </NFormItem>
-
-          <NFormItem label="Date d'acquisition" path="dateAcquisition">
-            <NDatePicker
-              v-model:value="formData.dateAcquisition"
-              type="date"
-              style="width: 100%"
-            />
-          </NFormItem>
-
-          <NFormItem label="Commentaire" path="commentaire">
-            <NInput
-              v-model:value="formData.commentaire"
-              type="textarea"
-              placeholder="Commentaire optionnel"
-              :rows="3"
-            />
-          </NFormItem>
-        </NForm>
-      </div>
-
       <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
         <NButton @click="previousStep">
           <template #icon>
@@ -953,35 +919,6 @@ onMounted(async () => {
   color: #374151;
 }
 
-.general-info {
-  margin-bottom: 24px;
-}
-
-.general-info h3 {
-  margin: 0 0 16px 0;
-  color: #374151;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.recap-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 24px;
-}
-.recap-table th, .recap-table td {
-  border: 1px solid #e5e7eb;
-  padding: 8px 12px;
-  text-align: left;
-}
-.recap-table th {
-  background: #f3f4f6;
-}
-.recap-table tfoot th {
-  font-weight: bold;
-  background: #f9fafb;
-}
-
 .section-header-mobile {
   flex-direction: column;
   align-items: stretch;
@@ -1024,6 +961,23 @@ onMounted(async () => {
 .recap-table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+.recap-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+.recap-table th, .recap-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  text-align: left;
+}
+.recap-table th {
+  background: #f3f4f6;
+}
+.recap-table tfoot th {
+  font-weight: bold;
+  background: #f9fafb;
 }
 @media (max-width: 600px) {
   .recap-table th, .recap-table td {
@@ -1070,5 +1024,60 @@ onMounted(async () => {
   font-size: 1rem;
   color: #757575;
   text-align: center;
+}
+
+@media (max-width: 768px) {
+  .general-info,
+  .general-info .n-form,
+  .general-info .n-form-item,
+  .general-info .n-input,
+  .general-info .n-input-number,
+  .general-info .n-date-picker {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+  .general-info {
+    padding: 12px 6px 16px 6px;
+    background: #f9f9fb;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    overflow-x: hidden !important;
+  }
+  .general-info h3 {
+    font-size: 1.15rem;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .general-info .n-form {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    width: 100%;
+  }
+  .general-info .n-form-item {
+    margin-bottom: 0 !important;
+    width: 100%;
+  }
+  .general-info .n-input,
+  .general-info .n-input-number,
+  .general-info .n-date-picker {
+    width: 100% !important;
+    font-size: 1.08rem;
+  }
+  .general-info label,
+  .general-info .n-form-item-label {
+    font-size: 1.08rem !important;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .general-info .n-input[readonly],
+  .general-info .n-input-number[readonly] {
+    background: #f3f3f7 !important;
+    color: #333 !important;
+    border: 1px solid #e0e0e0 !important;
+    min-height: 40px;
+    opacity: 1 !important;
+  }
 }
 </style> 

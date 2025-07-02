@@ -882,7 +882,7 @@ function getProprieteNom(obj: any) {
 </script>
 
 <template>
-  <div class="p-4">
+  <div class="p-4 compta-bg">
     <NCard :bordered="false">
       <div class="page-header mb-6">
         <div v-if="!isMobile" class="flex items-center justify-between">
@@ -1527,5 +1527,9 @@ function getProprieteNom(obj: any) {
   .label-annee {
     font-size: 1rem;
   }
+}
+.compta-bg {
+  background-color: var(--n-body-color);
+  min-height: 100vh;
 }
 </style> 

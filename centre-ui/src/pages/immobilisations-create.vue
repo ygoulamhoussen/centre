@@ -12,7 +12,7 @@
 
     <!-- Indicateur de progression -->
     <NCard class="progress-card">
-      <div class="progress-steps" :class="{ 'progress-steps-mobile': isMobile }">
+      <div v-if="!isMobile" class="progress-steps">
         <div 
           v-for="(step, index) in steps" 
           :key="index"
@@ -27,10 +27,14 @@
           <div class="step-label">{{ step.label }}</div>
         </div>
       </div>
+      <div v-else class="progress-steps-mobile-simple">
+        <span class="step-mobile-number">Étape {{ currentStep + 1 }}/{{ steps.length }}</span>
+        <span class="step-mobile-label">{{ steps[currentStep].label }}</span>
+      </div>
     </NCard>
 
     <!-- Étape 1: Sélection de la propriété -->
-    <NCard v-if="currentStep === 0" title="Étape 1: Sélection de la propriété" class="step-card">
+    <NCard v-if="currentStep === 0" class="step-card">
       <NForm label-placement="left" label-width="auto">
         <NFormItem label="Propriété" required>
           <NSelect
@@ -59,7 +63,7 @@
     </NCard>
 
     <!-- Étape 2: Décomposition de l'immobilisation -->
-    <NCard v-if="currentStep === 1" title="Étape 2: Décomposition de l'immobilisation" class="step-card">
+    <NCard v-if="currentStep === 1" class="step-card">
       <div class="decomposition-info">
         <p class="info-text">
           Propriété sélectionnée : <strong>{{ selectedProprieteInfo?.nom }}</strong>
@@ -235,7 +239,7 @@
     </NCard>
 
     <!-- Étape 3: Récapitulatif et validation -->
-    <NCard v-if="currentStep === 2" title="Étape 3: Récapitulatif et validation" class="step-card">
+    <NCard v-if="currentStep === 2" class="step-card">
       <div class="recap-section">
         <h3>Informations de la propriété</h3>
         <div class="recap-item">
@@ -1047,6 +1051,24 @@ onMounted(async () => {
 }
 .progress-steps-mobile .step-label {
   font-size: 12px;
+  text-align: center;
+}
+.progress-steps-mobile-simple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  gap: 4px;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #9C27B0;
+}
+.step-mobile-label {
+  font-size: 1rem;
+  color: #757575;
   text-align: center;
 }
 </style> 

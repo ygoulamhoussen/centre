@@ -24,6 +24,7 @@ import {
   NText,
   useMessage,
   NDatePicker,
+  NH1,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import {
@@ -884,9 +885,9 @@ function getProprieteNom(obj: any) {
   <div class="p-4">
     <NCard :bordered="false">
       <div class="page-header mb-6">
-        <div v-if="!isMobile" class="flex justify-between items-center">
+        <div v-if="!isMobile" class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold mb-2">Comptabilité - Charges et Recettes</h1>
+            <NH1 class="titre-principal text-2xl mb-2">Comptabilité - Charges et Recettes</NH1>
             <p class="text-gray-600">Gestion des charges déductibles et des recettes locatives</p>
           </div>
           <NSpace>
@@ -905,7 +906,7 @@ function getProprieteNom(obj: any) {
           </NSpace>
         </div>
         <div v-else class="mobile-header">
-          <h1 class="mobile-title">Comptabilité</h1>
+          <NH1 class="titre-principal mobile-title">Comptabilité</NH1>
           <NButton block size="small" type="primary" class="mobile-journal-btn" @click="editerJournalComptable">
             <template #icon>
               <NIcon :component="ArrowDownload24Filled" />
@@ -928,7 +929,17 @@ function getProprieteNom(obj: any) {
           </div>
         </div>
       </div>
-      <!-- Résumé financier -->
+      <div class="annee-row-wrapper">
+        <div class="annee-row">
+          <span class="label-annee">Année :</span>
+          <NSelect
+            v-model:value="anneeSelectionnee"
+            :options="anneesDisponibles.map(a => ({ label: a ? a.toString() : '', value: a }))"
+            placeholder="Choisir une année"
+            style="width: 120px"
+          />
+        </div>
+      </div>
       <NCard v-if="!isMobile" title="Résumé financier" class="mb-6">
         <template #header-extra>
           <NButton type="primary" @click="editerJournalComptable">
@@ -938,15 +949,6 @@ function getProprieteNom(obj: any) {
             Éditer le journal comptable
           </NButton>
         </template>
-        <div class="flex items-center mb-4">
-          <span class="mr-2">Année :</span>
-          <NSelect
-            v-model:value="anneeSelectionnee"
-            :options="anneesDisponibles.map(a => ({ label: a ? a.toString() : '', value: a }))"
-            placeholder="Choisir une année"
-            style="width: 120px"
-          />
-        </div>
         <NGrid :cols="4" :x-gap="16">
           <NGi>
             <NCard class="resume-card charge">
@@ -1370,90 +1372,69 @@ function getProprieteNom(obj: any) {
 </template>
 
 <style scoped>
+.titre-principal, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
 .flex {
   display: flex;
-}
-
-.justify-between {
   justify-content: space-between;
-}
-
-.items-center {
   align-items: center;
 }
-
 .mb-2 {
   margin-bottom: 0.5rem;
 }
-
 .mb-4 {
   margin-bottom: 1rem;
 }
-
 .mb-6 {
   margin-bottom: 1.5rem;
 }
-
 .text-2xl {
   font-size: 1.5rem;
 }
-
 .font-bold {
   font-weight: bold;
 }
-
 .text-gray-600 {
   color: #6b7280;
 }
-
 .text-center {
   text-align: center;
 }
-
 .p-4 {
   padding: 1rem;
 }
-
 .bg-red-50 {
   background-color: #fef2f2;
 }
-
 .bg-green-50 {
   background-color: #f0fdf4;
 }
-
 .bg-blue-50 {
   background-color: #eff6ff;
 }
-
 .bg-orange-50 {
   background-color: #fff7ed;
 }
-
 .text-red-600 {
   color: #dc2626;
 }
-
 .text-green-600 {
   color: #16a34a;
 }
-
 .text-blue-600 {
   color: #2563eb;
 }
-
 .text-orange-600 {
   color: #ea580c;
 }
-
 .rounded-lg {
   border-radius: 0.5rem;
 }
-
 .text-sm {
   font-size: 0.875rem;
 }
-
 .mobile-card {
   margin-bottom: 12px;
   border: 1px solid #eee;
@@ -1466,7 +1447,6 @@ function getProprieteNom(obj: any) {
   display: flex;
   gap: 8px;
 }
-
 .resume-card {
   margin-bottom: 12px;
   text-align: center;
@@ -1515,5 +1495,37 @@ function getProprieteNom(obj: any) {
   max-width: 320px;
   width: 100%;
   align-self: center;
+}
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+.annee-row-wrapper {
+  margin-bottom: 12px;
+}
+.annee-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+@media (max-width: 768px) {
+  .annee-row-wrapper {
+    justify-content: center;
+    display: flex;
+    margin-bottom: 16px;
+  }
+  .annee-row {
+    font-size: 1rem;
+    justify-content: center;
+  }
+  .label-annee {
+    font-size: 1rem;
+  }
 }
 </style> 

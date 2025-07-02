@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, h, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Icon } from '@iconify/vue'
 import type { DataTableColumns } from 'naive-ui'
-import { NButton, NDataTable, NSelect, useMessage, NCard } from 'naive-ui'
+import { NButton, NDataTable, NSelect, NCard, NH1, useMessage } from 'naive-ui'
+import { Icon } from '@iconify/vue'
 import { useAppStore } from '@/store/modules/app'
-
 import type { Immobilisation } from '@/types/immobilisation'
 import { immobilisationApi } from '@/service/api/immobilisation'
 import { CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
+
 definePage({
   meta: {
     title: 'Immobilisations',
@@ -57,21 +57,21 @@ const proprieteOptions = computed(() =>
   proprietes.value.map(p => ({
     label: p.nom,
     value: p.id,
-  }))
+  })),
 )
 
 const typeOptions = computed(() =>
   Object.entries(TYPE_IMMOBILISATION_LABELS).map(([value, label]) => ({
     label,
     value,
-  }))
+  })),
 )
 
 const categorieOptions = computed(() =>
   Object.entries(CATEGORIE_FISCALE_LABELS).map(([value, label]) => ({
     label,
     value,
-  }))
+  })),
 )
 
 // Filtrage des immobilisations
@@ -184,7 +184,7 @@ const columns: DataTableColumns<Immobilisation> = [
         size: 'small',
         quaternary: true,
         onClick: () => viewAmortissements(row),
-      }, { 
+      }, {
         icon: () => h(Icon, { icon: 'material-symbols:schedule' }),
       }),
       h(NButton, {
@@ -192,7 +192,7 @@ const columns: DataTableColumns<Immobilisation> = [
         quaternary: true,
         type: 'error',
         onClick: () => deleteImmobilisation(row.id),
-      }, { 
+      }, {
         icon: () => h(Icon, { icon: 'material-symbols:delete-outline' }),
       }),
     ]),
@@ -222,25 +222,23 @@ onMounted(async () => {
 
 <template>
   <div class="immobilisations-page">
-    <div class="page-header">
-      <div v-if="!isMobile" class="page-header-row">
-        <h1>Gestion des Immobilisations</h1>
-        <NButton type="primary" @click="navigateToCreate">
-          <template #icon>
-            <Icon icon="material-symbols:add" />
-          </template>
-          Nouvelle Immobilisation
-        </NButton>
-      </div>
-      <div v-else class="mobile-header">
-        <h1 class="mobile-title">Immobilisations</h1>
-        <NButton block size="small" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
-          <template #icon>
-            <Icon icon="material-symbols:add" />
-          </template>
-          Nouvelle Immobilisation
-        </NButton>
-      </div>
+    <div v-if="!isMobile" class="flex items-center justify-between">
+      <NH1 class="titre-principal">Gestion des Immobilisations</NH1>
+      <NButton type="primary" @click="navigateToCreate">
+        <template #icon>
+          <Icon icon="material-symbols:add" />
+        </template>
+        Nouvelle Immobilisation
+      </NButton>
+    </div>
+    <div v-else class="mobile-header">
+      <NH1 class="titre-principal mobile-title">Immobilisations</NH1>
+      <NButton block size="small" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
+        <template #icon>
+          <Icon icon="material-symbols:add" />
+        </template>
+        Nouvelle Immobilisation
+      </NButton>
     </div>
     <div v-if="!isMobile" class="filters">
       <!-- Filtres desktop -->
@@ -279,16 +277,15 @@ onMounted(async () => {
   padding: 20px;
 }
 
-.page-header {
+.titre-principal, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+
+.flex {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h1 {
-  margin: 0;
-  color: #333;
 }
 
 .filters {
@@ -342,10 +339,14 @@ onMounted(async () => {
   display: flex;
   gap: 8px;
 }
-.page-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }
 </style> 

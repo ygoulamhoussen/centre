@@ -15,6 +15,7 @@ import {
   NSpin,
   NStatistic,
   useMessage,
+  NH1,
 } from 'naive-ui'
 import { resultatFiscalApi } from '@/service/api/resultat-fiscal'
 import type { DataTableColumns } from 'naive-ui'
@@ -147,8 +148,8 @@ onMounted(async () => {
 
 <template>
   <div class="resultat-fiscal-page">
-    <div class="page-header">
-      <h1>Résultat Fiscal Annuel</h1>
+    <div class="page-header flex items-center justify-between">
+      <NH1 class="titre-principal">Résultat Fiscal Annuel</NH1>
     </div>
 
     <NCard class="filters-card">
@@ -298,5 +299,26 @@ onMounted(async () => {
 
 :deep(.result-negative .n-statistic-value) {
   color: #18a058; /* naive-ui success color */
+}
+
+.titre-principal, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+.flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }
 </style> 

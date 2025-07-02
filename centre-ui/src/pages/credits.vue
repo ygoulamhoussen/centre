@@ -2,7 +2,7 @@
 import { h, onMounted, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
-import { NButton, NDataTable, NPopconfirm, NSpace, useMessage, NCard } from 'naive-ui'
+import { NButton, NDataTable, NPopconfirm, NSpace, useMessage, NCard, NH1 } from 'naive-ui'
 import { getCreditsByUtilisateur, deleteCreditById } from '@/service/api/immobilisation'
 import { useAuthStore } from '@/store/modules/auth'
 
@@ -119,25 +119,23 @@ onMounted(async () => {
 
 <template>
   <div class="credits-page">
-    <div class="page-header">
-      <div v-if="!isMobile" class="page-header-row">
-        <h1>Gestion des Crédits</h1>
-        <NButton type="primary" @click="navigateToCreate">
-          <template #icon>
-            <Icon icon="material-symbols:add" />
-          </template>
-          Nouveau Crédit
-        </NButton>
-      </div>
-      <div v-else class="mobile-header">
-        <h1 class="mobile-title">Crédits</h1>
-        <NButton block size="small" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
-          <template #icon>
-            <Icon icon="material-symbols:add" />
-          </template>
-          Nouveau Crédit
-        </NButton>
-      </div>
+    <div v-if="!isMobile" class="flex items-center justify-between">
+      <NH1 class="titre-principal">Gestion des Crédits</NH1>
+      <NButton type="primary" @click="navigateToCreate">
+        <template #icon>
+          <Icon icon="material-symbols:add" />
+        </template>
+        Nouveau Crédit
+      </NButton>
+    </div>
+    <div v-else class="mobile-header">
+      <NH1 class="titre-principal mobile-title">Crédits</NH1>
+      <NButton block size="small" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
+        <template #icon>
+          <Icon icon="material-symbols:add" />
+        </template>
+        Nouveau Crédit
+      </NButton>
     </div>
     <NDataTable
       v-if="!isMobile"
@@ -167,19 +165,14 @@ onMounted(async () => {
 .credits-page {
   padding: 20px;
 }
-.page-header {
+.titre-principal, h1, h2, h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
+}
+.flex {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-}
-.page-header h1 {
-  margin: 0;
-  color: #333;
-}
-.actions {
-  display: flex;
-  gap: 8px;
 }
 .mobile-header {
   display: flex;
@@ -213,10 +206,18 @@ onMounted(async () => {
   display: flex;
   gap: 8px;
 }
-.page-header-row {
+.actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+  gap: 8px;
+}
+@media (max-width: 768px) {
+  .titre-principal, h1, h2, h3 {
+    font-size: 1.25rem !important;
+  }
+  .flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }
 </style> 

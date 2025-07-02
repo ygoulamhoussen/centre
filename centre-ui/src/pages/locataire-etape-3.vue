@@ -36,6 +36,12 @@ const router = useRouter()
 const message = useMessage()
 const chargement = ref(false)
 const isMobile = ref(window.innerWidth < 768)
+const currentStep = 2 // étape 3 (0-based)
+const steps = [
+  { label: 'Informations personnelles' },
+  { label: 'Adresse' },
+  { label: 'Récapitulatif' },
+]
 
 function handleResize() {
   isMobile.value = window.innerWidth < 768
@@ -80,15 +86,22 @@ function precedent() {
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="steps-wrapper" style="overflow-x:auto;">
-        <NSteps :current="3" class="mb-8">
-          <NStep title="Informations" description="Nom, contact, etc." />
-          <NStep title="Adresse" description="Lieu de résidence" />
-          <NStep title="Récapitulatif" description="Vérification finale" />
-        </NSteps>
+      <!-- Stepper custom -->
+      <div v-if="!isMobile" class="progress-steps mb-8">
+        <div 
+          v-for="(step, index) in steps" 
+          :key="index"
+          class="step"
+          :class="{ 'active': currentStep === index, 'completed': currentStep > index, 'disabled': currentStep < index }"
+        >
+          <div class="step-number">{{ index + 1 }}</div>
+          <div class="step-label">{{ step.label }}</div>
+        </div>
       </div>
-
-      <NH2 class="titre-principal mb-4">Étape 3: Récapitulatif</NH2>
+      <div v-else class="progress-steps-mobile-simple mb-8">
+        <span class="step-mobile-number">Étape 3/3</span>
+        <span class="step-mobile-label">Récapitulatif</span>
+      </div>
 
       <NDescriptions label-placement="top" bordered :column="isMobile ? 1 : 2">
         <NDescriptionsItem label="Nom complet">
@@ -132,7 +145,92 @@ h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0 8px 0;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  position: relative;
+}
+.step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: #e5e7eb;
+  z-index: 1;
+}
+.step.completed:not(:last-child)::after {
+  background-color: #9C27B0;
+}
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  z-index: 2;
+  position: relative;
+}
+.step.active .step-number {
+  background-color: #9C27B0;
+  color: white;
+}
+.step.completed .step-number {
+  background-color: #10b981;
+  color: white;
+}
+.step-label {
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+}
+.step.active .step-label {
+  color: #9C27B0;
+  font-weight: 500;
+}
+.step.completed .step-label {
+  color: #10b981;
+  font-weight: 500;
+}
+.progress-steps-mobile-simple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  gap: 4px;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #9C27B0;
+}
+.step-mobile-label {
+  font-size: 1rem;
+  color: #757575;
+  text-align: center;
+}
 @media (max-width: 768px) {
+  .progress-steps {
+    display: none !important;
+  }
+  .progress-steps-mobile-simple {
+    margin-bottom: 1rem !important;
+  }
   .mb-8 {
     margin-bottom: 1rem !important;
   }

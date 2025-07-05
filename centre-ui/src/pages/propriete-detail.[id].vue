@@ -56,8 +56,8 @@ const message = useMessage()
 // États
 const loading = ref(true)
 const saving = ref(false)
-const editingInfos = ref(false)
 const showDocumentModal = ref(false)
+const showEditModal = ref(false)
 const uploading = ref(false)
 const proprieteDetail = ref<any | null>(null)
 
@@ -173,8 +173,8 @@ async function fetchProprieteDetails() {
   }
 }
 
-function startEditing(section?: string) {
-  if (section === 'infos' && proprieteDetail.value?.propriete) {
+function startEditing() {
+  if (proprieteDetail.value?.propriete) {
     const propriete = proprieteDetail.value.propriete
     // S'assurer que les champs numériques sont correctement typés
     editForm.value = {
@@ -184,13 +184,7 @@ function startEditing(section?: string) {
       fraisNotaire: Number(propriete.fraisNotaire) || 0,
       fraisAgence: Number(propriete.fraisAgence) || 0,
     }
-    editingInfos.value = true
-    nextTick(() => {
-      // Scroll sur le signet
-      document.getElementById('focus-nom')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      // Focus sur l'input si possible
-      nomInputRef.value?.focus?.()
-    })
+    showEditModal.value = true
   }
 }
 
@@ -226,7 +220,7 @@ async function savePropriete() {
     }
 
     message.success('Modifications enregistrées avec succès')
-    editingInfos.value = false
+    showEditModal.value = false
   }
   catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
@@ -239,7 +233,7 @@ async function savePropriete() {
 }
 
 function cancelEditing() {
-  editingInfos.value = false
+  showEditModal.value = false
 }
 
 // Utilitaires
@@ -516,12 +510,7 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
         <NTabs v-if="proprieteDetail" v-model:value="activeTab" type="line" animated>
           <!-- Onglet Informations -->
           <NTabPane name="infos" :tab="() => h('span', [h(NIcon, { component: Info24Filled, size: 20, class: 'mr-1' }), ' Informations'])" title="Informations">
-            <div v-if="!editingInfos" class="action-buttons">
-              <NButton type="primary" @click="startEditing('infos')" class="action-button" ghost title="Modifier">
-                <template #icon>
-                  <NIcon :component="Edit24Filled" />
-                </template>
-              </NButton>
+            <div class="action-buttons">
               <NPopconfirm
                 @positive-click="() => proprieteDetail.propriete && proprieteDetail.propriete.id && supprimerPropriete(proprieteDetail.propriete.id)"
               >
@@ -535,20 +524,8 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
                 Êtes-vous sûr de vouloir supprimer cette propriété ?
               </NPopconfirm>
             </div>
-            <div v-else class="action-buttons">
-              <NButton type="primary" :loading="saving" @click="savePropriete" class="action-button" title="Enregistrer">
-                <template #icon>
-                  <NIcon :component="Save24Filled" />
-                </template>
-              </NButton>
-              <NButton class="action-button ml-2" @click="cancelEditing" title="Annuler">
-                <template #icon>
-                  <NIcon :component="DismissIcon" />
-                </template>
-              </NButton>
-            </div>
 
-            <NCard class="propriete-info-card" :bordered="false">
+            <NCard class="propriete-info-card clickable-card" :bordered="false" @click="startEditing">
               <div class="propriete-info-grid">
                 <div class="propriete-info-item">
                   <span class="propriete-info-label"><NIcon :component="Home24Filled" class="mr-1" />Nom :</span>
@@ -566,7 +543,6 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
                   <span class="propriete-info-label"><NIcon :component="Document24Filled" class="mr-1" />Ville :</span>
                   <span class="propriete-info-value">{{ proprieteDetail.propriete.ville }}</span>
                 </div>
-                <div id="focus-nom"></div>
                 <div class="propriete-info-item">
                   <span class="propriete-info-label"><NIcon :component="Document24Filled" class="mr-1" />Montant acquisition :</span>
                   <span class="propriete-info-value">{{ formatCurrency(proprieteDetail.propriete.montantAcquisition) }}</span>
@@ -580,76 +556,11 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
                   <span class="propriete-info-value">{{ proprieteDetail.propriete.tantieme }}</span>
                 </div>
               </div>
-            </NCard>
-
-            <NForm v-if="editingInfos" class="edit-form">
-              <div class="info-grid">
-                <div class="info-label">
-                  Nom :
-                </div>
-                <div class="info-value-edit">
-                  <NInput v-model:value="editForm.nom" size="large" style="width: 100%" ref="nomInputRef" />
-                </div>
-
-                <div class="info-label">
-                  Adresse :
-                </div>
-                <div class="info-value-edit">
-                  <NInput v-model:value="editForm.adresse" size="large" style="width: 100%" />
-                </div>
-
-                <div class="info-label">
-                  Code postal :
-                </div>
-                <div class="info-value-edit">
-                  <NInput v-model:value="editForm.codePostal" size="large" style="width: 100%" />
-                </div>
-
-                <div class="info-label">
-                  Ville :
-                </div>
-                <div class="info-value-edit">
-                  <NInput v-model:value="editForm.ville" size="large" style="width: 100%" />
-                </div>
-
-                <div class="info-label">
-                  Type :
-                </div>
-                <div class="info-value-edit">
-                  <NSelect
-                    v-model:value="editForm.typeBien"
-                    :options="[
-                      { label: 'Appartement', value: 'APPARTEMENT' },
-                      { label: 'Maison', value: 'MAISON' },
-                      { label: 'Local commercial', value: 'LOCAL_COMMERCIAL' },
-                    ]"
-                    size="large"
-                    style="width: 100%"
-                  />
-                </div>
-
-                <div class="info-label">
-                  Montant acquisition :
-                </div>
-                <div class="info-value-edit">
-                  <NInputNumber v-model:value="editForm.montantAcquisition" size="large" style="width: 100%" />
-                </div>
-
-                <div class="info-label">
-                  Date acquisition :
-                </div>
-                <div class="info-value-edit">
-                  <NDatePicker v-model:formatted-value="editForm.dateAcquisition" value-format="yyyy-MM-dd" size="large" style="width: 100%" />
-                </div>
-
-                <div class="info-label">
-                  Tantième :
-                </div>
-                <div class="info-value-edit">
-                  <NInputNumber v-model:value="editForm.tantieme" size="large" style="width: 100%" />
-                </div>
+              <div class="edit-hint">
+                <NIcon :component="Edit24Filled" size="16" />
+                <span>Cliquez pour modifier</span>
               </div>
-            </NForm>
+            </NCard>
           </NTabPane>
 
           <!-- Onglet Documents -->
@@ -776,6 +687,99 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
                 @click="ajouterDocument"
               >
                 Téléverser
+              </NButton>
+            </div>
+          </template>
+        </NCard>
+      </NModal>
+
+      <!-- Modal de modification des informations -->
+      <NModal v-model:show="showEditModal" :mask-closable="false">
+        <NCard
+          style="width: 700px; max-width: 90vw;"
+          title="Modifier les informations de la propriété"
+          :bordered="false"
+          size="huge"
+          role="dialog"
+          aria-modal="true"
+        >
+          <NForm class="edit-form">
+            <div class="info-grid">
+              <div class="info-label">
+                Nom :
+              </div>
+              <div class="info-value-edit">
+                <NInput v-model:value="editForm.nom" size="large" style="width: 100%" ref="nomInputRef" />
+              </div>
+
+              <div class="info-label">
+                Adresse :
+              </div>
+              <div class="info-value-edit">
+                <NInput v-model:value="editForm.adresse" size="large" style="width: 100%" />
+              </div>
+
+              <div class="info-label">
+                Code postal :
+              </div>
+              <div class="info-value-edit">
+                <NInput v-model:value="editForm.codePostal" size="large" style="width: 100%" />
+              </div>
+
+              <div class="info-label">
+                Ville :
+              </div>
+              <div class="info-value-edit">
+                <NInput v-model:value="editForm.ville" size="large" style="width: 100%" />
+              </div>
+
+              <div class="info-label">
+                Type :
+              </div>
+              <div class="info-value-edit">
+                <NSelect
+                  v-model:value="editForm.typeBien"
+                  :options="[
+                    { label: 'Appartement', value: 'APPARTEMENT' },
+                    { label: 'Maison', value: 'MAISON' },
+                    { label: 'Local commercial', value: 'LOCAL_COMMERCIAL' },
+                  ]"
+                  size="large"
+                  style="width: 100%"
+                />
+              </div>
+
+              <div class="info-label">
+                Montant acquisition :
+              </div>
+              <div class="info-value-edit">
+                <NInputNumber v-model:value="editForm.montantAcquisition" size="large" style="width: 100%" />
+              </div>
+
+              <div class="info-label">
+                Date acquisition :
+              </div>
+              <div class="info-value-edit">
+                <NDatePicker v-model:formatted-value="editForm.dateAcquisition" value-format="yyyy-MM-dd" size="large" style="width: 100%" />
+              </div>
+
+              <div class="info-label">
+                Tantième :
+              </div>
+              <div class="info-value-edit">
+                <NInputNumber v-model:value="editForm.tantieme" size="large" style="width: 100%" />
+              </div>
+            </div>
+          </NForm>
+          <template #footer>
+            <div class="flex justify-end gap-2">
+              <NButton @click="cancelEditing">Annuler</NButton>
+              <NButton 
+                type="primary" 
+                :loading="saving"
+                @click="savePropriete"
+              >
+                Enregistrer
               </NButton>
             </div>
           </template>
@@ -945,6 +949,36 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
   margin-bottom: 24px;
   background: var(--n-color-embedded);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--n-color-primary);
+}
+
+.edit-hint {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--n-text-color-disabled);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.clickable-card:hover .edit-hint {
+  opacity: 1;
+  color: var(--n-color-primary);
 }
 .propriete-info-grid {
   display: grid;

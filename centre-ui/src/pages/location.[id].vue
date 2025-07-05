@@ -56,7 +56,7 @@ const authStore = useAuthStore()
 
 const loading = ref(true)
 const saving = ref(false)
-const editing = ref(false)
+const showEditModal = ref(false)
 
 const locationId = Array.isArray(route.params.id)
   ? route.params.id[0]
@@ -170,11 +170,11 @@ async function loadDocuments() {
 }
 
 function startEditing() {
-  editing.value = true
+  showEditModal.value = true
 }
 
 function cancelEditing() {
-  editing.value = false
+  showEditModal.value = false
   if (location.value) {
     formData.value = {
       id: location.value.id,
@@ -219,7 +219,7 @@ async function saveLocation() {
     )
     if (!res.ok) throw new Error(await res.text())
     message.success('Location mise à jour')
-    editing.value = false
+    showEditModal.value = false
     await loadLocation()
   } catch (err: any) {
     console.error(err)
@@ -472,67 +472,59 @@ onMounted(() => {
 
         <NTabs type="line" animated @update:value="(tab) => { if(tab==='quittances'){loadQuittances()} }">
           <NTabPane name="details" tab="Détails">
-            <NCard class="mt-4">
-              <NForm label-placement="top" :disabled="!editing" class="max-w-xl">
-                <NFormItem label="Date début">
-                  <NDatePicker v-model:value="formData.dateDebut" type="date" class="w-full" />
-                </NFormItem>
-                <NFormItem label="Date fin">
-                  <NDatePicker v-model:value="formData.dateFin" type="date" class="w-full" />
-                </NFormItem>
-                <NFormItem label="Loyer mensuel (€)">
-                  <NInput v-model:value="formData.loyerMensuel" />
-                </NFormItem>
-                <NFormItem label="Charges mensuelles (€)">
-                  <NInput v-model:value="formData.chargesMensuelles" />
-                </NFormItem>
-                <NFormItem label="Dépôt garantie (€)">
-                  <NInput v-model:value="formData.depotGarantie" />
-                </NFormItem>
-                <NFormItem label="Fréquence loyer">
-                  <NSelect
-                    v-model:value="formData.frequenceLoyer"
-                    :options="[
-                      { label: 'Mensuel', value: 'MENSUEL' },
-                      { label: 'Trimestriel', value: 'TRIMESTRIEL' },
-                    ]"
-                  />
-                </NFormItem>
-                <NFormItem label="Jour échéance (1-28)">
-                  <NInput v-model:value="formData.jourEcheance" />
-                </NFormItem>
-              </NForm>
-
-              <div class="flex justify-between items-center mt-6">
-                <div>
-                  <NPopconfirm
-                    v-if="!editing"
-                    @positive-click="deleteLocation"
-                    positive-text="Oui, supprimer"
-                    negative-text="Annuler"
-                  >
-                    <template #trigger>
-                      <NButton type="error" ghost title="Supprimer la location">
-                        <template #icon><NIcon :component="Delete24Filled" /></template>
-                      </NButton>
-                    </template>
-                    Êtes-vous sûr de vouloir supprimer cette location ? Cette action est irréversible.
-                  </NPopconfirm>
-                </div>
-
-                <div class="flex items-center">
-                  <NButton v-if="editing" @click="cancelEditing" class="mr-2" title="Annuler">
-                    <template #icon><NIcon :component="Dismiss24Filled" /></template>
-                  </NButton>
-                  <NButton v-if="editing" type="primary" :loading="saving" @click="saveLocation" title="Enregistrer">
-                    <template #icon><NIcon :component="Save24Filled" /></template>
-                  </NButton>
-                  <NButton v-if="!editing" type="primary" @click="startEditing" title="Modifier">
-                    <template #icon><NIcon :component="Edit24Filled" /></template>
-                  </NButton>
+            <NCard class="mt-4 clickable-card" @click="startEditing">
+              <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div class="text-sm text-gray-500">Date début</div>
+                    <div class="text-base">{{ location.dateDebut ? new Date(location.dateDebut).toLocaleDateString('fr-FR') : 'Non spécifié' }}</div>
+                  </div>
+                  <div>
+                    <div class="text-sm text-gray-500">Date fin</div>
+                    <div class="text-base">{{ location.dateFin ? new Date(location.dateFin).toLocaleDateString('fr-FR') : 'Non spécifié' }}</div>
+                  </div>
+                  <div>
+                    <div class="text-sm text-gray-500">Loyer mensuel</div>
+                    <div class="text-base">{{ location.loyerMensuel }} €</div>
+                  </div>
+                  <div>
+                    <div class="text-sm text-gray-500">Charges mensuelles</div>
+                    <div class="text-base">{{ location.chargesMensuelles }} €</div>
+                  </div>
+                  <div>
+                    <div class="text-sm text-gray-500">Dépôt garantie</div>
+                    <div class="text-base">{{ location.depotGarantie }} €</div>
+                  </div>
+                  <div>
+                    <div class="text-sm text-gray-500">Fréquence loyer</div>
+                    <div class="text-base">{{ location.frequenceLoyer === 'MENSUEL' ? 'Mensuel' : 'Trimestriel' }}</div>
+                  </div>
+                  <div>
+                    <div class="text-sm text-gray-500">Jour échéance</div>
+                    <div class="text-base">{{ location.jourEcheance || 'Non spécifié' }}</div>
+                  </div>
                 </div>
               </div>
+              <div class="edit-hint">
+                <NIcon :component="Edit24Filled" size="16" />
+                <span>Cliquez pour modifier</span>
+              </div>
             </NCard>
+
+            <div class="flex justify-center mt-6">
+              <NPopconfirm
+                @positive-click="deleteLocation"
+                positive-text="Oui, supprimer"
+                negative-text="Annuler"
+              >
+                <template #trigger>
+                  <NButton type="error" ghost title="Supprimer la location">
+                    <template #icon><NIcon :component="Delete24Filled" /></template>
+                  </NButton>
+                </template>
+                Êtes-vous sûr de vouloir supprimer cette location ? Cette action est irréversible.
+              </NPopconfirm>
+            </div>
           </NTabPane>
 
           <NTabPane name="documents" tab="Documents">
@@ -671,6 +663,60 @@ onMounted(() => {
             </div>
           </NForm>
         </NModal>
+
+        <!-- Modal de modification des informations -->
+        <NModal v-model:show="showEditModal" :mask-closable="false">
+          <NCard
+            style="width: 700px; max-width: 90vw;"
+            title="Modifier les informations de la location"
+            :bordered="false"
+            size="huge"
+            role="dialog"
+            aria-modal="true"
+          >
+            <NForm label-placement="top" class="max-w-xl">
+              <NFormItem label="Date début">
+                <NDatePicker v-model:value="formData.dateDebut" type="date" class="w-full" />
+              </NFormItem>
+              <NFormItem label="Date fin">
+                <NDatePicker v-model:value="formData.dateFin" type="date" class="w-full" />
+              </NFormItem>
+              <NFormItem label="Loyer mensuel (€)">
+                <NInput v-model:value="formData.loyerMensuel" inputmode="decimal" />
+              </NFormItem>
+              <NFormItem label="Charges mensuelles (€)">
+                <NInput v-model:value="formData.chargesMensuelles" inputmode="decimal" />
+              </NFormItem>
+              <NFormItem label="Dépôt garantie (€)">
+                <NInput v-model:value="formData.depotGarantie" inputmode="decimal" />
+              </NFormItem>
+              <NFormItem label="Fréquence loyer">
+                <NSelect
+                  v-model:value="formData.frequenceLoyer"
+                  :options="[
+                    { label: 'Mensuel', value: 'MENSUEL' },
+                    { label: 'Trimestriel', value: 'TRIMESTRIEL' },
+                  ]"
+                />
+              </NFormItem>
+                              <NFormItem label="Jour échéance (1-28)">
+                  <NInput v-model:value="formData.jourEcheance" inputmode="numeric" />
+                </NFormItem>
+            </NForm>
+            <template #footer>
+              <div class="flex justify-end gap-2">
+                <NButton @click="cancelEditing">Annuler</NButton>
+                <NButton 
+                  type="primary" 
+                  :loading="saving"
+                  @click="saveLocation"
+                >
+                  Enregistrer
+                </NButton>
+              </div>
+            </template>
+          </NCard>
+        </NModal>
       </div>
 
       <div v-else class="text-center py-12">
@@ -749,5 +795,35 @@ h3 {
 }
 .n-tabs-tab:hover .tab-label-hover {
   display: inline;
+}
+
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--n-color-primary);
+}
+
+.edit-hint {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--n-text-color-disabled);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.clickable-card:hover .edit-hint {
+  opacity: 1;
+  color: var(--n-color-primary);
 }
 </style>

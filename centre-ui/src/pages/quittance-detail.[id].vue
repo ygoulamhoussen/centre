@@ -56,6 +56,7 @@ const statutOptions = [
 
 const tabsWrapperRef = ref<HTMLElement | null>(null)
 const activeTab = ref('detail')
+const showEditModal = ref(false)
 
 async function fetchQuittance() {
   loading.value = true
@@ -89,6 +90,14 @@ async function fetchPaiements() {
   }
 }
 
+function startEditing() {
+  showEditModal.value = true
+}
+
+function cancelEditing() {
+  showEditModal.value = false
+}
+
 async function enregistrer() {
   saving.value = true
   try {
@@ -100,7 +109,7 @@ async function enregistrer() {
     })
     if (!res.ok) throw new Error('Erreur serveur')
     message.success('Quittance modifiée !')
-    router.push('/quittance')
+    showEditModal.value = false
   } catch (e: any) {
     message.error(e.message || 'Erreur inconnue')
   } finally {
@@ -254,26 +263,36 @@ const paiementColumns = [
           <NTabs v-model:value="activeTab" type="line" class="mt-8">
             <NTabPane name="detail" :tab="h('span', [h(NIcon, { component: Info24Filled, size: 20 }), ' Détail'])">
               <NH2 class="sous-titre mb-4">Détail de la quittance</NH2>
-              <NForm label-placement="top">
-                <NFormItem label="Montant loyer (€)">
-                  <NInputNumber v-model:value="quittance.montantLoyer" min="0" placeholder="0.00" size="large" />
-                </NFormItem>
-                <NFormItem label="Montant charges (€)">
-                  <NInputNumber v-model:value="quittance.montantCharges" min="0" placeholder="0.00" size="large" />
-                </NFormItem>
-                <NFormItem label="Inclure caution ?">
-                  <NRadioGroup v-model:value="quittance.inclureCaution">
-                    <NRadio :value="true">Oui</NRadio>
-                    <NRadio :value="false">Non</NRadio>
-                  </NRadioGroup>
-                </NFormItem>
-                <NFormItem v-if="quittance.inclureCaution" label="Montant caution (€)">
-                  <NInputNumber v-model:value="quittance.depotGarantie" min="0" placeholder="0.00" size="large" />
-                </NFormItem>
-                <NFormItem label="Statut">
-                  <NSelect v-model:value="quittance.statut" :options="statutOptions" size="large" />
-                </NFormItem>
-              </NForm>
+              <NCard class="clickable-card" @click="startEditing">
+                <div class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div class="text-sm text-gray-500">Montant loyer</div>
+                      <div class="text-base">{{ quittance.montantLoyer }} €</div>
+                    </div>
+                    <div>
+                      <div class="text-sm text-gray-500">Montant charges</div>
+                      <div class="text-base">{{ quittance.montantCharges }} €</div>
+                    </div>
+                    <div>
+                      <div class="text-sm text-gray-500">Inclure caution</div>
+                      <div class="text-base">{{ quittance.inclureCaution ? 'Oui' : 'Non' }}</div>
+                    </div>
+                    <div v-if="quittance.inclureCaution">
+                      <div class="text-sm text-gray-500">Montant caution</div>
+                      <div class="text-base">{{ quittance.depotGarantie }} €</div>
+                    </div>
+                    <div>
+                      <div class="text-sm text-gray-500">Statut</div>
+                      <div class="text-base">{{ quittance.statut === 'PAYEE' ? 'Payée' : (quittance.statut === 'PARTIELLE' ? 'Partielle' : 'Impayée') }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="edit-hint">
+                  <NIcon :component="Edit24Filled" size="16" />
+                  <span>Cliquez pour modifier</span>
+                </div>
+              </NCard>
               <div class="flex justify-between mt-8">
                 <NButton ghost @click="router.push('/quittance')" title="Précédent">
                   <template #icon><NIcon :component="ArrowLeft24Filled" /></template>
@@ -291,9 +310,6 @@ const paiementColumns = [
                     </template>
                     Confirmer la suppression ?
                   </NPopconfirm>
-                  <NButton type="primary" :loading="saving" @click="enregistrer" title="Enregistrer">
-                    <template #icon><NIcon :component="Save24Filled" /></template>
-                  </NButton>
                 </div>
               </div>
             </NTabPane>
@@ -361,6 +377,51 @@ const paiementColumns = [
           </NTabs>
         </div>
       </NCard>
+
+      <!-- Modal de modification des informations -->
+      <NModal v-model:show="showEditModal" :mask-closable="false">
+        <NCard
+          style="width: 700px; max-width: 90vw;"
+          title="Modifier les informations de la quittance"
+          :bordered="false"
+          size="huge"
+          role="dialog"
+          aria-modal="true"
+        >
+          <NForm label-placement="top">
+            <NFormItem label="Montant loyer (€)">
+              <NInputNumber v-model:value="quittance.montantLoyer" min="0" placeholder="0.00" size="large" inputmode="decimal" />
+            </NFormItem>
+            <NFormItem label="Montant charges (€)">
+              <NInputNumber v-model:value="quittance.montantCharges" min="0" placeholder="0.00" size="large" inputmode="decimal" />
+            </NFormItem>
+            <NFormItem label="Inclure caution ?">
+              <NRadioGroup v-model:value="quittance.inclureCaution">
+                <NRadio :value="true">Oui</NRadio>
+                <NRadio :value="false">Non</NRadio>
+              </NRadioGroup>
+            </NFormItem>
+            <NFormItem v-if="quittance.inclureCaution" label="Montant caution (€)">
+              <NInputNumber v-model:value="quittance.depotGarantie" min="0" placeholder="0.00" size="large" inputmode="decimal" />
+            </NFormItem>
+            <NFormItem label="Statut">
+              <NSelect v-model:value="quittance.statut" :options="statutOptions" size="large" />
+            </NFormItem>
+          </NForm>
+          <template #footer>
+            <div class="flex justify-end gap-2">
+              <NButton @click="cancelEditing">Annuler</NButton>
+              <NButton 
+                type="primary" 
+                :loading="saving"
+                @click="enregistrer"
+              >
+                Enregistrer
+              </NButton>
+            </div>
+          </template>
+        </NCard>
+      </NModal>
     </NSpin>
   </div>
 </template>
@@ -436,6 +497,37 @@ const paiementColumns = [
 .n-tabs-tab:hover .tab-label-hover {
   display: inline;
 }
+
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--n-color-primary);
+}
+
+.edit-hint {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--n-text-color-disabled);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.clickable-card:hover .edit-hint {
+  opacity: 1;
+  color: var(--n-color-primary);
+}
+
 .tabs-scrollable {
   overflow-x: auto;
   scrollbar-width: thin;

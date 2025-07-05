@@ -54,41 +54,7 @@ async function deleteCredit(credit: Credit) {
   }
 }
 
-const columns = [
-  { title: 'Intitulé', key: 'intitule', width: 200 },
-  { title: 'Montant', key: 'montant', width: 120 },
-  { title: 'Durée (mois)', key: 'duree', width: 120 },
-  { title: 'Taux (%)', key: 'taux', width: 100 },
-  { title: 'Propriété', key: 'proprieteNom', width: 150 },
-  {
-    title: 'Actions',
-    key: 'actions',
-    width: 120,
-    render: (row: Credit) => h(NSpace, null, {
-      default: () => [
-        h(NButton, {
-          size: 'small',
-          quaternary: true,
-          onClick: () => viewEcheancier(row),
-        }, {
-          icon: () => h(Icon, { icon: 'material-symbols:schedule' }),
-        }),
-        h(NPopconfirm, {
-          onPositiveClick: () => deleteCredit(row),
-        }, {
-          trigger: () => h(NButton, {
-            size: 'small',
-            quaternary: true,
-            type: 'error',
-          }, {
-            icon: () => h(Icon, { icon: 'material-symbols:delete-outline' }),
-          }),
-          default: () => 'Êtes-vous sûr de vouloir supprimer ce crédit et toutes ses échéances ?',
-        }),
-      ],
-    }),
-  },
-]
+// Suppression de la définition des colonnes car on utilise des cards maintenant
 
 async function loadCredits() {
   loading.value = true
@@ -137,24 +103,79 @@ onMounted(async () => {
         Nouveau Crédit
       </NButton>
     </div>
-    <NDataTable
-      v-if="!isMobile"
-      :columns="columns"
-      :data="credits"
-      :loading="loading"
-      :bordered="false"
-      striped
-    />
+    <div v-if="!isMobile" class="desktop-cards">
+      <NCard 
+        v-for="credit in credits" 
+        :key="credit.id" 
+        class="credit-card clickable-card" 
+        @click="viewEcheancier(credit)"
+      >
+        <div class="card-header">
+          <div class="credit-info">
+            <div class="credit-title">{{ credit.intitule }}</div>
+            <div class="credit-amount">{{ credit.montant.toLocaleString('fr-FR') }} €</div>
+            <div class="credit-details">
+              <span class="detail-item">{{ credit.duree }} mois</span>
+              <span class="detail-item">{{ credit.taux }}%</span>
+            </div>
+            <div class="credit-property">{{ credit.proprieteNom }}</div>
+          </div>
+          <NPopconfirm @positive-click="deleteCredit(credit)">
+            <template #trigger>
+              <NButton 
+                size="small" 
+                quaternary 
+                type="error" 
+                class="delete-btn"
+                @click.stop
+              >
+                <Icon icon="material-symbols:delete-outline" />
+              </NButton>
+            </template>
+            Êtes-vous sûr de vouloir supprimer ce crédit et toutes ses échéances ?
+          </NPopconfirm>
+        </div>
+        <div class="edit-hint">
+          <Icon icon="material-symbols:schedule" />
+          <span>Cliquez pour voir l'échéancier</span>
+        </div>
+      </NCard>
+    </div>
     <div v-else>
-      <NCard v-for="credit in credits" :key="credit.id" class="mobile-card">
-        <div><b>Intitulé :</b> {{ credit.intitule }}</div>
-        <div><b>Montant :</b> {{ credit.montant }} €</div>
-        <div><b>Durée :</b> {{ credit.duree }} mois</div>
-        <div><b>Taux :</b> {{ credit.taux }} %</div>
-        <div><b>Propriété :</b> {{ credit.proprieteNom }}</div>
-        <div class="actions">
-          <NButton size="small" @click="viewEcheancier(credit)">Échéancier</NButton>
-          <NButton size="small" type="error" @click="deleteCredit(credit)">Supprimer</NButton>
+      <NCard 
+        v-for="credit in credits" 
+        :key="credit.id" 
+        class="mobile-card clickable-card" 
+        @click="viewEcheancier(credit)"
+      >
+        <div class="card-header">
+          <div class="credit-info">
+            <div class="credit-title">{{ credit.intitule }}</div>
+            <div class="credit-amount">{{ credit.montant.toLocaleString('fr-FR') }} €</div>
+            <div class="credit-details">
+              <span class="detail-item">{{ credit.duree }} mois</span>
+              <span class="detail-item">{{ credit.taux }}%</span>
+            </div>
+            <div class="credit-property">{{ credit.proprieteNom }}</div>
+          </div>
+          <NPopconfirm @positive-click="deleteCredit(credit)">
+            <template #trigger>
+              <NButton 
+                size="small" 
+                quaternary 
+                type="error" 
+                class="delete-btn"
+                @click.stop
+              >
+                <Icon icon="material-symbols:delete-outline" />
+              </NButton>
+            </template>
+            Êtes-vous sûr de vouloir supprimer ce crédit et toutes ses échéances ?
+          </NPopconfirm>
+        </div>
+        <div class="edit-hint">
+          <Icon icon="material-symbols:schedule" />
+          <span>Cliquez pour voir l'échéancier</span>
         </div>
       </NCard>
     </div>
@@ -209,6 +230,100 @@ onMounted(async () => {
 .actions {
   display: flex;
   gap: 8px;
+}
+
+/* Styles pour les cards cliquables */
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #1890ff;
+}
+
+/* Layout pour desktop */
+.desktop-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.credit-card {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.delete-btn {
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+}
+
+.credit-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.credit-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.credit-amount {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #52c41a;
+}
+
+.credit-details {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.credit-property {
+  font-size: 0.9rem;
+  color: #666;
+  font-style: italic;
+}
+
+.edit-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 0.8rem;
+  color: #999;
 }
 @media (max-width: 768px) {
   .titre-principal, h1, h2, h3 {

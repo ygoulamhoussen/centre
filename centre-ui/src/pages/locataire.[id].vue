@@ -69,7 +69,7 @@ const message = useMessage()
 const authStore = useAuthStore()
 const loading = ref(true)
 const saving = ref(false)
-const editing = ref(false)
+const showEditModal = ref(false)
 const locataire = ref<any>(null)
 const formData = ref({
   id: '',
@@ -100,7 +100,7 @@ console.log('ID du locataire extrait:', locataireId)
 
 // Fonctions de gestion d'édition
 function startEditing() {
-  editing.value = true
+  showEditModal.value = true
 }
 
 // Charger les données du locataire
@@ -156,7 +156,7 @@ async function loadLocataire() {
 
 // Annuler l'édition
 function cancelEditing() {
-  editing.value = false
+  showEditModal.value = false
   // Restaurer les données originales
   if (locataire.value) {
     formData.value = {
@@ -218,7 +218,7 @@ async function saveLocataire() {
     
     const responseData = await response.json()
     locataire.value = responseData
-    editing.value = false
+    showEditModal.value = false
     message.success('Locataire enregistré avec succès')
     
     // Recharger les données pour s'assurer qu'elles sont à jour
@@ -594,12 +594,7 @@ function formatDate(dateString: string) {
             h(NIcon, { component: Info24Filled, size: 20 }),
             ' Informations'
           ]">
-            <div v-if="!editing" class="action-buttons mb-4">
-              <NButton type="primary" @click="startEditing" class="action-button" ghost title="Modifier">
-                <template #icon>
-                  <NIcon :component="Edit24Filled" />
-                </template>
-              </NButton>
+            <div class="action-buttons mb-4">
               <NPopconfirm
                 @positive-click="confirmDelete"
               >
@@ -613,51 +608,8 @@ function formatDate(dateString: string) {
                 Êtes-vous sûr de vouloir supprimer ce locataire ?
               </NPopconfirm>
             </div>
-            <div v-else class="action-buttons mb-4">
-              <NButton type="primary" :loading="saving" @click="saveLocataire" class="action-button" title="Enregistrer">
-                <template #icon>
-                  <NIcon :component="Save24Filled" />
-                </template>
-              </NButton>
-              <NButton class="action-button ml-2" @click="cancelEditing" title="Annuler">
-                <template #icon>
-                  <NIcon :component="Dismiss24Filled" />
-                </template>
-              </NButton>
-            </div>
-            <NCard :bordered="false">
-              <NForm v-if="editing">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <NFormItem label="Nom" required>
-                    <NInput v-model:value="formData.nom" placeholder="Nom" />
-                  </NFormItem>
-                  <NFormItem label="Prénom" required>
-                    <NInput v-model:value="formData.prenom" placeholder="Prénom" />
-                  </NFormItem>
-                  <NFormItem label="Email">
-                    <NInput v-model:value="formData.email" type="email" placeholder="email@exemple.com" />
-                  </NFormItem>
-                  <NFormItem label="Téléphone">
-                    <NInput v-model:value="formData.telephone" placeholder="+33 6 12 34 56 78" />
-                  </NFormItem>
-                  <NFormItem label="Date de naissance">
-                    <NDatePicker v-model:formatted-value="formData.dateNaissance" value-format="yyyy-MM-dd" />
-                  </NFormItem>
-                  <NFormItem label="Adresse">
-                    <NInput v-model:value="formData.adresse" placeholder="Adresse" />
-                  </NFormItem>
-                  <NFormItem label="Code postal">
-                    <NInput v-model:value="formData.codePostal" placeholder="Code postal" />
-                  </NFormItem>
-                  <NFormItem label="Ville">
-                    <NInput v-model:value="formData.ville" placeholder="Ville" />
-                  </NFormItem>
-                  <NFormItem label="Pays">
-                    <NSelect v-model:value="formData.pays" :options="paysOptions" placeholder="Sélectionner un pays" />
-                  </NFormItem>
-                </div>
-              </NForm>
-              <div v-else class="space-y-6">
+            <NCard :bordered="false" class="clickable-card" @click="startEditing">
+              <div class="space-y-6">
                 <div>
                   <NH3 class="sous-titre mb-4">Informations personnelles</NH3>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -695,6 +647,10 @@ function formatDate(dateString: string) {
                   </div>
                 </div>
                 <NEmpty v-else description="Aucune adresse enregistrée" />
+              </div>
+              <div class="edit-hint">
+                <NIcon :component="Edit24Filled" size="16" />
+                <span>Cliquez pour modifier</span>
               </div>
             </NCard>
           </NTabPane>
@@ -832,6 +788,62 @@ function formatDate(dateString: string) {
         </div>
       </NCard>
     </NModal>
+
+    <!-- Modal de modification des informations -->
+    <NModal v-model:show="showEditModal" :mask-closable="false">
+      <NCard
+        style="width: 700px; max-width: 90vw;"
+        title="Modifier les informations du locataire"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <NForm>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <NFormItem label="Nom" required>
+              <NInput v-model:value="formData.nom" placeholder="Nom" />
+            </NFormItem>
+            <NFormItem label="Prénom" required>
+              <NInput v-model:value="formData.prenom" placeholder="Prénom" />
+            </NFormItem>
+            <NFormItem label="Email">
+              <NInput v-model:value="formData.email" type="email" placeholder="email@exemple.com" />
+            </NFormItem>
+            <NFormItem label="Téléphone">
+              <NInput v-model:value="formData.telephone" placeholder="+33 6 12 34 56 78" />
+            </NFormItem>
+            <NFormItem label="Date de naissance">
+              <NDatePicker v-model:formatted-value="formData.dateNaissance" value-format="yyyy-MM-dd" inputmode="numeric" />
+            </NFormItem>
+            <NFormItem label="Adresse">
+              <NInput v-model:value="formData.adresse" placeholder="Adresse" />
+            </NFormItem>
+            <NFormItem label="Code postal">
+              <NInput v-model:value="formData.codePostal" placeholder="Code postal" />
+            </NFormItem>
+            <NFormItem label="Ville">
+              <NInput v-model:value="formData.ville" placeholder="Ville" />
+            </NFormItem>
+            <NFormItem label="Pays">
+              <NSelect v-model:value="formData.pays" :options="paysOptions" placeholder="Sélectionner un pays" />
+            </NFormItem>
+          </div>
+        </NForm>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <NButton @click="cancelEditing">Annuler</NButton>
+            <NButton 
+              type="primary" 
+              :loading="saving"
+              @click="saveLocataire"
+            >
+              Enregistrer
+            </NButton>
+          </div>
+        </template>
+      </NCard>
+    </NModal>
   </div>
 </template>
 
@@ -932,5 +944,35 @@ function formatDate(dateString: string) {
   border-radius: 0;
   white-space: normal;
   box-shadow: none;
+}
+
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--n-color-primary);
+}
+
+.edit-hint {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--n-text-color-disabled);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.clickable-card:hover .edit-hint {
+  opacity: 1;
+  color: var(--n-color-primary);
 }
 </style>

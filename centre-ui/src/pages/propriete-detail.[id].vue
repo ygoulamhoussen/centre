@@ -723,7 +723,7 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
                 Code postal :
               </div>
               <div class="info-value-edit">
-                <NInput v-model:value="editForm.codePostal" size="large" style="width: 100%" />
+                <NInput v-model:value="editForm.codePostal" size="large" style="width: 100%" inputmode="numeric" pattern="[0-9]*" />
               </div>
 
               <div class="info-label">
@@ -749,26 +749,40 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
                 />
               </div>
 
-                              <div class="info-label">
-                  Montant acquisition :
-                </div>
-                <div class="info-value-edit">
-                  <NInputNumber v-model:value="editForm.montantAcquisition" size="large" style="width: 100%" inputmode="decimal" />
-                </div>
+              <div class="info-label">
+                Montant acquisition :
+              </div>
+              <div class="info-value-edit">
+                <NInputNumber v-model:value="editForm.montantAcquisition" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
+              </div>
 
-                <div class="info-label">
-                  Date acquisition :
-                </div>
-                <div class="info-value-edit">
-                  <NDatePicker v-model:formatted-value="editForm.dateAcquisition" value-format="yyyy-MM-dd" size="large" style="width: 100%" />
-                </div>
+              <div class="info-label">
+                Date acquisition :
+              </div>
+              <div class="info-value-edit">
+                <NDatePicker v-model:formatted-value="editForm.dateAcquisition" value-format="yyyy-MM-dd" size="large" style="width: 100%" />
+              </div>
 
-                <div class="info-label">
-                  Tantième :
-                </div>
-                <div class="info-value-edit">
-                  <NInputNumber v-model:value="editForm.tantieme" size="large" style="width: 100%" inputmode="decimal" />
-                </div>
+              <div class="info-label">
+                Tantième :
+              </div>
+              <div class="info-value-edit">
+                <NInputNumber v-model:value="editForm.tantieme" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
+              </div>
+
+              <div class="info-label">
+                Frais notaire :
+              </div>
+              <div class="info-value-edit">
+                <NInputNumber v-model:value="editForm.fraisNotaire" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
+              </div>
+
+              <div class="info-label">
+                Frais agence :
+              </div>
+              <div class="info-value-edit">
+                <NInputNumber v-model:value="editForm.fraisAgence" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
+              </div>
             </div>
           </NForm>
           <template #footer>

@@ -105,6 +105,8 @@ const currentStep = 2
               placeholder="0.00"
               style="width: 100%"
               size="large"
+              inputmode="numeric"
+              pattern="[0-9]*"
             >
               <template #prefix>
                 <NIcon :component="Money24Filled" />
@@ -119,6 +121,8 @@ const currentStep = 2
               placeholder="0.00"
               style="width: 100%"
               size="large"
+              inputmode="numeric"
+              pattern="[0-9]*"
             >
               <template #prefix>
                 <NIcon :component="DocumentHeader24Filled" />
@@ -133,6 +137,8 @@ const currentStep = 2
               placeholder="0.00"
               style="width: 100%"
               size="large"
+              inputmode="numeric"
+              pattern="[0-9]*"
             >
               <template #prefix>
                 <NIcon :component="PeopleCommunity24Filled" />
@@ -148,6 +154,8 @@ const currentStep = 2
               placeholder="ex: 1000"
               style="width: 100%"
               size="large"
+              inputmode="numeric"
+              pattern="[0-9]*"
             >
               <template #prefix>
                 <NIcon :component="ChartMultiple24Filled" />

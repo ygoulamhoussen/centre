@@ -93,7 +93,7 @@ const currentStep = 1
             </NInput>
           </NFormItemGi>
           <NFormItemGi :span="1" label="Code postal">
-            <NInput v-model:value="proprieteDTO.codePostal" placeholder="Saisir le code postal" size="large">
+            <NInput v-model:value="proprieteDTO.codePostal" placeholder="Saisir le code postal" size="large" inputmode="numeric" pattern="[0-9]*">
               <template #prefix>
                 <NIcon :component="Location24Filled" />
               </template>

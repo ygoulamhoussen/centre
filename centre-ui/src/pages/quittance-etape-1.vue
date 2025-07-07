@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { ArrowRight24Filled } from '@vicons/fluent'
+import { ArrowRight24Filled, Home24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -21,6 +21,7 @@ import {
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import QuittancePeriodeStep from './QuittancePeriodeStep.vue'
 
 definePage({
   meta: {
@@ -38,7 +39,6 @@ const { quittanceDTO } = storeToRefs(store)
 const locations = ref<any[]>([])
 const authStore = useAuthStore()
 const userId = authStore.userInfo.userId
-const stepTitles = ['Sélection', 'Détails', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 
 // --- Logique pour la sélection de période dynamique ---
@@ -50,22 +50,6 @@ const selectedMonth = ref<number | null>(null)
 const selectedQuarter = ref<number | null>(null)
 
 const currentYear = new Date().getFullYear()
-const yearOptions = Array.from({ length: 10 }, (_, i) => ({
-  label: (currentYear - 5 + i).toString(),
-  value: currentYear - 5 + i,
-})).reverse()
-
-const monthOptions = Array.from({ length: 12 }, (_, i) => ({
-  label: new Date(2000, i).toLocaleString('fr-FR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
-  value: i,
-}))
-
-const quarterOptions = [
-  { label: 'Trimestre 1 (Jan-Mar)', value: 1 },
-  { label: 'Trimestre 2 (Avr-Juin)', value: 2 },
-  { label: 'Trimestre 3 (Juil-Sep)', value: 3 },
-  { label: 'Trimestre 4 (Oct-Déc)', value: 4 },
-]
 
 watch(
   [selectedYear, selectedMonth, selectedQuarter, frequence],
@@ -127,11 +111,8 @@ async function fetchLocations() {
   }
 }
 
-function suivant() {
-  if (!quittanceDTO.value.locationId || !quittanceDTO.value.dateDebut || !quittanceDTO.value.dateFin) {
-    message.warning('Veuillez compléter tous les champs')
-    return
-  }
+function selectLocation(id: string) {
+  quittanceDTO.value.locationId = id
   router.push('/quittance-etape-2')
 }
 
@@ -154,60 +135,55 @@ onUnmounted(() => {
     <NCard :bordered="false">
       <div class="mb-8" v-if="!isMobile">
         <NSteps :current="0" size="small">
-          <NStep title="Sélection" status="process" description="Location et période" />
+          <NStep title="Location" status="process" description="Choix de la location" />
+          <NStep title="Période" description="Année et mois/trimestre" />
           <NStep title="Détails" description="Montants et statut" />
           <NStep title="Récapitulatif" description="Vérification finale" />
         </NSteps>
       </div>
       <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 1/3</div>
-        <div class="step-mobile-label">{{ stepTitles[0] }}</div>
+        <div class="step-mobile-number">Étape 1/4</div>
+        <div class="step-mobile-label">Sélection de la location</div>
       </div>
-      <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la location et de la période</NH2>
+      <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la location</NH2>
       <NForm label-placement="top">
         <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
           <NFormItemGi :span="2" label="Location">
-            <NSelect
-              v-model:value="quittanceDTO.locationId"
-              :options="locations.map(l => ({ label: `${l.proprieteNom} - ${l.locataireNom}`, value: l.id }))"
-              placeholder="Choisir une location"
-              size="large"
-            />
+            <div class="locations-grid">
+              <NCard
+                v-for="loc in locations"
+                :key="loc.id"
+                class="location-card"
+                hoverable
+                @click="selectLocation(loc.id)"
+              >
+                <div class="flex items-start gap-4">
+                  <div class="location-avatar">
+                    <NIcon :component="Home24Filled" size="32" />
+                  </div>
+                  <div class="flex-1">
+                    <div class="location-titre mb-2">{{ loc.proprieteNom }}</div>
+                    <div class="text-sm space-y-1">
+                      <div class="flex items-center gap-2">
+                        <span class="i-carbon-user" />
+                        <span>{{ loc.locataireNom }} {{ loc.locatairePrenom }}</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="i-carbon-calendar" />
+                        <span>Début: {{ loc.dateDebut ? new Date(loc.dateDebut).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Non spécifié' }}</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="i-carbon-money" />
+                        <span>{{ loc.loyerMensuel }}€ + {{ loc.chargesMensuelles }}€</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </NCard>
+            </div>
           </NFormItemGi>
-          
-          <NFormItemGi v-if="frequence" label="Année">
-            <NSelect v-model:value="selectedYear" :options="yearOptions" size="large" />
-          </NFormItemGi>
-
-          <NFormItemGi v-if="frequence === 'MENSUEL'" label="Mois">
-            <NSelect
-              v-model:value="selectedMonth"
-              :options="monthOptions"
-              clearable
-              placeholder="Choisir un mois"
-              size="large"
-            />
-          </NFormItemGi>
-          
-          <NFormItemGi v-if="frequence === 'TRIMESTRIEL'" label="Trimestre">
-            <NSelect
-              v-model:value="selectedQuarter"
-              :options="quarterOptions"
-              clearable
-              placeholder="Choisir un trimestre"
-              size="large"
-            />
-          </NFormItemGi>
-
         </NGrid>
       </NForm>
-      <div class="flex justify-end mt-8">
-        <NButton type="primary" @click="suivant" title="Suivant">
-          <template #icon>
-            <NIcon :component="ArrowRight24Filled" />
-          </template>
-        </NButton>
-      </div>
     </NCard>
   </div>
 </template>
@@ -228,6 +204,44 @@ h3 {
 }
 .mt-8 {
   margin-top: 2rem;
+}
+.locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.location-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.location-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.location-avatar {
+  background-color: var(--n-color-embedded);
+  color: var(--n-color-target);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.location-titre {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--n-text-color);
+}
+:deep(.n-card__content) {
+  flex: 1;
+}
+.location-card-selected {
+  border: 2px solid var(--n-color-primary);
+  background: #f5faff;
 }
 @media (max-width: 768px) {
   .mb-8 {

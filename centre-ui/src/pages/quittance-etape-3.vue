@@ -12,10 +12,17 @@ import {
   NSteps,
   NStep,
   NH2,
-  NIcon
+  NIcon,
+  NForm,
+  NFormItemGi,
+  NDatePicker,
+  NInputNumber,
+  NRadioGroup,
+  NRadio,
+  NSelect
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePage({
@@ -28,14 +35,14 @@ definePage({
 })
 
 const store = useUnifiedStore()
-const { quittanceDTO } = storeToRefs(store)
+const { quittanceDTO, locations } = storeToRefs(store)
 const authStore = useAuthStore()
 const router = useRouter()
 const message = useMessage()
 const loading = ref(false)
 
 const pdfSrc = ref<string | undefined>()
-const stepTitles = ['Sélection', 'Détails', 'Récapitulatif']
+const stepTitles = ['Location', 'Période', 'Détails', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 
 function handleResize() {
@@ -64,7 +71,23 @@ async function genererPdfPreview() {
 }
 
 function precedent() {
-  router.back()
+  router.push('/quittance-etape-2')
+}
+
+function suivant() {
+  // validation sommaire
+  if (
+    !quittanceDTO.value.dateDebut
+    || !quittanceDTO.value.dateFin
+    || !quittanceDTO.value.dateEmission
+    || !quittanceDTO.value.statut
+  ) {
+    message.warning('Merci de renseigner tous les champs obligatoires (*)')
+    return
+  }
+  // on stocke le total calculé
+  quittanceDTO.value.montantTotal = computedTotal.value.toFixed(2)
+  router.push('/quittance-etape-4')
 }
 
 async function enregistrer() {
@@ -100,6 +123,37 @@ async function enregistrer() {
   }
 }
 
+const computedTotal = computed(() => {
+  const loyer = Number.parseFloat(quittanceDTO.value.montantLoyer || '0')
+  const charges = Number.parseFloat(quittanceDTO.value.montantCharges || '0')
+  const caution = quittanceDTO.value.inclureCaution
+    ? Number.parseFloat(quittanceDTO.value.depotGarantie || '0')
+    : 0
+  return (loyer + charges + caution)
+})
+
+const selectedLocation = computed(() => {
+  return locations.value.find(loc => loc.id === quittanceDTO.value.locationId)
+})
+
+// Calcul automatique de la date d'échéance à partir de la date de début et du jour d'échéance de la location
+watch(
+  [() => quittanceDTO.value.dateDebut, selectedLocation],
+  ([dateDebut, loc]) => {
+    console.log('dateDebut', dateDebut, 'loc', loc)
+    if (dateDebut && loc && loc.jourEcheance) {
+      const refDate = new Date(dateDebut)
+      const annee = refDate.getFullYear()
+      const mois = refDate.getMonth() + 1 // JS: 0-based
+      const jour = Math.min(Number(loc.jourEcheance), new Date(annee, mois, 0).getDate())
+      const result = `${annee}-${mois.toString().padStart(2, '0')}-${jour.toString().padStart(2, '0')}`
+      console.log('dateEcheance calculée', result)
+      quittanceDTO.value.dateEcheance = result
+    }
+  },
+  { immediate: true }
+)
+
 </script>
 
 <template>
@@ -107,60 +161,70 @@ async function enregistrer() {
     <NCard :bordered="false">
       <div class="mb-8" v-if="!isMobile">
         <NSteps :current="2" size="small">
-          <NStep title="Sélection" status="finish" description="Location et période" />
-          <NStep title="Détails" status="finish" description="Montants et statut" />
-          <NStep title="Récapitulatif" status="process" description="Vérification finale" />
+          <NStep title="Location" status="finish" description="Choix de la location" />
+          <NStep title="Période" status="finish" description="Année et mois/trimestre" />
+          <NStep title="Détails" status="process" description="Montants et statut" />
+          <NStep title="Récapitulatif" description="Vérification finale" />
         </NSteps>
       </div>
       <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 3/3</div>
+        <div class="step-mobile-number">Étape 3/4</div>
         <div class="step-mobile-label">{{ stepTitles[2] }}</div>
       </div>
-      <NH2 class="titre-principal mb-4">Étape 3 : Récapitulatif</NH2>
-      <NDescriptions label-placement="top" bordered :column="isMobile ? 1 : 2">
-        <NDescriptionsItem label="Location ID">
-          {{ quittanceDTO.locationId }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Date début">
-          {{ quittanceDTO.dateDebut }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Date fin">
-          {{ quittanceDTO.dateFin || '—' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Date émission">
-          {{ quittanceDTO.dateEmission }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Loyer (€)">
-          {{ quittanceDTO.montantLoyer }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Charges (€)">
-          {{ quittanceDTO.montantCharges }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Inclure caution">
-          {{ quittanceDTO.inclureCaution ? 'Oui' : 'Non' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem v-if="quittanceDTO.inclureCaution" label="Montant caution (€)">
-          {{ quittanceDTO.depot_garantie }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Montant total (€)">
-          {{ quittanceDTO.montantTotal }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Statut">
-          {{ quittanceDTO.statut }}
-        </NDescriptionsItem>
-      </NDescriptions>
-      <NSpace class="mt-8" justify="space-between">
-        <NButton @click="precedent" title="Précédent">
-          <template #icon>
-            <NIcon :component="ArrowLeft24Filled" />
-          </template>
-        </NButton>
-        <NButton type="primary" @click="enregistrer" :loading="loading" title="Valider">
-          <template #icon>
-            <NIcon :component="Checkmark24Filled" />
-          </template>
-        </NButton>
-      </NSpace>
+      <NH2 class="titre-principal mb-4">Étape 3 : Détails de la quittance</NH2>
+      <NForm label-placement="top">
+        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
+          <NFormItemGi label="Date émission *">
+            <NDatePicker :value="quittanceDTO.dateEmission || undefined" @update:value="val => quittanceDTO.dateEmission = val" type="date" value-format="yyyy-MM-dd" size="large" />
+          </NFormItemGi>
+          <NFormItemGi label="Date échéance">
+            <NDatePicker
+              :value="quittanceDTO.dateEcheance || undefined"
+              @update:value="val => quittanceDTO.dateEcheance = val"
+              type="date"
+              value-format="yyyy-MM-dd"
+              size="large"
+              placeholder="Date calculée automatiquement"
+            />
+          </NFormItemGi>
+          <NFormItemGi label="Montant loyer (€) *">
+            <NInputNumber :value="Number.parseFloat(quittanceDTO.montantLoyer || '0')" @update:value="val => quittanceDTO.montantLoyer = String(val)" min="0" placeholder="0.00" size="large" />
+            <div v-if="isTrimestriel" style="color: #1976d2; font-weight: bold; font-size: 1em; margin-top: 2px;">
+              {{ loyerDetail }}
+            </div>
+          </NFormItemGi>
+          <NFormItemGi label="Montant charges (€) *">
+            <NInputNumber :value="Number.parseFloat(quittanceDTO.montantCharges || '0')" @update:value="val => quittanceDTO.montantCharges = String(val)" min="0" placeholder="0.00" size="large" />
+          </NFormItemGi>
+          <NFormItemGi label="Inclure caution ?">
+            <NRadioGroup v-model:value="quittanceDTO.inclureCaution">
+              <NRadio :value="true">Oui</NRadio>
+              <NRadio :value="false">Non</NRadio>
+            </NRadioGroup>
+          </NFormItemGi>
+          <NFormItemGi v-if="quittanceDTO.inclureCaution" label="Montant caution (€)">
+            <NInputNumber :value="Number.parseFloat(quittanceDTO.depotGarantie || '0')" @update:value="val => quittanceDTO.depotGarantie = String(val)" min="0" placeholder="0.00" size="large" />
+          </NFormItemGi>
+          <NFormItemGi label="Montant total (€)">
+            <NInputNumber :value="computedTotal" disabled size="large" />
+          </NFormItemGi>
+          <NFormItemGi label="Statut *">
+            <NSelect
+              v-model:value="quittanceDTO.statut"
+              :options="[
+                { label: 'PAYÉE', value: 'PAYEE' },
+                { label: 'PARTIELLE', value: 'PARTIELLE' },
+                { label: 'IMPAYÉE', value: 'IMPAYEE' },
+              ]"
+              size="large"
+            />
+          </NFormItemGi>
+        </NGrid>
+      </NForm>
+      <div class="flex justify-between mt-8">
+        <NButton @click="precedent" size="large">Précédent</NButton>
+        <NButton type="primary" @click="suivant" size="large">Suivant</NButton>
+      </div>
     </NCard>
   </div>
 </template>

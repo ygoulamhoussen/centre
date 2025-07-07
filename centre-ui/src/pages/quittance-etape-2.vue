@@ -39,9 +39,11 @@ const router = useRouter()
 const message = useMessage()
 
 // trouver la location choisie à l'étape 1
-const selectedLocation = computed(() => {
-  return locations.value.find(loc => loc.id === quittanceDTO.value.locationId)
-})
+const selectedLocation = computed(() => locations.value.find(l => l.id === quittanceDTO.value.locationId))
+const frequence = computed(() => selectedLocation.value?.frequenceLoyer)
+const selectedYear = ref(new Date().getFullYear())
+const selectedMonth = ref<number | null>(null)
+const selectedQuarter = ref<number | null>(null)
 
 // calcul du loyer selon la fréquence
 const isTrimestriel = computed(() => {
@@ -125,29 +127,68 @@ const computedTotal = computed(() => {
   return (loyer + charges + caution)
 })
 
+function precedent() {
+  router.push('/quittance-etape-1')
+}
+
 function suivant() {
-  // validation sommaire
-  if (
-    !quittanceDTO.value.dateDebut
-    || !quittanceDTO.value.dateFin
-    || !quittanceDTO.value.dateEmission
-    || !quittanceDTO.value.statut
-  ) {
-    message.warning('Merci de renseigner tous les champs obligatoires (*)')
+  if (!selectedYear.value || (frequence.value === 'MENSUEL' && selectedMonth.value === null) || (frequence.value === 'TRIMESTRIEL' && selectedQuarter.value === null)) {
+    message.warning('Veuillez sélectionner la période complète')
     return
   }
-  // on stocke le total calculé
-  quittanceDTO.value.montantTotal = computedTotal.value.toFixed(2)
+  // Calcul de la période selon la fréquence
+  let startDate: Date | null = null
+  let endDate: Date | null = null
+
+  if (selectedYear.value) {
+    if (frequence.value === 'MENSUEL' && selectedMonth.value !== null) {
+      startDate = new Date(selectedYear.value, selectedMonth.value, 1)
+      endDate = new Date(selectedYear.value, selectedMonth.value + 1, 0)
+    } else if (frequence.value === 'TRIMESTRIEL' && selectedQuarter.value !== null) {
+      const startMonth = (selectedQuarter.value - 1) * 3
+      startDate = new Date(selectedYear.value, startMonth, 1)
+      endDate = new Date(selectedYear.value, startMonth + 3, 0)
+    } else if (frequence.value === 'ANNUEL') {
+      startDate = new Date(selectedYear.value, 0, 1)
+      endDate = new Date(selectedYear.value, 11, 31)
+    }
+  }
+
+  quittanceDTO.value.dateDebut = startDate
+    ? `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`
+    : null
+  quittanceDTO.value.dateFin = endDate
+    ? `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
+    : null
+
   router.push('/quittance-etape-3')
 }
 
-const stepTitles = ['Sélection', 'Détails', 'Récapitulatif']
+const stepTitles = ['Location', 'Période', 'Détails', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 function handleResize() {
   isMobile.value = window.innerWidth < 768
 }
 onMounted(() => window.addEventListener('resize', handleResize))
 onUnmounted(() => window.removeEventListener('resize', handleResize))
+
+const currentYear = new Date().getFullYear()
+const yearOptions = Array.from({ length: 10 }, (_, i) => ({
+  label: (currentYear - 5 + i).toString(),
+  value: currentYear - 5 + i,
+})).reverse()
+
+const monthOptions = Array.from({ length: 12 }, (_, i) => ({
+  label: new Date(2000, i).toLocaleString('fr-FR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
+  value: i,
+}))
+
+const quarterOptions = [
+  { label: 'Trimestre 1 (Jan-Mar)', value: 1 },
+  { label: 'Trimestre 2 (Avr-Juin)', value: 2 },
+  { label: 'Trimestre 3 (Juil-Sep)', value: 3 },
+  { label: 'Trimestre 4 (Oct-Déc)', value: 4 },
+]
 </script>
 
 <template>
@@ -155,60 +196,44 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
     <NCard :bordered="false">
       <div class="mb-8" v-if="!isMobile">
         <NSteps :current="1" size="small">
-          <NStep title="Sélection" status="finish" description="Location et période" />
-          <NStep title="Détails" status="process" description="Montants et statut" />
+          <NStep title="Location" status="finish" description="Choix de la location" />
+          <NStep title="Période" status="process" description="Année et mois/trimestre" />
+          <NStep title="Détails" description="Montants et statut" />
           <NStep title="Récapitulatif" description="Vérification finale" />
         </NSteps>
       </div>
       <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 2/3</div>
-        <div class="step-mobile-label">{{ stepTitles[1] }}</div>
+        <div class="step-mobile-number">Étape 2/4</div>
+        <div class="step-mobile-label">Sélection de la période</div>
       </div>
-      <NH2 class="titre-principal mb-4">Étape 2 : Détails de la quittance</NH2>
+      <NH2 class="titre-principal mb-4">Étape 2 : Sélection de la période</NH2>
       <NForm label-placement="top">
         <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
-          <NFormItemGi label="Date émission *">
-            <NDatePicker v-model:formatted-value="quittanceDTO.dateEmission" type="date" value-format="yyyy-MM-dd" size="large" />
+          <NFormItemGi v-if="frequence" label="Année">
+            <NSelect v-model:value="selectedYear" :options="yearOptions" size="large" />
           </NFormItemGi>
-          <NFormItemGi label="Date échéance">
-            <NDatePicker v-model:formatted-value="quittanceDTO.dateEcheance" type="date" value-format="yyyy-MM-dd" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Montant loyer (€) *">
-            <NInputNumber :value="Number.parseFloat(quittanceDTO.montantLoyer || '0')" @update:value="val => quittanceDTO.montantLoyer = String(val)" min="0" placeholder="0.00" size="large" />
-            <div v-if="isTrimestriel" style="color: #1976d2; font-weight: bold; font-size: 1em; margin-top: 2px;">
-              {{ loyerDetail }}
-            </div>
-          </NFormItemGi>
-          <NFormItemGi label="Montant charges (€) *">
-            <NInputNumber :value="Number.parseFloat(quittanceDTO.montantCharges || '0')" @update:value="val => quittanceDTO.montantCharges = String(val)" min="0" placeholder="0.00" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Inclure caution ?">
-            <NRadioGroup v-model:value="quittanceDTO.inclureCaution">
-              <NRadio :value="true">Oui</NRadio>
-              <NRadio :value="false">Non</NRadio>
-            </NRadioGroup>
-          </NFormItemGi>
-          <NFormItemGi v-if="quittanceDTO.inclureCaution" label="Montant caution (€)">
-            <NInputNumber :value="Number.parseFloat(quittanceDTO.depotGarantie || '0')" @update:value="val => quittanceDTO.depotGarantie = String(val)" min="0" placeholder="0.00" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Montant total (€)">
-            <NInputNumber :value="computedTotal" disabled size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Statut *">
+          <NFormItemGi v-if="frequence === 'MENSUEL'" label="Mois">
             <NSelect
-              v-model:value="quittanceDTO.statut"
-              :options="[
-                { label: 'PAYÉE', value: 'PAYEE' },
-                { label: 'PARTIELLE', value: 'PARTIELLE' },
-                { label: 'IMPAYÉE', value: 'IMPAYEE' },
-              ]"
+              v-model:value="selectedMonth"
+              :options="monthOptions"
+              clearable
+              placeholder="Choisir un mois"
+              size="large"
+            />
+          </NFormItemGi>
+          <NFormItemGi v-if="frequence === 'TRIMESTRIEL'" label="Trimestre">
+            <NSelect
+              v-model:value="selectedQuarter"
+              :options="quarterOptions"
+              clearable
+              placeholder="Choisir un trimestre"
               size="large"
             />
           </NFormItemGi>
         </NGrid>
       </NForm>
       <div class="flex justify-between mt-8">
-        <NButton @click="$router.back()" size="large">Précédent</NButton>
+        <NButton @click="precedent" size="large">Précédent</NButton>
         <NButton type="primary" @click="suivant" size="large">Suivant</NButton>
       </div>
     </NCard>

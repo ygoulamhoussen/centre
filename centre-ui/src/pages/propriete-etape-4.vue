@@ -26,6 +26,8 @@ import {
   NSpace,
   NText,
   useMessage,
+  NSteps,
+  NStep,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -106,26 +108,14 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div v-if="!isMobile" class="progress-steps mb-8">
-        <div 
-          v-for="(step, index) in steps" 
-          :key="index"
-          class="step"
-          :class="{ 
-            'active': currentStep === index,
-            'completed': currentStep > index,
-            'disabled': currentStep < index
-          }"
-        >
-          <div class="step-number">{{ index + 1 }}</div>
-          <div class="step-label">{{ step.label }}</div>
-        </div>
+      <div class="mb-8" style="width: 100%;">
+        <NSteps :current="3" size="small">
+          <NStep title="Type et Nom" status="finish" />
+          <NStep title="Adresse" status="finish" />
+          <NStep title="Détails" status="finish" />
+          <NStep title="Récapitulatif" status="process" />
+        </NSteps>
       </div>
-      <div v-else class="progress-steps-mobile-simple mb-8">
-        <span class="step-mobile-number">Étape {{ currentStep + 1 }}/{{ steps.length }}</span>
-        <span class="step-mobile-label">{{ steps[currentStep].label }}</span>
-      </div>
-
       <NDescriptions label-placement="top" bordered :columns="2" title="Récapitulatif de la propriété">
         <NDescriptionsItem label="Nom de la propriété" :label-style="{ fontWeight: 'bold' }">{{
           proprieteDTO.nom

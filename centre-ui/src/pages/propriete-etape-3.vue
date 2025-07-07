@@ -22,7 +22,9 @@ import {
   NIcon,
   NInputNumber,
   NSpace,
-  useMessage
+  useMessage,
+  NSteps,
+  NStep
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
@@ -72,26 +74,14 @@ const currentStep = 2
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div v-if="!isMobile" class="progress-steps mb-8">
-        <div 
-          v-for="(step, index) in steps" 
-          :key="index"
-          class="step"
-          :class="{ 
-            'active': currentStep === index,
-            'completed': currentStep > index,
-            'disabled': currentStep < index
-          }"
-        >
-          <div class="step-number">{{ index + 1 }}</div>
-          <div class="step-label">{{ step.label }}</div>
-        </div>
+      <div class="mb-8" style="width: 100%;">
+        <NSteps :current="2" size="small">
+          <NStep title="Type et Nom" status="finish" />
+          <NStep title="Adresse" status="finish" />
+          <NStep title="Détails" status="process" />
+          <NStep title="Récapitulatif" />
+        </NSteps>
       </div>
-      <div v-else class="progress-steps-mobile-simple mb-8">
-        <span class="step-mobile-number">Étape {{ currentStep + 1 }}/{{ steps.length }}</span>
-        <span class="step-mobile-label">{{ steps[currentStep].label }}</span>
-      </div>
-
       <NForm>
         <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
           <NFormItemGi label="Date d'acquisition *">

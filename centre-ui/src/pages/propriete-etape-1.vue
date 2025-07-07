@@ -22,6 +22,8 @@ import {
   NSelect,
   NSpace,
   useMessage,
+  NSteps,
+  NStep,
 } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -77,26 +79,14 @@ const currentStep = 0
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div v-if="!isMobile" class="progress-steps mb-8">
-        <div 
-          v-for="(step, index) in steps" 
-          :key="index"
-          class="step"
-          :class="{ 
-            'active': currentStep === index,
-            'completed': currentStep > index,
-            'disabled': currentStep < index
-          }"
-        >
-          <div class="step-number">{{ index + 1 }}</div>
-          <div class="step-label">{{ step.label }}</div>
-        </div>
+      <div class="mb-8">
+        <NSteps :current="0" size="small">
+          <NStep title="Type et Nom" status="process" />
+          <NStep title="Adresse" />
+          <NStep title="Détails" />
+          <NStep title="Récapitulatif" />
+        </NSteps>
       </div>
-      <div v-else class="progress-steps-mobile-simple mb-8">
-        <span class="step-mobile-number">Étape {{ currentStep + 1 }}/{{ steps.length }}</span>
-        <span class="step-mobile-label">{{ steps[currentStep].label }}</span>
-      </div>
-
       <NForm>
         <NGrid :cols="isMobile ? 1 : 2" :x-gap="24" :y-gap="24" class="form-grid">
           <NFormItemGi>
@@ -112,7 +102,6 @@ const currentStep = 0
           </NFormItemGi>
         </NGrid>
       </NForm>
-
       <div class="type-titre mb-4">Quel est le type de bien ?</div>
       <NGrid :cols="isMobile ? 1 : 2" :x-gap="12" :y-gap="12" responsive="screen" :item-responsive="true" class="type-grid">
         <NGi v-for="type in typesBien" :key="type.value">
@@ -129,7 +118,6 @@ const currentStep = 0
           </NButton>
         </NGi>
       </NGrid>
-
       <div class="mt-8" :class="[isMobile ? 'flex-center' : 'flex-end']">
         <NButton
           type="primary"

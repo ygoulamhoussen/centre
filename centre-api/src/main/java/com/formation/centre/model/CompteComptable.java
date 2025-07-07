@@ -21,4 +21,7 @@ public class CompteComptable {
 
     @Column(nullable = false)
     private String type;
+
+    @Column(nullable = true)
+    private String description;
 } 

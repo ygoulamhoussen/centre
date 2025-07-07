@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { NCard, NDataTable, NInput, NSpin, NH1 } from 'naive-ui'
+import { onMounted, computed, ref } from 'vue'
+import { NCard, NDataTable, NInput, NH1, NSpin } from 'naive-ui'
 
 const comptes = ref<any[]>([])
 const loading = ref(true)
@@ -10,15 +10,17 @@ const columns = [
   { title: 'Code', key: 'code' },
   { title: 'Libellé', key: 'libelle' },
   { title: 'Type', key: 'type' },
+  { title: 'Description', key: 'description' },
 ]
 
 async function fetchComptes() {
   loading.value = true
   try {
-    const res = await fetch('http://localhost:8080/api/plan-comptable')
+    const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
+    const res = await fetch(`${baseUrl}/api/plan-comptable`)
     const data = await res.json()
     comptes.value = data
-  } catch (e) {
+  } catch {
     comptes.value = []
   } finally {
     loading.value = false

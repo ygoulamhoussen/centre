@@ -288,5 +288,6 @@ CREATE TABLE IF NOT EXISTS compte_comptable (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(20) NOT NULL UNIQUE,
     libelle VARCHAR(255) NOT NULL,
-    type VARCHAR(50) NOT NULL
+    type VARCHAR(50) NOT NULL,
+    description VARCHAR(255)
 );

@@ -1,6 +1,6 @@
 const local: App.I18n.Schema = {
   system: {
-    title: 'Zimmo',
+    title: 'Zymo',
     updateTitle: 'Thông báo cập nhật phiên bản hệ thống',
     updateContent: 'Phát hiện phiên bản mới của hệ thống, bạn có muốn làm mới trang ngay bây giờ không?',
     updateConfirm: 'Làm mới ngay',

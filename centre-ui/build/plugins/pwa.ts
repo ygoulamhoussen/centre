@@ -8,8 +8,8 @@ export function setupPwaPlugin() {
       maximumFileSizeToCacheInBytes: 3000000,
     },
     manifest: {
-      name: 'Zimmo',
-      short_name: 'Zimmo',
+      name: 'Zymo',
+      short_name: 'Zymo',
       theme_color: '#ffffff',
       icons: [
         {

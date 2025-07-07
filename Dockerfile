@@ -43,4 +43,4 @@ WORKDIR /app
 COPY --from=backend-build /app/centre-api/target/centre-api-0.0.1-SNAPSHOT.jar /app/centre-api.jar
 
 # Lancer l'application
-CMD ["java", "-jar", "/app/centre-api.jar --spring.profiles.active=prod"]
+CMD ["java", "-jar", "/app/centre-api.jar", "--spring.profiles.active=prod"]

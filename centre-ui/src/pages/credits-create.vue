@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage, NSteps, NStep } from 'naive-ui'
+import { computed, h, onMounted, ref, onUnmounted, nextTick } from 'vue'
 import { definePage, useRouter } from 'vue-router'
 import { useAppStore } from '@/store/modules/app'
 
@@ -20,7 +20,6 @@ const steps = [
 ]
 
 const formData = ref({
-  intitule: '',
   montant: 0,
   duree: 12,
   taux: 1.5,
@@ -42,6 +41,9 @@ const periodiciteOptions = [
 const proprieteOptions = ref<Array<{ label: string; value: string }>>([])
 
 const echeancier = ref<any[]>([])
+
+// Ajout refs pour focus sur le NDatePicker de la nouvelle échéance
+const echeanceRefs = ref<Record<number, any>>({})
 
 function formatDate(date: number | string | null) {
   if (!date) {
@@ -67,6 +69,11 @@ function handleEdit(row: any) {
   const rowToEdit = echeancier.value.find(e => e.numero === row.numero)
   if (rowToEdit) {
     rowToEdit.isEditing = true
+    nextTick(() => {
+      if (echeanceRefs.value[row.numero] && echeanceRefs.value[row.numero].focus) {
+        echeanceRefs.value[row.numero].focus()
+      }
+    })
   }
 }
 
@@ -103,6 +110,9 @@ const echeancierColumns = computed(() => [
     render: (row: any, index: number) => {
       if (row.isEditing) {
         return h(NDatePicker, {
+          ref: (el: any) => {
+            if (el) echeanceRefs.value[row.numero] = el
+          },
           value: row.date ? new Date(row.date).getTime() : null,
           onUpdateValue: (value: number | null) => {
             echeancier.value[index].date = value ? new Date(value) : null
@@ -206,7 +216,7 @@ function goBack() {
 
 const isStep1Valid = computed(() => {
   const f = formData.value
-  return !!(f.intitule && f.montant > 0 && f.duree > 0 && f.taux >= 0 && f.type && f.dateDebut && f.periodicite && f.proprieteId && f.banque)
+  return !!(f.montant > 0 && f.duree > 0 && f.taux >= 0 && f.type && f.dateDebut && f.periodicite && f.proprieteId && f.banque)
 })
 
 function nextStep() {
@@ -284,6 +294,11 @@ function addEcheanceManuelle() {
     total: 0,
     solde: 0,
     isEditing: true,
+  })
+  nextTick(() => {
+    if (echeanceRefs.value[maxNumero + 1] && echeanceRefs.value[maxNumero + 1].focus) {
+      echeanceRefs.value[maxNumero + 1].focus()
+    }
   })
 }
 
@@ -380,6 +395,14 @@ onMounted(async () => {
   }
 })
 
+const stepTitles = ['Caractéristiques', 'Échéancier', 'Confirmation']
+const isMobileRef = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobileRef.value = window.innerWidth < 768
+}
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
+
 definePage({
   meta: {
     title: 'Création d\'un Crédit',
@@ -391,35 +414,22 @@ definePage({
 
 <template>
   <div class="credits-create-page">
-    <div class="page-header">
-      <h1 :class="{ 'mobile-title': isMobile }">Nouveau Crédit</h1>
-      <NButton v-if="!isMobile" @click="goBack">
-        <template #icon>
-          <Icon icon="material-symbols:arrow-back" />
-        </template>
-        Retour
-      </NButton>
-      <NButton v-else block size="small" class="mobile-journal-btn" @click="goBack">
-        <template #icon>
-          <Icon icon="material-symbols:arrow-back" />
-        </template>
-        Retour
-      </NButton>
-    </div>
     <NCard class="progress-card">
-      <div class="progress-steps" :class="{ 'progress-steps-mobile': isMobile }">
-        <div v-for="(step, index) in steps" :key="index" class="step" :class="{ active: currentStep === index, completed: currentStep > index }">
-          <div class="step-number">{{ index + 1 }}</div>
-          <div class="step-label">{{ step.label }}</div>
-        </div>
+      <div v-if="!isMobileRef" class="mb-8">
+        <NSteps :current="currentStep" size="small">
+          <NStep title="Caractéristiques" :status="currentStep === 0 ? 'process' : 'finish'" />
+          <NStep title="Échéancier" :status="currentStep === 1 ? 'process' : (currentStep > 1 ? 'finish' : undefined)" />
+          <NStep title="Confirmation" :status="currentStep === 2 ? 'process' : undefined" />
+        </NSteps>
+      </div>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape {{ currentStep + 1 }}/3</div>
+        <div class="step-mobile-label">{{ stepTitles[currentStep] }}</div>
       </div>
     </NCard>
     <!-- Étape 1 : Saisie des caractéristiques -->
     <NCard v-if="currentStep === 0" title="Étape 1 : Caractéristiques du crédit" class="step-card">
-      <NForm :class="{ 'mobile-form': isMobile }" label-placement="left" label-width="auto">
-        <NFormItem label="Intitulé" required>
-          <NInput v-model:value="formData.intitule" placeholder="Intitulé du crédit" />
-        </NFormItem>
+      <NForm :class="{ 'mobile-form': isMobileRef }" label-placement="left" label-width="auto">
         <NFormItem label="Montant emprunté (€)" required>
           <NInputNumber v-model:value="formData.montant" min="0" style="width: 100%" />
         </NFormItem>
@@ -452,7 +462,7 @@ definePage({
           <NInput v-model:value="formData.banque" placeholder="Nom de la banque" />
         </NFormItem>
       </NForm>
-      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
         <NButton @click="goBack">Annuler</NButton>
         <NButton type="primary" :disabled="!isStep1Valid" @click="nextStep">
           Suivant
@@ -464,7 +474,7 @@ definePage({
     </NCard>
     <!-- Étape 2 : Génération de l'échéancier -->
     <NCard v-if="currentStep === 1" title="Étape 2 : Échéancier" class="step-card">
-      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]" style="margin-bottom: 16px;">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]" style="margin-bottom: 16px;">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -481,15 +491,50 @@ definePage({
       <div class="echeancier-section">
         <NButton @click="generateEcheancier" type="primary">Générer l'échéancier</NButton>
         <NButton @click="addEcheanceManuelle" style="margin-left: 8px;">Ajouter une échéance manuelle</NButton>
-        <NDataTable v-if="!isMobile" :columns="echeancierColumns" :data="echeancier" :loading="generatingEcheancier" :row-key="(row: any) => row.numero" striped />
+        <NDataTable v-if="!isMobileRef" :columns="echeancierColumns" :data="echeancier" :loading="generatingEcheancier" :row-key="(row: any) => row.numero" striped />
         <div v-else>
           <NCard v-for="(e, idx) in echeancier" :key="e.numero" class="mobile-card">
             <div><b>N° :</b> {{ e.numero }}</div>
-            <div><b>Date :</b> {{ formatDate(e.date) }}</div>
-            <div><b>Capital remboursé :</b> {{ e.capital }}</div>
-            <div><b>Intérêts :</b> {{ e.interets }}</div>
-            <div><b>Total échéance :</b> {{ e.total }}</div>
-            <div><b>Solde restant dû :</b> {{ e.solde }}</div>
+            <div><b>Date :</b>
+              <template v-if="e.isEditing">
+                <NDatePicker v-model:value="e.date" type="date" format="dd/MM/yyyy" style="width: 100%" :ref="el => { if (el) echeanceRefs.value[e.numero] = el }" />
+              </template>
+              <template v-else>
+                {{ formatDate(e.date) }}
+              </template>
+            </div>
+            <div><b>Capital remboursé :</b>
+              <template v-if="e.isEditing">
+                <NInputNumber v-model:value="e.capital" style="width: 100%" />
+              </template>
+              <template v-else>
+                {{ e.capital }}
+              </template>
+            </div>
+            <div><b>Intérêts :</b>
+              <template v-if="e.isEditing">
+                <NInputNumber v-model:value="e.interets" style="width: 100%" />
+              </template>
+              <template v-else>
+                {{ e.interets }}
+              </template>
+            </div>
+            <div><b>Total échéance :</b>
+              <template v-if="e.isEditing">
+                <NInputNumber v-model:value="e.total" style="width: 100%" />
+              </template>
+              <template v-else>
+                {{ e.total }}
+              </template>
+            </div>
+            <div><b>Solde restant dû :</b>
+              <template v-if="e.isEditing">
+                <NInputNumber v-model:value="e.solde" style="width: 100%" />
+              </template>
+              <template v-else>
+                {{ e.solde }}
+              </template>
+            </div>
             <div class="actions">
               <NButton size="small" v-if="!e.isEditing" @click="handleEdit(e)">Modifier</NButton>
               <NButton size="small" v-if="!e.isEditing" @click="removeEcheance(idx)">Supprimer</NButton>
@@ -499,7 +544,7 @@ definePage({
           </NCard>
         </div>
       </div>
-      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -516,7 +561,7 @@ definePage({
     </NCard>
     <!-- Étape 3 : Récapitulatif et confirmation -->
     <NCard v-if="currentStep === 2" title="Étape 3 : Confirmation" class="step-card">
-      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]" style="margin-bottom: 16px;">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]" style="margin-bottom: 16px;">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -533,7 +578,6 @@ definePage({
       <div class="recap-section">
         <h3>Récapitulatif du crédit</h3>
         <ul>
-          <li><strong>Intitulé :</strong> {{ formData.intitule }}</li>
           <li><strong>Montant :</strong> {{ formData.montant }} €</li>
           <li><strong>Durée :</strong> {{ formData.duree }} mois</li>
           <li><strong>Taux :</strong> {{ formData.taux }} %</li>
@@ -542,7 +586,7 @@ definePage({
           <li><strong>Périodicité :</strong> {{ formData.periodicite }}</li>
         </ul>
         <h3>Échéancier</h3>
-        <NDataTable v-if="!isMobile" :columns="recapColumns" :data="echeancier" striped />
+        <NDataTable v-if="!isMobileRef" :columns="recapColumns" :data="echeancier" striped />
         <div v-else>
           <NCard v-for="(e, idx) in echeancier" :key="e.numero" class="mobile-card">
             <div><b>N° :</b> {{ e.numero }}</div>
@@ -554,7 +598,7 @@ definePage({
           </NCard>
         </div>
       </div>
-      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
+      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
         <NButton @click="previousStep">
           <template #icon>
             <Icon icon="material-symbols:arrow-back" />
@@ -575,12 +619,6 @@ definePage({
 <style scoped>
 .credits-create-page {
   padding: 20px;
-}
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
 }
 .progress-card {
   margin-bottom: 20px;
@@ -725,6 +763,20 @@ definePage({
 .mobile-form .n-form-item {
   width: 100%;
   margin-bottom: 0;
+}
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
 </style>
 <!-- test --> 

@@ -1,4 +1,4 @@
-# Zimmo
+# Zymo
 
 ![image](./public/favicon.svg)
 

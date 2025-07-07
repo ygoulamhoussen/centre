@@ -38,6 +38,7 @@ const store = useUnifiedStore()
 const { proprieteDTO } = storeToRefs(store)
 const router = useRouter()
 
+const stepTitles = ['Type et Nom', 'Adresse', 'Détails', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 function handleResize() {
   isMobile.value = window.innerWidth < 768
@@ -53,25 +54,23 @@ function valider() {
   router.push('/propriete-etape-3')
 }
 
-const steps = [
-  { label: 'Type et Nom' },
-  { label: 'Adresse' },
-  { label: 'Détails' },
-  { label: 'Récapitulatif' },
-]
 const currentStep = 1
 </script>
 
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="mb-8" style="width: 100%;">
+      <div class="mb-8" v-if="!isMobile">
         <NSteps :current="1" size="small">
           <NStep title="Type et Nom" status="finish" />
           <NStep title="Adresse" status="process" />
           <NStep title="Détails" />
           <NStep title="Récapitulatif" />
         </NSteps>
+      </div>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape 2/4</div>
+        <div class="step-mobile-label">{{ stepTitles[1] }}</div>
       </div>
       <NForm>
         <NGrid :x-gap="24" :y-gap="24" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
@@ -217,5 +216,19 @@ const currentStep = 1
     justify-content: center !important;
     margin-top: 1.5rem !important;
   }
+}
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
 </style>

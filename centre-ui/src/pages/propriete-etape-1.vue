@@ -48,6 +48,7 @@ const typesBien = [
   { value: 'PARKING', label: 'Parking', icon: BuildingHome24Filled },
 ]
 
+const stepTitles = ['Type et Nom', 'Adresse', 'Détails', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 function handleResize() {
   isMobile.value = window.innerWidth < 768
@@ -79,13 +80,17 @@ const currentStep = 0
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="mb-8">
+      <div class="mb-8" v-if="!isMobile">
         <NSteps :current="0" size="small">
           <NStep title="Type et Nom" status="process" />
           <NStep title="Adresse" />
           <NStep title="Détails" />
           <NStep title="Récapitulatif" />
         </NSteps>
+      </div>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape 1/4</div>
+        <div class="step-mobile-label">{{ stepTitles[0] }}</div>
       </div>
       <NForm>
         <NGrid :cols="isMobile ? 1 : 2" :x-gap="24" :y-gap="24" class="form-grid">
@@ -208,5 +213,19 @@ const currentStep = 0
     font-size: 1.15rem !important;
     padding: 1rem 1.25rem !important;
   }
+}
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
 </style>

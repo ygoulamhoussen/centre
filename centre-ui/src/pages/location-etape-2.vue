@@ -79,6 +79,7 @@ const jourEcheance = computed({
   },
 })
 
+const stepTitles = ['Sélection', 'Détails du bail', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 function handleResize() {
   isMobile.value = window.innerWidth < 768
@@ -102,12 +103,16 @@ function precedent() {
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="steps-wrapper" style="overflow-x:auto;">
-        <NSteps :current="2" class="mb-8">
-          <NStep title="Sélection" description="Propriété et locataire" />
-          <NStep title="Détails du bail" description="Loyer, dates, etc." />
+      <div class="mb-8" v-if="!isMobile">
+        <NSteps :current="1" size="small">
+          <NStep title="Sélection" status="finish" description="Propriété et locataire" />
+          <NStep title="Détails du bail" status="process" description="Loyer, dates, etc." />
           <NStep title="Récapitulatif" description="Vérification finale" />
         </NSteps>
+      </div>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape 2/3</div>
+        <div class="step-mobile-label">{{ stepTitles[1] }}</div>
       </div>
 
       <NH2 class="titre-principal mb-4">Étape 2: Détails du bail</NH2>
@@ -209,5 +214,19 @@ h3 {
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+}
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
 </style>

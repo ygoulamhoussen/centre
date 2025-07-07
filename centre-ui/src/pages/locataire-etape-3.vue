@@ -35,13 +35,8 @@ const utilisateurId = authStore.userInfo.userId
 const router = useRouter()
 const message = useMessage()
 const chargement = ref(false)
+const stepTitles = ['Informations personnelles', 'Adresse', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
-const currentStep = 2 // étape 3 (0-based)
-const steps = [
-  { label: 'Informations personnelles' },
-  { label: 'Adresse' },
-  { label: 'Récapitulatif' },
-]
 
 function handleResize() {
   isMobile.value = window.innerWidth < 768
@@ -86,21 +81,16 @@ function precedent() {
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <!-- Stepper custom -->
-      <div v-if="!isMobile" class="progress-steps mb-8">
-        <div 
-          v-for="(step, index) in steps" 
-          :key="index"
-          class="step"
-          :class="{ 'active': currentStep === index, 'completed': currentStep > index, 'disabled': currentStep < index }"
-        >
-          <div class="step-number">{{ index + 1 }}</div>
-          <div class="step-label">{{ step.label }}</div>
-        </div>
+      <div class="mb-8" v-if="!isMobile">
+        <NSteps :current="2" size="small">
+          <NStep title="Informations personnelles" status="finish" />
+          <NStep title="Adresse" status="finish" />
+          <NStep title="Récapitulatif" status="process" />
+        </NSteps>
       </div>
-      <div v-else class="progress-steps-mobile-simple mb-8">
-        <span class="step-mobile-number">Étape 3/3</span>
-        <span class="step-mobile-label">Récapitulatif</span>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape 3/3</div>
+        <div class="step-mobile-label">{{ stepTitles[2] }}</div>
       </div>
 
       <NDescriptions label-placement="top" bordered :column="isMobile ? 1 : 2">
@@ -264,5 +254,19 @@ h3 {
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+}
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
 </style>

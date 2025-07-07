@@ -35,6 +35,7 @@ const utilisateurId = authStore.userInfo.userId
 const router = useRouter()
 const message = useMessage()
 const chargement = ref(false)
+const stepTitles = ['Sélection', 'Détails du bail', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 
 function handleResize() {
@@ -88,12 +89,16 @@ function precedent() {
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="steps-wrapper" style="overflow-x:auto;">
-        <NSteps :current="3" class="mb-8">
-          <NStep title="Sélection" description="Propriété et locataire" />
-          <NStep title="Détails du bail" description="Loyer, dates, etc." />
-          <NStep title="Récapitulatif" description="Vérification finale" />
+      <div class="mb-8" v-if="!isMobile">
+        <NSteps :current="2" size="small">
+          <NStep title="Sélection" status="finish" description="Propriété et locataire" />
+          <NStep title="Détails du bail" status="finish" description="Loyer, dates, etc." />
+          <NStep title="Récapitulatif" status="process" description="Vérification finale" />
         </NSteps>
+      </div>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape 3/3</div>
+        <div class="step-mobile-label">{{ stepTitles[2] }}</div>
       </div>
 
       <NH2 class="titre-principal mb-4">Étape 3: Récapitulatif</NH2>
@@ -185,5 +190,19 @@ h3 {
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+}
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
 </style>

@@ -38,6 +38,7 @@ const { quittanceDTO } = storeToRefs(store)
 const locations = ref<any[]>([])
 const authStore = useAuthStore()
 const userId = authStore.userInfo.userId
+const stepTitles = ['Sélection', 'Détails', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 
 // --- Logique pour la sélection de période dynamique ---
@@ -151,12 +152,16 @@ onUnmounted(() => {
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="steps-wrapper" style="overflow-x:auto;">
-        <NSteps :current="1" class="mb-8">
-          <NStep title="Sélection" description="Location et période" />
+      <div class="mb-8" v-if="!isMobile">
+        <NSteps :current="0" size="small">
+          <NStep title="Sélection" status="process" description="Location et période" />
           <NStep title="Détails" description="Montants et statut" />
           <NStep title="Récapitulatif" description="Vérification finale" />
         </NSteps>
+      </div>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape 1/3</div>
+        <div class="step-mobile-label">{{ stepTitles[0] }}</div>
       </div>
       <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la location et de la période</NH2>
       <NForm label-placement="top">
@@ -258,5 +263,19 @@ h3 {
     margin-bottom: 1rem !important;
     margin-top: 1rem !important;
   }
+}
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
 </style>

@@ -37,6 +37,7 @@ const store = useUnifiedStore()
 const { locataireDTO } = storeToRefs(store)
 const router = useRouter()
 
+const stepTitles = ['Informations personnelles', 'Adresse', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 function handleResize() {
   isMobile.value = window.innerWidth < 768
@@ -51,33 +52,21 @@ function precedent() {
 function suivant() {
   router.push('/locataire-etape-3')
 }
-
-const currentStep = 1 // étape 2 (0-based)
-const steps = [
-  { label: 'Informations personnelles' },
-  { label: 'Adresse' },
-  { label: 'Récapitulatif' },
-]
 </script>
 
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <!-- Stepper custom -->
-      <div v-if="!isMobile" class="progress-steps mb-8">
-        <div 
-          v-for="(step, index) in steps" 
-          :key="index"
-          class="step"
-          :class="{ 'active': currentStep === index, 'completed': currentStep > index, 'disabled': currentStep < index }"
-        >
-          <div class="step-number">{{ index + 1 }}</div>
-          <div class="step-label">{{ step.label }}</div>
-        </div>
+      <div class="mb-8" v-if="!isMobile">
+        <NSteps :current="1" size="small">
+          <NStep title="Informations personnelles" status="finish" />
+          <NStep title="Adresse" status="process" />
+          <NStep title="Récapitulatif" />
+        </NSteps>
       </div>
-      <div v-else class="progress-steps-mobile-simple mb-8">
-        <span class="step-mobile-number">Étape 2/3</span>
-        <span class="step-mobile-label">Adresse</span>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape 2/3</div>
+        <div class="step-mobile-label">{{ stepTitles[1] }}</div>
       </div>
 
       <NForm>
@@ -176,91 +165,18 @@ h3 {
     margin-bottom: 1rem !important;
   }
 }
-.progress-steps {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 0 8px 0;
-}
-.step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  position: relative;
-}
-.step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  width: 100%;
-  height: 2px;
-  background-color: #e5e7eb;
-  z-index: 1;
-}
-.step.completed:not(:last-child)::after {
-  background-color: #9C27B0;
-}
-.step-number {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  background-color: #e5e7eb;
-  color: #6b7280;
-  z-index: 2;
-  position: relative;
-}
-.step.active .step-number {
-  background-color: #9C27B0;
-  color: white;
-}
-.step.completed .step-number {
-  background-color: #10b981;
-  color: white;
-}
-.step-label {
-  font-size: 14px;
-  color: #6b7280;
+.mobile-stepper {
   text-align: center;
-}
-.step.active .step-label {
-  color: #9C27B0;
-  font-weight: 500;
-}
-.step.completed .step-label {
-  color: #10b981;
-  font-weight: 500;
-}
-.progress-steps-mobile-simple {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 0;
-  gap: 4px;
+  margin-bottom: 1.5rem;
 }
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #9C27B0;
+  color: #1976d2;
 }
 .step-mobile-label {
-  font-size: 1rem;
-  color: #757575;
-  text-align: center;
-}
-@media (max-width: 768px) {
-  .progress-steps {
-    display: none !important;
-  }
-  .progress-steps-mobile-simple {
-    margin-bottom: 1rem !important;
-  }
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
 </style>

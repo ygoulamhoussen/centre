@@ -30,11 +30,7 @@ const { locataireDTO } = storeToRefs(store)
 const router = useRouter()
 const message = useMessage()
 const currentStep = 0 // étape 1 (0-based pour le stepper custom)
-const steps = [
-  { label: 'Informations personnelles' },
-  { label: 'Adresse' },
-  { label: 'Récapitulatif' },
-]
+const stepTitles = ['Informations personnelles', 'Adresse', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 
 function handleResize() {
@@ -56,21 +52,16 @@ function suivant() {
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <!-- Stepper custom -->
-      <div v-if="!isMobile" class="progress-steps mb-8">
-        <div 
-          v-for="(step, index) in steps" 
-          :key="index"
-          class="step"
-          :class="{ 'active': currentStep === index, 'completed': currentStep > index, 'disabled': currentStep < index }"
-        >
-          <div class="step-number">{{ index + 1 }}</div>
-          <div class="step-label">{{ step.label }}</div>
-        </div>
+      <div class="mb-8" v-if="!isMobile">
+        <NSteps :current="0" size="small">
+          <NStep title="Informations personnelles" status="process" />
+          <NStep title="Adresse" />
+          <NStep title="Récapitulatif" />
+        </NSteps>
       </div>
-      <div v-else class="progress-steps-mobile-simple mb-8">
-        <span class="step-mobile-number">Étape 1/3</span>
-        <span class="step-mobile-label">Informations personnelles</span>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape 1/3</div>
+        <div class="step-mobile-label">{{ stepTitles[0] }}</div>
       </div>
 
       <NForm>
@@ -237,5 +228,19 @@ h3 {
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+}
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
 </style>

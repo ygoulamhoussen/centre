@@ -54,6 +54,7 @@ import com.formation.centre.model.Amortissement;
 import com.formation.centre.model.Charge;
 import com.formation.centre.model.CompositionAcquisition;
 import com.formation.centre.model.Propriete;
+import com.formation.centre.model.CompteComptable;
 import com.formation.centre.repository.ProprieteRepository;
 import com.formation.centre.repository.CreditRepository;
 import com.formation.centre.service.UnifiedService;
@@ -894,6 +895,11 @@ public ResponseEntity<byte[]> genererJournalComptablePdf(
     } catch (Exception e) {
         return ResponseEntity.status(500).build();
     }
+}
+
+@GetMapping("/plan-comptable")
+public List<CompteComptable> getPlanComptable() {
+    return unifiedService.getPlanComptable();
 }
 
 } 

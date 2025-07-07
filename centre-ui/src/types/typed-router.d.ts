@@ -59,6 +59,7 @@ declare module 'vue-router/auto-routes' {
     '/PaiementForm': RouteRecordInfo<'/PaiementForm', '/PaiementForm', Record<never, never>, Record<never, never>>,
     '/pieces': RouteRecordInfo<'/pieces', '/pieces', Record<never, never>, Record<never, never>>,
     '/pieces-ajout': RouteRecordInfo<'/pieces-ajout', '/pieces-ajout', Record<never, never>, Record<never, never>>,
+    '/plan-comptable': RouteRecordInfo<'/plan-comptable', '/plan-comptable', Record<never, never>, Record<never, never>>,
     '/plugin': RouteRecordInfo<'/plugin', '/plugin', Record<never, never>, Record<never, never>>,
     '/plugin/audio': RouteRecordInfo<'/plugin/audio', '/plugin/audio', Record<never, never>, Record<never, never>>,
     '/plugin/charts': RouteRecordInfo<'/plugin/charts', '/plugin/charts', Record<never, never>, Record<never, never>>,

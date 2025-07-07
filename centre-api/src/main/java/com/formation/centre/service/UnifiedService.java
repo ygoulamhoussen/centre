@@ -82,6 +82,8 @@ import com.formation.centre.dto.ResultatFiscalDetailDTOs;
 import com.lowagie.text.Element;
 import com.lowagie.text.FontFactory;
 import java.awt.Color;
+import com.formation.centre.model.CompteComptable;
+import com.formation.centre.repository.CompteComptableRepository;
 
 @Service
 public class UnifiedService {
@@ -100,6 +102,7 @@ public class UnifiedService {
     @Autowired private RecetteRepository recetteRepository;
     @Autowired private ImmobilisationRepository immobilisationRepository;
     @Autowired private EcheanceCreditRepository echeanceCreditRepository;
+    @Autowired private CompteComptableRepository compteComptableRepository;
 
 
 
@@ -1781,6 +1784,10 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         } catch (DocumentException e) {
             throw new RuntimeException("Erreur lors de la génération du PDF", e);
         }
+    }
+
+    public List<CompteComptable> getPlanComptable() {
+        return compteComptableRepository.findAll();
     }
 
 }

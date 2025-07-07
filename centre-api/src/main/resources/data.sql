@@ -245,3 +245,11 @@ INSERT INTO echeance_credit (id, credit_id, date_echeance, total_echeance, inter
 INSERT INTO ecriture_comptable (id, date_ecriture, montant, type, propriete_id, charge_id, recette_id, commentaire, utilisateur_id, cree_le, modifie_le) VALUES
 ('B0000000-0000-0000-0000-000000000001', '2024-10-15', 950.00, 'CHARGE', '10000000-0000-0000-0000-000000000001', '80000000-0000-0000-0000-000000000001', NULL, 'Ecriture pour la taxe foncière 2024', '00000000-0000-0000-0000-000000000003', NOW(), NOW()),
 ('B0000000-0000-0000-0000-000000000002', '2024-05-05', 770.00, 'RECETTE', '10000000-0000-0000-0000-000000000101', NULL, '90000000-0000-0000-0000-000000000001', 'Ecriture pour le loyer de Mai 2024 Marseille', '00000000-0000-0000-0000-000000000003', NOW(), NOW());
+
+INSERT INTO compte_comptable (code, libelle, type) VALUES
+('101', 'Capital social', 'Passif'),
+('201', 'Frais d''établissement', 'Actif'),
+('211', 'Terrains', 'Actif'),
+('401', 'Fournisseurs', 'Passif'),
+('411', 'Clients', 'Actif'),
+('512', 'Banque', 'Actif');

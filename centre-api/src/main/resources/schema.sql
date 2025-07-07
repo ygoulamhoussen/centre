@@ -23,6 +23,8 @@ DROP TABLE IF EXISTS role CASCADE;
 
 DROP TABLE IF EXISTS utilisateur CASCADE;
 
+DROP TABLE IF EXISTS compte_comptable;
+
 -- UTILISATEUR
 CREATE TABLE utilisateur (
     id UUID PRIMARY KEY,
@@ -280,4 +282,11 @@ CREATE TABLE cloture_exercice (
     date_cloture DATE,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS compte_comptable (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    libelle VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL
 );

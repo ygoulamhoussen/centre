@@ -57,6 +57,7 @@ const statutOptions = [
 const tabsWrapperRef = ref<HTMLElement | null>(null)
 const activeTab = ref('detail')
 const showEditModal = ref(false)
+const oldStatut = ref<string | null>(null)
 
 async function fetchQuittance() {
   loading.value = true
@@ -91,6 +92,7 @@ async function fetchPaiements() {
 }
 
 function startEditing() {
+  oldStatut.value = quittance.value.statut
   showEditModal.value = true
 }
 
@@ -108,7 +110,13 @@ async function enregistrer() {
       body: JSON.stringify(payload),
     })
     if (!res.ok) throw new Error('Erreur serveur')
-    message.success('Quittance modifiée !')
+    let ecritureCreee = false
+    // Si le statut passe à PAYEE alors qu'il ne l'était pas avant, on crée l'écriture comptable
+    if (oldStatut.value !== 'PAYEE' && quittance.value.statut === 'PAYEE') {
+      await creerEcritureComptable()
+      ecritureCreee = true
+    }
+    message.success(ecritureCreee ? 'Quittance modifiée et écriture comptable créée !' : 'Quittance modifiée !')
     showEditModal.value = false
   } catch (e: any) {
     message.error(e.message || 'Erreur inconnue')
@@ -298,10 +306,6 @@ const paiementColumns = [
                   <template #icon><NIcon :component="ArrowLeft24Filled" /></template>
                 </NButton>
                 <div class="flex gap-2">
-                  <NButton type="info" ghost @click="creerEcritureComptable" title="Créer écriture comptable">
-                    <template #icon><NIcon :component="Calculator24Filled" /></template>
-                    Écriture comptable
-                  </NButton>
                   <NPopconfirm @positive-click="supprimer" positive-text="Supprimer" negative-text="Annuler">
                     <template #trigger>
                       <NButton type="error" ghost title="Supprimer">

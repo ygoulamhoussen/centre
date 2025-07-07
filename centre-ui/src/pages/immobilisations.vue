@@ -257,15 +257,18 @@ onMounted(async () => {
       striped
     />
     <div v-else>
-      <NCard v-for="immobilisation in filteredImmobilisations" :key="immobilisation.id" class="mobile-card">
+      <NCard v-for="immobilisation in filteredImmobilisations" :key="immobilisation.id" class="mobile-card" @click="viewAmortissements(immobilisation)" style="cursor: pointer;">
         <div><b>Intitulé :</b> {{ immobilisation.intitule }}</div>
         <div><b>Montant :</b> {{ formatCurrency(immobilisation.montant) }}</div>
         <div><b>Type :</b> {{ TYPE_IMMOBILISATION_LABELS[immobilisation.typeImmobilisation] }}</div>
         <div><b>Catégorie fiscale :</b> {{ CATEGORIE_FISCALE_LABELS[immobilisation.categorieFiscale] }}</div>
         <div><b>Date d'acquisition :</b> {{ formatDate(immobilisation.dateAcquisition) }}</div>
-        <div class="actions">
-          <NButton size="small" @click="viewAmortissements(immobilisation)">Amortissements</NButton>
-          <NButton size="small" type="error" @click="deleteImmobilisation(immobilisation.id)">Supprimer</NButton>
+        <div class="actions" @click.stop>
+          <NButton size="small" type="error" @click="deleteImmobilisation(immobilisation.id)">
+            <template #icon>
+              <Icon icon="material-symbols:delete-outline" />
+            </template>
+          </NButton>
         </div>
       </NCard>
     </div>

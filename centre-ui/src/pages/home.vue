@@ -42,11 +42,7 @@ function tryInstallApp() {
 
 <template>
   <NSpace vertical :size="16">
-    <div v-if="appStore.isMobile" class="mt-4">
-      <NButton type="primary" @click="tryInstallApp">
-        Installer l’application sur mon mobile
-      </NButton>
-    </div>
+
     <HeaderBanner />
     <CardData />
     <NGrid :x-gap="gap" :y-gap="16" responsive="screen" item-responsive>
@@ -69,7 +65,11 @@ function tryInstallApp() {
         <CreativityBanner />
       </NGi> -->
     </NGrid>
-
+    <div v-if="appStore.isMobile" class="mt-4 flex-center">
+      <NButton type="primary" @click="tryInstallApp">
+        Installer l’application sur mon mobile
+      </NButton>
+    </div>
     <NModal v-model:show="showInstallHelp">
       <NCard>
         <template #header>Installer l’application</template>
@@ -78,7 +78,7 @@ function tryInstallApp() {
             Sur iPhone, ouvrez le menu <b>Partager</b> puis « Ajouter à l’écran d’accueil  ».
           </div>
           <div v-else>
-            Sur Android, ouvrez le menu du navigateur puis « Installer l’application ».
+            Sur Android, ouvrez le menu du navigateur puis « Ajouter à l'écran d'accueil  ».
           </div>
         </div>
       </NCard>
@@ -86,4 +86,10 @@ function tryInstallApp() {
   </NSpace>
 </template>
 
-<style scoped></style>
+<style scoped>
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+</style>

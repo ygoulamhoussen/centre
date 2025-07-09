@@ -207,15 +207,18 @@ h3 {
 }
 .locations-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
+  width: 100%;
+  margin: 0;
+  max-width: 100%;
 }
 .location-card {
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  margin: 0;
 }
 .location-card:hover {
   transform: translateY(-2px);
@@ -270,7 +273,7 @@ h3 {
     font-size: 1.25rem !important;
   }
   .p-4 {
-    padding: 1rem !important;
+    padding: 0 !important;
   }
   .mb-8,
   .mt-8 {

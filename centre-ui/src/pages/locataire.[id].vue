@@ -74,7 +74,6 @@ const locataire = ref<any>(null)
 const formData = ref({
   id: '',
   nom: '',
-  prenom: '',
   email: '',
   telephone: '',
   dateNaissance: null as number | null,
@@ -137,7 +136,6 @@ async function loadLocataire() {
     formData.value = {
       id: data.id || '',
       nom: data.nom || '',
-      prenom: data.prenom || '',
       email: data.email || '',
       telephone: data.telephone || '',
       dateNaissance: data.dateNaissance ? new Date(data.dateNaissance).getTime() : null,
@@ -162,7 +160,6 @@ function cancelEditing() {
     formData.value = {
       id: locataire.value.id || '',
       nom: locataire.value.nom || '',
-      prenom: locataire.value.prenom || '',
       email: locataire.value.email || '',
       telephone: locataire.value.telephone || '',
       dateNaissance: locataire.value.dateNaissance ? new Date(locataire.value.dateNaissance).getTime() : null,
@@ -618,10 +615,6 @@ function formatDate(dateString: string) {
                       <div class="text-base">{{ locataire.nom || 'Non spécifié' }}</div>
                     </div>
                     <div>
-                      <div class="text-sm text-gray-500">Prénom</div>
-                      <div class="text-base">{{ locataire.prenom || 'Non spécifié' }}</div>
-                    </div>
-                    <div>
                       <div class="text-sm text-gray-500">Email</div>
                       <div class="text-base">{{ locataire.email || 'Non spécifié' }}</div>
                     </div>
@@ -803,9 +796,6 @@ function formatDate(dateString: string) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <NFormItem label="Nom" required>
               <NInput v-model:value="formData.nom" placeholder="Nom" />
-            </NFormItem>
-            <NFormItem label="Prénom" required>
-              <NInput v-model:value="formData.prenom" placeholder="Prénom" />
             </NFormItem>
             <NFormItem label="Email">
               <NInput v-model:value="formData.email" type="email" placeholder="email@exemple.com" />

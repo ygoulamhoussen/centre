@@ -105,9 +105,6 @@ const documentTypes = [
   { value: 'AUTRE', label: 'Autre document' },
 ]
 
-// Ajouter la ref pour le champ nom
-const nomInputRef = ref<HTMLInputElement | null>(null)
-
 // Méthodes
 async function supprimerPropriete(id: string) {
   try {
@@ -489,9 +486,16 @@ onMounted(() => {
   fetchProprieteDetails()
 })
 
-function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMenu: string } }) {
-  throw new Error('Function not implemented.')
-}
+// Juste après la déclaration de showEditModal
+watch(showEditModal, (val) => {
+  if (val) {
+    nextTick(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
+      }
+    })
+  }
+})
 
 // Suppression de toute la logique d'amortissement et de centrage d'onglet (plus d'onglet composant)
 </script>
@@ -709,7 +713,7 @@ function definePage(arg0: { meta: { title: string; hideInMenu: boolean; activeMe
                 Nom :
               </div>
               <div class="info-value-edit">
-                <NInput v-model:value="editForm.nom" size="large" style="width: 100%" ref="nomInputRef" />
+                <NInput v-model:value="editForm.nom" size="large" style="width: 100%" />
               </div>
 
               <div class="info-label">

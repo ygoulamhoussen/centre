@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, h } from 'vue'
+import { onMounted, ref, computed, h, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/modules/auth'
 import { 
@@ -563,6 +563,17 @@ onMounted(() => {
   loadLocataire()
 })
 
+// Juste après la déclaration de showEditModal
+watch(showEditModal, (val) => {
+  if (val) {
+    nextTick(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
+      }
+    })
+  }
+})
+
 // Fonction pour formater la date
 function formatDate(dateString: string) {
   if (!dateString) return 'Non spécifié'
@@ -795,7 +806,7 @@ function formatDate(dateString: string) {
         <NForm>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <NFormItem label="Nom" required>
-              <NInput v-model:value="formData.nom" placeholder="Nom" />
+              <NInput v-model:value="formData.nom" placeholder="Nom" :autofocus="false" />
             </NFormItem>
             <NFormItem label="Email">
               <NInput v-model:value="formData.email" type="email" placeholder="email@exemple.com" />

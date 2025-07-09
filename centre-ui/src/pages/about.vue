@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAppStore } from '@/store/modules/app'
 import pkg from '~/package.json'
+import { ref, onMounted } from 'vue'
 
 definePage({
   meta: {
@@ -54,6 +55,29 @@ const pkgJson: PkgJson = {
 const latestBuildTime = BUILD_TIME
 
 const website = 'https://v-naive-admin.vercel.app'
+
+// --- Bouton d'installation toujours visible ---
+const showInstallHelp = ref(false)
+const deferredPrompt = ref<any>(null)
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
+
+onMounted(() => {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault()
+    deferredPrompt.value = e
+  })
+})
+
+function tryInstallApp() {
+  if (deferredPrompt.value) {
+    deferredPrompt.value.prompt()
+    deferredPrompt.value.userChoice.then(() => {
+      deferredPrompt.value = null
+    })
+  } else {
+    showInstallHelp.value = true
+  }
+}
 </script>
 
 <template>
@@ -66,6 +90,26 @@ const website = 'https://v-naive-admin.vercel.app'
       class="card-wrapper"
     >
       <p>{{ $t('page.about.introduction') }}</p>
+      <!-- Bouton d'installation toujours visible -->
+      <div class="mt-4">
+        <NButton type="primary" @click="tryInstallApp">
+          Installer l’application sur mon mobile
+        </NButton>
+      </div>
+      <!-- Modale d'aide si le prompt n'est pas disponible -->
+      <NModal v-model:show="showInstallHelp">
+        <NCard>
+          <template #header>Installer l’application</template>
+          <div>
+            <div v-if="isIos">
+              Sur iPhone, ouvrez le menu <b>Partager</b> puis « Ajouter à l’écran d’accueil  ».
+            </div>
+            <div v-else>
+              Sur Android, ouvrez le menu du navigateur puis « Installer l’application ».
+            </div>
+          </div>
+        </NCard>
+      </NModal>
     </NCard>
     <NCard
       :title="$t('page.about.projectInfo.title')"

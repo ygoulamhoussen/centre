@@ -2,7 +2,7 @@
 import { useRouterPush } from '@/hooks/common/router'
 import { useRouteStore } from '@/store/modules/route'
 import { NMenu } from 'naive-ui'
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, ref, watch, onMounted } from 'vue'
 import { useMenu } from '../../context'
 
 const routeStore = useRouteStore()
@@ -13,19 +13,34 @@ const menuContainer = ref<HTMLElement | null>(null)
 
 // Fonction corrigée pour centrer l'item actif sur le parent .n-menu-item--selected
 function centerActiveMenuItem() {
-  if (!menuContainer.value) return
+  console.log('centerActiveMenuItem called')
+  if (!menuContainer.value) {
+    console.log('menuContainer not ready')
+    return
+  }
 
   const menuList = menuContainer.value.querySelector('.n-menu--horizontal') as HTMLElement | null
-  if (!menuList) return
-
-  const active = menuList.querySelector('.n-menu-item--selected') as HTMLElement | null
-  if (active) {
-    const menuWidth = menuList.clientWidth
-    const activeLeft = active.offsetLeft
-    const activeWidth = active.offsetWidth
-    const scrollLeft = activeLeft - (menuWidth / 2) + (activeWidth / 2)
-    menuList.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+  if (!menuList) {
+    console.log('menuList not found')
+    return
   }
+
+  console.log('selectedKey:', selectedKey.value)
+  console.log('menu options:', routeStore.menus)
+  setTimeout(() => {
+    console.log('setTimeout executed')
+    console.log('menuList.innerHTML:', menuList.innerHTML)
+    const active = menuList.querySelector('.n-menu-item-content--selected') as HTMLElement | null
+    console.log('active:', active)
+    if (active) {
+      const scrollContainer = menuList.parentElement || menuList
+      const menuWidth = scrollContainer.clientWidth
+      const activeLeft = active.getBoundingClientRect().left - scrollContainer.getBoundingClientRect().left + scrollContainer.scrollLeft
+      const activeWidth = active.offsetWidth
+      const scrollLeft = activeLeft - (menuWidth / 2) + (activeWidth / 2)
+      scrollContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+    }
+  }, 300)
 }
 
 // Handler du clic sur le menu
@@ -42,6 +57,18 @@ watch(selectedKey, () => {
     centerActiveMenuItem()
   })
 })
+
+watch(
+  () => routeStore.menus,
+  (menus) => {
+    if (menus && menus.length > 0) {
+      setTimeout(() => {
+        centerActiveMenuItem()
+      }, 300)
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

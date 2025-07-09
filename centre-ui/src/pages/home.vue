@@ -4,6 +4,7 @@ import HeaderBanner from '@/components/modules/home/header-banner.vue'
 import LineChart from '@/components/modules/home/line-chart.vue'
 import PieChart from '@/components/modules/home/pie-chart.vue'
 import { useAppStore } from '@/store/modules/app'
+import { ref, onMounted } from 'vue'
 
 definePage({
   meta: {
@@ -15,10 +16,37 @@ definePage({
 const appStore = useAppStore()
 
 const gap = computed(() => (appStore.isMobile ? 0 : 16))
+
+const showInstallHelp = ref(false)
+const deferredPrompt = ref<any>(null)
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
+
+onMounted(() => {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault()
+    deferredPrompt.value = e
+  })
+})
+
+function tryInstallApp() {
+  if (deferredPrompt.value) {
+    deferredPrompt.value.prompt()
+    deferredPrompt.value.userChoice.then(() => {
+      deferredPrompt.value = null
+    })
+  } else {
+    showInstallHelp.value = true
+  }
+}
 </script>
 
 <template>
   <NSpace vertical :size="16">
+    <div v-if="appStore.isMobile" class="mt-4">
+      <NButton type="primary" @click="tryInstallApp">
+        Installer l’application sur mon mobile
+      </NButton>
+    </div>
     <HeaderBanner />
     <CardData />
     <NGrid :x-gap="gap" :y-gap="16" responsive="screen" item-responsive>
@@ -41,6 +69,20 @@ const gap = computed(() => (appStore.isMobile ? 0 : 16))
         <CreativityBanner />
       </NGi> -->
     </NGrid>
+
+    <NModal v-model:show="showInstallHelp">
+      <NCard>
+        <template #header>Installer l’application</template>
+        <div>
+          <div v-if="isIos">
+            Sur iPhone, ouvrez le menu <b>Partager</b> puis « Ajouter à l’écran d’accueil  ».
+          </div>
+          <div v-else>
+            Sur Android, ouvrez le menu du navigateur puis « Installer l’application ».
+          </div>
+        </div>
+      </NCard>
+    </NModal>
   </NSpace>
 </template>
 

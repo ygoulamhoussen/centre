@@ -9,6 +9,7 @@ import GlobalFooter from './modules/global-footer/index.vue'
 import GlobalHeader from './modules/global-header/index.vue'
 import GlobalSider from './modules/global-sider/index.vue'
 import ThemeDrawer from './modules/theme-drawer/index.vue'
+import MobileMenu from './modules/global-menu/mobile-menu.vue'
 
 defineOptions({
   name: 'DefaultLayout',
@@ -32,7 +33,7 @@ const headerProps = computed(() => {
     'vertical': {
       showLogo: false,
       showMenu: false,
-      showMenuToggler: true,
+      showMenuToggler: !appStore.isMobile, // le toggle est masqué sur mobile
     },
     'vertical-mix': {
       showLogo: false,
@@ -96,19 +97,33 @@ function getSiderCollapsedWidth() {
       <GlobalHeader v-bind="headerProps" />
     </template>
     <template #sider>
-      <GlobalSider />
+      <GlobalSider v-if="!appStore.isMobile" />
     </template>
-    <GlobalMenu />
+    <GlobalMenu v-if="!appStore.isMobile" />
     <GlobalContent />
     <ThemeDrawer />
     <template #footer>
       <GlobalFooter />
     </template>
+    <!-- Menu horizontal en bas pour mobile -->
+    <div v-if="appStore.isMobile" class="bottom-nav">
+      <MobileMenu />
+    </div>
   </AdminLayout>
 </template>
 
 <style lang="scss">
 #__SCROLL_EL_ID__ {
   @include scrollbar();
+}
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: #fff;
+  border-top: 1px solid #eee;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.03);
 }
 </style>

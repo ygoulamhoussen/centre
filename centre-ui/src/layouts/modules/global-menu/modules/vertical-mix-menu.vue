@@ -82,6 +82,7 @@ watch(
         :sider-collapse="appStore.siderCollapse"
         :dark-mode="themeStore.darkMode"
         :theme-color="themeStore.themeColor"
+        :is-mobile="appStore.isMobile"
         @select="handleSelectMixMenu"
         @toggle-sider-collapse="appStore.toggleSiderCollapse"
       >

@@ -16,6 +16,7 @@ interface Props {
   siderCollapse?: boolean
   darkMode?: boolean
   themeColor: string
+  isMobile?: boolean // Ajout de la prop
 }
 
 interface Emits {
@@ -87,6 +88,7 @@ function toggleSiderCollapse() {
       />
     </SimpleScrollbar>
     <MenuToggler
+      v-if="!isMobile"
       arrow-icon
       :collapsed="siderCollapse"
       :z-index="99"

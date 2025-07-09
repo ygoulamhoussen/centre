@@ -2,8 +2,9 @@
 import { Icon } from '@iconify/vue'
 import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage, NSteps, NStep } from 'naive-ui'
 import { computed, h, onMounted, ref, onUnmounted, nextTick } from 'vue'
-import { definePage, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAppStore } from '@/store/modules/app'
+import { useAuthStore } from '@/store/modules/auth'
 
 const router = useRouter()
 const message = useMessage()
@@ -11,7 +12,7 @@ const currentStep = ref(0)
 const saving = ref(false)
 const generatingEcheancier = ref(false)
 const editingRowsOriginalData = ref<Record<number, any>>({})
-const isMobile = useAppStore().isMobile
+const authStore = useAuthStore()
 
 const steps = [
   { label: 'Caractéristiques' },
@@ -26,7 +27,7 @@ const formData = ref({
   type: '',
   dateDebut: null as number | null,
   periodicite: 'MENSUELLE',
-  proprieteId: '',
+  proprieteId: '' as string,
   banque: '',
 })
 
@@ -334,9 +335,10 @@ async function saveCredit() {
       dureeMois: String(formData.value.duree),
       tauxInteretAnnuel: String(formData.value.taux),
       mensualite,
-      assuranceMensuelle: '0', // à ajouter si tu veux gérer l'assurance
+      assuranceMensuelle: '0',
       fraisDossier: '0',
       fraisGarantie: '0',
+      utilisateurId: authStore.userInfo.userId,
     }
     const response = await fetch(`${baseUrl}/api/createCredit`, {
       method: 'POST',
@@ -380,12 +382,12 @@ onMounted(async () => {
   try {
     // Appel API réel pour charger les propriétés de l'utilisateur Yussouf
     const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
-    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003`)
+    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/${authStore.userInfo.userId}`)
     if (!response.ok) {
       throw new Error('Erreur lors de la récupération des propriétés')
     }
     const proprietes = await response.json()
-    proprieteOptions.value = proprietes.map((p: any) => ({ label: p.nom, value: p.id }))
+    proprieteOptions.value = proprietes.map((p: any) => ({ label: p.nom, value: String(p.id) }))
   }
   catch {
     message.error('Erreur lors du chargement des propriétés')
@@ -429,21 +431,21 @@ definePage({
     </NCard>
     <!-- Étape 1 : Saisie des caractéristiques -->
     <NCard v-if="currentStep === 0" title="Étape 1 : Caractéristiques du crédit" class="step-card">
-      <NForm :class="{ 'mobile-form': isMobileRef }" label-placement="left" label-width="auto">
+      <NForm :class="{ 'mobile-form': isMobileRef }" :label-placement="isMobileRef ? 'top' : 'left'" label-width="auto">
         <NFormItem label="Montant emprunté (€)" required>
-          <NInputNumber v-model:value="formData.montant" min="0" style="width: 100%" />
+          <NInputNumber v-model:value="formData.montant as number" min="0" style="width: 100%" />
         </NFormItem>
         <NFormItem label="Durée (mois)" required>
-          <NInputNumber v-model:value="formData.duree" min="1" style="width: 100%" />
+          <NInputNumber v-model:value="formData.duree as number" min="1" style="width: 100%" />
         </NFormItem>
         <NFormItem label="Taux d'intérêt (%)" required>
-          <NInputNumber v-model:value="formData.taux" min="0" max="100" precision="2" style="width: 100%" />
+          <NInputNumber v-model:value="formData.taux as number" min="0" max="100" precision="2" style="width: 100%" />
         </NFormItem>
         <NFormItem label="Type de crédit" required>
           <NSelect v-model:value="formData.type" :options="typeOptions" style="width: 100%" />
         </NFormItem>
         <NFormItem label="Date de début" required>
-          <NDatePicker v-model:value="formData.dateDebut" type="date" style="width: 100%" format="dd/MM/yyyy" />
+          <NDatePicker v-model:value="formData.dateDebut as number | null" type="date" style="width: 100%" format="dd/MM/yyyy" />
         </NFormItem>
         <NFormItem label="Périodicité" required>
           <NSelect v-model:value="formData.periodicite" :options="periodiciteOptions" style="width: 100%" />
@@ -497,7 +499,7 @@ definePage({
             <div><b>N° :</b> {{ e.numero }}</div>
             <div><b>Date :</b>
               <template v-if="e.isEditing">
-                <NDatePicker v-model:value="e.date" type="date" format="dd/MM/yyyy" style="width: 100%" :ref="el => { if (el) echeanceRefs.value[e.numero] = el }" />
+                <NDatePicker v-model:value="e.date" type="date" format="dd/MM/yyyy" style="width: 100%" :ref="el => { if (el) echeanceRefs[e.numero] = el }" />
               </template>
               <template v-else>
                 {{ formatDate(e.date) }}
@@ -619,9 +621,13 @@ definePage({
 <style scoped>
 .credits-create-page {
   padding: 20px;
+  background: #f5f6fa;
 }
-.progress-card {
-  margin-bottom: 20px;
+.progress-card, .step-card {
+  background: #fafbfc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(60,60,60,0.04);
 }
 .progress-steps {
   display: flex;
@@ -655,6 +661,7 @@ definePage({
   gap: 8px;
   flex: 1;
   position: relative;
+  color: #222;
 }
 .step:not(:last-child)::after {
   content: '';
@@ -677,8 +684,8 @@ definePage({
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  background-color: #e5e7eb;
-  color: #6b7280;
+  background: #3b82f6;
+  color: #fff;
   z-index: 2;
   position: relative;
 }
@@ -692,7 +699,7 @@ definePage({
 }
 .step-label {
   font-size: 14px;
-  color: #6b7280;
+  color: #222;
   text-align: center;
 }
 .step.active .step-label {
@@ -749,6 +756,7 @@ definePage({
   border-radius: 8px;
   padding: 12px;
   background: #fff;
+  box-shadow: 0 2px 8px rgba(60,60,60,0.04);
 }
 .mobile-card .actions {
   margin-top: 8px;
@@ -777,6 +785,20 @@ definePage({
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
+}
+.n-form-item-label {
+  color: #222;
+}
+@media (max-width: 768px) {
+  .echeancier-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .echeancier-section .n-button {
+    width: 100%;
+    margin-left: 0 !important;
+  }
 }
 </style>
 <!-- test --> 

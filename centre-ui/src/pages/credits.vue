@@ -187,7 +187,7 @@ onMounted(async () => {
   padding: 20px;
 }
 .titre-principal, h1, h2, h3 {
-  color: var(--n-text-color) !important;
+  color: #222 !important;
   font-weight: bold;
 }
 .flex {
@@ -249,7 +249,7 @@ onMounted(async () => {
 .desktop-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
+  gap: 24px;
   margin-top: 20px;
 }
 
@@ -258,6 +258,16 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  background: #fafbfc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(60,60,60,0.04);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.credit-card:hover {
+  box-shadow: 0 4px 16px rgba(60,60,60,0.10);
+  border-color: #b3c0d1;
 }
 
 .card-header {
@@ -268,13 +278,16 @@ onMounted(async () => {
 }
 
 .delete-btn {
-  flex-shrink: 0;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
+  background: #fbe9e7;
+  color: #d32f2f;
+  border-radius: 6px;
+  opacity: 1;
+  border: none;
 }
 
 .delete-btn:hover {
-  opacity: 1;
+  background: #ffebee;
+  color: #b71c1c;
 }
 
 .credit-info {
@@ -286,13 +299,13 @@ onMounted(async () => {
 .credit-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1890ff;
+  color: #222;
 }
 
 .credit-amount {
   font-size: 1.2rem;
   font-weight: bold;
-  color: #52c41a;
+  color: #3b82f6;
 }
 
 .credit-details {
@@ -302,16 +315,16 @@ onMounted(async () => {
 }
 
 .detail-item {
-  background: #f5f5f5;
+  background: #f0f2f5;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.9rem;
-  color: #666;
+  color: #555;
 }
 
 .credit-property {
   font-size: 0.9rem;
-  color: #666;
+  color: #888;
   font-style: italic;
 }
 
@@ -323,7 +336,7 @@ onMounted(async () => {
   padding-top: 8px;
   border-top: 1px solid #f0f0f0;
   font-size: 0.8rem;
-  color: #999;
+  color: #888;
 }
 @media (max-width: 768px) {
   .titre-principal, h1, h2, h3 {

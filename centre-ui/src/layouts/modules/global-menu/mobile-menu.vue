@@ -2,8 +2,8 @@
 import { useRouterPush } from '@/hooks/common/router'
 import { useRouteStore } from '@/store/modules/route'
 import { NMenu } from 'naive-ui'
+import { nextTick, ref, watch } from 'vue'
 import { useMenu } from '../../context'
-import { ref, nextTick, watch } from 'vue'
 
 const routeStore = useRouteStore()
 const { selectedKey } = useMenu()
@@ -14,9 +14,11 @@ const menuContainer = ref<HTMLElement | null>(null)
 // Fonction corrigée pour centrer l'item actif sur le parent .n-menu-item--selected
 function centerActiveMenuItem() {
   if (!menuContainer.value) return
-  const menuList = menuContainer.value.querySelector('.n-menu--horizontal')
+
+  const menuList = menuContainer.value.querySelector('.n-menu--horizontal') as HTMLElement | null
   if (!menuList) return
-  const active = menuList.querySelector('.n-menu-item--selected')
+
+  const active = menuList.querySelector('.n-menu-item--selected') as HTMLElement | null
   if (active) {
     const menuWidth = menuList.clientWidth
     const activeLeft = active.offsetLeft
@@ -70,4 +72,4 @@ watch(selectedKey, () => {
   justify-content: flex-start;
   -webkit-overflow-scrolling: touch;
 }
-</style> 
+</style>

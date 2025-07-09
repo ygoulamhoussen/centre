@@ -8,6 +8,7 @@ import { NButton, NCard, NDataTable, NTabPane, NTabs, useMessage } from 'naive-u
 import type { ChargeDTO } from '@/types/dto'
 import { createCharge, createEcritureComptableCharge } from '@/service/api/charges-recettes'
 import { useAppStore } from '@/store/modules/app'
+import { useAuthStore } from '@/store/modules/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +18,7 @@ const message = useMessage()
 const writingInProgress = ref<Record<number, boolean>>({})
 const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
 const isMobile = useAppStore().isMobile
+const authStore = useAuthStore()
 
 definePage({
   meta: {
@@ -40,7 +42,7 @@ function formatDate(date: number | string | null) {
 
 onMounted(async () => {
   const id = route.params.id as string | undefined
-  const utilisateurId = '00000000-0000-0000-0000-000000000003' // ID utilisateur codé en dur pour l'exemple
+  const utilisateurId = authStore.userInfo.userId
   if (!id) {
     message.error('ID du crédit manquant')
     console.error('ID du crédit manquant')

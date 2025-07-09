@@ -203,5 +203,19 @@ onMounted(() => {
   .locataire-nom {
     font-size: 1rem;
   }
+  .flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .titre-principal {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .n-button {
+    width: 100%;
+    max-width: 320px;
+    align-self: center;
+  }
 }
 </style>

@@ -100,6 +100,7 @@ onMounted(fetchProprietes)
           <template #icon>
             <NIcon :component="Add24Filled" />
           </template>
+          Nouvelle propriété
         </NButton>
       </div>
 
@@ -158,9 +159,18 @@ onMounted(fetchProprietes)
     font-size: 1.25rem !important;
   }
   .flex {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .titre-principal {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .n-button {
+    width: 100%;
+    max-width: 320px;
+    align-self: center;
   }
 }
 </style>

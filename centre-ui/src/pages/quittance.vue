@@ -86,6 +86,9 @@ onMounted(() => fetchQuittances())
     <div class="flex justify-between items-center mb-6">
       <NH1 class="titre-principal">Mes quittances</NH1>
       <NButton type="primary" @click="demarrerCreation">
+        <template #icon>
+          <NIcon :component="DocumentPdf24Filled" />
+        </template>
         Créer une quittance
       </NButton>
     </div>
@@ -94,6 +97,9 @@ onMounted(() => fetchQuittances())
         <NEmpty description="Aucune quittance enregistrée.">
           <template #extra>
             <NButton type="primary" @click="demarrerCreation">
+              <template #icon>
+                <NIcon :component="DocumentPdf24Filled" />
+              </template>
               Créer une quittance
             </NButton>
           </template>
@@ -227,6 +233,20 @@ h3 {
   }
   .mb-6 {
     margin-bottom: 1rem !important;
+  }
+  .flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .titre-principal {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .n-button {
+    width: 100%;
+    max-width: 320px;
+    align-self: center;
   }
 }
 </style>

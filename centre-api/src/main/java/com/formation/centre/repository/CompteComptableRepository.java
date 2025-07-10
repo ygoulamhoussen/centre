@@ -4,5 +4,5 @@ import com.formation.centre.model.CompteComptable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CompteComptableRepository extends JpaRepository<CompteComptable, Long> {
-    // rien à ajouter
+    CompteComptable findByCode(String code);
 } 

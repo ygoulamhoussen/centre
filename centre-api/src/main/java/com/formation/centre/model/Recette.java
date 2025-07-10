@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.formation.centre.model.EcritureComptable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -52,6 +53,10 @@ public class Recette {
     @ManyToOne
     @JoinColumn(name = "document_id")
     private DocumentEntity document;
+
+    @ManyToOne
+    @JoinColumn(name = "ecriture_comptable_id")
+    private EcritureComptable ecritureComptable;
 
     @Column(name = "cree_le")
     private LocalDateTime creeLe;
@@ -142,6 +147,9 @@ public class Recette {
     public void setDocument(DocumentEntity document) {
         this.document = document;
     }
+
+    public EcritureComptable getEcritureComptable() { return ecritureComptable; }
+    public void setEcritureComptable(EcritureComptable ecritureComptable) { this.ecritureComptable = ecritureComptable; }
 
     public LocalDateTime getCreeLe() {
         return creeLe;

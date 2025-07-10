@@ -1,3 +1,32 @@
+-- =============================
+-- 📘 Plan comptable simplifié LMNP – par catégories
+-- =============================
+--
+-- 🟦 Recettes (classe 7)
+-- Numéro de compte | Intitulé                        | À reporter dans 2033-B
+-- 706000           | Loyers meublés                  | Recettes locatives
+-- 708000           | Produits accessoires            | Produits accessoires
+--
+-- 🟥 Charges d’exploitation (classe 6)
+-- Numéro de compte | Intitulé                        | À reporter dans 2033-B
+-- 606000           | Achats non stockés de petits matériels | Achats
+-- 615000           | Entretien et réparations        | Charges externes
+-- 616000           | Primes d’assurances             | Charges externes
+-- 618000           | Frais de gestion (honoraires, assistance...) | Charges externes
+-- 622000           | Frais de gestion locative, conciergerie | Charges externes
+-- 606300           | Fournitures administratives     | Charges externes
+-- 635100           | Taxe foncière                   | Impôts et taxes
+-- 637000           | Cotisations CFE ou autres       | Impôts et taxes
+--
+-- 🟧 Charges financières
+-- Numéro de compte | Intitulé                        | À reporter dans 2033-B
+-- 661100           | Intérêts des emprunts           | Charges financières
+--
+-- 🟨 Amortissements (via 2033-C)
+-- Numéro de compte | Intitulé                        | À reporter dans 2033-B
+-- 681100           | Dotations aux amortissements    | Dotations aux amortissements
+-- =============================
+
 -- Jeux de données pour LMNP - PostgreSQL
 
 -- Utilisateurs
@@ -241,59 +270,38 @@ INSERT INTO echeance_credit (id, credit_id, date_echeance, total_echeance, inter
 ('A0000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000200', '2023-03-01', 1595.55, 558.29, 972.26, 65.00),
 ('A0000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000200', '2023-04-01', 1595.55, 556.58, 973.97, 65.00);
 
--- ÉCRITURES COMPTABLES (basées sur l'entité EcritureComptable.java)
-INSERT INTO ecriture_comptable (id, date_ecriture, montant, type, propriete_id, charge_id, recette_id, commentaire, utilisateur_id, cree_le, modifie_le) VALUES
-('B0000000-0000-0000-0000-000000000001', '2024-10-15', 950.00, 'CHARGE', '10000000-0000-0000-0000-000000000001', '80000000-0000-0000-0000-000000000001', NULL, 'Ecriture pour la taxe foncière 2024', '00000000-0000-0000-0000-000000000003', NOW(), NOW()),
-('B0000000-0000-0000-0000-000000000002', '2024-05-05', 770.00, 'RECETTE', '10000000-0000-0000-0000-000000000101', NULL, '90000000-0000-0000-0000-000000000001', 'Ecriture pour le loyer de Mai 2024 Marseille', '00000000-0000-0000-0000-000000000003', NOW(), NOW());
-
+-- ÉCRITURES COMPTABLES (nouveau modèle)
+-- Exemple :
+-- INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, numero_piece, utilisateur_id, created_at) VALUES
+-- ('B0000000-0000-0000-0000-000000000001', '2024-10-15', 'Loyer Mai 2024', 'BQ', 'PJ-2024-001', '00000000-0000-0000-0000-000000000003', NOW());
+-- Suppression des anciens comptes et ajout du plan simplifié LMNP
+DELETE FROM compte_comptable;
 INSERT INTO compte_comptable (code, libelle, type, description) VALUES
-('10100000', 'Capital', 'Passif', 'Capital'),
-('10130000', 'Capital souscrit, appelé, versé', 'Passif', 'Capital souscrit, appelé, versé'),
-('10800000', 'Compte de l''exploitant', 'Passif', 'Apport personnel de l''associé afin d''augmenter la trésorerie de l''entreprise. En cas de dépense, il s''agit d''un remboursement de ce que doit l''entreprise à l''associé.'),
-('11000000', 'Report à nouveau (solde créditeur)', 'Passif', 'Report à nouveau (solde créditeur)'),
-('11900000', 'Report à nouveau (solde débiteur)', 'Passif', 'Report à nouveau (solde débiteur)'),
-('12000000', 'Résultat de l''exercice (bénéfice)', 'Passif', 'Résultat de l''exercice (bénéfice)'),
-('12900000', 'Résultat de l''exercice (perte)', 'Passif', 'Résultat de l''exercice (perte)'),
-('16500000', 'Dépôts et cautionnements reçus', 'Passif', 'Dépôt de garantie ou caution reçue lors de la signature d''un bail de location.'),
-('16500001', 'Dépôt de garantie - TEST', 'Passif', NULL),
-('21100000', 'Terrains', 'Actif', 'Terrains'),
-('21100001', 'STATE GARDEN - Terrain (15%)', 'Actif', 'STATE GARDEN - Terrain (15%)'),
-('21300000', 'Construction', 'Actif', 'Construction'),
-('21300001', 'STATE GARDEN - Agencements (20%)', 'Actif', 'STATE GARDEN - Agencements (20%)'),
-('21300002', 'STATE GARDEN - IGT (20%)', 'Actif', 'STATE GARDEN - IGT (20%)'),
-('21300003', 'STATE GARDEN - Façades, étanchéité (5%)', 'Actif', 'STATE GARDEN - Façades, étanchéité (5%)'),
-('21300004', 'STATE GARDEN - Structure (Gros oeuvre) (40%)', 'Actif', 'STATE GARDEN - Structure (Gros oeuvre) (40%)'),
-('21800000', 'Autres immobilisations corporelles', 'Actif', 'Autres immobilisations corporelles'),
-('21810000', 'Installations générales, agencements, aménagements divers', 'Actif', 'Installations générales, agencements, aménagements divers'),
-('21820000', 'Matériel de transport', 'Actif', 'Matériel de transport'),
-('21830000', 'Matériel de bureau et matériel informatique', 'Actif', 'Matériel de bureau et matériel informatique'),
-('21840000', 'Mobilier', 'Actif', 'Mobilier'),
-('27510000', 'Dépôts et cautionnements versés', 'Actif', 'Dépôts et cautionnements versés'),
-('28130000', 'Amortissement sur construction', 'Actif', 'Amortissement sur construction'),
-('28180000', 'Amortissement sur autres immobilisations corporelles', 'Actif', 'Amortissement sur autres immobilisations corporelles'),
-('28181000', 'Amortissement sur installations générales, agencements, aménagements divers', 'Actif', 'Amortissement sur installations générales, agencements, aménagements divers'),
-('28182000', 'Amortissement sur matériel de transport', 'Actif', 'Amortissement sur matériel de transport'),
-('28183000', 'Amortissement sur matériel de bureau et matériel informatique', 'Actif', 'Amortissement sur matériel de bureau et matériel informatique'),
-('28184000', 'Amortissement sur mobilier', 'Actif', 'Amortissement sur mobilier'),
-('40410000', 'Fournisseurs d''immobilisations', 'Passif', 'Fournisseurs d''immobilisations'),
-('41100001', 'Locataire - TEST', 'Actif', NULL),
-('46700000', 'Autres comptes débiteurs ou créditeurs', 'Actif', 'Autres comptes débiteurs ou créditeurs'),
-('46860000', 'Charge à payer', 'Passif', 'Charge à payer'),
-('46870000', 'Produits à recevoir', 'Actif', 'Produits à recevoir'),
-('48600000', 'Charge constatée d''avance', 'Actif', 'Charge constatée d''avance'),
-('48700000', 'Produits constatés d''avance', 'Passif', 'Produits constatés d''avance'),
-('51200000', 'Banque', 'Actif', 'Banque'),
-('53000000', 'Caisse', 'Actif', 'Caisse'),
-('60620000', 'Fourniture d''entretien et de petit équipement', 'Charge', 'Fourniture d''entretien et de petit équipement'),
-('61400000', 'Charges locatives et de copropriété', 'Charge', 'Charges locatives, charges de copropriété à régler au syndic.'),
-('61600000', 'Primes d''assurances', 'Charge', 'Dépense d''assurance de tout type. Par exemple : assurance de crédit, assurance de propriétaire non occupant, assurance véhicule, ...'),
-('61660000', 'Primes d''assurances emprênt', 'Charge', 'Primes d''assurances emprênt'),
-('62200000', 'Rémunérations d''intermédiaires et honoraires', 'Charge', 'Frais d''agences lors d''une achat/vente'),
-('62260000', 'Honoraires', 'Charge', 'Frais d''actes et contentieux (huissier, frais de greffe, enregistrement, Kbis).'),
-('62510000', 'Voyages et déplacements', 'Charge', 'Frais de déplacement liés à l''activité. Par exemple : les billets de train, de transports en commun, les tickets d''essence, ...'),
-('62710000', 'Frais sur titres', 'Charge', 'Frais sur titres'),
-('62780000', 'Autres frais et commissions sur prestations de services', 'Charge', 'Frais bancaires (hors intérêts et agios) et commissions de paiement. Par exemple : les frais de tenu de compte, les commissions sur des règlements reçus (Stripe, Stancer), ...'),
-('63512000', 'Taxes foncières', 'Charge', 'Taxe foncière des différentes propriétés.'),
-('65110000', 'Redevances pour concessions, brevets, licences, marques, procédés, logiciels', 'Charge', 'Frais liés aux différents abonnements de logiciels externes utilisés par l''entreprise. Par l''exemple : l''abonnement TOMAPPART.'),
-('66110000', 'Intérêts des emprunts et dettes', 'Charge', 'Intérêts liés à un crédit en cours (se référer au tableau d''amortissement bancaire) ou des agios facturés suite à un découvert.'),
-('68112000', 'Dotations aux amortissements sur immo. corporelles', 'Charge', 'Dotations aux amortissements sur immo. corporelles');
+('706000', 'Loyers meublés', 'Recette', 'Recettes locatives (2033-B)'),
+('708000', 'Produits accessoires', 'Recette', 'Produits accessoires (2033-B)'),
+('606000', 'Achats non stockés de petits matériels', 'Charge', 'Achats de petits équipements, mobilier, fournitures (2033-B)'),
+('606300', 'Fournitures administratives', 'Charge', 'Fournitures administratives (2033-B)'),
+('615000', 'Entretien et réparations', 'Charge', 'Entretien, réparations (2033-B Charges externes)'),
+('616000', 'Primes d’assurances', 'Charge', 'Assurances (2033-B Charges externes)'),
+('618000', 'Frais de gestion (honoraires, assistance...)', 'Charge', 'Honoraires, assistance, gestion (2033-B Charges externes)'),
+('622000', 'Frais de gestion locative, conciergerie', 'Charge', 'Gestion locative, conciergerie (2033-B Charges externes)'),
+('635100', 'Taxe foncière', 'Charge', 'Taxe foncière (2033-B Impôts et taxes)'),
+('637000', 'Cotisations CFE ou autres', 'Charge', 'Cotisations CFE, autres impôts (2033-B Impôts et taxes)'),
+('661100', 'Intérêts des emprunts', 'Charge', 'Intérêts d’emprunt (2033-B Charges financières)'),
+('681100', 'Dotations aux amortissements', 'Charge', 'Dotations aux amortissements (2033-B/2033-C)'),
+-- Passif (Capitaux propres et Dettes)
+('101000', 'Capital personnel (apports du LMNP)', 'Passif', 'Apports personnels du loueur en meublé'),
+('120000', 'Résultat de l’exercice précédent', 'Passif', 'Résultat de l’exercice précédent'),
+('129000', 'Résultat en attente d’affectation', 'Passif', 'Résultat non encore affecté'),
+('164000', 'Emprunt immobilier', 'Dettes', 'Emprunt bancaire immobilier'),
+('401000', 'Fournisseurs', 'Dettes', 'Dettes envers les fournisseurs'),
+('445660', 'TVA collectée', 'Dettes', 'TVA collectée à reverser'),
+('445661', 'TVA déductible sur biens/services', 'Dettes', 'TVA déductible sur achats de biens et services'),
+-- Comptes ajoutés pour compléter le plan LMNP simplifié :
+('213000', 'Immobilisations corporelles (biens)', 'Immobilisations', 'Valeur du bien immobilier détenu'),
+('215000', 'Mobilier et équipements', 'Immobilisations', 'Mobilier et équipements loués avec le bien'),
+('280000', 'Amortissements des immobilisations', 'Immobilisations', 'Suivi des dotations aux amortissements'),
+('411000', 'Clients', 'Tiers', 'Créances locataires (loyers non payés)'),
+('445662', 'TVA déductible sur biens et services', 'Tiers', 'TVA récupérable sur achats'),
+('512000', 'Banque', 'Trésorerie', 'Compte courant bancaire'),
+('530000', 'Caisse', 'Trésorerie', 'Espèces détenues (rare en LMNP)');

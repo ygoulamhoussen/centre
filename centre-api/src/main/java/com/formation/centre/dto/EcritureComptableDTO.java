@@ -1,181 +1,40 @@
 package com.formation.centre.dto;
 
-import com.formation.centre.model.EcritureComptable;
+import java.util.List;
 
 public class EcritureComptableDTO {
     private String id;
     private String dateEcriture;
-    private String montant;
-    private String type;
-    private String proprieteId;
-    private String proprieteNom;
-    private String chargeId;
-    private String recetteId;
-    private String commentaire;
+    private String libelle;
+    private String journalCode;
+    private String numeroPiece;
     private String utilisateurId;
-    private String documentId;
-    private String documentNom;
     private String createdAt;
-    private String updatedAt;
+    private List<LigneEcritureDTO> lignes;
 
-    // Constructeurs
     public EcritureComptableDTO() {}
 
-    public EcritureComptableDTO(String id, String dateEcriture, String montant, String type, 
-                               String proprieteId, String proprieteNom, String chargeId, String recetteId, 
-                               String commentaire, String utilisateurId, String documentId, String documentNom,
-                               String createdAt, String updatedAt) {
-        this.id = id;
-        this.dateEcriture = dateEcriture;
-        this.montant = montant;
-        this.type = type;
-        this.proprieteId = proprieteId;
-        this.proprieteNom = proprieteNom;
-        this.chargeId = chargeId;
-        this.recetteId = recetteId;
-        this.commentaire = commentaire;
-        this.utilisateurId = utilisateurId;
-        this.documentId = documentId;
-        this.documentNom = documentNom;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    // Méthode de conversion depuis l'entité
-    public static EcritureComptableDTO fromEntity(EcritureComptable ecriture) {
-        if (ecriture == null) {
-            return null;
-        }
+    public String getDateEcriture() { return dateEcriture; }
+    public void setDateEcriture(String dateEcriture) { this.dateEcriture = dateEcriture; }
 
-        EcritureComptableDTO dto = new EcritureComptableDTO();
-        dto.setId(ecriture.getId() != null ? ecriture.getId().toString() : null);
-        dto.setDateEcriture(ecriture.getDateEcriture() != null ? ecriture.getDateEcriture().toString() : null);
-        dto.setMontant(ecriture.getMontant() != null ? ecriture.getMontant().toPlainString() : null);
-        dto.setType(ecriture.getType() != null ? ecriture.getType().name() : null);
-        dto.setProprieteId(ecriture.getPropriete() != null ? ecriture.getPropriete().getId().toString() : null);
-        dto.setProprieteNom(ecriture.getPropriete() != null ? ecriture.getPropriete().getNom() : null);
-        dto.setChargeId(ecriture.getCharge() != null ? ecriture.getCharge().getId().toString() : null);
-        dto.setRecetteId(ecriture.getRecette() != null ? ecriture.getRecette().getId().toString() : null);
-        dto.setCommentaire(ecriture.getCommentaire());
-        dto.setUtilisateurId(ecriture.getUtilisateur() != null ? ecriture.getUtilisateur().getId().toString() : null);
-        dto.setDocumentId(ecriture.getDocument() != null ? ecriture.getDocument().getId().toString() : null);
-        dto.setDocumentNom(ecriture.getDocument() != null ? ecriture.getDocument().getTitre() : null);
-        dto.setCreatedAt(ecriture.getCreeLe() != null ? ecriture.getCreeLe().toString() : null);
-        dto.setUpdatedAt(ecriture.getModifieLe() != null ? ecriture.getModifieLe().toString() : null);
+    public String getLibelle() { return libelle; }
+    public void setLibelle(String libelle) { this.libelle = libelle; }
 
-        return dto;
-    }
+    public String getJournalCode() { return journalCode; }
+    public void setJournalCode(String journalCode) { this.journalCode = journalCode; }
 
-    // Getters et Setters
-    public String getId() {
-        return id;
-    }
+    public String getNumeroPiece() { return numeroPiece; }
+    public void setNumeroPiece(String numeroPiece) { this.numeroPiece = numeroPiece; }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    public String getUtilisateurId() { return utilisateurId; }
+    public void setUtilisateurId(String utilisateurId) { this.utilisateurId = utilisateurId; }
 
-    public String getDateEcriture() {
-        return dateEcriture;
-    }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
-    public void setDateEcriture(String dateEcriture) {
-        this.dateEcriture = dateEcriture;
-    }
-
-    public String getMontant() {
-        return montant;
-    }
-
-    public void setMontant(String montant) {
-        this.montant = montant;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getProprieteId() {
-        return proprieteId;
-    }
-
-    public void setProprieteId(String proprieteId) {
-        this.proprieteId = proprieteId;
-    }
-
-    public String getProprieteNom() {
-        return proprieteNom;
-    }
-
-    public void setProprieteNom(String proprieteNom) {
-        this.proprieteNom = proprieteNom;
-    }
-
-    public String getChargeId() {
-        return chargeId;
-    }
-
-    public void setChargeId(String chargeId) {
-        this.chargeId = chargeId;
-    }
-
-    public String getRecetteId() {
-        return recetteId;
-    }
-
-    public void setRecetteId(String recetteId) {
-        this.recetteId = recetteId;
-    }
-
-    public String getCommentaire() {
-        return commentaire;
-    }
-
-    public void setCommentaire(String commentaire) {
-        this.commentaire = commentaire;
-    }
-
-    public String getUtilisateurId() {
-        return utilisateurId;
-    }
-
-    public void setUtilisateurId(String utilisateurId) {
-        this.utilisateurId = utilisateurId;
-    }
-
-    public String getDocumentId() {
-        return documentId;
-    }
-
-    public void setDocumentId(String documentId) {
-        this.documentId = documentId;
-    }
-
-    public String getDocumentNom() {
-        return documentNom;
-    }
-
-    public void setDocumentNom(String documentNom) {
-        this.documentNom = documentNom;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public List<LigneEcritureDTO> getLignes() { return lignes; }
+    public void setLignes(List<LigneEcritureDTO> lignes) { this.lignes = lignes; }
 }

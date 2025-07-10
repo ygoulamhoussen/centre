@@ -4,6 +4,8 @@ DROP TABLE IF EXISTS document CASCADE;
 DROP TABLE IF EXISTS cloture_exercice CASCADE;
 DROP TABLE IF EXISTS charges CASCADE;
 DROP TABLE IF EXISTS recettes CASCADE;
+-- ECRITURE COMPTABLE (nouvelle version simplifiée)
+DROP TABLE IF EXISTS ligne_ecriture CASCADE;
 DROP TABLE IF EXISTS ecriture_comptable CASCADE;
 DROP TABLE IF EXISTS echeance_credit CASCADE;
 DROP TABLE IF EXISTS credit CASCADE;
@@ -222,6 +224,17 @@ CREATE TABLE document (
     modifie_le TIMESTAMP
 );
 
+-- ECRITURE COMPTABLE (doit être créée AVANT charges, recettes, ligne_ecriture)
+CREATE TABLE ecriture_comptable (
+    id UUID PRIMARY KEY,
+    date_ecriture DATE NOT NULL,
+    libelle TEXT NOT NULL,
+    journal_code VARCHAR(10) NOT NULL,
+    numero_piece VARCHAR(50),
+    utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- CHARGE
 CREATE TABLE charges (
     id UUID PRIMARY KEY,
@@ -233,6 +246,7 @@ CREATE TABLE charges (
     commentaire TEXT,
     utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
     document_id UUID REFERENCES document(id),
+    ecriture_comptable_id UUID REFERENCES ecriture_comptable(id),
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
@@ -249,24 +263,21 @@ CREATE TABLE recettes (
     commentaire TEXT,
     utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
     document_id UUID REFERENCES document(id),
+    ecriture_comptable_id UUID REFERENCES ecriture_comptable(id),
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );
 
--- ECRITURE COMPTABLE
-CREATE TABLE ecriture_comptable (
+-- LIGNE ECRITURE (doit être après ecriture_comptable)
+CREATE TABLE ligne_ecriture (
     id UUID PRIMARY KEY,
-    date_ecriture DATE NOT NULL,
-    montant DECIMAL(10,2) NOT NULL,
-    type TEXT NOT NULL,
-    propriete_id UUID REFERENCES propriete(id) NOT NULL,
-    charge_id UUID REFERENCES charges(id),
-    recette_id UUID REFERENCES recettes(id),
-    commentaire TEXT,
-    utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
-    document_id UUID REFERENCES document(id),
-    cree_le TIMESTAMP,
-    modifie_le TIMESTAMP
+    ecriture_id UUID REFERENCES ecriture_comptable(id) ON DELETE CASCADE,
+    compte_num VARCHAR(20) NOT NULL,
+    compte_libelle VARCHAR(255) NOT NULL,
+    debit DECIMAL(12,2) DEFAULT 0,
+    credit DECIMAL(12,2) DEFAULT 0,
+    tiers VARCHAR(255),
+    commentaire TEXT
 );
 
 -- CLOTURE D'EXERCICE

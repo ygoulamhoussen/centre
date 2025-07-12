@@ -1678,6 +1678,17 @@ private CompteComptable getCompteComptablePourRecette(Recette recette) {
             return compteComptableRepository.findByCode("777000"); // Subventions d'exploitation (à adapter si besoin)
         case "AUTRE":
             return compteComptableRepository.findByCode("758000"); // Produits exceptionnels divers
+        // Types de biens immobiliers
+        case "APPARTEMENT":
+        case "MAISON":
+        case "BIEN_IMMOBILIER":
+            return compteComptableRepository.findByCode("706000"); // Loyers meublés
+        case "TERRAIN":
+            return compteComptableRepository.findByCode("706000"); // Loyers meublés
+        case "LOCAL_COMMERCIAL":
+            return compteComptableRepository.findByCode("706000"); // Loyers meublés
+        case "BUREAUX":
+            return compteComptableRepository.findByCode("706000"); // Loyers meublés
         default:
             throw new IllegalArgumentException("Type de recette inconnu : " + recette.getType());
     }
@@ -1747,8 +1758,44 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         ecriture.setPieceDate(quittance.getDateDebut());
 
         EcritureComptable saved = ecritureComptableRepository.save(ecriture);
-        // Pas de setMontant, setType, setPropriete, setRecette, setCommentaire, setCreeLe, setModifieLe
-        // Générer les lignes d'écriture si besoin ici
+
+        // Lier l'écriture à la recette
+        savedRecette.setEcritureComptable(saved);
+        recetteRepository.save(savedRecette);
+
+        // Générer les lignes d'écriture
+        CompteComptable compteProduit = getCompteComptablePourRecette(savedRecette);
+        CompteComptable compteTresorerie = compteComptableRepository.findByCode("512000"); // Banque
+
+        String compAuxNum = null;
+        String compAuxLib = null;
+        if (savedRecette.getPropriete() != null) {
+            Propriete prop = savedRecette.getPropriete();
+            compAuxNum = prop.getId() != null ? prop.getId().toString() : null;
+            compAuxLib = prop.getNom();
+        }
+
+        LigneEcriture ligneDebit = new LigneEcriture();
+        ligneDebit.setEcriture(saved);
+        ligneDebit.setCompteNum(compteTresorerie.getCode());
+        ligneDebit.setCompteLibelle(compteTresorerie.getLibelle());
+        ligneDebit.setDebit(savedRecette.getMontant());
+        ligneDebit.setCredit(BigDecimal.ZERO);
+        if (compAuxNum != null) ligneDebit.setTiers(compAuxNum);
+        if (compAuxLib != null) ligneDebit.setCommentaire(compAuxLib);
+
+        LigneEcriture ligneCredit = new LigneEcriture();
+        ligneCredit.setEcriture(saved);
+        ligneCredit.setCompteNum(compteProduit.getCode());
+        ligneCredit.setCompteLibelle(compteProduit.getLibelle());
+        ligneCredit.setDebit(BigDecimal.ZERO);
+        ligneCredit.setCredit(savedRecette.getMontant());
+        if (compAuxNum != null) ligneCredit.setTiers(compAuxNum);
+        if (compAuxLib != null) ligneCredit.setCommentaire(compAuxLib);
+
+        ligneEcritureRepository.save(ligneDebit);
+        ligneEcritureRepository.save(ligneCredit);
+
         return ecritureToDTO(saved);
     }
 

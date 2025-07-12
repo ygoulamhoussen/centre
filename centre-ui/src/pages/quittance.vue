@@ -15,7 +15,7 @@ import {
   NTag,
   NText,
   NTooltip,
-  useMessage
+  useMessage,
 } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -55,7 +55,7 @@ function demarrerCreation() {
 async function telechargerQuittance(id: string) {
   try {
     const res = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/generateQuittancePdf/${id}`, {
-      method: 'GET'
+      method: 'GET',
     })
     const blob = await res.blob()
     const url = window.URL.createObjectURL(blob)
@@ -67,7 +67,7 @@ async function telechargerQuittance(id: string) {
     window.URL.revokeObjectURL(url)
   } catch (e) {
     console.error(e)
-    message.error("Erreur lors du téléchargement du PDF")
+    message.error('Erreur lors du téléchargement du PDF')
   }
 }
 
@@ -172,7 +172,7 @@ h3 {
 }
 .quittance-card {
   cursor: pointer;
-  transition: 
+  transition:
     transform 0.2s,
     box-shadow 0.2s;
   height: 100%;

@@ -851,8 +851,7 @@ public ResponseEntity<?> createEcheancesCredit(@RequestBody List<EcheanceCreditD
                 chargeInteret.setMontant(echeance.getInteret());
                 chargeInteret.setIntitule("Intérêts échéance crédit");
                 chargeInteret.setStatut("PAYEE");
-                ChargeDTO savedCharge = unifiedService.saveCharge(chargeInteret);
-                unifiedService.createEcritureComptableCharge(savedCharge.getId());
+                unifiedService.saveCharge(chargeInteret);
             }
             // Charge d'assurance
             if (echeance.getAssurance() != null && !echeance.getAssurance().equals("0")) {
@@ -864,8 +863,7 @@ public ResponseEntity<?> createEcheancesCredit(@RequestBody List<EcheanceCreditD
                 chargeAssurance.setMontant(echeance.getAssurance());
                 chargeAssurance.setIntitule("Assurance échéance crédit");
                 chargeAssurance.setStatut("PAYEE");
-                ChargeDTO savedCharge = unifiedService.saveCharge(chargeAssurance);
-                unifiedService.createEcritureComptableCharge(savedCharge.getId());
+                unifiedService.saveCharge(chargeAssurance);
             }
         }
     }

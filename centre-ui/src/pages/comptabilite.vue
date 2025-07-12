@@ -98,6 +98,14 @@ type AmortissementDTO = {
   proprieteNom: string
   immobilisationIntitule: string
   montantAmortissement: string
+  dateCharge: string
+  proprieteId: string
+  commentaire?: string
+  utilisateurId: string
+  documentId?: string
+  documentNom?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 // Ajout pour les amortissements
@@ -231,10 +239,45 @@ const colonnesEcritures = [
 
 // Colonnes pour les amortissements
 const colonnesAmortissements = [
-  { title: 'Année', key: 'annee', width: 100 },
+  { title: 'Date', key: 'dateCharge', width: 120 },
   { title: 'Propriété', key: 'proprieteNom', width: 200 },
-  { title: 'Immobilisation', key: 'immobilisationIntitule', width: 200 },
+  { title: 'Immobilisation', key: 'immobilisationIntitule', width: 250 },
+  { title: 'Année', key: 'annee', width: 80 },
   { title: 'Montant', key: 'montantAmortissement', width: 120, render: (row: AmortissementDTO) => `${row.montantAmortissement} €` },
+  {
+    title: 'Document',
+    key: 'documentNom',
+    width: 150,
+    render: (row: AmortissementDTO) => {
+      if (row.documentId && row.documentNom) {
+        return h(NButton, {
+          size: 'small',
+          type: 'primary',
+          onClick: () => handleDownloadDocument(row.documentId!, row.documentNom!),
+        }, { default: () => row.documentNom })
+      }
+      return h('span', { style: { color: '#999' } }, 'Aucun document')
+    },
+  },
+  {
+    title: 'Actions',
+    key: 'actions',
+    width: 120,
+    render: (row: AmortissementDTO) => h(NSpace, { size: 'small' }, {
+      default: () => [
+        h(NButton, {
+          size: 'small',
+          type: 'primary',
+          onClick: () => editerAmortissement(row),
+        }, { default: () => h(NIcon, { component: Edit24Filled }) }),
+        h(NButton, {
+          size: 'small',
+          type: 'error',
+          onClick: () => supprimerAmortissement(row.id!),
+        }, { default: () => h(NIcon, { component: Delete24Filled }) }),
+      ],
+    }),
+  },
 ]
 
 // Calculs
@@ -305,7 +348,7 @@ async function chargerDonnees() {
     ])
 
     charges.value = (chargesData as any[])
-      .filter((c: any) => c.nature !== 'AMORTISSEMENT')
+      .filter((c: any) => c.nature !== 'AMORTISSEMENT') // Exclure les amortissements des charges
       .map((c: any) => ({
         id: c.id,
         intitule: c.intitule ?? '',
@@ -321,6 +364,28 @@ async function chargerDonnees() {
         createdAt: c.createdAt,
         updatedAt: c.updatedAt,
       }))
+    
+    // Séparer les amortissements des charges normales
+    const amortissementsData = (chargesData as any[])
+      .filter((c: any) => c.nature === 'AMORTISSEMENT')
+      .map((c: any) => ({
+        id: c.id,
+        annee: c.dateCharge ? new Date(c.dateCharge).getFullYear() : 0,
+        proprieteNom: c.proprieteNom ?? '',
+        immobilisationIntitule: c.intitule || '',
+        montantAmortissement: c.montant?.toString() ?? '',
+        dateCharge: c.dateCharge ?? '',
+        proprieteId: c.proprieteId ?? '',
+        commentaire: c.commentaire,
+        utilisateurId: c.utilisateurId,
+        documentId: c.documentId,
+        documentNom: c.documentNom,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }))
+    
+    amortissements.value = amortissementsData
+
     recettes.value = (recettesData as any[]).map((r: any) => ({
       id: r.id,
       intitule: r.intitule ?? '',
@@ -335,32 +400,6 @@ async function chargerDonnees() {
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
     }))
-
-    // Charger les amortissements (API à adapter si besoin)
-    const annee = anneeSelectionnee.value || new Date().getFullYear()
-    const utilisateurId = authStore.userInfo.userId
-    const amortissementsResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/amortissements/${utilisateurId}/${annee}`)
-    if (amortissementsResponse.ok) {
-      const data = await amortissementsResponse.json()
-      amortissements.value = (data as any[]).map((a: any) => ({
-        id: a.id,
-        annee: a.annee ? parseInt(a.annee) : 0,
-        proprieteNom: '', // Le DTO ne contient pas ce champ, à compléter si besoin
-        immobilisationIntitule: a.immobilisationIntitule ?? '',
-        montantAmortissement: a.montantAmortissement ?? '',
-      }))
-    } else {
-      // Si pas d'API dédiée, on extrait les amortissements des charges
-      amortissements.value = (chargesData as any[])
-        .filter((c: any) => c.nature === 'AMORTISSEMENT')
-        .map((c: any) => ({
-          id: c.id,
-          annee: c.dateCharge ? new Date(c.dateCharge).getFullYear() : 0,
-          proprieteNom: c.proprieteNom ?? '',
-          immobilisationIntitule: c.commentaire || '',
-          montantAmortissement: c.montant?.toString() ?? '',
-        }))
-    }
 
     // Charger les propriétés
     const propResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/${authStore.userInfo.userId}`)
@@ -509,14 +548,16 @@ async function sauvegarderCharge() {
   }
 }
 
-async function supprimerCharge(id: string) {
-  try {
-    await deleteCharge(id)
-    message.success('Charge supprimée avec succès')
-    await chargerDonnees()
-  }
-  catch (error: any) {
-    message.error(error.message || 'Erreur lors de la suppression')
+function supprimerCharge(id: string) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer cette charge ?')) {
+    deleteCharge(id)
+      .then(() => {
+        message.success('Charge supprimée avec succès')
+        chargerDonnees()
+      })
+      .catch((error: any) => {
+        message.error(error.message || 'Erreur lors de la suppression')
+      })
   }
 }
 
@@ -843,7 +884,7 @@ onMounted(() => {
 async function editerJournalComptable() {
   try {
     const userId = authStore.userInfo.userId
-    const annee = anneeSelectionnee.value
+    const annee = new Date().getFullYear() // Utilise l'année en cours par défaut
     const proprieteId = proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all' ? proprieteSelectionnee.value : null
     let url = ''
     if (proprieteId) {
@@ -890,6 +931,40 @@ function getProprieteNom(obj: any) {
     return found ? found.label : ''
   }
   return ''
+}
+
+function editerAmortissement(amortissement: AmortissementDTO) {
+  // Pour les amortissements, on utilise la même logique que les charges
+  // car ce sont techniquement des charges de type AMORTISSEMENT
+  const chargeEquivalent: ChargeDTO = {
+    id: amortissement.id,
+    intitule: amortissement.immobilisationIntitule,
+    montant: amortissement.montantAmortissement,
+    dateCharge: amortissement.dateCharge,
+    proprieteId: amortissement.proprieteId,
+    proprieteNom: amortissement.proprieteNom,
+    nature: 'AMORTISSEMENT',
+    commentaire: amortissement.commentaire,
+    utilisateurId: amortissement.utilisateurId,
+    documentId: amortissement.documentId,
+    documentNom: amortissement.documentNom,
+    createdAt: amortissement.createdAt,
+    updatedAt: amortissement.updatedAt,
+  }
+  editerCharge(chargeEquivalent)
+}
+
+function supprimerAmortissement(id: string) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer cet amortissement ?')) {
+    deleteCharge(id) // Utilise la même API que les charges
+      .then(() => {
+        message.success('Amortissement supprimé avec succès')
+        chargerDonnees()
+      })
+      .catch((error: any) => {
+        message.error(error.message || 'Erreur lors de la suppression')
+      })
+  }
 }
 </script>
 
@@ -1052,10 +1127,16 @@ function getProprieteNom(obj: any) {
           />
           <div v-else>
             <NCard v-for="amort in amortissementsFiltres" :key="amort.id" class="mobile-card">
-              <div><b>Année :</b> {{ amort.annee }}</div>
+              <div><b>Date :</b> {{ amort.dateCharge }}</div>
               <div><b>Propriété :</b> {{ amort.proprieteNom }}</div>
               <div><b>Immobilisation :</b> {{ amort.immobilisationIntitule }}</div>
+              <div><b>Année :</b> {{ amort.annee }}</div>
               <div><b>Montant :</b> {{ amort.montantAmortissement }} €</div>
+              <div v-if="amort.documentNom"><b>Document :</b> {{ amort.documentNom }}</div>
+              <div class="actions">
+                <NButton size="small" type="primary" @click="editerAmortissement(amort)">Éditer</NButton>
+                <NButton size="small" type="error" @click="supprimerAmortissement(amort.id || '')">Supprimer</NButton>
+              </div>
             </NCard>
           </div>
         </NTabPane>

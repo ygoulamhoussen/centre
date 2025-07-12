@@ -1169,7 +1169,10 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
         System.out.println("Plan d'amortissement généré avec succès pour l'immobilisation: " + saved.getId());
         // Générer automatiquement les charges d'amortissement et les écritures comptables
         List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(saved.getId());
+        System.out.println("=== GÉNÉRATION CHARGES D'AMORTISSEMENT ===");
+        System.out.println("Nombre d'amortissements trouvés: " + amortissements.size());
         for (Amortissement amortissement : amortissements) {
+            System.out.println("Traitement amortissement année: " + amortissement.getAnnee() + ", montant: " + amortissement.getMontantAmortissement());
             ChargeDTO chargeDTO = new ChargeDTO();
             chargeDTO.setIntitule("Dotation amortissement " + amortissement.getAnnee() + " - " + saved.getIntitule());
             chargeDTO.setMontant(amortissement.getMontantAmortissement().toPlainString());
@@ -1178,7 +1181,12 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
             chargeDTO.setUtilisateurId(saved.getUtilisateur().getId().toString());
             chargeDTO.setNature("AMORTISSEMENT");
             chargeDTO.setCommentaire("Dotation automatique depuis immobilisation " + saved.getIntitule());
-            saveCharge(chargeDTO);
+            System.out.println("Création charge pour année " + amortissement.getAnnee() + " avec date: " + chargeDTO.getDateCharge());
+            ChargeDTO savedCharge = saveCharge(chargeDTO);
+            System.out.println("Charge créée avec ID: " + savedCharge.getId());
+            // Générer l'écriture comptable spécifique dotation amortissement
+            createEcritureComptableDotationAmortissement(savedCharge, saved, amortissement);
+            System.out.println("Écriture comptable créée pour année " + amortissement.getAnnee());
         }
     } catch (Exception e) {
         System.err.println("Erreur lors de la génération du plan d'amortissement ou des charges: " + e.getMessage());
@@ -1343,7 +1351,8 @@ public ChargeDTO saveCharge(ChargeDTO dto) {
     Charge saved = chargeRepository.save(c);
     
     // Créer automatiquement l'écriture comptable pour une nouvelle charge
-    if (dto.getId() == null || dto.getId().isEmpty()) {
+    // SAUF pour les amortissements qui ont leur propre méthode de création d'écriture
+    if ((dto.getId() == null || dto.getId().isEmpty()) && !"AMORTISSEMENT".equals(dto.getNature())) {
         createEcritureComptableCharge(saved.getId().toString());
     }
     
@@ -1590,6 +1599,7 @@ private CompteComptable getCompteComptablePourCharge(Charge charge) {
         case "Intérêts":
             return compteComptableRepository.findByCode("661100"); // Intérêts des emprunts
         case "Amortissements":
+        case "AMORTISSEMENT":
             return compteComptableRepository.findByCode("681100"); // Dotations aux amortissements
             
         default:
@@ -1989,6 +1999,51 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
             case "VEN": return "Ventes";
             case "ACH": return "Achats";
             default: return code;
+        }
+    }
+
+    // Ajouter à la fin du fichier (ou dans la section des écritures comptables)
+    public void createEcritureComptableDotationAmortissement(ChargeDTO charge, Immobilisation immobilisation, Amortissement amortissement) {
+        EcritureComptable ecriture = new EcritureComptable();
+        ecriture.setDateEcriture(LocalDate.parse(charge.getDateCharge()));
+        ecriture.setLibelle(charge.getIntitule());
+        ecriture.setJournalCode("OD");
+        ecriture.setJournalLib(getJournalLibForCode("OD"));
+        ecriture.setNumeroPiece(charge.getId());
+        ecriture.setUtilisateur(immobilisation.getUtilisateur());
+        ecriture.setCreatedAt(LocalDateTime.now());
+        ecriture.setPieceDate(LocalDate.parse(charge.getDateCharge()));
+        EcritureComptable savedEcriture = ecritureComptableRepository.save(ecriture);
+
+        // Débit 6811 (Dotations aux amortissements)
+        LigneEcriture ligneDebit = new LigneEcriture();
+        ligneDebit.setEcriture(savedEcriture);
+        ligneDebit.setCompteNum("6811");
+        ligneDebit.setCompteLibelle("Dotations aux amortissements");
+        ligneDebit.setDebit(new BigDecimal(charge.getMontant()));
+        ligneDebit.setCredit(BigDecimal.ZERO);
+        ligneEcritureRepository.save(ligneDebit);
+
+        // Crédit 28xx (Amortissements des immobilisations)
+        String compteCredit = "28000"; // Par défaut
+        String type = immobilisation.getTypeImmobilisation();
+        if ("MOBILIER".equals(type)) compteCredit = "28182";
+        else if ("TRAVAUX".equals(type)) compteCredit = "28185";
+        else if ("BIEN_IMMOBILIER".equals(type)) compteCredit = "28161";
+        else if ("FRAIS".equals(type)) compteCredit = "28000";
+        LigneEcriture ligneCredit = new LigneEcriture();
+        ligneCredit.setEcriture(savedEcriture);
+        ligneCredit.setCompteNum(compteCredit);
+        ligneCredit.setCompteLibelle("Amortissements " + immobilisation.getIntitule());
+        ligneCredit.setDebit(BigDecimal.ZERO);
+        ligneCredit.setCredit(new BigDecimal(charge.getMontant()));
+        ligneEcritureRepository.save(ligneCredit);
+
+        // Lier l'écriture à la charge si besoin (optionnel)
+        Charge c = chargeRepository.findById(UUID.fromString(charge.getId())).orElse(null);
+        if (c != null) {
+            c.setEcritureComptable(savedEcriture);
+            chargeRepository.save(c);
         }
     }
 

@@ -108,8 +108,13 @@ async function chargerEcritures() {
         .filter((a): a is number => a !== null),
     )).sort((a, b) => b - a)
     annees.value = anneesUniques
-    if (annees.value.length > 0) {
-      anneeSelectionnee.value = annees.value[0]
+
+    // Initialiser avec l'année en cours par défaut
+    const anneeCourante = new Date().getFullYear()
+    if (annees.value.includes(anneeCourante)) {
+      anneeSelectionnee.value = anneeCourante
+    } else if (annees.value.length > 0) {
+      anneeSelectionnee.value = annees.value[0] // Fallback sur la première année disponible
     }
   } catch (error: any) {
     message.error(error.message || 'Erreur lors du chargement des écritures')

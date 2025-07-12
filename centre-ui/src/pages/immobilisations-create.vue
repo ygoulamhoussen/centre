@@ -516,10 +516,19 @@ function onProprieteSelect(proprieteId: string) {
   selectedPropriete.value = proprieteId
   formData.value.proprieteId = proprieteId
   
-  // Récupérer le montant d'acquisition de la propriété
-  const montantAcquisition = selectedProprieteInfo.value?.montantAcquisition || 0
-  formData.value.intitule = `Immobilisation - ${selectedProprieteInfo.value?.nom || 'Propriété'}`
-  formData.value.dateAcquisition = Date.now()
+  // Récupérer les informations de la propriété sélectionnée
+  const propriete = selectedProprieteInfo.value
+  const montantAcquisition = propriete?.montantAcquisition || 0
+  
+  formData.value.intitule = `Immobilisation - ${propriete?.nom || 'Propriété'}`
+  
+  // Utiliser la date d'acquisition de la propriété si disponible, sinon la date actuelle
+  if (propriete?.dateAcquisition) {
+    formData.value.dateAcquisition = new Date(propriete.dateAcquisition).getTime()
+  } else {
+    formData.value.dateAcquisition = Date.now()
+  }
+  
   formData.value.typeImmobilisation = 'TRAVAUX' as TypeImmobilisation
   formData.value.categorieFiscale = 'TRAVAUX_5_ANS' as CategorieFiscale
   formData.value.dureeAmortissement = '10'

@@ -65,6 +65,77 @@ const proprieteOptions = computed(() =>
 
 const allProprieteIds = computed(() => proprietes.value.map(p => p.id))
 
+// Computed values for detailed breakdown
+const chargesExternes = computed(() => {
+  if (!resultat.value?.chargesDetail) return 0
+  return resultat.value.chargesDetail
+    .filter(charge => 
+      charge.nature === 'ENTRETIEN_REPARATION' || 
+      charge.nature === 'COPROPRIETE' || 
+      charge.nature === 'GESTION_LOCATIVE' ||
+      charge.nature === 'EXPERT_COMPTABLE' ||
+      charge.nature === 'LOGICIEL_LMNP' ||
+      charge.nature === 'FRAIS_COMMUNICATION' ||
+      charge.nature === 'FOURNITURES'
+    )
+    .reduce((sum, charge) => sum + charge.montant, 0)
+})
+
+const impotsEtTaxes = computed(() => {
+  if (!resultat.value?.chargesDetail) return 0
+  return resultat.value.chargesDetail
+    .filter(charge => 
+      charge.nature === 'TAXE_FONCIERE' || 
+      charge.nature === 'CFE'
+    )
+    .reduce((sum, charge) => sum + charge.montant, 0)
+})
+
+const interetsEmprunt = computed(() => {
+  if (!resultat.value?.chargesDetail) return 0
+  return resultat.value.chargesDetail
+    .filter(charge => 
+      charge.nature === 'INTERETS_EMPRUNT' || 
+      charge.nature === 'ASSURANCE_EMPRUNTEUR'
+    )
+    .reduce((sum, charge) => sum + charge.montant, 0)
+})
+
+const produitsAccessoires = computed(() => {
+  if (!resultat.value?.recettesDetail) return 0
+  return resultat.value.recettesDetail
+    .filter(recette => 
+      recette.intitule.includes('charges') || 
+      recette.intitule.includes('récupérables') ||
+      recette.intitule.includes('accessoires')
+    )
+    .reduce((sum, recette) => sum + recette.montant, 0)
+})
+
+const loyersNets = computed(() => {
+  return (resultat.value?.recettesLocatives ?? 0) - produitsAccessoires.value
+})
+
+const totalProduits = computed(() => {
+  return loyersNets.value + produitsAccessoires.value
+})
+
+const totalChargesExploitation = computed(() => {
+  return chargesExternes.value + impotsEtTaxes.value + (resultat.value?.amortissements ?? 0)
+})
+
+const resultatExploitation = computed(() => {
+  return totalProduits.value - totalChargesExploitation.value
+})
+
+const resultatFinancier = computed(() => {
+  return -interetsEmprunt.value // Les intérêts sont des charges financières
+})
+
+const resultatCourant = computed(() => {
+  return resultatExploitation.value + resultatFinancier.value
+})
+
 // Functions
 async function loadProprietes() {
   loadingData.value = true
@@ -106,7 +177,7 @@ async function calculerResultat() {
 
 function formatCurrency(value?: number) {
   if (value === undefined || value === null) {
-    return 'N/A'
+    return '0,00 €'
   }
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -162,7 +233,7 @@ onMounted(async () => {
 <template>
   <div class="resultat-fiscal-page">
     <div class="page-header flex items-center justify-between">
-      <NH1 class="titre-principal">Compte de Résultat Simplifié (2033-B)</NH1>
+      <NH1 class="titre-principal">Compte de Résultat LMNP (2033-B)</NH1>
     </div>
 
     <NCard class="filters-card">
@@ -198,71 +269,86 @@ onMounted(async () => {
       <NCard class="recap-2033b-card">
         <table class="recap-2033b-table">
           <thead>
-            <tr><th colspan="2">Compte de Résultat Simplifié (2033-B)</th></tr>
+            <tr><th colspan="2">Compte de Résultat LMNP (2033-B)</th></tr>
           </thead>
           <tbody>
             <tr class="section"><td colspan="2">1. Produits d'exploitation</td></tr>
             <tr>
-              <td>Recettes locatives</td>
-              <td class="amount">{{ formatCurrency(resultat.recettesLocatives) }}</td>
+              <td>Loyers meublés (706000)</td>
+              <td class="amount">{{ formatCurrency(loyersNets) }}</td>
             </tr>
             <tr>
-              <td>Produits accessoires</td>
-              <td class="amount">N/A</td>
+              <td>Produits accessoires (708000)</td>
+              <td class="amount">{{ formatCurrency(produitsAccessoires) }}</td>
             </tr>
+            <tr class="total-row">
+              <td><strong>Total produits d'exploitation</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(totalProduits) }}</strong></td>
+            </tr>
+            
             <tr class="section"><td colspan="2">2. Charges d'exploitation</td></tr>
             <tr>
-              <td>Charges externes</td>
-              <td class="amount">{{ formatCurrency(resultat.chargesDeductibles) }}</td>
+              <td>Charges externes (606000, 614000, 615000, 622000, 623000, 626000)</td>
+              <td class="amount">{{ formatCurrency(chargesExternes) }}</td>
             </tr>
             <tr>
-              <td>Impôts et taxes</td>
-              <td class="amount">N/A</td>
+              <td>Impôts et taxes (635100, 637000)</td>
+              <td class="amount">{{ formatCurrency(impotsEtTaxes) }}</td>
             </tr>
             <tr>
-              <td>Intérêts d’emprunt</td>
-              <td class="amount">N/A</td>
-            </tr>
-            <tr>
-              <td>Amortissements (2033-C)</td>
+              <td>Dotations aux amortissements (681100)</td>
               <td class="amount">{{ formatCurrency(resultat.amortissements) }}</td>
             </tr>
-            <tr class="section"><td colspan="2">3. Résultat d'exploitation</td></tr>
-            <tr>
-              <td><strong>Total produits – Total charges d’exploitation</strong></td>
-              <td class="amount"><strong>{{ formatCurrency((resultat.recettesLocatives ?? 0) - (resultat.chargesDeductibles ?? 0) - (resultat.amortissements ?? 0)) }}</strong></td>
+            <tr class="total-row">
+              <td><strong>Total charges d'exploitation</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(totalChargesExploitation) }}</strong></td>
             </tr>
+            
+            <tr class="section"><td colspan="2">3. Résultat d'exploitation</td></tr>
+            <tr class="result-row">
+              <td><strong>Total produits – Total charges d'exploitation</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(resultatExploitation) }}</strong></td>
+            </tr>
+            
             <tr class="section"><td colspan="2">4. Résultat financier</td></tr>
             <tr>
-              <td>Produits financiers</td>
-              <td class="amount">N/A</td>
+              <td>Charges financières - Intérêts d'emprunt (661100)</td>
+              <td class="amount">{{ formatCurrency(-interetsEmprunt) }}</td>
             </tr>
-            <tr>
-              <td>Charges financières (intérêts d’emprunt)</td>
-              <td class="amount">N/A</td>
+            <tr class="result-row">
+              <td><strong>Résultat financier</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(resultatFinancier) }}</strong></td>
             </tr>
+            
             <tr class="section"><td colspan="2">5. Résultat courant avant impôt</td></tr>
-            <tr>
+            <tr class="result-row">
               <td><strong>Résultat d'exploitation + résultat financier</strong></td>
-              <td class="amount"><strong>{{ formatCurrency((resultat.recettesLocatives ?? 0) - (resultat.chargesDeductibles ?? 0) - (resultat.amortissements ?? 0)) }}</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(resultatCourant) }}</strong></td>
             </tr>
+            
             <tr class="section"><td colspan="2">6. Résultat exceptionnel</td></tr>
             <tr>
               <td>Produits exceptionnels</td>
-              <td class="amount">N/A</td>
+              <td class="amount">0,00 €</td>
             </tr>
             <tr>
               <td>Charges exceptionnelles</td>
-              <td class="amount">N/A</td>
+              <td class="amount">0,00 €</td>
             </tr>
+            <tr class="result-row">
+              <td><strong>Résultat exceptionnel</strong></td>
+              <td class="amount"><strong>0,00 €</strong></td>
+            </tr>
+            
             <tr class="section"><td colspan="2">7. Impôt sur les bénéfices</td></tr>
             <tr>
               <td>Impôt sur les bénéfices</td>
-              <td class="amount">0 €</td>
+              <td class="amount">0,00 €</td>
             </tr>
+            
             <tr class="section"><td colspan="2">8. Résultat net</td></tr>
-            <tr>
-              <td><strong>Résultat net</strong></td>
+            <tr class="final-result">
+              <td><strong>Résultat net de l'exercice</strong></td>
               <td class="amount"><strong>{{ formatCurrency(resultat.resultatFiscal) }}</strong></td>
             </tr>
           </tbody>
@@ -363,6 +449,19 @@ onMounted(async () => {
 .recap-2033b-table .amount {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+.recap-2033b-table .total-row {
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+.recap-2033b-table .result-row {
+  background: #e8f4fd;
+  border-top: 1px solid #bee5eb;
+}
+.recap-2033b-table .final-result {
+  background: #d4edda;
+  border-top: 2px solid #28a745;
+  font-weight: bold;
 }
 
 .details-collapse {

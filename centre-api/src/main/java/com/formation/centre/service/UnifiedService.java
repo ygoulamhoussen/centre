@@ -1241,6 +1241,67 @@ public List<AmortissementDTO> getAmortissementsByUtilisateurAndAnnee(String util
 }
 
 @Transactional
+public void deleteAmortissement(String amortissementId) {
+    System.out.println("=== SUPPRESSION AMORTISSEMENT ===");
+    System.out.println("Amortissement ID: " + amortissementId);
+    
+    try {
+        UUID id = UUID.fromString(amortissementId);
+        Amortissement amortissement = amortissementRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Amortissement introuvable avec l'ID: " + amortissementId));
+        
+        System.out.println("Amortissement trouvé: " + amortissement.getId());
+        System.out.println("Immobilisation: " + amortissement.getImmobilisation().getIntitule());
+        System.out.println("Année: " + amortissement.getAnnee());
+        
+        // Trouver la charge associée à cet amortissement
+        // Recherche par nature AMORTISSEMENT et propriété, puis filtrer par année
+        List<Charge> chargesAssociees = chargeRepository.findByNatureAndProprieteId(
+            "AMORTISSEMENT", 
+            amortissement.getImmobilisation().getPropriete().getId()
+        );
+        
+        // Filtrer les charges pour l'année spécifique
+        List<Charge> chargesPourAnnee = chargesAssociees.stream()
+            .filter(charge -> {
+                if (charge.getDateCharge() != null) {
+                    return charge.getDateCharge().getYear() == amortissement.getAnnee();
+                }
+                return false;
+            })
+            .collect(Collectors.toList());
+        
+        System.out.println("Charges associées trouvées: " + chargesPourAnnee.size());
+        
+        // Supprimer les charges et écritures comptables associées
+        for (Charge charge : chargesPourAnnee) {
+            System.out.println("Suppression de la charge: " + charge.getId() + " - " + charge.getIntitule());
+            
+            if (charge.getEcritureComptable() != null) {
+                System.out.println("Suppression de l'écriture comptable: " + charge.getEcritureComptable().getId());
+                // Supprimer d'abord les lignes d'écriture
+                ligneEcritureRepository.deleteByEcritureId(charge.getEcritureComptable().getId());
+                // Puis supprimer l'écriture comptable
+                ecritureComptableRepository.deleteById(charge.getEcritureComptable().getId());
+            }
+            // Supprimer la charge
+            chargeRepository.deleteById(charge.getId());
+        }
+        
+        // Supprimer l'amortissement
+        amortissementRepository.deleteById(id);
+        System.out.println("Amortissement supprimé avec succès");
+        
+    } catch (IllegalArgumentException e) {
+        System.err.println("Erreur lors de la suppression: " + e.getMessage());
+        throw e;
+    } catch (Exception e) {
+        System.err.println("Erreur inattendue lors de la suppression: " + e.getMessage());
+        throw new RuntimeException("Erreur lors de la suppression de l'amortissement: " + e.getMessage(), e);
+    }
+}
+
+@Transactional
 public void genererPlanAmortissement(String immobilisationId) {
     System.out.println("=== GÉNÉRATION PLAN AMORTISSEMENT ===");
     System.out.println("Immobilisation ID: " + immobilisationId);
@@ -1359,13 +1420,57 @@ public ChargeDTO saveCharge(ChargeDTO dto) {
     return chargeToDTO(saved);
 }
 
+@Transactional
 public void deleteCharge(String id) {
+    System.out.println("=== SUPPRESSION CHARGE ===");
+    System.out.println("Charge ID: " + id);
+    
+    Charge charge = chargeRepository.findById(UUID.fromString(id))
+            .orElseThrow(() -> new IllegalArgumentException("Charge introuvable avec l'ID: " + id));
+    
+    System.out.println("Charge trouvée: " + charge.getId() + " - " + charge.getIntitule());
+    System.out.println("Nature: " + charge.getNature());
+    
+    // Si c'est une charge d'amortissement, supprimer aussi l'amortissement correspondant
+    if ("AMORTISSEMENT".equals(charge.getNature())) {
+        System.out.println("Suppression d'une charge d'amortissement - recherche de l'amortissement correspondant");
+        
+        // Trouver l'amortissement correspondant par propriété et année
+        // D'abord trouver les immobilisations de cette propriété
+        List<Immobilisation> immobilisations = immobilisationRepository.findByProprieteId(charge.getPropriete().getId());
+        List<Amortissement> amortissements = new ArrayList<>();
+        
+        // Puis trouver tous les amortissements de ces immobilisations
+        for (Immobilisation immobilisation : immobilisations) {
+            amortissements.addAll(amortissementRepository.findByImmobilisationId(immobilisation.getId()));
+        }
+        
+        // Filtrer par année
+        List<Amortissement> amortissementsPourAnnee = amortissements.stream()
+            .filter(amortissement -> amortissement.getAnnee() == charge.getDateCharge().getYear())
+            .collect(Collectors.toList());
+        
+        System.out.println("Amortissements trouvés pour l'année " + charge.getDateCharge().getYear() + ": " + amortissementsPourAnnee.size());
+        
+        // Supprimer l'amortissement correspondant
+        for (Amortissement amortissement : amortissementsPourAnnee) {
+            System.out.println("Suppression de l'amortissement: " + amortissement.getId() + " pour l'année " + amortissement.getAnnee());
+            amortissementRepository.deleteById(amortissement.getId());
+        }
+    }
+    
     // Supprimer l'écriture comptable associée à la charge
-    Charge charge = chargeRepository.findById(UUID.fromString(id)).orElse(null);
-    if (charge != null && charge.getEcritureComptable() != null) {
+    if (charge.getEcritureComptable() != null) {
+        System.out.println("Suppression de l'écriture comptable: " + charge.getEcritureComptable().getId());
+        // Supprimer d'abord les lignes d'écriture
+        ligneEcritureRepository.deleteByEcritureId(charge.getEcritureComptable().getId());
+        // Puis supprimer l'écriture comptable
         ecritureComptableRepository.deleteById(charge.getEcritureComptable().getId());
     }
+    
+    // Supprimer la charge
     chargeRepository.deleteById(UUID.fromString(id));
+    System.out.println("Charge supprimée avec succès");
 }
 
 private ChargeDTO chargeToDTO(Charge c) {
@@ -1440,10 +1545,14 @@ public RecetteDTO saveRecette(RecetteDTO dto) {
     return recetteToDTO(saved);
 }
 
+@Transactional
 public void deleteRecette(String id) {
     // Supprimer l'écriture comptable associée à la recette
     Recette recette = recetteRepository.findById(UUID.fromString(id)).orElse(null);
     if (recette != null && recette.getEcritureComptable() != null) {
+        // Supprimer d'abord les lignes d'écriture
+        ligneEcritureRepository.deleteByEcritureId(recette.getEcritureComptable().getId());
+        // Puis supprimer l'écriture comptable
         ecritureComptableRepository.deleteById(recette.getEcritureComptable().getId());
     }
     recetteRepository.deleteById(UUID.fromString(id));

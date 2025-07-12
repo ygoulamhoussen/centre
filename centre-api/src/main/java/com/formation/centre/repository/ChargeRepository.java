@@ -65,4 +65,22 @@ public interface ChargeRepository extends JpaRepository<Charge, UUID> {
 
     @Query("SELECT c FROM Charge c WHERE c.ecritureComptable.id = :ecritureId")
     java.util.Optional<Charge> findByEcritureComptable_Id(@Param("ecritureId") UUID ecritureId);
+
+    /**
+     * Récupérer les charges par nature et intitulé contenant un texte
+     */
+    @Query("SELECT c FROM Charge c WHERE c.nature = :nature AND c.intitule LIKE %:intitule%")
+    List<Charge> findByNatureAndIntituleContaining(@Param("nature") String nature, @Param("intitule") String intitule);
+
+    /**
+     * Récupérer les charges par nature, propriété et année
+     */
+    @Query("SELECT c FROM Charge c WHERE c.nature = :nature AND c.propriete.id = :proprieteId AND YEAR(c.dateCharge) = :annee")
+    List<Charge> findByNatureAndProprieteIdAndAnnee(@Param("nature") String nature, @Param("proprieteId") UUID proprieteId, @Param("annee") Integer annee);
+
+    /**
+     * Récupérer les charges par nature et propriété
+     */
+    @Query("SELECT c FROM Charge c WHERE c.nature = :nature AND c.propriete.id = :proprieteId")
+    List<Charge> findByNatureAndProprieteId(@Param("nature") String nature, @Param("proprieteId") UUID proprieteId);
 } 

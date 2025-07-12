@@ -57,6 +57,7 @@ import {
   downloadDocument,
   updateEcritureComptable,
   deleteEcritureComptable,
+  deleteAmortissement,
 } from '@/service/api/charges-recettes'
 import { useRouter } from 'vue-router'
 import { naturesCharges, typesRecettes, getChargeByValue } from '@/constants/compta'
@@ -955,10 +956,10 @@ function editerAmortissement(amortissement: AmortissementDTO) {
 }
 
 function supprimerAmortissement(id: string) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cet amortissement ?')) {
-    deleteCharge(id) // Utilise la même API que les charges
+  if (confirm('Êtes-vous sûr de vouloir supprimer cette dotation aux amortissements ?')) {
+    deleteCharge(id) // Utilise l'API des charges car les amortissements sont des charges de nature AMORTISSEMENT
       .then(() => {
-        message.success('Amortissement supprimé avec succès')
+        message.success('Dotation aux amortissements supprimée avec succès')
         chargerDonnees()
       })
       .catch((error: any) => {

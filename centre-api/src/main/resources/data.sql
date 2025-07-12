@@ -309,3 +309,22 @@ INSERT INTO compte_comptable (code, libelle, type, description) VALUES
 ('445662', 'TVA déductible sur biens et services', 'Tiers', 'TVA récupérable sur achats'),
 ('512000', 'Banque', 'Trésorerie', 'Compte courant bancaire'),
 ('530000', 'Caisse', 'Trésorerie', 'Espèces détenues (rare en LMNP)');
+
+-- Comptes complémentaires pour la cohérence frontend/backend
+INSERT INTO compte_comptable (code, libelle, type, description) VALUES
+('614000', 'Charges de copropriété', 'Charge', 'Quote-part propriétaire (hors travaux non déductibles)'),
+('616100', 'Assurance emprunteur', 'Charge', 'Assurance emprunteur'),
+('622600', 'Frais d''expert-comptable', 'Charge', 'Frais d''expert-comptable'),
+('623000', 'Publicité / annonces', 'Charge', 'Publicité et annonces'),
+('623100', 'Abonnement logiciel LMNP', 'Charge', 'Abonnement logiciel LMNP'),
+('625100', 'Frais de déplacement', 'Charge', 'Frais de déplacement'),
+('626000', 'Frais postaux, téléphone', 'Charge', 'Frais postaux, téléphone'),
+('627000', 'Frais de dossier ou garantie', 'Charge', 'Frais de dossier ou garantie'),
+('635800', 'Cotisation CFE', 'Charge', 'Cotisation CFE'),
+('606100', 'Consommation électrique', 'Charge', 'Consommation électrique'),
+('606200', 'Consommation d''eau', 'Charge', 'Consommation d''eau'),
+('606400', 'Consommation de chauffage', 'Charge', 'Consommation de chauffage'),
+('606800', 'Autres charges non classées', 'Charge', 'Autres charges non classées'),
+('165000', 'Dépôt de garantie reçu', 'Dettes', 'Dépôt de garantie reçu (passif)'),
+('777000', 'Subventions d''exploitation', 'Recette', 'Subventions et aides reçues'),
+('758000', 'Produits exceptionnels divers', 'Recette', 'Produits exceptionnels divers');

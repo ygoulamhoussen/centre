@@ -394,6 +394,25 @@ export async function createEcritureComptableQuittance(quittanceId: string): Pro
 }
 
 /**
+ * Supprimer un amortissement
+ * @param id ID de l'amortissement à supprimer
+ */
+export async function deleteAmortissement(id: string): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/amortissements/${id}`,
+    {
+      method: 'DELETE',
+      credentials: 'include'
+    }
+  )
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error.message || 'Erreur lors de la suppression de l\'amortissement')
+  }
+}
+
+/**
  * Modifier une écriture comptable
  * @param data Données de l'écriture comptable à modifier
  */

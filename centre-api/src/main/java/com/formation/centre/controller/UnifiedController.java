@@ -34,6 +34,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formation.centre.dto.AmortissementDTO;
 import com.formation.centre.dto.ChargeDTO;
 import com.formation.centre.dto.CompositionAcquisitionDTO;
+import com.formation.centre.repository.AmortissementRepository;
+import com.formation.centre.model.Amortissement;
 import com.formation.centre.dto.CreditDTO;
 import com.formation.centre.dto.DashboardDTO;
 import com.formation.centre.dto.DocumentDTO;
@@ -72,6 +74,9 @@ public class UnifiedController {
 
     @Autowired
     private CreditRepository creditRepository;
+
+    @Autowired
+    private AmortissementRepository amortissementRepository;
 
     @Autowired
     private UnifiedService unifiedService;
@@ -656,6 +661,49 @@ public ResponseEntity<Void> genererPlanAmortissement(@PathVariable String immobi
         return ResponseEntity.ok().build();
     } catch (Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@DeleteMapping("/amortissements/{id}")
+public ResponseEntity<Void> deleteAmortissement(@PathVariable String id) {
+    try {
+        unifiedService.deleteAmortissement(id);
+        return ResponseEntity.noContent().build();
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().build();
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+// Endpoint de diagnostic temporaire pour lister tous les amortissements
+@GetMapping("/amortissements/debug/all")
+public ResponseEntity<Map<String, Object>> getAllAmortissementsDebug() {
+    try {
+        Map<String, Object> result = new HashMap<>();
+        
+        // Récupérer tous les amortissements de la base
+        List<Amortissement> allAmortissements = amortissementRepository.findAll();
+        
+        List<Map<String, Object>> amortissementsInfo = new ArrayList<>();
+        for (Amortissement a : allAmortissements) {
+            Map<String, Object> info = new HashMap<>();
+            info.put("id", a.getId().toString());
+            info.put("annee", a.getAnnee());
+            info.put("montantAmortissement", a.getMontantAmortissement());
+            info.put("immobilisationId", a.getImmobilisation().getId().toString());
+            info.put("immobilisationIntitule", a.getImmobilisation().getIntitule());
+            amortissementsInfo.add(info);
+        }
+        
+        result.put("total", allAmortissements.size());
+        result.put("amortissements", amortissementsInfo);
+        
+        return ResponseEntity.ok(result);
+    } catch (Exception e) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
 

@@ -26,7 +26,6 @@ declare module 'vue-router/auto-routes' {
     '/about': RouteRecordInfo<'/about', '/about', Record<never, never>, Record<never, never>>,
     '/amortissements.[id]': RouteRecordInfo<'/amortissements.[id]', '/amortissements/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/charge-create': RouteRecordInfo<'/charge-create', '/charge-create', Record<never, never>, Record<never, never>>,
-    '/charge-edit.[id]': RouteRecordInfo<'/charge-edit.[id]', '/charge-edit/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/comptabilite': RouteRecordInfo<'/comptabilite', '/comptabilite', Record<never, never>, Record<never, never>>,
     '/comptabilite-propriete.[id]': RouteRecordInfo<'/comptabilite-propriete.[id]', '/comptabilite-propriete/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/credits': RouteRecordInfo<'/credits', '/credits', Record<never, never>, Record<never, never>>,

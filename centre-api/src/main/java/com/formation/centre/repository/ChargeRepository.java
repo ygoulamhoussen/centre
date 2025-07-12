@@ -62,4 +62,7 @@ public interface ChargeRepository extends JpaRepository<Charge, UUID> {
         @Param("annee") int annee,
         @Param("proprieteIds") List<UUID> proprieteIds
     );
+
+    @Query("SELECT c FROM Charge c WHERE c.ecritureComptable.id = :ecritureId")
+    java.util.Optional<Charge> findByEcritureComptable_Id(@Param("ecritureId") UUID ecritureId);
 } 

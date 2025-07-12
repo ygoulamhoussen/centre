@@ -1520,39 +1520,81 @@ public EcritureComptableDTO createEcritureComptableCharge(String chargeId) {
 }
 
 private CompteComptable getCompteComptablePourCharge(Charge charge) {
-    // Correspondance nature → code compte (data.sql)
+    // Correspondance nature → code compte selon la nomenclature LMNP
     switch (charge.getNature()) {
-        case "Achats":
-        case "Petit matériel":
-        case "Matériel":
-            return compteComptableRepository.findByCode("606000"); // Achats non stockés de petits matériels
+        // 🏠 Charges de propriété
+        case "ASSURANCE_PNO":
+            return compteComptableRepository.findByCode("616000"); // Assurance habitation propriétaire non occupant
+        case "ENTRETIEN_REPARATION":
+            return compteComptableRepository.findByCode("615000"); // Entretien et réparations
+        case "COPROPRIETE":
+            return compteComptableRepository.findByCode("614000"); // Charges de copropriété
+        case "TAXE_FONCIERE":
+            return compteComptableRepository.findByCode("635100"); // Taxe foncière
+            
+        // 🧾 Charges de gestion
+        case "GESTION_LOCATIVE":
+            return compteComptableRepository.findByCode("622000"); // Honoraires de gestion locative
+        case "EXPERT_COMPTABLE":
+            return compteComptableRepository.findByCode("622600"); // Frais d'expert-comptable
+        case "LOGICIEL_LMNP":
+            return compteComptableRepository.findByCode("623100"); // Abonnement logiciel LMNP
+        case "FRAIS_COMMUNICATION":
+            return compteComptableRepository.findByCode("626000"); // Frais postaux, téléphone
+        case "FOURNITURES":
+            return compteComptableRepository.findByCode("606300"); // Fournitures de bureau
+            
+        // 💸 Charges financières
+        case "INTERETS_EMPRUNT":
+            return compteComptableRepository.findByCode("661100"); // Intérêts d'emprunt
+        case "ASSURANCE_EMPRUNTEUR":
+            return compteComptableRepository.findByCode("616100"); // Assurance emprunteur
+        case "FRAIS_DOSSIER":
+            return compteComptableRepository.findByCode("627000"); // Frais de dossier ou garantie
+            
+        // 🧾 Autres charges spécifiques
+        case "PUBLICITE":
+            return compteComptableRepository.findByCode("623000"); // Publicité / annonces
+        case "DEPLACEMENT":
+            return compteComptableRepository.findByCode("625100"); // Frais de déplacement
+        case "CFE":
+            return compteComptableRepository.findByCode("635800"); // Cotisation CFE
+            
+        // 🔧 Charges d'exploitation
+        case "ELECTRICITE":
+            return compteComptableRepository.findByCode("606100"); // Consommation électrique
+        case "EAU":
+            return compteComptableRepository.findByCode("606200"); // Consommation d'eau
+        case "CHAUFFAGE":
+            return compteComptableRepository.findByCode("606400"); // Consommation de chauffage
+            
+        // 📋 Autres (pour flexibilité)
+        case "AUTRES":
+            return compteComptableRepository.findByCode("606800"); // Autres charges non classées
+            
+        // Anciennes valeurs pour compatibilité (à supprimer progressivement)
+        case "TRAVAUX":
         case "Entretien":
         case "Réparations":
             return compteComptableRepository.findByCode("615000"); // Entretien et réparations
-        case "Assurance":
+        case "ASSURANCE":
         case "Primes d'assurances":
             return compteComptableRepository.findByCode("616000"); // Primes d'assurances
-        case "Honoraires":
-        case "Frais de gestion":
-        case "Assistance":
-            return compteComptableRepository.findByCode("618000"); // Frais de gestion (honoraires, assistance...)
+        case "GESTION":
         case "Gestion locative":
         case "Conciergerie":
-            return compteComptableRepository.findByCode("622000"); // Frais de gestion locative, conciergerie
-        case "Fournitures":
-        case "Fournitures administratives":
-            return compteComptableRepository.findByCode("606300"); // Fournitures administratives
+            return compteComptableRepository.findByCode("622000"); // Frais de gestion locative
+        case "TAXES":
         case "Taxe foncière":
             return compteComptableRepository.findByCode("635100"); // Taxe foncière
-        case "CFE":
-        case "Cotisations":
-            return compteComptableRepository.findByCode("637000"); // Cotisations CFE ou autres
         case "Intérêts":
             return compteComptableRepository.findByCode("661100"); // Intérêts des emprunts
         case "Amortissements":
             return compteComptableRepository.findByCode("681100"); // Dotations aux amortissements
+            
         default:
-            throw new IllegalArgumentException("Nature de charge inconnue : " + charge.getNature());
+            // Fallback vers un compte générique si la nature n'est pas reconnue
+            return compteComptableRepository.findByCode("606800"); // Autres charges non classées
     }
 }
 
@@ -1737,6 +1779,19 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                 .map(this::ligneToDTO)
                 .collect(Collectors.toList());
             dto.setLignes(lignesDTO);
+        }
+        // Ajout du document lié à la charge ou recette associée
+        // Recherche d'une charge ou recette liée à cette écriture
+        Charge charge = chargeRepository.findByEcritureComptable_Id(e.getId()).orElse(null);
+        if (charge != null && charge.getDocument() != null) {
+            dto.setDocumentId(charge.getDocument().getId() != null ? charge.getDocument().getId().toString() : null);
+            dto.setDocumentNom(charge.getDocument().getTitre());
+        } else {
+            Recette recette = recetteRepository.findByEcritureComptable_Id(e.getId()).orElse(null);
+            if (recette != null && recette.getDocument() != null) {
+                dto.setDocumentId(recette.getDocument().getId() != null ? recette.getDocument().getId().toString() : null);
+                dto.setDocumentNom(recette.getDocument().getTitre());
+            }
         }
         return dto;
     }

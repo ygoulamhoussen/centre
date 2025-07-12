@@ -140,6 +140,7 @@ const local: App.I18n.Schema = {
     '/paiement': 'Paiements',
     '/credits':'Crédits',
     '/immobilisations': 'Immobilisation',
+    '/fec': 'Journal',
     '/comptabilite': 'Comptabilite',
     '/plan-comptable': 'Plan comptable',
     '/resultat-fiscal': 'Résultat fiscal',

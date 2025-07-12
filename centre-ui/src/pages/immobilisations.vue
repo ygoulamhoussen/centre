@@ -1,18 +1,18 @@
 <script setup lang="ts">
+import type { Immobilisation } from '@/types/immobilisation'
+import type { DataTableColumns } from 'naive-ui'
+import { immobilisationApi } from '@/service/api/immobilisation'
+import { useAppStore } from '@/store/modules/app'
+import { CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
+import { Icon } from '@iconify/vue'
+import { NButton, NCard, NDataTable, NH1, NSelect, useMessage } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import type { DataTableColumns } from 'naive-ui'
-import { NButton, NDataTable, NSelect, NCard, NH1, useMessage } from 'naive-ui'
-import { Icon } from '@iconify/vue'
-import { useAppStore } from '@/store/modules/app'
-import type { Immobilisation } from '@/types/immobilisation'
-import { immobilisationApi } from '@/service/api/immobilisation'
-import { CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
 
 definePage({
   meta: {
     title: 'Immobilisations',
-    icon: 'material-symbols:real-estate-agent',
+    icon: 'mdi:domain',
     order: 7,
   },
 })
@@ -280,7 +280,10 @@ onMounted(async () => {
   padding: 20px;
 }
 
-.titre-principal, h1, h2, h3 {
+.titre-principal,
+h1,
+h2,
+h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
@@ -343,7 +346,10 @@ onMounted(async () => {
   gap: 8px;
 }
 @media (max-width: 768px) {
-  .titre-principal, h1, h2, h3 {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
     font-size: 1.25rem !important;
   }
   .flex {

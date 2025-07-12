@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { NCard, NDataTable, NButton, NIcon, NSelect, NSpace, NH1, NTag, useMessage } from 'naive-ui'
-import { ArrowDownload24Filled } from '@vicons/fluent'
-import { useAuthStore } from '@/store/modules/auth'
-import { getEcrituresComptablesWithProprieteNom } from '@/service/api/charges-recettes'
 import type { EcritureComptableDTO, LigneEcritureDTO } from '@/types/dto'
+import { downloadDocument, getEcrituresComptablesWithProprieteNom } from '@/service/api/charges-recettes'
+import { useAuthStore } from '@/store/modules/auth'
+import { ArrowDownload24Filled, Document24Filled } from '@vicons/fluent'
+import { NButton, NCard, NDataTable, NH1, NIcon, NSelect, NSpace, NTag, NTooltip, useMessage } from 'naive-ui'
+import { computed, h, onMounted, ref } from 'vue'
+
+definePage({
+  meta: {
+    title: 'Fichier des Écritures Comptables (FEC)',
+    icon: 'mdi:file-table-outline',
+    order: 11,
+  },
+})
 
 const authStore = useAuthStore()
 const message = useMessage()
@@ -27,10 +35,40 @@ const colonnesFEC = [
   { title: 'LibelleEcriture', key: 'libelle', width: 200 },
   { title: 'MontantDebit', key: 'debit', width: 110, render: (row: any) => row.debit ? Number(row.debit).toFixed(2) : '' },
   { title: 'MontantCredit', key: 'credit', width: 110, render: (row: any) => row.credit ? Number(row.credit).toFixed(2) : '' },
+  {
+    title: 'Document',
+    key: 'document',
+    width: 120,
+    render: (row: any) => {
+      if (row.documentId && row.documentNom) {
+        return h(
+          NTooltip,
+          { placement: 'top' },
+          {
+            trigger: () =>
+              h(
+                NIcon,
+                {
+                  component: ArrowDownload24Filled,
+                  size: 20,
+                  style: { cursor: 'pointer', color: '#2563eb' },
+                  onClick: () => handleDownloadDocument(row.documentId, row.documentNom),
+                  title: row.documentNom,
+                },
+              ),
+            default: () => row.documentNom,
+          },
+        )
+      }
+      return h('span', { style: { color: '#999' } }, 'Aucun document')
+    },
+  },
 ]
 
 const lignesFECFiltrees = computed(() => {
-  if (!anneeSelectionnee.value) return lignesFEC.value
+  if (!anneeSelectionnee.value) {
+    return lignesFEC.value
+  }
   return lignesFEC.value.filter(l => l.dateEcriture && new Date(l.dateEcriture).getFullYear() === anneeSelectionnee.value)
 })
 
@@ -40,7 +78,7 @@ async function chargerEcritures() {
     const data = await getEcrituresComptablesWithProprieteNom(authStore.userInfo.userId)
     // Pour chaque écriture, on a potentiellement plusieurs lignes d'écriture
     const lignes: any[] = []
-    for (const e of data as EcritureComptableDTO[]) {
+    for (const e of data as any[]) {
       if (Array.isArray(e.lignes)) {
         for (const l of e.lignes as LigneEcritureDTO[]) {
           lignes.push({
@@ -56,13 +94,20 @@ async function chargerEcritures() {
             libelle: e.libelle,
             debit: l.debit,
             credit: l.credit,
+            documentId: e.documentId,
+            documentNom: e.documentNom,
           })
         }
       }
     }
     lignesFEC.value = lignes
     // Calcul des années disponibles
-    annees.value = Array.from(new Set(lignes.map(l => l.dateEcriture ? new Date(l.dateEcriture).getFullYear() : null).filter(a => !!a))).sort((a, b) => b - a)
+    const anneesUniques = Array.from(new Set(
+      lignes
+        .map(l => l.dateEcriture ? new Date(l.dateEcriture).getFullYear() : null)
+        .filter((a): a is number => a !== null),
+    )).sort((a, b) => b - a)
+    annees.value = anneesUniques
     if (annees.value.length > 0) {
       anneeSelectionnee.value = annees.value[0]
     }
@@ -83,7 +128,11 @@ async function telechargerFEC() {
     const annee = anneeSelectionnee.value
     const url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/fec?utilisateurId=${userId}&annee=${annee}`
     const response = await fetch(url, { method: 'GET', credentials: 'include' })
-    if (!response.ok) throw new Error('Erreur lors du téléchargement du FEC')
+
+    if (!response.ok) {
+      throw new Error('Erreur lors du téléchargement du FEC')
+    }
+
     const blob = await response.blob()
     const urlBlob = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -94,8 +143,42 @@ async function telechargerFEC() {
     window.URL.revokeObjectURL(urlBlob)
     document.body.removeChild(a)
     message.success('FEC téléchargé avec succès')
-  } catch (error) {
+  } catch {
     message.error('Erreur lors du téléchargement du FEC')
+  }
+}
+
+async function handleDownloadDocument(documentId: string, documentNom: string) {
+  try {
+    // Récupérer les métadonnées du document pour avoir le nom de fichier correct
+    const metadataResponse = await fetch(
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/documents/${documentId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      },
+    )
+
+    if (!metadataResponse.ok) {
+      throw new Error('Erreur lors de la récupération des métadonnées du document')
+    }
+
+    const metadata = await metadataResponse.json()
+    const fileName = metadata.nomFichier || documentNom || 'document'
+
+    const blob = await downloadDocument(documentId)
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    message.success('Document téléchargé avec succès')
+  } catch (error: any) {
+    console.error('Erreur lors du téléchargement du document:', error)
+    message.error(error.message || 'Erreur lors du téléchargement du document')
   }
 }
 </script>

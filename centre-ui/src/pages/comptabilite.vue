@@ -25,6 +25,7 @@ import {
   useMessage,
   NDatePicker,
   NH1,
+  NTooltip,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import {
@@ -58,7 +59,7 @@ import {
   deleteEcritureComptable,
 } from '@/service/api/charges-recettes'
 import { useRouter } from 'vue-router'
-import { naturesCharges, typesRecettes } from '@/constants/compta'
+import { naturesCharges, typesRecettes, getChargeByValue } from '@/constants/compta'
 
 definePage({
   meta: {
@@ -822,6 +823,17 @@ const modalChargeVisible = ref(false)
 const modalRecetteVisible = ref(false)
 const ecritureEnCours = ref<Partial<EcritureComptableDTO>>({})
 const modalEcritureVisible = ref(false)
+
+const chargeDescription = computed(() => {
+  if (!chargeEnCours.value.nature) return ''
+  const charge = getChargeByValue(chargeEnCours.value.nature)
+  return charge?.description || ''
+})
+const chargeCompte = computed(() => {
+  if (!chargeEnCours.value.nature) return ''
+  const charge = getChargeByValue(chargeEnCours.value.nature)
+  return charge?.compte || ''
+})
 
 // Chargement initial
 onMounted(() => {

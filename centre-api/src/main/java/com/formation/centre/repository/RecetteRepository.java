@@ -68,4 +68,7 @@ public interface RecetteRepository extends JpaRepository<Recette, UUID> {
         @Param("annee") int annee,
         @Param("proprieteIds") List<UUID> proprieteIds
     );
+
+    @Query("SELECT r FROM Recette r WHERE r.ecritureComptable.id = :ecritureId")
+    java.util.Optional<Recette> findByEcritureComptable_Id(@Param("ecritureId") UUID ecritureId);
 } 

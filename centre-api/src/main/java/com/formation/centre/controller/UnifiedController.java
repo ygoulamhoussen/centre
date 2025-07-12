@@ -52,6 +52,7 @@ import com.formation.centre.dto.ProprieteDetailDTO;
 import com.formation.centre.dto.QuittanceDTO;
 import com.formation.centre.dto.RecetteDTO;
 import com.formation.centre.dto.ResultatFiscalDTO;
+import com.formation.centre.dto.BilanSimplifieDTO;
 import com.formation.centre.model.Amortissement;
 import com.formation.centre.model.Charge;
 import com.formation.centre.model.CompositionAcquisition;
@@ -921,10 +922,18 @@ public ResponseEntity<?> createEcheancesCredit(@RequestBody List<EcheanceCreditD
 @GetMapping("/resultat-fiscal")
 public ResponseEntity<ResultatFiscalDTO> getResultatFiscal(
         @RequestParam("annee") int annee,
-        @RequestParam("proprieteIds") List<String> proprieteIds,
         @RequestParam("utilisateurId") String utilisateurId) {
-    ResultatFiscalDTO resultat = unifiedService.calculerResultatFiscal(annee, proprieteIds, utilisateurId);
+    ResultatFiscalDTO resultat = unifiedService.calculerResultatFiscal(annee, utilisateurId);
     return ResponseEntity.ok(resultat);
+}
+
+@GetMapping("/bilan-simplifie")
+public ResponseEntity<BilanSimplifieDTO> getBilanSimplifie(
+        @RequestParam("annee") int annee,
+        @RequestParam("utilisateurId") String utilisateurId) {
+    // Passer un tableau vide pour les propriétés pour prendre en compte toutes les propriétés
+    BilanSimplifieDTO bilan = unifiedService.calculerBilanSimplifie(annee, new ArrayList<>(), utilisateurId);
+    return ResponseEntity.ok(bilan);
 }
 
 @GetMapping("/journal-comptable/pdf")

@@ -270,14 +270,8 @@ INSERT INTO echeance_credit (id, credit_id, date_echeance, total_echeance, inter
 ('A0000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000200', '2023-03-01', 1595.55, 558.29, 972.26, 65.00),
 ('A0000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000200', '2023-04-01', 1595.55, 556.58, 973.97, 65.00);
 
--- ÉCRITURES COMPTABLES (nouveau modèle)
--- Exemple d'écriture comptable avec tous les champs FEC utiles
-INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
-('B0000000-0000-0000-0000-000000000001', '2024-10-15', 'Loyer Mai 2024', 'BQ', 'Journal de banque', 'PJ-2024-001', '2024-10-15', '00000000-0000-0000-0000-000000000003', NOW());
--- Lignes pour l'écriture b0000000-0000-0000-0000-000000000001 (Loyer Mai 2024)
-INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
-('b0000000-0000-0000-0000-000000000101', 'b0000000-0000-0000-0000-000000000001', '706000', 'Loyers meublés', 1000.00, 0.00, NULL, 'Loyer Mai 2024'),
-('b0000000-0000-0000-0000-000000000102', 'b0000000-0000-0000-0000-000000000001', '512000', 'Banque', 0.00, 1000.00, NULL, 'Loyer Mai 2024');
+-- ÉCRITURES COMPTABLES (ancien modèle - supprimé pour éviter les conflits)
+-- Les nouvelles écritures comptables cohérentes sont ajoutées plus bas
 -- Suppression des anciens comptes et ajout du plan simplifié LMNP
 DELETE FROM compte_comptable;
 INSERT INTO compte_comptable (code, libelle, type, description) VALUES
@@ -328,3 +322,168 @@ INSERT INTO compte_comptable (code, libelle, type, description) VALUES
 ('165000', 'Dépôt de garantie reçu', 'Dettes', 'Dépôt de garantie reçu (passif)'),
 ('777000', 'Subventions d''exploitation', 'Recette', 'Subventions et aides reçues'),
 ('758000', 'Produits exceptionnels divers', 'Recette', 'Produits exceptionnels divers');
+
+-- ===== ÉCRITURES COMPTABLES COHÉRENTES AVEC LES DONNÉES EXISTANTES =====
+
+-- 1. ÉCRITURE : Enregistrement des loyers reçus (Mai 2024 - Marseille)
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000001', '2024-05-05', 'Encaissement loyer Mai 2024 - Marseille', 'BQ', 'Journal de banque', 'PJ-2024-001', '2024-05-05', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000000101', 'B0000000-0000-0000-0000-000000000001', '512000', 'Banque', 770.00, 0.00, NULL, 'Encaissement loyer'),
+('B0000000-0000-0000-0000-000000000102', 'B0000000-0000-0000-0000-000000000001', '706000', 'Loyers meublés', 0.00, 770.00, NULL, 'Loyer Mai 2024 Marseille');
+
+-- 2. ÉCRITURE : Enregistrement des loyers reçus (Mai 2024 - Lille)
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000002', '2024-05-07', 'Encaissement loyer Mai 2024 - Lille', 'BQ', 'Journal de banque', 'PJ-2024-002', '2024-05-07', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000000201', 'B0000000-0000-0000-0000-000000000002', '512000', 'Banque', 1220.00, 0.00, NULL, 'Encaissement loyer'),
+('B0000000-0000-0000-0000-000000000202', 'B0000000-0000-0000-0000-000000000002', '706000', 'Loyers meublés', 0.00, 1220.00, NULL, 'Loyer Mai 2024 Lille');
+
+-- 3. ÉCRITURE : Enregistrement de l'indemnité d'assurance (DDE)
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000003', '2024-03-15', 'Indemnité assurance DDE', 'BQ', 'Journal de banque', 'PJ-2024-003', '2024-03-15', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000000301', 'B0000000-0000-0000-0000-000000000003', '512000', 'Banque', 450.00, 0.00, NULL, 'Indemnité reçue'),
+('B0000000-0000-0000-0000-000000000302', 'B0000000-0000-0000-0000-000000000003', '708000', 'Produits accessoires', 0.00, 450.00, NULL, 'Indemnité assurance DDE');
+
+-- 4. ÉCRITURE : Enregistrement de la taxe foncière
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000004', '2024-10-15', 'Taxe foncière 2024 - Studio Paris', 'OD', 'Journal des opérations diverses', 'PJ-2024-004', '2024-10-15', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000000401', 'B0000000-0000-0000-0000-000000000004', '635100', 'Taxe foncière', 950.00, 0.00, NULL, 'Taxe foncière 2024'),
+('B0000000-0000-0000-0000-000000000402', 'B0000000-0000-0000-0000-000000000004', '512000', 'Banque', 0.00, 950.00, NULL, 'Paiement taxe foncière');
+
+-- 5. ÉCRITURE : Enregistrement des charges de copropriété
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000005', '2024-04-20', 'Charges copropriété T2 2024', 'OD', 'Journal des opérations diverses', 'PJ-2024-005', '2024-04-20', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000000501', 'B0000000-0000-0000-0000-000000000005', '614000', 'Charges de copropriété', 320.00, 0.00, NULL, 'Régularisation charges copropriété'),
+('B0000000-0000-0000-0000-000000000502', 'B0000000-0000-0000-0000-000000000005', '512000', 'Banque', 0.00, 320.00, NULL, 'Paiement charges copropriété');
+
+-- 6. ÉCRITURE : Enregistrement de l'assurance PNO
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000006', '2024-01-25', 'Assurance PNO Bordeaux', 'OD', 'Journal des opérations diverses', 'PJ-2024-006', '2024-01-25', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000000601', 'B0000000-0000-0000-0000-000000000006', '616000', 'Primes d''assurances', 180.00, 0.00, NULL, 'Assurance PNO Bordeaux'),
+('B0000000-0000-0000-0000-000000000602', 'B0000000-0000-0000-0000-000000000006', '512000', 'Banque', 0.00, 180.00, NULL, 'Paiement assurance PNO');
+
+-- 7. ÉCRITURE : Enregistrement des dotations aux amortissements (2024)
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000007', '2024-12-31', 'Dotations aux amortissements 2024', 'OD', 'Journal des opérations diverses', 'PJ-2024-007', '2024-12-31', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000000701', 'B0000000-0000-0000-0000-000000000007', '681100', 'Dotations aux amortissements', 2300.00, 0.00, NULL, 'Dotations 2024 (1500+800)'),
+('B0000000-0000-0000-0000-000000000702', 'B0000000-0000-0000-0000-000000000007', '280000', 'Amortissements des immobilisations', 0.00, 2300.00, NULL, 'Amortissements 2024');
+
+-- 8. ÉCRITURE : Enregistrement des intérêts d'emprunt (échéance février 2023)
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000008', '2023-02-01', 'Échéance emprunt février 2023', 'BQ', 'Journal de banque', 'PJ-2023-001', '2023-02-01', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000000801', 'B0000000-0000-0000-0000-000000000008', '661100', 'Intérêts des emprunts', 560.00, 0.00, NULL, 'Intérêts février 2023'),
+('B0000000-0000-0000-0000-000000000802', 'B0000000-0000-0000-0000-000000000008', '164000', 'Emprunt immobilier', 970.55, 0.00, NULL, 'Remboursement capital'),
+('B0000000-0000-0000-0000-000000000803', 'B0000000-0000-0000-0000-000000000008', '616100', 'Assurance emprunteur', 65.00, 0.00, NULL, 'Assurance emprunteur'),
+('B0000000-0000-0000-0000-000000000804', 'B0000000-0000-0000-0000-000000000008', '512000', 'Banque', 0.00, 1595.55, NULL, 'Paiement échéance');
+
+-- 9. ÉCRITURE : Enregistrement de l'acquisition d'une immobilisation (Rénovation cuisine)
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000009', '2023-02-15', 'Acquisition rénovation cuisine', 'OD', 'Journal des opérations diverses', 'PJ-2023-002', '2023-02-15', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000000901', 'B0000000-0000-0000-0000-000000000009', '215000', 'Mobilier et équipements', 15000.00, 0.00, NULL, 'Rénovation cuisine'),
+('B0000000-0000-0000-0000-000000000902', 'B0000000-0000-0000-0000-000000000009', '512000', 'Banque', 0.00, 15000.00, NULL, 'Paiement rénovation');
+
+-- 10. ÉCRITURE : Enregistrement de l'acquisition du mobilier salon
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000010', '2023-03-01', 'Acquisition mobilier salon', 'OD', 'Journal des opérations diverses', 'PJ-2023-003', '2023-03-01', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001001', 'B0000000-0000-0000-0000-000000000010', '215000', 'Mobilier et équipements', 8000.00, 0.00, NULL, 'Mobilier salon'),
+('B0000000-0000-0000-0000-000000001002', 'B0000000-0000-0000-0000-000000000010', '512000', 'Banque', 0.00, 8000.00, NULL, 'Paiement mobilier');
+
+-- 11. ÉCRITURE : Enregistrement de l'acquisition de la maison Bordeaux (immobilisation principale)
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000011', '2023-01-10', 'Acquisition maison Bordeaux', 'OD', 'Journal des opérations diverses', 'PJ-2023-004', '2023-01-10', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001101', 'B0000000-0000-0000-0000-000000000011', '213000', 'Immobilisations corporelles (biens)', 350000.00, 0.00, NULL, 'Maison Bordeaux'),
+('B0000000-0000-0000-0000-000000001102', 'B0000000-0000-0000-0000-000000000011', '164000', 'Emprunt immobilier', 0.00, 320000.00, NULL, 'Emprunt immobilier'),
+('B0000000-0000-0000-0000-000000001103', 'B0000000-0000-0000-0000-000000000011', '512000', 'Banque', 0.00, 30000.00, NULL, 'Apport personnel');
+
+-- 12. ÉCRITURE : Enregistrement des frais de notaire et d'agence
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000012', '2023-01-10', 'Frais acquisition maison Bordeaux', 'OD', 'Journal des opérations diverses', 'PJ-2023-005', '2023-01-10', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001201', 'B0000000-0000-0000-0000-000000000012', '618000', 'Frais de gestion (honoraires, assistance...)', 37000.00, 0.00, NULL, 'Frais notaire et agence'),
+('B0000000-0000-0000-0000-000000001202', 'B0000000-0000-0000-0000-000000000012', '512000', 'Banque', 0.00, 37000.00, NULL, 'Paiement frais acquisition');
+
+-- 13. ÉCRITURE : Enregistrement d'un loyer impayé (Avril 2024 - Marseille)
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000013', '2024-04-30', 'Loyer impayé Avril 2024 - Marseille', 'OD', 'Journal des opérations diverses', 'PJ-2024-008', '2024-04-30', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001301', 'B0000000-0000-0000-0000-000000000013', '411000', 'Clients', 770.00, 0.00, NULL, 'Créance locataire'),
+('B0000000-0000-0000-0000-000000001302', 'B0000000-0000-0000-0000-000000000013', '706000', 'Loyers meublés', 0.00, 770.00, NULL, 'Loyer Avril 2024 Marseille');
+
+-- 14. ÉCRITURE : Enregistrement d'un paiement partiel en espèces (non validé)
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000014', '2024-04-10', 'Paiement partiel espèces - Marseille', 'BQ', 'Journal de banque', 'PJ-2024-009', '2024-04-10', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001401', 'B0000000-0000-0000-0000-000000000014', '530000', 'Caisse', 400.00, 0.00, NULL, 'Paiement partiel espèces'),
+('B0000000-0000-0000-0000-000000001402', 'B0000000-0000-0000-0000-000000000014', '411000', 'Clients', 0.00, 400.00, NULL, 'Règlement partiel créance');
+
+-- 15. ÉCRITURE : Enregistrement des charges d'amortissement pour 2023
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000015', '2023-12-31', 'Dotations aux amortissements 2023', 'OD', 'Journal des opérations diverses', 'PJ-2023-006', '2023-12-31', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001501', 'B0000000-0000-0000-0000-000000000015', '681100', 'Dotations aux amortissements', 2300.00, 0.00, NULL, 'Dotations 2023 (1500+800)'),
+('B0000000-0000-0000-0000-000000001502', 'B0000000-0000-0000-0000-000000000015', '280000', 'Amortissements des immobilisations', 0.00, 2300.00, NULL, 'Amortissements 2023');
+
+-- 16. ÉCRITURE : Enregistrement du dépôt de garantie reçu
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000016', '2023-01-01', 'Dépôt de garantie reçu - Studio Paris', 'BQ', 'Journal de banque', 'PJ-2023-007', '2023-01-01', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001601', 'B0000000-0000-0000-0000-000000000016', '512000', 'Banque', 1000.00, 0.00, NULL, 'Dépôt de garantie reçu'),
+('B0000000-0000-0000-0000-000000001602', 'B0000000-0000-0000-0000-000000000016', '165000', 'Dépôt de garantie reçu', 0.00, 1000.00, NULL, 'Dépôt de garantie locataire');
+
+-- 17. ÉCRITURE : Enregistrement des frais de gestion locative
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000017', '2024-06-15', 'Frais de gestion locative', 'OD', 'Journal des opérations diverses', 'PJ-2024-010', '2024-06-15', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001701', 'B0000000-0000-0000-0000-000000000017', '622000', 'Frais de gestion locative, conciergerie', 150.00, 0.00, NULL, 'Frais de gestion locative'),
+('B0000000-0000-0000-0000-000000001702', 'B0000000-0000-0000-0000-000000000017', '512000', 'Banque', 0.00, 150.00, NULL, 'Paiement frais gestion');
+
+-- 18. ÉCRITURE : Enregistrement des fournitures administratives
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000018', '2024-07-20', 'Fournitures administratives', 'OD', 'Journal des opérations diverses', 'PJ-2024-011', '2024-07-20', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001801', 'B0000000-0000-0000-0000-000000000018', '606300', 'Fournitures administratives', 85.00, 0.00, NULL, 'Fournitures administratives'),
+('B0000000-0000-0000-0000-000000001802', 'B0000000-0000-0000-0000-000000000018', '512000', 'Banque', 0.00, 85.00, NULL, 'Paiement fournitures');
+
+-- 19. ÉCRITURE : Enregistrement des travaux d'entretien
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000019', '2024-08-10', 'Travaux entretien - Studio Paris', 'OD', 'Journal des opérations diverses', 'PJ-2024-012', '2024-08-10', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000001901', 'B0000000-0000-0000-0000-000000000019', '615000', 'Entretien et réparations', 450.00, 0.00, NULL, 'Travaux entretien'),
+('B0000000-0000-0000-0000-000000001902', 'B0000000-0000-0000-0000-000000000019', '512000', 'Banque', 0.00, 450.00, NULL, 'Paiement travaux');
+
+-- 20. ÉCRITURE : Enregistrement de la cotisation CFE
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000020', '2024-12-15', 'Cotisation CFE 2024', 'OD', 'Journal des opérations diverses', 'PJ-2024-013', '2024-12-15', '00000000-0000-0000-0000-000000000003', NOW());
+
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('B0000000-0000-0000-0000-000000002001', 'B0000000-0000-0000-0000-000000000020', '635800', 'Cotisation CFE', 120.00, 0.00, NULL, 'Cotisation CFE 2024'),
+('B0000000-0000-0000-0000-000000002002', 'B0000000-0000-0000-0000-000000000020', '512000', 'Banque', 0.00, 120.00, NULL, 'Paiement CFE');

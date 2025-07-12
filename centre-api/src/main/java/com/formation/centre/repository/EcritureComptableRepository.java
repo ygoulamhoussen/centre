@@ -14,4 +14,10 @@ public interface EcritureComptableRepository extends JpaRepository<EcritureCompt
     // Plus de méthodes custom, tout passe par les nouveaux champs et la relation avec LigneEcriture
     @Query("SELECT e FROM EcritureComptable e LEFT JOIN FETCH e.lignes")
     List<EcritureComptable> findAllWithLignes();
+    
+    /**
+     * Récupérer les écritures comptables pour une année et un utilisateur donnés
+     */
+    @Query("SELECT e FROM EcritureComptable e LEFT JOIN FETCH e.lignes WHERE e.utilisateur.id = :utilisateurId AND YEAR(e.dateEcriture) = :annee ORDER BY e.dateEcriture")
+    List<EcritureComptable> findByUtilisateurIdAndAnnee(@Param("utilisateurId") UUID utilisateurId, @Param("annee") int annee);
 }

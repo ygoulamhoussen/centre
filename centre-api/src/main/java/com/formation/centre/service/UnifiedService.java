@@ -77,6 +77,8 @@ import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.formation.centre.dto.ResultatFiscalDTO;
+import com.formation.centre.dto.BilanSimplifieDTO;
+import com.formation.centre.dto.BilanSimplifieDetailDTOs;
 import lombok.RequiredArgsConstructor;
 import com.formation.centre.dto.ResultatFiscalDetailDTOs;
 import com.lowagie.text.Element;
@@ -1011,7 +1013,7 @@ public CompositionAcquisitionDTO toDTO(CompositionAcquisition c) {
     // Ajout du résultat fiscal estimé (année en cours)
     int annee = java.time.LocalDate.now().getYear();
     java.util.List<String> proprieteIds = proprietes.stream().map(p -> p.getId().toString()).toList();
-    ResultatFiscalDTO resultatFiscal = calculerResultatFiscal(annee, proprieteIds, id);
+    ResultatFiscalDTO resultatFiscal = calculerResultatFiscal(annee, id.toString());
     dto.setResultatFiscalEstime(resultatFiscal != null ? resultatFiscal.getResultatFiscal() : 0);
 
     return dto;
@@ -2029,36 +2031,102 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         return paiementRepository.findByQuittance_Id(UUID.fromString(quittanceId));
     }
 
-    public ResultatFiscalDTO calculerResultatFiscal(int annee, List<String> proprieteIds, String utilisateurId) {
+
+
+    public BilanSimplifieDTO calculerBilanSimplifie(int annee, List<String> proprieteIds, String utilisateurId) {
         UUID userUuid = UUID.fromString(utilisateurId);
-        List<UUID> propUuids = proprieteIds.stream().map(UUID::fromString).collect(Collectors.toList());
+        
+        // Récupération des immobilisations avec amortissements cumulés
+        List<Immobilisation> immobilisations = immobilisationRepository.findByUtilisateurId(userUuid);
+        
+        // Si proprieteIds est vide, prendre toutes les propriétés
+        List<BilanSimplifieDetailDTOs.ImmobilisationDetailDTO> immobilisationsDetail;
+        if (proprieteIds == null || proprieteIds.isEmpty()) {
+            // Prendre toutes les immobilisations de l'utilisateur
+            immobilisationsDetail = immobilisations.stream()
+                .map(immo -> {
+                    // Calculer les amortissements cumulés pour cette immobilisation
+                    List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(immo.getId());
+                    BigDecimal amortissementsCumules = amortissements.stream()
+                        .map(Amortissement::getMontantAmortissement)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    
+                    BigDecimal valeurNette = immo.getMontant().subtract(amortissementsCumules);
+                    
+                    return new BilanSimplifieDetailDTOs.ImmobilisationDetailDTO(
+                        immo.getIntitule(),
+                        immo.getPropriete().getNom(),
+                        immo.getMontant(),
+                        amortissementsCumules,
+                        valeurNette,
+                        immo.getTypeImmobilisation()
+                    );
+                })
+                .collect(Collectors.toList());
+        } else {
+            // Filtrer par les propriétés spécifiées
+            List<UUID> propUuids = proprieteIds.stream().map(UUID::fromString).collect(Collectors.toList());
+            immobilisationsDetail = immobilisations.stream()
+                .filter(immo -> propUuids.contains(immo.getPropriete().getId()))
+                .map(immo -> {
+                    // Calculer les amortissements cumulés pour cette immobilisation
+                    List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(immo.getId());
+                    BigDecimal amortissementsCumules = amortissements.stream()
+                        .map(Amortissement::getMontantAmortissement)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    
+                    BigDecimal valeurNette = immo.getMontant().subtract(amortissementsCumules);
+                    
+                    return new BilanSimplifieDetailDTOs.ImmobilisationDetailDTO(
+                        immo.getIntitule(),
+                        immo.getPropriete().getNom(),
+                        immo.getMontant(),
+                        amortissementsCumules,
+                        valeurNette,
+                        immo.getTypeImmobilisation()
+                    );
+                })
+                .collect(Collectors.toList());
+        }
 
-        // Calculs des totaux (déjà existant)
-        double totalRecettes = recetteRepository.sumRecettesByYearAndProprietes(userUuid, annee, propUuids);
-        double totalCharges = chargeRepository.sumChargesByYearAndProprietes(userUuid, annee, propUuids);
-        double totalAmortissements = amortissementRepository.sumAmortissementsByYearAndProprietes(userUuid, annee, propUuids);
-        double resultatFiscal = totalRecettes - totalCharges - totalAmortissements;
+        // Récupération des emprunts (simulation pour l'instant)
+        List<BilanSimplifieDetailDTOs.EmpruntDetailDTO> empruntsDetail = List.of(
+            new BilanSimplifieDetailDTOs.EmpruntDetailDTO(
+                "Emprunt immobilier",
+                "Résidence du Parc",
+                BigDecimal.valueOf(120000),
+                "Crédit Agricole",
+                LocalDate.of(2030, 12, 31)
+            )
+        );
 
-        // Récupération des listes détaillées
-        List<Recette> recettes = recetteRepository.findByYearAndProprietes(userUuid, annee, propUuids);
-        List<Charge> charges = chargeRepository.findByYearAndProprietes(userUuid, annee, propUuids);
-        List<Amortissement> amortissements = amortissementRepository.findByYearAndProprietes(userUuid, annee, propUuids);
+        // Simulation de la trésorerie (à adapter selon vos besoins)
+        List<BilanSimplifieDetailDTOs.TresorerieDetailDTO> tresorerieDetail = List.of(
+            new BilanSimplifieDetailDTOs.TresorerieDetailDTO(
+                "Compte courant principal",
+                BigDecimal.valueOf(5000),
+                LocalDate.of(annee, 12, 31)
+            ),
+            new BilanSimplifieDetailDTOs.TresorerieDetailDTO(
+                "Compte épargne",
+                BigDecimal.valueOf(2000),
+                LocalDate.of(annee, 12, 31)
+            )
+        );
 
-        // Conversion en DTOs de détail
-        List<ResultatFiscalDetailDTOs.RecetteDetailDTO> recettesDetail = recettes.stream()
-            .map(r -> new ResultatFiscalDetailDTOs.RecetteDetailDTO(r.getIntitule(), r.getDateRecette(), r.getMontant(), r.getPropriete().getNom()))
-            .collect(Collectors.toList());
-
-        List<ResultatFiscalDetailDTOs.ChargeDetailDTO> chargesDetail = charges.stream()
-            .map(c -> new ResultatFiscalDetailDTOs.ChargeDetailDTO(c.getIntitule(), c.getDateCharge(), c.getMontant(), c.getPropriete().getNom(), c.getNature()))
-            .collect(Collectors.toList());
-            
-        List<ResultatFiscalDetailDTOs.AmortissementDetailDTO> amortissementsDetail = amortissements.stream()
-            .map(a -> new ResultatFiscalDetailDTOs.AmortissementDetailDTO(a.getImmobilisation().getIntitule(), a.getAnnee(), a.getMontantAmortissement(), a.getImmobilisation().getPropriete().getNom()))
-            .collect(Collectors.toList());
+        // Calcul du résultat de l'exercice
+        ResultatFiscalDTO resultatFiscal = calculerResultatFiscal(annee, utilisateurId);
 
         // Création du DTO final
-        return new ResultatFiscalDTO(totalRecettes, totalCharges, totalAmortissements, resultatFiscal, recettesDetail, chargesDetail, amortissementsDetail);
+        return new BilanSimplifieDTO(
+            immobilisationsDetail,
+            empruntsDetail,
+            tresorerieDetail,
+            0.0, // Créances clients (à adapter)
+            60000.0, // Capital (à adapter)
+            resultatFiscal.getResultatFiscal(),
+            0.0 // Dettes fournisseurs (à adapter)
+        );
     }
 
     public byte[] genererJournalComptablePdf(String proprieteId, String utilisateurId, int annee) {
@@ -2201,6 +2269,124 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
             c.setEcritureComptable(savedEcriture);
             chargeRepository.save(c);
         }
+    }
+
+    public ResultatFiscalDTO calculerResultatFiscal(int annee, String utilisateurId) {
+        UUID userUuid = UUID.fromString(utilisateurId);
+        
+        // Récupérer toutes les écritures comptables de l'année pour l'utilisateur
+        List<EcritureComptable> ecritures = ecritureComptableRepository.findByUtilisateurIdAndAnnee(userUuid, annee);
+        
+        // Calculer les totaux à partir des écritures comptables
+        double totalLoyers = 0.0;
+        double totalProduitsAccessoires = 0.0;
+        double totalChargesExternes = 0.0;
+        double totalImpotsTaxes = 0.0;
+        double totalInteretsEmprunt = 0.0;
+        double totalAmortissements = 0.0;
+        
+        // Détails pour les DTOs
+        List<ResultatFiscalDetailDTOs.RecetteDetailDTO> recettesDetail = new ArrayList<>();
+        List<ResultatFiscalDetailDTOs.ChargeDetailDTO> chargesDetail = new ArrayList<>();
+        List<ResultatFiscalDetailDTOs.AmortissementDetailDTO> amortissementsDetail = new ArrayList<>();
+        
+        for (EcritureComptable ecriture : ecritures) {
+            for (LigneEcriture ligne : ecriture.getLignes()) {
+                String compteNum = ligne.getCompteNum();
+                double montant = ligne.getCredit().doubleValue(); // On prend le crédit pour les produits
+                
+                switch (compteNum) {
+                    case "706000": // Loyers meublés
+                        totalLoyers += montant;
+                        recettesDetail.add(new ResultatFiscalDetailDTOs.RecetteDetailDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture(),
+                            ligne.getCredit(),
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A"
+                        ));
+                        break;
+                        
+                    case "708000": // Produits accessoires
+                        totalProduitsAccessoires += montant;
+                        recettesDetail.add(new ResultatFiscalDetailDTOs.RecetteDetailDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture(),
+                            ligne.getCredit(),
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A"
+                        ));
+                        break;
+                        
+                    case "606000": // Achats non stockés
+                    case "606300": // Fournitures administratives
+                    case "614000": // Charges de copropriété
+                    case "615000": // Entretien et réparations
+                    case "622000": // Frais de gestion locative
+                    case "623000": // Publicité / annonces
+                    case "623100": // Abonnement logiciel LMNP
+                    case "626000": // Frais postaux, téléphone
+                        totalChargesExternes += ligne.getDebit().doubleValue();
+                        chargesDetail.add(new ResultatFiscalDetailDTOs.ChargeDetailDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture(),
+                            ligne.getDebit(),
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            "CHARGES_EXTERNES"
+                        ));
+                        break;
+                        
+                    case "635100": // Taxe foncière
+                    case "635800": // Cotisation CFE
+                    case "637000": // Cotisations CFE ou autres
+                        totalImpotsTaxes += ligne.getDebit().doubleValue();
+                        chargesDetail.add(new ResultatFiscalDetailDTOs.ChargeDetailDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture(),
+                            ligne.getDebit(),
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            "IMPOTS_TAXES"
+                        ));
+                        break;
+                        
+                    case "661100": // Intérêts des emprunts
+                    case "616100": // Assurance emprunteur
+                        totalInteretsEmprunt += ligne.getDebit().doubleValue();
+                        chargesDetail.add(new ResultatFiscalDetailDTOs.ChargeDetailDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture(),
+                            ligne.getDebit(),
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            "INTERETS_EMPRUNT"
+                        ));
+                        break;
+                        
+                    case "681100": // Dotations aux amortissements
+                        totalAmortissements += ligne.getDebit().doubleValue();
+                        amortissementsDetail.add(new ResultatFiscalDetailDTOs.AmortissementDetailDTO(
+                            ecriture.getLibelle(),
+                            annee,
+                            ligne.getDebit(),
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A"
+                        ));
+                        break;
+                }
+            }
+        }
+        
+        // Calcul du résultat fiscal
+        double totalProduits = totalLoyers + totalProduitsAccessoires;
+        double totalCharges = totalChargesExternes + totalImpotsTaxes + totalAmortissements;
+        double resultatFiscal = totalProduits - totalCharges - totalInteretsEmprunt;
+        
+        // Création du DTO final
+        return new ResultatFiscalDTO(
+            totalLoyers, // recettesLocatives (loyers uniquement)
+            totalCharges + totalInteretsEmprunt, // chargesDeductibles (toutes les charges)
+            totalAmortissements, // amortissements
+            resultatFiscal, // resultatFiscal
+            recettesDetail,
+            chargesDetail,
+            amortissementsDetail
+        );
     }
 
 }

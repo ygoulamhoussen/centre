@@ -33,10 +33,9 @@ export interface ResultatFiscal {
 }
 
 export const resultatFiscalApi = {
-  async calculerResultatFiscal(annee: number, proprieteIds: string[], utilisateurId: string): Promise<ResultatFiscal> {
+  async calculerResultatFiscal(annee: number, utilisateurId: string): Promise<ResultatFiscal> {
     const params = new URLSearchParams()
     params.append('annee', annee.toString())
-    proprieteIds.forEach(id => params.append('proprieteIds', id))
     params.append('utilisateurId', utilisateurId)
 
     const response = await fetch(

@@ -39,13 +39,9 @@ const message = useMessage()
 
 // State
 const loading = ref(false)
-const loadingData = ref(false)
 const selectedYear = ref<number | null>(new Date().getFullYear())
-const selectedProprieteIds = ref<string[] | null>(null)
-const proprietes = ref<any[]>([])
 const resultat = ref<ResultatFiscal | null>(null)
 const utilisateurId = '00000000-0000-0000-0000-000000000003' // Hardcoded for now
-const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
 
 // Options for selects
 const yearOptions = computed(() => {
@@ -55,15 +51,6 @@ const yearOptions = computed(() => {
     value: currentYear - i,
   }))
 })
-
-const proprieteOptions = computed(() =>
-  proprietes.value.map(p => ({
-    label: p.nom,
-    value: p.id,
-  }))
-)
-
-const allProprieteIds = computed(() => proprietes.value.map(p => p.id))
 
 // Computed values for detailed breakdown
 const chargesExternes = computed(() => {
@@ -105,15 +92,17 @@ const produitsAccessoires = computed(() => {
   if (!resultat.value?.recettesDetail) return 0
   return resultat.value.recettesDetail
     .filter(recette => 
-      recette.intitule.includes('charges') || 
-      recette.intitule.includes('récupérables') ||
-      recette.intitule.includes('accessoires')
+      recette.intitule.toLowerCase().includes('charges') || 
+      recette.intitule.toLowerCase().includes('récupérables') ||
+      recette.intitule.toLowerCase().includes('accessoires') ||
+      recette.intitule.toLowerCase().includes('indemnité') ||
+      recette.intitule.toLowerCase().includes('assurance')
     )
     .reduce((sum, recette) => sum + recette.montant, 0)
 })
 
 const loyersNets = computed(() => {
-  return (resultat.value?.recettesLocatives ?? 0) - produitsAccessoires.value
+  return resultat.value?.recettesLocatives ?? 0
 })
 
 const totalProduits = computed(() => {
@@ -137,34 +126,18 @@ const resultatCourant = computed(() => {
 })
 
 // Functions
-async function loadProprietes() {
-  loadingData.value = true
-  try {
-    // Assuming a generic API to fetch properties, similar to other pages
-    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/${utilisateurId}`)
-    proprietes.value = await response.json()
-    // Select all properties by default
-    selectedProprieteIds.value = allProprieteIds.value
-  } catch (error) {
-    message.error('Erreur lors du chargement des propriétés')
-    console.error(error)
-  } finally {
-    loadingData.value = false
-  }
-}
-
 async function calculerResultat() {
-  if (!selectedYear.value || !selectedProprieteIds.value || selectedProprieteIds.value.length === 0) {
-    message.warning('Veuillez sélectionner une année et au moins une propriété.')
+  if (!selectedYear.value) {
+    message.warning('Veuillez sélectionner une année.')
     return
   }
 
   loading.value = true
   resultat.value = null
   try {
+    // Passer seulement l'année et l'utilisateur pour prendre en compte toutes les propriétés
     resultat.value = await resultatFiscalApi.calculerResultatFiscal(
       selectedYear.value,
-      selectedProprieteIds.value,
       utilisateurId,
     )
   } catch (error) {
@@ -223,10 +196,8 @@ function getResultatClass(value?: number) {
 }
 
 onMounted(async () => {
-  await loadProprietes()
-  if (proprietes.value.length > 0) {
-    await calculerResultat()
-  }
+  // Lancer le calcul automatiquement à l'arrivée sur la page
+  await calculerResultat()
 })
 </script>
 
@@ -243,14 +214,7 @@ onMounted(async () => {
           :options="yearOptions"
           placeholder="Année"
           style="width: 150px"
-        />
-        <NSelect
-          v-model:value="selectedProprieteIds"
-          :options="proprieteOptions"
-          placeholder="Toutes les propriétés"
-          multiple
-          clearable
-          style="flex-grow: 1; min-width: 250px;"
+          @update:value="calculerResultat"
         />
         <NButton type="primary" :loading="loading" @click="calculerResultat">
           <template #icon>

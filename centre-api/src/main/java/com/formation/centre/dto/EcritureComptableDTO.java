@@ -10,6 +10,8 @@ public class EcritureComptableDTO {
     private String numeroPiece;
     private String utilisateurId;
     private String createdAt;
+    private String journalLib;
+    private String pieceDate;
     private List<LigneEcritureDTO> lignes;
 
     public EcritureComptableDTO() {}
@@ -34,6 +36,12 @@ public class EcritureComptableDTO {
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public String getJournalLib() { return journalLib; }
+    public void setJournalLib(String journalLib) { this.journalLib = journalLib; }
+
+    public String getPieceDate() { return pieceDate; }
+    public void setPieceDate(String pieceDate) { this.pieceDate = pieceDate; }
 
     public List<LigneEcritureDTO> getLignes() { return lignes; }
     public void setLignes(List<LigneEcritureDTO> lignes) { this.lignes = lignes; }

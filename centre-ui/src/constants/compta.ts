@@ -12,7 +12,10 @@ export const naturesCharges = [
 ]
 
 export const typesRecettes = [
-  { label: 'Loyers', value: 'LOCATION' },
-  { label: 'Exceptionnelle', value: 'EXCEPTIONNELLE' },
-  { label: 'Quittance', value: 'QUITTANCE' },
+  { label: 'Loyer encaissé', value: 'LOYER' },
+  { label: 'Remboursement de charges', value: 'REMBOURSEMENT_CHARGES' },
+  { label: 'Régularisation de charges', value: 'REGULARISATION_CHARGES' },
+  { label: 'Dépôt de garantie encaissé', value: 'DEPOT_GARANTIE' },
+  { label: 'Aide / Subvention', value: 'AIDE_SUBVENTION' },
+  { label: 'Autre produit exceptionnel', value: 'AUTRE' },
 ] 

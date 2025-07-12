@@ -111,8 +111,8 @@ async function enregistrer() {
     })
     if (!res.ok) throw new Error('Erreur serveur')
     let ecritureCreee = false
-    // Si le statut passe à PAYEE alors qu'il ne l'était pas avant, on crée l'écriture comptable
-    if (oldStatut.value !== 'PAYEE' && quittance.value.statut === 'PAYEE') {
+    // Si le statut est PAYEE, on crée l'écriture comptable uniquement si elle n'existe pas déjà
+    if (quittance.value.statut === 'PAYEE' && !quittance.value.ecritureComptableId) {
       await creerEcritureComptable()
       ecritureCreee = true
     }

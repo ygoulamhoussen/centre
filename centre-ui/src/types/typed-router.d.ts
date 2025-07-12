@@ -36,6 +36,7 @@ declare module 'vue-router/auto-routes' {
     '/document/vite': RouteRecordInfo<'/document/vite', '/document/vite', Record<never, never>, Record<never, never>>,
     '/document/vue': RouteRecordInfo<'/document/vue', '/document/vue', Record<never, never>, Record<never, never>>,
     '/echeancier.[id]': RouteRecordInfo<'/echeancier.[id]', '/echeancier/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    '/fec': RouteRecordInfo<'/fec', '/fec', Record<never, never>, Record<never, never>>,
     '/home': RouteRecordInfo<'/home', '/home', Record<never, never>, Record<never, never>>,
     '/immobilisations': RouteRecordInfo<'/immobilisations', '/immobilisations', Record<never, never>, Record<never, never>>,
     '/immobilisations-create': RouteRecordInfo<'/immobilisations-create', '/immobilisations-create', Record<never, never>, Record<never, never>>,

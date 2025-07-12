@@ -86,6 +86,7 @@ import com.formation.centre.model.CompteComptable;
 import com.formation.centre.repository.CompteComptableRepository;
 import com.formation.centre.repository.LigneEcritureRepository;
 import com.formation.centre.model.LigneEcriture;
+import com.formation.centre.dto.LigneEcritureDTO;
 
 @Service
 public class UnifiedService {
@@ -1448,7 +1449,7 @@ private RecetteDTO recetteToDTO(Recette r) {
 public List<EcritureComptableDTO> getEcrituresComptables(String proprieteId, int anneeFiscale) {
     // Cette méthode doit être adaptée selon la nouvelle structure (par exemple, filtrer via les lignes d'écriture ou le libellé)
     // Ici, on retourne toutes les écritures, à affiner si besoin
-    return ecritureComptableRepository.findAll()
+    return ecritureComptableRepository.findAllWithLignes()
             .stream()
             .map(this::ecritureToDTO)
             .collect(Collectors.toList());
@@ -1457,7 +1458,7 @@ public List<EcritureComptableDTO> getEcrituresComptables(String proprieteId, int
 public List<EcritureComptableDTO> getEcrituresComptablesByUtilisateur(String utilisateurId) {
     // Idem, filtrage à affiner si besoin
     UUID uid = UUID.fromString(utilisateurId);
-    return ecritureComptableRepository.findAll()
+    return ecritureComptableRepository.findAllWithLignes()
             .stream()
             .filter(e -> e.getUtilisateur() != null && e.getUtilisateur().getId().equals(uid))
             .map(this::ecritureToDTO)
@@ -1466,7 +1467,7 @@ public List<EcritureComptableDTO> getEcrituresComptablesByUtilisateur(String uti
 
 public List<EcritureComptableDTO> getEcrituresComptablesByUtilisateurAndAnnee(String utilisateurId, int anneeFiscale) {
     UUID uid = UUID.fromString(utilisateurId);
-    return ecritureComptableRepository.findAll()
+    return ecritureComptableRepository.findAllWithLignes()
             .stream()
             .filter(e -> e.getUtilisateur() != null && e.getUtilisateur().getId().equals(uid))
             .filter(e -> e.getDateEcriture() != null && e.getDateEcriture().getYear() == anneeFiscale)
@@ -1482,9 +1483,11 @@ public EcritureComptableDTO createEcritureComptableCharge(String chargeId) {
     ecriture.setDateEcriture(charge.getDateCharge());
     ecriture.setLibelle("Charge : " + charge.getIntitule() + " (" + charge.getNature() + ")");
     ecriture.setJournalCode("ACH"); // Code journal pour les achats/charges, à adapter si besoin
+    ecriture.setJournalLib(getJournalLibForCode("ACH"));
     ecriture.setNumeroPiece(charge.getId().toString());
     ecriture.setUtilisateur(charge.getUtilisateur());
     ecriture.setCreatedAt(LocalDateTime.now());
+    ecriture.setPieceDate(charge.getDateCharge());
 
     EcritureComptable saved = ecritureComptableRepository.save(ecriture);
 
@@ -1561,9 +1564,11 @@ public EcritureComptableDTO createEcritureComptableRecette(String recetteId) {
     ecriture.setDateEcriture(recette.getDateRecette());
     ecriture.setLibelle("Recette : " + recette.getIntitule() + " (" + recette.getType() + ")");
     ecriture.setJournalCode("VEN"); // Code journal pour les ventes/recettes, à adapter si besoin
+    ecriture.setJournalLib(getJournalLibForCode("VEN"));
     ecriture.setNumeroPiece(recette.getId().toString());
     ecriture.setUtilisateur(recette.getUtilisateur());
     ecriture.setCreatedAt(LocalDateTime.now());
+    ecriture.setPieceDate(recette.getDateRecette());
 
     EcritureComptable saved = ecritureComptableRepository.save(ecriture);
 
@@ -1575,12 +1580,22 @@ public EcritureComptableDTO createEcritureComptableRecette(String recetteId) {
     CompteComptable compteProduit = getCompteComptablePourRecette(recette);
     CompteComptable compteTresorerie = compteComptableRepository.findByCode("512000"); // Banque
 
+    String compAuxNum = null;
+    String compAuxLib = null;
+    if (recette.getPropriete() != null) {
+        Propriete prop = recette.getPropriete();
+        compAuxNum = prop.getId() != null ? prop.getId().toString() : null;
+        compAuxLib = prop.getNom();
+    }
+
     LigneEcriture ligneDebit = new LigneEcriture();
     ligneDebit.setEcriture(saved);
     ligneDebit.setCompteNum(compteTresorerie.getCode());
     ligneDebit.setCompteLibelle(compteTresorerie.getLibelle());
     ligneDebit.setDebit(recette.getMontant());
     ligneDebit.setCredit(BigDecimal.ZERO);
+    if (compAuxNum != null) ligneDebit.setTiers(compAuxNum);
+    if (compAuxLib != null) ligneDebit.setCommentaire(compAuxLib);
 
     LigneEcriture ligneCredit = new LigneEcriture();
     ligneCredit.setEcriture(saved);
@@ -1588,6 +1603,8 @@ public EcritureComptableDTO createEcritureComptableRecette(String recetteId) {
     ligneCredit.setCompteLibelle(compteProduit.getLibelle());
     ligneCredit.setDebit(BigDecimal.ZERO);
     ligneCredit.setCredit(recette.getMontant());
+    if (compAuxNum != null) ligneCredit.setTiers(compAuxNum);
+    if (compAuxLib != null) ligneCredit.setCommentaire(compAuxLib);
 
     ligneEcritureRepository.save(ligneDebit);
     ligneEcritureRepository.save(ligneCredit);
@@ -1598,13 +1615,17 @@ public EcritureComptableDTO createEcritureComptableRecette(String recetteId) {
 private CompteComptable getCompteComptablePourRecette(Recette recette) {
     // Correspondance type → code compte (data.sql)
     switch (recette.getType()) {
-        case "Loyer":
-        case "Loyers meublés":
-        case "Location":
+        case "LOYER":
             return compteComptableRepository.findByCode("706000"); // Loyers meublés
-        case "Accessoire":
-        case "Produits accessoires":
-            return compteComptableRepository.findByCode("708000"); // Produits accessoires
+        case "REMBOURSEMENT_CHARGES":
+        case "REGULARISATION_CHARGES":
+            return compteComptableRepository.findByCode("708000"); // Produits accessoires (charges récupérables)
+        case "DEPOT_GARANTIE":
+            return compteComptableRepository.findByCode("165000"); // Dépôt de garantie reçu (passif)
+        case "AIDE_SUBVENTION":
+            return compteComptableRepository.findByCode("777000"); // Subventions d'exploitation (à adapter si besoin)
+        case "AUTRE":
+            return compteComptableRepository.findByCode("758000"); // Produits exceptionnels divers
         default:
             throw new IllegalArgumentException("Type de recette inconnu : " + recette.getType());
     }
@@ -1626,8 +1647,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
     if (!recettesExistentes.isEmpty()) {
         // Une recette existe déjà, vérifier si elle a une écriture comptable
         for (Recette recetteExistante : recettesExistentes) {
-            EcritureComptable ecritureExistante = ecritureComptableRepository.findByRecetteId(recetteExistante.getId());
-            if (ecritureExistante != null) {
+            if (recetteExistante.getEcritureComptable() != null) {
                 System.out.println("Écriture comptable existante trouvée pour recette: " + recetteExistante.getId());
                 throw new IllegalArgumentException("Une écriture comptable existe déjà pour cette quittance");
             }
@@ -1668,9 +1688,11 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         ecriture.setLibelle("Quittance de loyer - " + quittance.getLocation().getLocataire().getNom() +
             " - Période: " + quittance.getDateDebut() + " à " + (quittance.getDateFin() != null ? quittance.getDateFin() : "en cours"));
         ecriture.setJournalCode("VEN");
+        ecriture.setJournalLib(getJournalLibForCode("VEN"));
         ecriture.setNumeroPiece(quittance.getId().toString());
         ecriture.setUtilisateur(quittance.getLocation().getPropriete().getUtilisateur());
         ecriture.setCreatedAt(LocalDateTime.now());
+        ecriture.setPieceDate(quittance.getDateDebut());
 
         EcritureComptable saved = ecritureComptableRepository.save(ecriture);
         // Pas de setMontant, setType, setPropriete, setRecette, setCommentaire, setCreeLe, setModifieLe
@@ -1693,25 +1715,42 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
     public void deleteEcritureComptable(String id) {
         EcritureComptable ecriture = ecritureComptableRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new IllegalArgumentException("Écriture comptable introuvable"));
-        
-        // Supprimer aussi la recette associée si elle existe
-        if (ecriture.getRecette() != null) {
-            recetteRepository.deleteById(ecriture.getRecette().getId());
-        }
-        
+        // Suppression de la recette associée supprimée :
+        // Ancien code supprimé : if (ecriture.getRecette() != null) { ... }
+        // La suppression de la recette doit se faire via deleteRecette si besoin
         ecritureComptableRepository.deleteById(UUID.fromString(id));
     }
 
     private EcritureComptableDTO ecritureToDTO(EcritureComptable e) {
-        // À adapter selon la nouvelle structure du DTO
-        // Ici, on retourne un DTO minimal
         EcritureComptableDTO dto = new EcritureComptableDTO();
         dto.setId(e.getId() != null ? e.getId().toString() : null);
         dto.setDateEcriture(e.getDateEcriture() != null ? e.getDateEcriture().toString() : null);
         dto.setLibelle(e.getLibelle());
         dto.setJournalCode(e.getJournalCode());
+        dto.setJournalLib(e.getJournalLib());
         dto.setNumeroPiece(e.getNumeroPiece());
+        dto.setPieceDate(e.getPieceDate() != null ? e.getPieceDate().toString() : null);
         dto.setUtilisateurId(e.getUtilisateur() != null ? e.getUtilisateur().getId().toString() : null);
+        // Ajout du mapping des lignes d'écriture
+        if (e.getLignes() != null) {
+            List<LigneEcritureDTO> lignesDTO = e.getLignes().stream()
+                .map(this::ligneToDTO)
+                .collect(Collectors.toList());
+            dto.setLignes(lignesDTO);
+        }
+        return dto;
+    }
+
+    private LigneEcritureDTO ligneToDTO(LigneEcriture l) {
+        LigneEcritureDTO dto = new LigneEcritureDTO();
+        dto.setId(l.getId() != null ? l.getId().toString() : null);
+        dto.setEcritureId(l.getEcriture() != null && l.getEcriture().getId() != null ? l.getEcriture().getId().toString() : null);
+        dto.setCompteNum(l.getCompteNum());
+        dto.setCompteLibelle(l.getCompteLibelle());
+        dto.setDebit(l.getDebit());
+        dto.setCredit(l.getCredit());
+        dto.setTiers(l.getTiers());
+        dto.setCommentaire(l.getCommentaire());
         return dto;
     }
 
@@ -1802,11 +1841,17 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
     }
 
     public byte[] genererJournalComptablePdf(String proprieteId, String utilisateurId, int annee) {
-        List<EcritureComptable> ecritures;
+        List<EcritureComptable> ecritures = ecritureComptableRepository.findAll();
+        // Filtrage en mémoire sur l'année et l'utilisateur/propriété
         if (proprieteId != null && !proprieteId.isEmpty()) {
-            ecritures = ecritureComptableRepository.findByProprieteIdAndAnnee(UUID.fromString(proprieteId), annee);
+            // TODO: Ajouter un champ proprieteId dans EcritureComptable ou filtrer via les lignes d'écriture
+            // Pour l'instant, pas de filtrage possible
         } else if (utilisateurId != null && !utilisateurId.isEmpty()) {
-            ecritures = ecritureComptableRepository.findByUtilisateurIdAndAnnee(UUID.fromString(utilisateurId), annee);
+            UUID uid = UUID.fromString(utilisateurId);
+            ecritures = ecritures.stream()
+                .filter(e -> e.getUtilisateur() != null && e.getUtilisateur().getId().equals(uid))
+                .filter(e -> e.getDateEcriture() != null && e.getDateEcriture().getYear() == annee)
+                .collect(Collectors.toList());
         } else {
             throw new IllegalArgumentException("proprieteId ou utilisateurId requis");
         }
@@ -1825,14 +1870,14 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
             document.add(new Paragraph(" "));
 
             // Tableau avec en-têtes stylées
-            PdfPTable table = new PdfPTable(5);
+            PdfPTable table = new PdfPTable(2);
             table.setWidthPercentage(100);
             table.setSpacingBefore(10f);
-            table.setWidths(new float[]{2.2f, 1.5f, 1.5f, 2.5f, 4f});
+            table.setWidths(new float[]{2.2f, 6f});
 
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.WHITE);
             Color headerBg = new Color(60, 60, 60);
-            String[] headers = {"Date", "Type", "Montant", "Propriété", "Commentaire"};
+            String[] headers = {"Date", "Libellé"};
             for (String h : headers) {
                 PdfPCell cell = new PdfPCell(new Paragraph(h, headerFont));
                 cell.setBackgroundColor(headerBg);
@@ -1845,7 +1890,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
             Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 11);
             if (ecritures.isEmpty()) {
                 PdfPCell cell = new PdfPCell(new Paragraph("Aucune écriture comptable pour cette période.", cellFont));
-                cell.setColspan(5);
+                cell.setColspan(2);
                 cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 cell.setPadding(8f);
                 table.addCell(cell);
@@ -1860,29 +1905,12 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                     dateCell.setBorderWidth(0.5f);
                     table.addCell(dateCell);
 
-                    PdfPCell typeCell = new PdfPCell(new Paragraph(e.getType() != null ? e.getType().toString() : "", cellFont));
-                    typeCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    typeCell.setPadding(5f);
-                    typeCell.setBorderWidth(0.5f);
-                    table.addCell(typeCell);
-
-                    PdfPCell montantCell = new PdfPCell(new Paragraph(e.getMontant() != null ? e.getMontant().toPlainString() + " €" : "", cellFont));
-                    montantCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-                    montantCell.setPadding(5f);
-                    montantCell.setBorderWidth(0.5f);
-                    table.addCell(montantCell);
-
-                    PdfPCell propCell = new PdfPCell(new Paragraph(e.getPropriete() != null ? e.getPropriete().getNom() : "", cellFont));
-                    propCell.setHorizontalAlignment(Element.ALIGN_LEFT);
-                    propCell.setPadding(5f);
-                    propCell.setBorderWidth(0.5f);
-                    table.addCell(propCell);
-
-                    PdfPCell commCell = new PdfPCell(new Paragraph(e.getCommentaire() != null ? e.getCommentaire() : "", cellFont));
-                    commCell.setHorizontalAlignment(Element.ALIGN_LEFT);
-                    commCell.setPadding(5f);
-                    commCell.setBorderWidth(0.5f);
-                    table.addCell(commCell);
+                    PdfPCell libelleCell = new PdfPCell(new Paragraph(e.getLibelle() != null ? e.getLibelle() : "", cellFont));
+                    libelleCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+                    libelleCell.setPadding(5f);
+                    libelleCell.setBorderWidth(0.5f);
+                    table.addCell(libelleCell);
+                    // TODO: Ajouter d'autres colonnes (montant, propriété, etc.) à partir des lignes d'écriture si besoin
                 }
             }
             document.add(table);
@@ -1895,6 +1923,18 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
 
     public List<CompteComptable> getPlanComptable() {
         return compteComptableRepository.findAll();
+    }
+
+    private String getJournalLibForCode(String code) {
+        switch (code) {
+            case "BQ": return "Journal de banque";
+            case "OD": return "Opérations diverses";
+            case "VE": return "Ventes";
+            case "AC": return "Achats";
+            case "VEN": return "Ventes";
+            case "ACH": return "Achats";
+            default: return code;
+        }
     }
 
 }

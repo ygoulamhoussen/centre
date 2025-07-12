@@ -43,20 +43,27 @@ export interface RecetteDTO {
   updatedAt?: string;
 }
 
+export interface LigneEcritureDTO {
+  id?: string;
+  ecritureId?: string;
+  compteNum: string;
+  compteLibelle: string;
+  debit: string;
+  credit: string;
+  tiers?: string;
+  commentaire?: string;
+}
+
 export interface EcritureComptableDTO {
   id?: string;
   dateEcriture: string;
-  montant: string;
-  type: 'CHARGE' | 'RECETTE';
-  proprieteId: string;
-  chargeId?: string;
-  recetteId?: string;
-  commentaire?: string;
-  utilisateurId?: string;
-  documentId?: string;
-  documentNom?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  journalCode: string;
+  journalLib?: string;
+  pieceDate?: string;
+  numeroPiece?: string;
+  libelle: string;
+  lignes?: LigneEcritureDTO[];
+  // autres champs existants si besoin
 }
 
 export interface DocumentDTO {

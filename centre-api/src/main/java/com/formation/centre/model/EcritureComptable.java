@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "ecriture_comptable")
@@ -24,9 +26,18 @@ public class EcritureComptable {
     @Column(name = "numero_piece", length = 50)
     private String numeroPiece;
 
+    @Column(name = "journal_lib", length = 100)
+    private String journalLib;
+
+    @Column(name = "piece_date")
+    private LocalDate pieceDate;
+
     @ManyToOne
     @JoinColumn(name = "utilisateur_id", nullable = false)
     private Utilisateur utilisateur;
+
+    @OneToMany(mappedBy = "ecriture", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<LigneEcriture> lignes = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -48,8 +59,17 @@ public class EcritureComptable {
     public String getNumeroPiece() { return numeroPiece; }
     public void setNumeroPiece(String numeroPiece) { this.numeroPiece = numeroPiece; }
 
+    public String getJournalLib() { return journalLib; }
+    public void setJournalLib(String journalLib) { this.journalLib = journalLib; }
+
+    public LocalDate getPieceDate() { return pieceDate; }
+    public void setPieceDate(LocalDate pieceDate) { this.pieceDate = pieceDate; }
+
     public Utilisateur getUtilisateur() { return utilisateur; }
     public void setUtilisateur(Utilisateur utilisateur) { this.utilisateur = utilisateur; }
+
+    public List<LigneEcriture> getLignes() { return lignes; }
+    public void setLignes(List<LigneEcriture> lignes) { this.lignes = lignes; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

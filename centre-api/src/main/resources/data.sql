@@ -271,9 +271,13 @@ INSERT INTO echeance_credit (id, credit_id, date_echeance, total_echeance, inter
 ('A0000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000200', '2023-04-01', 1595.55, 556.58, 973.97, 65.00);
 
 -- ÉCRITURES COMPTABLES (nouveau modèle)
--- Exemple :
--- INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, numero_piece, utilisateur_id, created_at) VALUES
--- ('B0000000-0000-0000-0000-000000000001', '2024-10-15', 'Loyer Mai 2024', 'BQ', 'PJ-2024-001', '00000000-0000-0000-0000-000000000003', NOW());
+-- Exemple d'écriture comptable avec tous les champs FEC utiles
+INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journal_lib, numero_piece, piece_date, utilisateur_id, created_at) VALUES
+('B0000000-0000-0000-0000-000000000001', '2024-10-15', 'Loyer Mai 2024', 'BQ', 'Journal de banque', 'PJ-2024-001', '2024-10-15', '00000000-0000-0000-0000-000000000003', NOW());
+-- Lignes pour l'écriture b0000000-0000-0000-0000-000000000001 (Loyer Mai 2024)
+INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
+('b0000000-0000-0000-0000-000000000101', 'b0000000-0000-0000-0000-000000000001', '706000', 'Loyers meublés', 1000.00, 0.00, NULL, 'Loyer Mai 2024'),
+('b0000000-0000-0000-0000-000000000102', 'b0000000-0000-0000-0000-000000000001', '512000', 'Banque', 0.00, 1000.00, NULL, 'Loyer Mai 2024');
 -- Suppression des anciens comptes et ajout du plan simplifié LMNP
 DELETE FROM compte_comptable;
 INSERT INTO compte_comptable (code, libelle, type, description) VALUES

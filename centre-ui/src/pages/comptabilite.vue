@@ -1047,45 +1047,6 @@ function getProprieteNom(obj: any) {
             </NCard>
           </div>
         </NTabPane>
-
-        <NTabPane name="ecritures" tab="Écritures Comptables">
-          <div class="mb-4">
-            <NSpace>
-              <NSelect
-                v-model:value="proprieteSelectionnee"
-                placeholder="Sélectionner une propriété"
-                :options="[
-                  { label: 'Toutes les propriétés', value: '' },
-                  ...proprietes
-                ]"
-                style="width: 250px"
-              />
-            </NSpace>
-          </div>
-
-          <NDataTable
-            v-if="!isMobile"
-            :columns="colonnesEcritures"
-            :data="ecrituresComptables"
-            :loading="chargement"
-            :pagination="{ pageSize: 10 }"
-            striped
-          />
-          <div v-else>
-            <NCard v-for="ecriture in ecrituresComptables" :key="ecriture.id" class="mobile-card">
-              <div><b>Date :</b> {{ ecriture.dateEcriture }}</div>
-              <div><b>Propriété :</b> {{ getProprieteNom(ecriture) }}</div>
-              <div><b>Type :</b> {{ ecriture.type }}</div>
-              <div><b>Montant :</b> {{ ecriture.montant }} €</div>
-              <div><b>Description :</b> {{ ecriture.commentaire }}</div>
-              <div v-if="ecriture.documentNom"><b>Document :</b> {{ ecriture.documentNom }}</div>
-              <div class="actions">
-                <NButton size="small" type="primary" @click="editerEcriture(ecriture)">Éditer</NButton>
-                <NButton size="small" type="error" @click="supprimerEcriture(ecriture.id || '')">Supprimer</NButton>
-              </div>
-            </NCard>
-          </div>
-        </NTabPane>
       </NTabs>
     </NCard>
 

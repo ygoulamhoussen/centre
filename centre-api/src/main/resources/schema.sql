@@ -230,7 +230,9 @@ CREATE TABLE ecriture_comptable (
     date_ecriture DATE NOT NULL,
     libelle TEXT NOT NULL,
     journal_code VARCHAR(10) NOT NULL,
+    journal_lib VARCHAR(100),
     numero_piece VARCHAR(50),
+    piece_date DATE,
     utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );

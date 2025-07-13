@@ -177,6 +177,14 @@ import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/store/modules/auth'
 import { capitalIdentitesApi } from '@/service/api/capital-identites'
 
+definePage({
+  meta: {
+    title: '2033-D - Capital et identités',
+    hideInMenu: true,
+    activeMenu: '/liasse-fiscale',
+  },
+})
+
 const message = useMessage()
 const authStore = useAuthStore()
 

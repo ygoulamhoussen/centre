@@ -7,11 +7,11 @@
 -- 706000           | Loyers meublés                  | Recettes locatives
 -- 708000           | Produits accessoires            | Produits accessoires
 --
--- 🟥 Charges d’exploitation (classe 6)
+-- 🟥 Charges d'exploitation (classe 6)
 -- Numéro de compte | Intitulé                        | À reporter dans 2033-B
 -- 606000           | Achats non stockés de petits matériels | Achats
 -- 615000           | Entretien et réparations        | Charges externes
--- 616000           | Primes d’assurances             | Charges externes
+-- 616000           | Primes d'assurances             | Charges externes
 -- 618000           | Frais de gestion (honoraires, assistance...) | Charges externes
 -- 622000           | Frais de gestion locative, conciergerie | Charges externes
 -- 606300           | Fournitures administratives     | Charges externes
@@ -280,17 +280,17 @@ INSERT INTO compte_comptable (code, libelle, type, description) VALUES
 ('606000', 'Achats non stockés de petits matériels', 'Charge', 'Achats de petits équipements, mobilier, fournitures (2033-B)'),
 ('606300', 'Fournitures administratives', 'Charge', 'Fournitures administratives (2033-B)'),
 ('615000', 'Entretien et réparations', 'Charge', 'Entretien, réparations (2033-B Charges externes)'),
-('616000', 'Primes d’assurances', 'Charge', 'Assurances (2033-B Charges externes)'),
+('616000', 'Primes d''assurances', 'Charge', 'Assurances (2033-B Charges externes)'),
 ('618000', 'Frais de gestion (honoraires, assistance...)', 'Charge', 'Honoraires, assistance, gestion (2033-B Charges externes)'),
 ('622000', 'Frais de gestion locative, conciergerie', 'Charge', 'Gestion locative, conciergerie (2033-B Charges externes)'),
 ('635100', 'Taxe foncière', 'Charge', 'Taxe foncière (2033-B Impôts et taxes)'),
 ('637000', 'Cotisations CFE ou autres', 'Charge', 'Cotisations CFE, autres impôts (2033-B Impôts et taxes)'),
-('661100', 'Intérêts des emprunts', 'Charge', 'Intérêts d’emprunt (2033-B Charges financières)'),
+('661100', 'Intérêts des emprunts', 'Charge', 'Intérêts d''emprunt (2033-B Charges financières)'),
 ('681100', 'Dotations aux amortissements', 'Charge', 'Dotations aux amortissements (2033-B/2033-C)'),
 -- Passif (Capitaux propres et Dettes)
 ('101000', 'Capital personnel (apports du LMNP)', 'Passif', 'Apports personnels du loueur en meublé'),
-('120000', 'Résultat de l’exercice précédent', 'Passif', 'Résultat de l’exercice précédent'),
-('129000', 'Résultat en attente d’affectation', 'Passif', 'Résultat non encore affecté'),
+('120000', 'Résultat de l''exercice précédent', 'Passif', 'Résultat de l''exercice précédent'),
+('129000', 'Résultat en attente d''affectation', 'Passif', 'Résultat non encore affecté'),
 ('164000', 'Emprunt immobilier', 'Dettes', 'Emprunt bancaire immobilier'),
 ('401000', 'Fournisseurs', 'Dettes', 'Dettes envers les fournisseurs'),
 ('445660', 'TVA collectée', 'Dettes', 'TVA collectée à reverser'),
@@ -322,6 +322,19 @@ INSERT INTO compte_comptable (code, libelle, type, description) VALUES
 ('165000', 'Dépôt de garantie reçu', 'Dettes', 'Dépôt de garantie reçu (passif)'),
 ('777000', 'Subventions d''exploitation', 'Recette', 'Subventions et aides reçues'),
 ('758000', 'Produits exceptionnels divers', 'Recette', 'Produits exceptionnels divers');
+
+-- Comptes exceptionnels pour les charges et produits exceptionnels
+INSERT INTO compte_comptable (code, libelle, type, description) VALUES
+('671000', 'Charges exceptionnelles sur opérations de gestion', 'Charge', 'Charges exceptionnelles liées à la gestion'),
+('678000', 'Charges exceptionnelles sur opérations en capital', 'Charge', 'Charges exceptionnelles liées au capital'),
+('658000', 'Charges exceptionnelles diverses', 'Charge', 'Autres charges exceptionnelles'),
+('675000', 'Valeurs comptables des éléments d''actif cédés', 'Charge', 'Valeurs comptables lors de cessions'),
+('675100', 'Moins-values de cession d''éléments d''actif', 'Charge', 'Moins-values lors de cessions d''actifs'),
+('775000', 'Produits exceptionnels sur opérations de gestion', 'Recette', 'Produits exceptionnels liés à la gestion'),
+('776000', 'Produits exceptionnels sur opérations en capital', 'Recette', 'Produits exceptionnels liés au capital'),
+('758100', 'Produits exceptionnels sur opérations de gestion', 'Recette', 'Produits exceptionnels divers'),
+('758200', 'Produits exceptionnels sur opérations en capital', 'Recette', 'Produits exceptionnels divers'),
+('758300', 'Produits exceptionnels sur cessions d''éléments d''actif', 'Recette', 'Produits exceptionnels sur cessions');
 
 -- ===== ÉCRITURES COMPTABLES COHÉRENTES AVEC LES DONNÉES EXISTANTES =====
 

@@ -144,6 +144,43 @@ export const naturesCharges = [
     description: 'Autres charges non classées',
     categorie: 'AUTRES',
   },
+
+  // ⚠️ 7. Charges exceptionnelles
+  {
+    label: 'Charges exceptionnelles sur opérations de gestion',
+    value: 'CHARGES_EXCEPTIONNELLES_GESTION',
+    compte: '671000',
+    description: 'Charges exceptionnelles liées à la gestion',
+    categorie: 'EXCEPTIONNELLES',
+  },
+  {
+    label: 'Charges exceptionnelles sur opérations en capital',
+    value: 'CHARGES_EXCEPTIONNELLES_CAPITAL',
+    compte: '678000',
+    description: 'Charges exceptionnelles liées au capital',
+    categorie: 'EXCEPTIONNELLES',
+  },
+  {
+    label: 'Charges exceptionnelles diverses',
+    value: 'CHARGES_EXCEPTIONNELLES_DIVERSES',
+    compte: '658000',
+    description: 'Autres charges exceptionnelles',
+    categorie: 'EXCEPTIONNELLES',
+  },
+  {
+    label: 'Valeurs comptables des éléments d\'actif cédés',
+    value: 'VALEURS_COMPTABLES_CEDES',
+    compte: '675000',
+    description: 'Valeurs comptables lors de cessions',
+    categorie: 'EXCEPTIONNELLES',
+  },
+  {
+    label: 'Moins-values de cession d\'éléments d\'actif',
+    value: 'MOINS_VALUES_CESSION',
+    compte: '675100',
+    description: 'Moins-values lors de cessions d\'actifs',
+    categorie: 'EXCEPTIONNELLES',
+  },
 ]
 
 // Catégories de charges pour le regroupement
@@ -153,6 +190,7 @@ export const categoriesCharges = [
   { value: 'FINANCIER', label: '💸 Charges financières' },
   { value: 'EXPLOITATION', label: '🔧 Charges d\'exploitation' },
   { value: 'AUTRES', label: '📋 Autres charges' },
+  { value: 'EXCEPTIONNELLES', label: '⚠️ Charges exceptionnelles' },
 ]
 
 // Types de recettes LMNP

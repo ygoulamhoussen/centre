@@ -95,6 +95,7 @@ import com.formation.centre.model.CapitalIdentites;
 import com.formation.centre.repository.CapitalIdentitesRepository;
 import com.formation.centre.dto.CapitalIdentitesDTO;
 import com.formation.centre.dto.RepartitionChargesDTO;
+import com.formation.centre.dto.ProduitsChargesExceptionnelsDTO;
 
 @Service
 public class UnifiedService {
@@ -1699,6 +1700,18 @@ private CompteComptable getCompteComptablePourCharge(Charge charge) {
         case "AUTRES":
             return compteComptableRepository.findByCode("606800"); // Autres charges non classées
             
+        // ⚠️ Charges exceptionnelles
+        case "CHARGES_EXCEPTIONNELLES_GESTION":
+            return compteComptableRepository.findByCode("671000"); // Charges exceptionnelles sur opérations de gestion
+        case "CHARGES_EXCEPTIONNELLES_CAPITAL":
+            return compteComptableRepository.findByCode("678000"); // Charges exceptionnelles sur opérations en capital
+        case "CHARGES_EXCEPTIONNELLES_DIVERSES":
+            return compteComptableRepository.findByCode("658000"); // Charges exceptionnelles diverses
+        case "VALEURS_COMPTABLES_CEDES":
+            return compteComptableRepository.findByCode("675000"); // Valeurs comptables des éléments d'actif cédés
+        case "MOINS_VALUES_CESSION":
+            return compteComptableRepository.findByCode("675100"); // Moins-values de cession d'éléments d'actif
+            
         // Anciennes valeurs pour compatibilité (à supprimer progressivement)
         case "TRAVAUX":
         case "Entretien":
@@ -2284,10 +2297,10 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         ecriture.setPieceDate(LocalDate.parse(charge.getDateCharge()));
         EcritureComptable savedEcriture = ecritureComptableRepository.save(ecriture);
 
-        // Débit 6811 (Dotations aux amortissements)
+        // Débit 681100 (Dotations aux amortissements)
         LigneEcriture ligneDebit = new LigneEcriture();
         ligneDebit.setEcriture(savedEcriture);
-        ligneDebit.setCompteNum("6811");
+        ligneDebit.setCompteNum("681100");
         ligneDebit.setCompteLibelle("Dotations aux amortissements");
         ligneDebit.setDebit(new BigDecimal(charge.getMontant()));
         ligneDebit.setCredit(BigDecimal.ZERO);
@@ -2363,12 +2376,14 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                         
                     case "606000": // Achats non stockés
                     case "606300": // Fournitures administratives
-                    case "614000": // Charges de copropriété
-                    case "615000": // Entretien et réparations
-                    case "622000": // Frais de gestion locative
-                    case "623000": // Publicité / annonces
-                    case "623100": // Abonnement logiciel LMNP
-                    case "626000": // Frais postaux, téléphone
+                    case "606800": // Achats d'emballages
+                    case "606100": // Achats de matières premières
+                    case "606200": // Achats d'autres approvisionnements
+                    case "606400": // Achats de fournitures d'entretien et petit équipement
+                    case "606500": // Achats de fournitures d'atelier et d'usine
+                    case "606600": // Achats de fournitures de magasinage
+                    case "606700": // Achats de fournitures de transport
+                    case "606900": // Achats de fournitures diverses
                         totalChargesExternes += ligne.getDebit().doubleValue();
                         chargesDetail.add(new ResultatFiscalDetailDTOs.ChargeDetailDTO(
                             ecriture.getLibelle(),
@@ -2581,6 +2596,14 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                     switch (compteNum) {
                         case "606000": // Achats non stockés de petits matériels
                         case "606300": // Fournitures administratives
+                        case "606800": // Achats d'emballages
+                        case "606100": // Achats de matières premières
+                        case "606200": // Achats d'autres approvisionnements
+                        case "606400": // Achats de fournitures d'entretien et petit équipement
+                        case "606500": // Achats de fournitures d'atelier et d'usine
+                        case "606600": // Achats de fournitures de magasinage
+                        case "606700": // Achats de fournitures de transport
+                        case "606900": // Achats de fournitures diverses
                             totalAchats = totalAchats.add(montant);
                             detailsAchats.add(new RepartitionChargesDTO.ChargeDetailDTO(
                                 ecriture.getLibelle(),
@@ -2692,6 +2715,128 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         repartition.calculerTotal();
         
         return repartition;
+    }
+
+    // ===== SERVICES POUR LES PRODUITS ET CHARGES EXCEPTIONNELS (2033-F) =====
+
+    public ProduitsChargesExceptionnelsDTO calculerProduitsChargesExceptionnels(int annee, String utilisateurId) {
+        UUID userUuid = UUID.fromString(utilisateurId);
+        
+        // Récupération des écritures comptables de l'utilisateur pour l'année
+        List<EcritureComptable> ecritures = ecritureComptableRepository.findByUtilisateurIdAndAnnee(userUuid, annee);
+        
+        ProduitsChargesExceptionnelsDTO exceptionnels = new ProduitsChargesExceptionnelsDTO(utilisateurId, annee);
+        List<ProduitsChargesExceptionnelsDTO.OperationExceptionnelleDTO> detailsProduits = new ArrayList<>();
+        List<ProduitsChargesExceptionnelsDTO.OperationExceptionnelleDTO> detailsCharges = new ArrayList<>();
+        List<ProduitsChargesExceptionnelsDTO.OperationExceptionnelleDTO> detailsPlusValues = new ArrayList<>();
+        List<ProduitsChargesExceptionnelsDTO.OperationExceptionnelleDTO> detailsMoinsValues = new ArrayList<>();
+        
+        BigDecimal totalProduits = BigDecimal.ZERO;
+        BigDecimal totalCharges = BigDecimal.ZERO;
+        BigDecimal totalPlusValues = BigDecimal.ZERO;
+        BigDecimal totalMoinsValues = BigDecimal.ZERO;
+        
+        for (EcritureComptable ecriture : ecritures) {
+            List<LigneEcriture> lignes = ligneEcritureRepository.findByEcritureId(ecriture.getId());
+            
+            for (LigneEcriture ligne : lignes) {
+                String compteNum = ligne.getCompteNum();
+                BigDecimal montant;
+                String typeOperation;
+                
+                // Déterminer si c'est un produit (crédit) ou une charge (débit)
+                if (ligne.getCredit().compareTo(BigDecimal.ZERO) > 0) {
+                    montant = ligne.getCredit();
+                    typeOperation = "PRODUIT";
+                } else if (ligne.getDebit().compareTo(BigDecimal.ZERO) > 0) {
+                    montant = ligne.getDebit();
+                    typeOperation = "CHARGE";
+                } else {
+                    continue; // Ignorer les lignes sans montant
+                }
+                
+                switch (compteNum) {
+                    // Produits exceptionnels (classe 7)
+                    case "775000": // Produits exceptionnels sur opérations de gestion
+                    case "777000": // Produits exceptionnels sur opérations en capital
+                    case "758000": // Produits exceptionnels divers
+                    case "758100": // Produits exceptionnels sur opérations de gestion
+                    case "758200": // Produits exceptionnels sur opérations en capital
+                    case "758300": // Produits exceptionnels sur cessions d'éléments d'actif
+                        totalProduits = totalProduits.add(montant);
+                        detailsProduits.add(new ProduitsChargesExceptionnelsDTO.OperationExceptionnelleDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture().toString(),
+                            montant,
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            compteNum,
+                            typeOperation
+                        ));
+                        break;
+                        
+                    // Charges exceptionnelles (classe 6)
+                    case "671000": // Charges exceptionnelles sur opérations de gestion
+                    case "678000": // Charges exceptionnelles sur opérations en capital
+                    case "658000": // Charges exceptionnelles diverses
+                    case "658100": // Charges exceptionnelles sur opérations de gestion
+                    case "658200": // Charges exceptionnelles sur opérations en capital
+                    case "658300": // Charges exceptionnelles sur cessions d'éléments d'actif
+                        totalCharges = totalCharges.add(montant);
+                        detailsCharges.add(new ProduitsChargesExceptionnelsDTO.OperationExceptionnelleDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture().toString(),
+                            montant,
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            compteNum,
+                            typeOperation
+                        ));
+                        break;
+                        
+                    // Plus-values à long terme
+                    case "775100": // Plus-values de cession d'éléments d'actif
+                    case "775200": // Plus-values de cession de titres de placement
+                        totalPlusValues = totalPlusValues.add(montant);
+                        detailsPlusValues.add(new ProduitsChargesExceptionnelsDTO.OperationExceptionnelleDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture().toString(),
+                            montant,
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            compteNum,
+                            "PLUS_VALUE"
+                        ));
+                        break;
+                        
+                    // Moins-values à long terme
+                    case "675000": // Valeurs comptables des éléments d'actif cédés
+                    case "675100": // Moins-values de cession d'éléments d'actif
+                        totalMoinsValues = totalMoinsValues.add(montant);
+                        detailsMoinsValues.add(new ProduitsChargesExceptionnelsDTO.OperationExceptionnelleDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture().toString(),
+                            montant,
+                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            compteNum,
+                            "MOINS_VALUE"
+                        ));
+                        break;
+                }
+            }
+        }
+        
+        // Attribution des totaux et détails
+        exceptionnels.setProduitsExceptionnels(totalProduits);
+        exceptionnels.setDetailsProduitsExceptionnels(detailsProduits);
+        exceptionnels.setChargesExceptionnelles(totalCharges);
+        exceptionnels.setDetailsChargesExceptionnelles(detailsCharges);
+        exceptionnels.setPlusValuesLongTerme(totalPlusValues);
+        exceptionnels.setDetailsPlusValues(detailsPlusValues);
+        exceptionnels.setMoinsValuesLongTerme(totalMoinsValues);
+        exceptionnels.setDetailsMoinsValues(detailsMoinsValues);
+        
+        // Calcul du total
+        exceptionnels.calculerTotal();
+        
+        return exceptionnels;
     }
 }
 

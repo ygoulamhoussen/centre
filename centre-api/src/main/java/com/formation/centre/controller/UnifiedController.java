@@ -64,6 +64,7 @@ import com.formation.centre.service.UnifiedService;
 import com.formation.centre.dto.SuiviImmobilisationsDTO;
 import com.formation.centre.dto.CapitalIdentitesDTO;
 import com.formation.centre.dto.RepartitionChargesDTO;
+import com.formation.centre.dto.ProduitsChargesExceptionnelsDTO;
 
 
 @RestController
@@ -1034,6 +1035,21 @@ public ResponseEntity<SuiviImmobilisationsDTO> getSuiviImmobilisations(
         try {
             RepartitionChargesDTO repartition = unifiedService.calculerRepartitionCharges(annee, utilisateurId);
             return ResponseEntity.ok(repartition);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // ===== ENDPOINTS POUR LES PRODUITS ET CHARGES EXCEPTIONNELS (2033-F) =====
+
+    @GetMapping("/produits-charges-exceptionnels")
+    public ResponseEntity<ProduitsChargesExceptionnelsDTO> getProduitsChargesExceptionnels(
+            @RequestParam("annee") int annee,
+            @RequestParam("utilisateurId") String utilisateurId) {
+        try {
+            ProduitsChargesExceptionnelsDTO exceptionnels = unifiedService.calculerProduitsChargesExceptionnels(annee, utilisateurId);
+            return ResponseEntity.ok(exceptionnels);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

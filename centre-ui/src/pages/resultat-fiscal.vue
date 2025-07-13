@@ -29,9 +29,9 @@ import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NGi, NGri
 
 definePage({
   meta: {
-    title: 'Résultat Fiscal',
-    icon: 'material-symbols:account-balance-outline',
-    order: 10,
+    title: '2033-B - Compte de résultat',
+    hideInMenu: true,
+    activeMenu: '/liasse-fiscale',
   },
 })
 

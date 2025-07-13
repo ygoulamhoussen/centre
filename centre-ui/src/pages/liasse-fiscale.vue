@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { CalculatorOutline, ScaleOutline, ConstructOutline, InformationCircleOutline, PersonOutline, PieChartOutline } from '@vicons/ionicons5'
+import { CalculatorOutline, ScaleOutline, ConstructOutline, InformationCircleOutline, PersonOutline, PieChartOutline, WarningOutline } from '@vicons/ionicons5'
 
 const router = useRouter()
 </script>
@@ -12,7 +12,7 @@ const router = useRouter()
         <p>Accédez à tous les modules de la liasse fiscale LMNP :</p>
       </div>
 
-      <n-grid :cols="5" :x-gap="16" :y-gap="16">
+      <n-grid :cols="6" :x-gap="16" :y-gap="16">
         <!-- Résultat Fiscal -->
         <n-grid-item>
           <n-card 
@@ -133,6 +133,31 @@ const router = useRouter()
             </div>
           </n-card>
         </n-grid-item>
+
+        <!-- Produits et Charges Exceptionnels -->
+        <n-grid-item>
+          <n-card 
+            title="📄 Formulaire 2033-F" 
+            subtitle="Produits et charges exceptionnels"
+            class="module-card"
+            @click="router.push('/produits-charges-exceptionnels')"
+          >
+            <template #header-extra>
+              <n-icon size="24" class="text-yellow-500">
+                <WarningOutline />
+              </n-icon>
+            </template>
+            <div class="space-y-2">
+              <p class="text-sm text-gray-600">Opérations non courantes</p>
+              <ul class="text-xs text-gray-500 space-y-1">
+                <li>• Produits exceptionnels</li>
+                <li>• Charges exceptionnelles</li>
+                <li>• Plus/moins-values</li>
+                <li>• Ventes de biens</li>
+              </ul>
+            </div>
+          </n-card>
+        </n-grid-item>
       </n-grid>
 
       <!-- Informations complémentaires -->
@@ -146,7 +171,7 @@ const router = useRouter()
             <ul class="list-disc list-inside space-y-1 text-sm">
               <li>Régime fiscal pour les propriétaires louant des biens meublés</li>
               <li>Obligation de tenir une comptabilité complète</li>
-              <li>Déclaration annuelle avec les formulaires 2033-A, 2033-B, 2033-C, 2033-D et 2033-E</li>
+              <li>Déclaration annuelle avec les formulaires 2033-A, 2033-B, 2033-C, 2033-D, 2033-E et 2033-F</li>
               <li>Amortissement des immobilisations sur leur durée d'usage</li>
             </ul>
           </div>

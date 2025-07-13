@@ -31,11 +31,14 @@ import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NSelect, 
 
 definePage({
   meta: {
-    title: 'Bilan Simplifié',
+    title: '2033-A - Bilan simplifié',
     icon: 'material-symbols:account-balance',
+    hideInMenu:true,
     order: 11,
   },
 })
+
+
 
 const message = useMessage()
 

@@ -117,7 +117,19 @@ const colonnesCharges = [
   { title: 'Date', key: 'dateCharge', width: 120 },
   { title: 'Propriété', key: 'proprieteNom', width: 200 },
   { title: 'Intitulé', key: 'intitule', width: 200 },
-  { title: 'Nature', key: 'nature', width: 150 },
+  { 
+    title: 'Nature', 
+    key: 'nature', 
+    width: 150,
+    render: (row: ChargeDTO) => {
+      const charge = getChargeByValue(row.nature)
+      const isExceptionnelle = charge?.categorie === 'EXCEPTIONNELLES'
+      return h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [
+        h('span', {}, row.nature),
+        isExceptionnelle ? h(NTag, { type: 'warning', size: 'small' }, { default: () => 'Exceptionnelle' }) : null
+      ])
+    }
+  },
   { title: 'Montant', key: 'montant', width: 120, render: (row: ChargeDTO) => `${row.montant} €` },
   {
     title: 'Document',
@@ -297,13 +309,22 @@ const anneesDisponibles = computed(() => {
   const anneesCharges = charges.value.map(c => c.dateCharge ? new Date(c.dateCharge).getFullYear() : null)
   const anneesAmortissements = amortissements.value.map(a => a.annee)
   const anneesRecettes = recettes.value.map(r => r.dateRecette ? new Date(r.dateRecette).getFullYear() : null)
-  return Array.from(new Set([...anneesCharges, ...anneesAmortissements, ...anneesRecettes].filter(a => !!a))).sort((a, b) => b - a)
+  return Array.from(new Set([...anneesCharges, ...anneesAmortissements, ...anneesRecettes].filter(a => !!a))).sort((a, b) => (b || 0) - (a || 0))
 })
 
 const anneeSelectionnee = ref<number | null>(null)
 
 // Années disponibles pour les écritures (on peut réutiliser anneesDisponibles ou en calculer un spécifique si besoin)
 const anneesEcrituresDisponibles = computed(() => anneesDisponibles.value.filter(a => a !== null))
+
+// Fonction pour compter les charges exceptionnelles
+const chargesExceptionnelles = computed(() => {
+  return chargesFiltrees.value.filter(c => getChargeByValue(c.nature)?.categorie === 'EXCEPTIONNELLES')
+})
+
+const totalChargesExceptionnelles = computed(() => {
+  return chargesExceptionnelles.value.reduce((sum, charge) => sum + Number.parseFloat(charge.montant), 0)
+})
 
 onMounted(() => {
   chargerDonnees().then(() => {
@@ -977,6 +998,23 @@ function supprimerAmortissement(id: string) {
           <div>
             <NH1 class="titre-principal text-2xl mb-2">Comptabilité - Charges et Recettes</NH1>
             <p class="text-gray-600">Gestion des charges déductibles et des recettes locatives</p>
+            <NTooltip trigger="hover" placement="bottom">
+              <template #trigger>
+                <NButton text size="small" class="mt-2">
+                  <template #icon>
+                    <NIcon :component="Calculator24Filled" />
+                  </template>
+                  Qu'est-ce qu'une charge exceptionnelle ?
+                </NButton>
+              </template>
+              <div style="max-width: 300px;">
+                <p><b>Charges exceptionnelles :</b></p>
+                <p>• Charges non récurrentes liées à des événements particuliers</p>
+                <p>• Exemples : cessions d'actifs, restructurations, litiges</p>
+                <p>• Apparaissent dans le formulaire 2033-F de la liasse fiscale</p>
+                <p>• Comptes : 671000, 678000, 658000, 675000, 675100</p>
+              </div>
+            </NTooltip>
           </div>
           <NSpace>
             <NButton type="primary" @click="nouvelleCharge">
@@ -1063,11 +1101,29 @@ function supprimerAmortissement(id: string) {
             </NCard>
           </NGi>
         </NGrid>
+        
+        <!-- Information sur les charges exceptionnelles -->
+        <div v-if="totalChargesExceptionnelles > 0" class="mt-4">
+          <NAlert type="info" class="mb-2">
+            <template #header>
+              <b>Charges exceptionnelles détectées</b>
+            </template>
+            <p>Total des charges exceptionnelles pour {{ anneeSelectionnee }} : <strong>{{ totalChargesExceptionnelles.toFixed(2) }} €</strong></p>
+            <p class="text-sm">Ces charges apparaissent dans le formulaire 2033-F de la liasse fiscale LMNP.</p>
+          </NAlert>
+        </div>
       </NCard>
 
       <!-- Onglets -->
       <NTabs type="line" animated>
         <NTabPane name="charges" tab="Charges">
+          <NAlert v-if="chargesFiltrees.some(c => getChargeByValue(c.nature)?.categorie === 'EXCEPTIONNELLES')" type="warning" class="mb-4">
+            <template #header>
+              <b>Charges exceptionnelles détectées</b>
+            </template>
+            <p>Certaines charges sont marquées comme exceptionnelles. Ces charges apparaissent dans le formulaire 2033-F (Produits et charges exceptionnels) de la liasse fiscale LMNP.</p>
+          </NAlert>
+          
           <NDataTable
             v-if="!isMobile"
             :columns="colonnesCharges"
@@ -1077,11 +1133,16 @@ function supprimerAmortissement(id: string) {
             striped
           />
           <div v-else>
-            <NCard v-for="charge in chargesFiltrees" :key="charge.id" class="mobile-card">
+            <NCard v-for="charge in chargesFiltrees" :key="charge.id" class="mobile-card" :class="{ 'exceptionnelle': getChargeByValue(charge.nature)?.categorie === 'EXCEPTIONNELLES' }">
               <div><b>Date :</b> {{ charge.dateCharge }}</div>
               <div><b>Propriété :</b> {{ getProprieteNom(charge) }}</div>
               <div><b>Intitulé :</b> {{ charge.intitule }}</div>
-              <div><b>Nature :</b> {{ charge.nature }}</div>
+              <div class="nature-row">
+                <b>Nature :</b> {{ charge.nature }}
+                <NTag v-if="getChargeByValue(charge.nature)?.categorie === 'EXCEPTIONNELLES'" type="warning" size="small">
+                  Exceptionnelle
+                </NTag>
+              </div>
               <div><b>Montant :</b> {{ charge.montant }} €</div>
               <div v-if="charge.documentNom"><b>Document :</b> {{ charge.documentNom }}</div>
               <div class="actions">
@@ -1275,6 +1336,17 @@ function supprimerAmortissement(id: string) {
                 :options="naturesCharges"
                 placeholder="Sélectionner une nature"
               />
+              <div v-if="chargeEnCours.nature" class="mt-2">
+                <NTag v-if="getChargeByValue(chargeEnCours.nature)?.categorie === 'EXCEPTIONNELLES'" type="warning" size="small">
+                  ⚠️ Charge exceptionnelle - Compte {{ getChargeByValue(chargeEnCours.nature)?.compte }}
+                </NTag>
+                <div v-else class="text-sm text-gray-600">
+                  Compte : {{ getChargeByValue(chargeEnCours.nature)?.compte || 'Non défini' }}
+                </div>
+                <div v-if="getChargeByValue(chargeEnCours.nature)?.description" class="text-sm text-gray-500 mt-1">
+                  {{ getChargeByValue(chargeEnCours.nature)?.description }}
+                </div>
+              </div>
             </NFormItem>
           </NGi>
           <NGi :span="2">
@@ -1501,6 +1573,18 @@ function supprimerAmortissement(id: string) {
   margin-top: 8px;
   display: flex;
   gap: 8px;
+}
+
+.mobile-card.exceptionnelle {
+  border-left: 4px solid #faad14;
+  background-color: #fffbe6;
+}
+
+.nature-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .resume-card {
   margin-bottom: 12px;

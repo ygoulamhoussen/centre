@@ -94,6 +94,7 @@ declare module 'vue-router/auto-routes' {
     '/plugin/tables/vtable': RouteRecordInfo<'/plugin/tables/vtable', '/plugin/tables/vtable', Record<never, never>, Record<never, never>>,
     '/plugin/typeit': RouteRecordInfo<'/plugin/typeit', '/plugin/typeit', Record<never, never>, Record<never, never>>,
     '/plugin/video': RouteRecordInfo<'/plugin/video', '/plugin/video', Record<never, never>, Record<never, never>>,
+    '/produits-charges-exceptionnels': RouteRecordInfo<'/produits-charges-exceptionnels', '/produits-charges-exceptionnels', Record<never, never>, Record<never, never>>,
     '/propriete': RouteRecordInfo<'/propriete', '/propriete', Record<never, never>, Record<never, never>>,
     '/propriete-detail.[id]': RouteRecordInfo<'/propriete-detail.[id]', '/propriete-detail/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/propriete-etape-1': RouteRecordInfo<'/propriete-etape-1', '/propriete-etape-1', Record<never, never>, Record<never, never>>,

@@ -24,6 +24,7 @@ DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 
 DROP TABLE IF EXISTS utilisateur CASCADE;
+DROP TABLE IF EXISTS capital_identites CASCADE;
 
 DROP TABLE IF EXISTS compte_comptable;
 
@@ -37,6 +38,27 @@ CREATE TABLE utilisateur (
     mot_de_passe_hash TEXT,
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
+);
+
+-- CAPITAL ET IDENTITES (formulaire 2033-D)
+CREATE TABLE capital_identites (
+    id UUID PRIMARY KEY,
+    utilisateur_id UUID NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+    nom_exploitant VARCHAR(255) NOT NULL,
+    prenom_exploitant VARCHAR(255) NOT NULL,
+    adresse_exploitant VARCHAR(500) NOT NULL,
+    code_postal_exploitant VARCHAR(10) NOT NULL,
+    ville_exploitant VARCHAR(255) NOT NULL,
+    qualite VARCHAR(255) NOT NULL,
+    apports_numeraires DECIMAL(15,2),
+    apports_nature DECIMAL(15,2),
+    apports_industrie DECIMAL(15,2),
+    parts_detenues VARCHAR(255),
+    total_capital DECIMAL(15,2),
+    date_creation DATE NOT NULL,
+    date_modification DATE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
 );
 
 CREATE TABLE role (
@@ -304,3 +326,4 @@ CREATE TABLE IF NOT EXISTS compte_comptable (
     type VARCHAR(50) NOT NULL,
     description VARCHAR(255)
 );
+

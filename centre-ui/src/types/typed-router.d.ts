@@ -26,6 +26,7 @@ declare module 'vue-router/auto-routes' {
     '/about': RouteRecordInfo<'/about', '/about', Record<never, never>, Record<never, never>>,
     '/amortissements.[id]': RouteRecordInfo<'/amortissements.[id]', '/amortissements/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/bilan-simplifie': RouteRecordInfo<'/bilan-simplifie', '/bilan-simplifie', Record<never, never>, Record<never, never>>,
+    '/capital-identites': RouteRecordInfo<'/capital-identites', '/capital-identites', Record<never, never>, Record<never, never>>,
     '/charge-create': RouteRecordInfo<'/charge-create', '/charge-create', Record<never, never>, Record<never, never>>,
     '/comptabilite': RouteRecordInfo<'/comptabilite', '/comptabilite', Record<never, never>, Record<never, never>>,
     '/comptabilite-propriete.[id]': RouteRecordInfo<'/comptabilite-propriete.[id]', '/comptabilite-propriete/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
@@ -40,6 +41,7 @@ declare module 'vue-router/auto-routes' {
     '/home': RouteRecordInfo<'/home', '/home', Record<never, never>, Record<never, never>>,
     '/immobilisations': RouteRecordInfo<'/immobilisations', '/immobilisations', Record<never, never>, Record<never, never>>,
     '/immobilisations-create': RouteRecordInfo<'/immobilisations-create', '/immobilisations-create', Record<never, never>, Record<never, never>>,
+    '/liasse-fiscale': RouteRecordInfo<'/liasse-fiscale', '/liasse-fiscale', Record<never, never>, Record<never, never>>,
     '/locataire': RouteRecordInfo<'/locataire', '/locataire', Record<never, never>, Record<never, never>>,
     '/locataire-etape-1': RouteRecordInfo<'/locataire-etape-1', '/locataire-etape-1', Record<never, never>, Record<never, never>>,
     '/locataire-etape-2': RouteRecordInfo<'/locataire-etape-2', '/locataire-etape-2', Record<never, never>, Record<never, never>>,
@@ -106,7 +108,9 @@ declare module 'vue-router/auto-routes' {
     '/quittance-etape-4': RouteRecordInfo<'/quittance-etape-4', '/quittance-etape-4', Record<never, never>, Record<never, never>>,
     '/recette-create': RouteRecordInfo<'/recette-create', '/recette-create', Record<never, never>, Record<never, never>>,
     '/recette-edit.[id]': RouteRecordInfo<'/recette-edit.[id]', '/recette-edit/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    '/repartition-charges': RouteRecordInfo<'/repartition-charges', '/repartition-charges', Record<never, never>, Record<never, never>>,
     '/resultat-fiscal': RouteRecordInfo<'/resultat-fiscal', '/resultat-fiscal', Record<never, never>, Record<never, never>>,
+    '/suivi-immobilisations': RouteRecordInfo<'/suivi-immobilisations', '/suivi-immobilisations', Record<never, never>, Record<never, never>>,
     '/user-center': RouteRecordInfo<'/user-center', '/user-center', Record<never, never>, Record<never, never>>,
   }
 }

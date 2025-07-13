@@ -61,6 +61,9 @@ import com.formation.centre.model.CompteComptable;
 import com.formation.centre.repository.ProprieteRepository;
 import com.formation.centre.repository.CreditRepository;
 import com.formation.centre.service.UnifiedService;
+import com.formation.centre.dto.SuiviImmobilisationsDTO;
+import com.formation.centre.dto.CapitalIdentitesDTO;
+import com.formation.centre.dto.RepartitionChargesDTO;
 
 
 @RestController
@@ -957,4 +960,83 @@ public List<CompteComptable> getPlanComptable() {
     return unifiedService.getPlanComptable();
 }
 
+@GetMapping("/suivi-immobilisations")
+public ResponseEntity<SuiviImmobilisationsDTO> getSuiviImmobilisations(
+        @RequestParam("annee") int annee,
+        @RequestParam("utilisateurId") String utilisateurId) {
+    try {
+        SuiviImmobilisationsDTO suivi = unifiedService.calculerSuiviImmobilisations(annee, utilisateurId);
+        return ResponseEntity.ok(suivi);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+    // ===== ENDPOINTS POUR LE CAPITAL ET IDENTITÉS (2033-D) =====
+
+    @GetMapping("/capital-identites/{utilisateurId}")
+    public ResponseEntity<CapitalIdentitesDTO> getCapitalIdentites(@PathVariable String utilisateurId) {
+        try {
+            CapitalIdentitesDTO capitalIdentites = unifiedService.getCapitalIdentitesByUtilisateur(utilisateurId);
+            if (capitalIdentites == null) {
+                // Retourner un DTO vide au lieu de null
+                CapitalIdentitesDTO emptyDTO = new CapitalIdentitesDTO();
+                emptyDTO.setUtilisateurId(utilisateurId);
+                return ResponseEntity.ok(emptyDTO);
+            }
+            return ResponseEntity.ok(capitalIdentites);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/capital-identites")
+    public ResponseEntity<CapitalIdentitesDTO> createCapitalIdentites(@RequestBody CapitalIdentitesDTO dto) {
+        try {
+            CapitalIdentitesDTO saved = unifiedService.saveCapitalIdentites(dto);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/capital-identites")
+    public ResponseEntity<CapitalIdentitesDTO> updateCapitalIdentites(@RequestBody CapitalIdentitesDTO dto) {
+        try {
+            CapitalIdentitesDTO updated = unifiedService.saveCapitalIdentites(dto);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/capital-identites/{id}")
+    public ResponseEntity<Void> deleteCapitalIdentites(@PathVariable String id) {
+        try {
+            unifiedService.deleteCapitalIdentites(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // ===== ENDPOINTS POUR LA RÉPARTITION DES CHARGES (2033-E) =====
+
+    @GetMapping("/repartition-charges")
+    public ResponseEntity<RepartitionChargesDTO> getRepartitionCharges(
+            @RequestParam("annee") int annee,
+            @RequestParam("utilisateurId") String utilisateurId) {
+        try {
+            RepartitionChargesDTO repartition = unifiedService.calculerRepartitionCharges(annee, utilisateurId);
+            return ResponseEntity.ok(repartition);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 } 

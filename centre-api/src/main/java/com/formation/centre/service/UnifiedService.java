@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -89,6 +90,11 @@ import com.formation.centre.repository.CompteComptableRepository;
 import com.formation.centre.repository.LigneEcritureRepository;
 import com.formation.centre.model.LigneEcriture;
 import com.formation.centre.dto.LigneEcritureDTO;
+import com.formation.centre.dto.SuiviImmobilisationsDTO;
+import com.formation.centre.model.CapitalIdentites;
+import com.formation.centre.repository.CapitalIdentitesRepository;
+import com.formation.centre.dto.CapitalIdentitesDTO;
+import com.formation.centre.dto.RepartitionChargesDTO;
 
 @Service
 public class UnifiedService {
@@ -109,6 +115,7 @@ public class UnifiedService {
     @Autowired private EcheanceCreditRepository echeanceCreditRepository;
     @Autowired private CompteComptableRepository compteComptableRepository;
     @Autowired private LigneEcritureRepository ligneEcritureRepository;
+    @Autowired private CapitalIdentitesRepository capitalIdentitesRepository;
 
 
 
@@ -2427,6 +2434,265 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         );
     }
 
+    public SuiviImmobilisationsDTO calculerSuiviImmobilisations(int annee, String utilisateurId) {
+        UUID userUuid = UUID.fromString(utilisateurId);
+        
+        // Récupération des immobilisations de l'utilisateur
+        List<Immobilisation> immobilisations = immobilisationRepository.findByUtilisateurId(userUuid);
+        
+        List<SuiviImmobilisationsDTO.ImmobilisationDetailDTO> details = immobilisations.stream()
+            .map(immo -> {
+                // Récupération des amortissements pour cette immobilisation
+                List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(immo.getId());
+                
+                // Calcul du cumul des amortissements antérieurs (jusqu'à l'année précédente)
+                BigDecimal cumulAnterieurs = amortissements.stream()
+                    .filter(amort -> amort.getAnnee() < annee)
+                    .map(Amortissement::getMontantAmortissement)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                // Dotation de l'exercice en cours
+                BigDecimal dotationExercice = amortissements.stream()
+                    .filter(amort -> amort.getAnnee() == annee)
+                    .map(Amortissement::getMontantAmortissement)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                // Cumul après exercice
+                BigDecimal cumulCloture = cumulAnterieurs.add(dotationExercice);
+                
+                // Valeur nette comptable
+                BigDecimal vnc = immo.getMontant().subtract(cumulCloture);
+                
+                // Taux d'amortissement (linéaire)
+                BigDecimal taux = BigDecimal.valueOf(100.0 / immo.getDureeAmortissement());
+                
+                // Base amortissable (souvent égale au montant HT, sauf pour les terrains)
+                BigDecimal baseAmortissable = immo.getMontant();
+                if (immo.getValeurTerrain() != null && immo.getValeurTerrain().compareTo(BigDecimal.ZERO) > 0) {
+                    // Si il y a une valeur terrain, la base amortissable est le montant moins la valeur terrain
+                    baseAmortissable = immo.getMontant().subtract(immo.getValeurTerrain());
+                }
+                
+                return new SuiviImmobilisationsDTO.ImmobilisationDetailDTO(
+                    immo.getId().toString(),
+                    immo.getIntitule(),
+                    immo.getDateAcquisition(),
+                    immo.getMontant(),
+                    baseAmortissable,
+                    immo.getDureeAmortissement(),
+                    taux,
+                    cumulAnterieurs,
+                    dotationExercice,
+                    BigDecimal.ZERO, // Amortissement exceptionnel (rare en LMNP)
+                    cumulCloture,
+                    vnc,
+                    immo.getPropriete().getNom()
+                );
+            })
+            .collect(Collectors.toList());
+        
+        return new SuiviImmobilisationsDTO(details, annee);
+    }
+
+    // ===== SERVICES POUR LE CAPITAL ET IDENTITÉS (2033-D) =====
+
+    public CapitalIdentitesDTO getCapitalIdentitesByUtilisateur(String utilisateurId) {
+        UUID userUuid = UUID.fromString(utilisateurId);
+        Optional<CapitalIdentites> capitalIdentites = capitalIdentitesRepository.findFirstByUtilisateurId(userUuid);
+        return capitalIdentites.map(CapitalIdentites::toDTO).orElse(null);
+    }
+
+    public CapitalIdentitesDTO saveCapitalIdentites(CapitalIdentitesDTO dto) {
+        CapitalIdentites capitalIdentites;
+        boolean isNew = false;
+        
+        if (dto.getId() != null && !dto.getId().isEmpty()) {
+            // Mise à jour
+            capitalIdentites = capitalIdentitesRepository.findById(UUID.fromString(dto.getId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Capital et identités introuvables"));
+            capitalIdentites.setDateModification(LocalDate.now());
+        } else {
+            // Création
+            capitalIdentites = new CapitalIdentites();
+            capitalIdentites.setCreatedAt(LocalDateTime.now());
+            capitalIdentites.setDateCreation(LocalDate.now());
+            isNew = true;
+        }
+        
+        // Mise à jour des champs
+        capitalIdentites.setNomExploitant(dto.getNomExploitant());
+        capitalIdentites.setPrenomExploitant(dto.getPrenomExploitant());
+        capitalIdentites.setAdresseExploitant(dto.getAdresseExploitant());
+        capitalIdentites.setCodePostalExploitant(dto.getCodePostalExploitant());
+        capitalIdentites.setVilleExploitant(dto.getVilleExploitant());
+        capitalIdentites.setQualite(dto.getQualite());
+        capitalIdentites.setApportsNumeraires(dto.getApportsNumeraires());
+        capitalIdentites.setApportsNature(dto.getApportsNature());
+        capitalIdentites.setApportsIndustrie(dto.getApportsIndustrie());
+        capitalIdentites.setPartsDetenues(dto.getPartsDetenues());
+        capitalIdentites.setUtilisateur(utilisateurRepository.findById(UUID.fromString(dto.getUtilisateurId())).orElseThrow());
+        capitalIdentites.setUpdatedAt(LocalDateTime.now());
+        
+        // Calcul automatique du total
+        capitalIdentites.calculerTotalCapital();
+        
+        CapitalIdentites saved = capitalIdentitesRepository.save(capitalIdentites);
+        return CapitalIdentites.toDTO(saved);
+    }
+
+    @Transactional
+    public void deleteCapitalIdentites(String id) {
+        capitalIdentitesRepository.deleteById(UUID.fromString(id));
+    }
+
+    // ===== SERVICES POUR LA RÉPARTITION DES CHARGES (2033-E) =====
+
+    public RepartitionChargesDTO calculerRepartitionCharges(int annee, String utilisateurId) {
+        UUID userUuid = UUID.fromString(utilisateurId);
+        
+        // Récupération des écritures comptables de l'utilisateur pour l'année
+        List<EcritureComptable> ecritures = ecritureComptableRepository.findByUtilisateurIdAndAnnee(userUuid, annee);
+        
+        RepartitionChargesDTO repartition = new RepartitionChargesDTO(utilisateurId, annee);
+        List<RepartitionChargesDTO.ChargeDetailDTO> detailsAchats = new ArrayList<>();
+        List<RepartitionChargesDTO.ChargeDetailDTO> detailsChargesExternes = new ArrayList<>();
+        List<RepartitionChargesDTO.ChargeDetailDTO> detailsImpotsTaxes = new ArrayList<>();
+        List<RepartitionChargesDTO.ChargeDetailDTO> detailsChargesPersonnel = new ArrayList<>();
+        List<RepartitionChargesDTO.ChargeDetailDTO> detailsChargesSociales = new ArrayList<>();
+        List<RepartitionChargesDTO.ChargeDetailDTO> detailsAmortissements = new ArrayList<>();
+        List<RepartitionChargesDTO.ChargeDetailDTO> detailsAutresCharges = new ArrayList<>();
+        
+        BigDecimal totalAchats = BigDecimal.ZERO;
+        BigDecimal totalChargesExternes = BigDecimal.ZERO;
+        BigDecimal totalImpotsTaxes = BigDecimal.ZERO;
+        BigDecimal totalChargesPersonnel = BigDecimal.ZERO;
+        BigDecimal totalChargesSociales = BigDecimal.ZERO;
+        BigDecimal totalAmortissements = BigDecimal.ZERO;
+        BigDecimal totalAutresCharges = BigDecimal.ZERO;
+        
+        for (EcritureComptable ecriture : ecritures) {
+            List<LigneEcriture> lignes = ligneEcritureRepository.findByEcritureId(ecriture.getId());
+            
+            for (LigneEcriture ligne : lignes) {
+                if (ligne.getDebit().compareTo(BigDecimal.ZERO) > 0) { // Seulement les charges (débits)
+                    String compteNum = ligne.getCompteNum();
+                    BigDecimal montant = ligne.getDebit();
+                    
+                    switch (compteNum) {
+                        case "606000": // Achats non stockés de petits matériels
+                        case "606300": // Fournitures administratives
+                            totalAchats = totalAchats.add(montant);
+                            detailsAchats.add(new RepartitionChargesDTO.ChargeDetailDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                                compteNum
+                            ));
+                            break;
+                            
+                        case "615000": // Entretien et réparations
+                        case "616000": // Primes d'assurances
+                        case "618000": // Frais de gestion (honoraires, assistance...)
+                        case "622000": // Frais de gestion locative, conciergerie
+                        case "626000": // Frais postaux, téléphone
+                        case "623000": // Publicité / annonces
+                        case "623100": // Abonnement logiciel LMNP
+                        case "614000": // Charges de copropriété
+                            totalChargesExternes = totalChargesExternes.add(montant);
+                            detailsChargesExternes.add(new RepartitionChargesDTO.ChargeDetailDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                                compteNum
+                            ));
+                            break;
+                            
+                        case "635100": // Taxe foncière
+                        case "635800": // Cotisation CFE
+                        case "637000": // Cotisations CFE ou autres
+                            totalImpotsTaxes = totalImpotsTaxes.add(montant);
+                            detailsImpotsTaxes.add(new RepartitionChargesDTO.ChargeDetailDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                                compteNum
+                            ));
+                            break;
+                            
+                        case "641000": // Charges de personnel
+                            totalChargesPersonnel = totalChargesPersonnel.add(montant);
+                            detailsChargesPersonnel.add(new RepartitionChargesDTO.ChargeDetailDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                                compteNum
+                            ));
+                            break;
+                            
+                        case "646000": // Charges sociales de l'exploitant
+                            totalChargesSociales = totalChargesSociales.add(montant);
+                            detailsChargesSociales.add(new RepartitionChargesDTO.ChargeDetailDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                                compteNum
+                            ));
+                            break;
+                            
+                        case "681100": // Dotations aux amortissements
+                            totalAmortissements = totalAmortissements.add(montant);
+                            detailsAmortissements.add(new RepartitionChargesDTO.ChargeDetailDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                                compteNum
+                            ));
+                            break;
+                            
+                        case "627000": // Frais de dossier ou garantie
+                        case "616100": // Assurance emprunteur
+                        case "661100": // Intérêts des emprunts
+                            totalAutresCharges = totalAutresCharges.add(montant);
+                            detailsAutresCharges.add(new RepartitionChargesDTO.ChargeDetailDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                                compteNum
+                            ));
+                            break;
+                    }
+                }
+            }
+        }
+        
+        // Attribution des totaux et détails
+        repartition.setAchats(totalAchats);
+        repartition.setDetailsAchats(detailsAchats);
+        repartition.setAutresChargesExternes(totalChargesExternes);
+        repartition.setDetailsChargesExternes(detailsChargesExternes);
+        repartition.setImpotsTaxes(totalImpotsTaxes);
+        repartition.setDetailsImpotsTaxes(detailsImpotsTaxes);
+        repartition.setChargesPersonnel(totalChargesPersonnel);
+        repartition.setDetailsChargesPersonnel(detailsChargesPersonnel);
+        repartition.setChargesSociales(totalChargesSociales);
+        repartition.setDetailsChargesSociales(detailsChargesSociales);
+        repartition.setDotationsAmortissements(totalAmortissements);
+        repartition.setDetailsAmortissements(detailsAmortissements);
+        repartition.setAutresCharges(totalAutresCharges);
+        repartition.setDetailsAutresCharges(detailsAutresCharges);
+        
+        // Calcul du total
+        repartition.calculerTotal();
+        
+        return repartition;
+    }
 }
 
 

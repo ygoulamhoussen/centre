@@ -242,4 +242,23 @@ export async function deleteCreditById(id: string): Promise<void> {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.message || 'Erreur lors de la suppression du crédit');
   }
+}
+
+// API pour le suivi des immobilisations (formulaire 2033-C)
+export const suiviImmobilisationsApi = async (annee: number, utilisateurId: string) => {
+  const response = await fetch(
+    `${API_BASE_URL}/api/suivi-immobilisations?annee=${annee}&utilisateurId=${utilisateurId}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    },
+  )
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error.message || 'Erreur lors de la récupération du suivi des immobilisations')
+  }
+
+  return response.json()
 } 

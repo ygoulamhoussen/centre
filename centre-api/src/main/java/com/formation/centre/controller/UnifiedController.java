@@ -65,6 +65,7 @@ import com.formation.centre.dto.SuiviImmobilisationsDTO;
 import com.formation.centre.dto.CapitalIdentitesDTO;
 import com.formation.centre.dto.RepartitionChargesDTO;
 import com.formation.centre.dto.ProduitsChargesExceptionnelsDTO;
+import com.formation.centre.dto.SoldesIntermediairesGestionDTO;
 
 
 @RestController
@@ -1050,6 +1051,19 @@ public ResponseEntity<SuiviImmobilisationsDTO> getSuiviImmobilisations(
         try {
             ProduitsChargesExceptionnelsDTO exceptionnels = unifiedService.calculerProduitsChargesExceptionnels(annee, utilisateurId);
             return ResponseEntity.ok(exceptionnels);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/soldes-intermediaires-gestion")
+    public ResponseEntity<SoldesIntermediairesGestionDTO> getSoldesIntermediairesGestion(
+            @RequestParam("annee") int annee,
+            @RequestParam("utilisateurId") String utilisateurId) {
+        try {
+            SoldesIntermediairesGestionDTO soldes = unifiedService.calculerSoldesIntermediairesGestion(annee, utilisateurId);
+            return ResponseEntity.ok(soldes);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

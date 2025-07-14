@@ -96,6 +96,7 @@ import com.formation.centre.repository.CapitalIdentitesRepository;
 import com.formation.centre.dto.CapitalIdentitesDTO;
 import com.formation.centre.dto.RepartitionChargesDTO;
 import com.formation.centre.dto.ProduitsChargesExceptionnelsDTO;
+import com.formation.centre.dto.SoldesIntermediairesGestionDTO;
 
 @Service
 public class UnifiedService {
@@ -2715,6 +2716,225 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         repartition.calculerTotal();
         
         return repartition;
+    }
+
+    // ===== SERVICES POUR LES SOLDES INTERMÉDIAIRES DE GESTION (2033-G) =====
+
+    public SoldesIntermediairesGestionDTO calculerSoldesIntermediairesGestion(int annee, String utilisateurId) {
+        UUID userUuid = UUID.fromString(utilisateurId);
+        
+        // Récupération des écritures comptables de l'utilisateur pour l'année
+        List<EcritureComptable> ecritures = ecritureComptableRepository.findByUtilisateurIdAndAnnee(userUuid, annee);
+        
+        SoldesIntermediairesGestionDTO sig = new SoldesIntermediairesGestionDTO(utilisateurId, annee);
+        List<SoldesIntermediairesGestionDTO.DetailSoldeDTO> detailsProduction = new ArrayList<>();
+        List<SoldesIntermediairesGestionDTO.DetailSoldeDTO> detailsConsommation = new ArrayList<>();
+        List<SoldesIntermediairesGestionDTO.DetailSoldeDTO> detailsChargesPersonnel = new ArrayList<>();
+        List<SoldesIntermediairesGestionDTO.DetailSoldeDTO> detailsChargesFinancieres = new ArrayList<>();
+        List<SoldesIntermediairesGestionDTO.DetailSoldeDTO> detailsExceptionnel = new ArrayList<>();
+        
+        BigDecimal productionExercice = BigDecimal.ZERO;
+        BigDecimal consommationTiers = BigDecimal.ZERO;
+        BigDecimal chargesPersonnel = BigDecimal.ZERO;
+        BigDecimal dotationsAmortissements = BigDecimal.ZERO;
+        BigDecimal dotationsProvisions = BigDecimal.ZERO;
+        BigDecimal chargesFinancieres = BigDecimal.ZERO;
+        BigDecimal produitsFinanciers = BigDecimal.ZERO;
+        BigDecimal produitsExceptionnels = BigDecimal.ZERO;
+        BigDecimal chargesExceptionnelles = BigDecimal.ZERO;
+        BigDecimal impotsSurBenefices = BigDecimal.ZERO;
+        
+        for (EcritureComptable ecriture : ecritures) {
+            List<LigneEcriture> lignes = ligneEcritureRepository.findByEcritureId(ecriture.getId());
+            
+            for (LigneEcriture ligne : lignes) {
+                String compteNum = ligne.getCompteNum();
+                BigDecimal montant;
+                String commentaire = ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A";
+                
+                // PRODUCTION DE L'EXERCICE (crédits)
+                if (ligne.getCredit().compareTo(BigDecimal.ZERO) > 0) {
+                    montant = ligne.getCredit();
+                    
+                    switch (compteNum) {
+                        case "706000": // Loyers meublés
+                        case "708000": // Produits accessoires
+                        case "777000": // Subventions d'exploitation
+                            productionExercice = productionExercice.add(montant);
+                            detailsProduction.add(new SoldesIntermediairesGestionDTO.DetailSoldeDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                compteNum,
+                                commentaire
+                            ));
+                            break;
+                            
+                        case "761000": // Produits financiers
+                        case "762000": // Revenus des titres de participation
+                        case "763000": // Revenus des autres titres immobilisés
+                        case "764000": // Revenus des autres créances immobilisées
+                        case "765000": // Escomptes obtenus
+                        case "766000": // Gains de change
+                        case "767000": // Produits nets sur cessions de valeurs mobilières de placement
+                            produitsFinanciers = produitsFinanciers.add(montant);
+                            detailsChargesFinancieres.add(new SoldesIntermediairesGestionDTO.DetailSoldeDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                compteNum,
+                                commentaire
+                            ));
+                            break;
+                            
+                        case "775000": // Produits exceptionnels sur opérations de gestion
+                        case "776000": // Produits exceptionnels sur opérations en capital
+                        case "758000": // Produits exceptionnels divers
+                        case "758100": // Produits exceptionnels sur opérations de gestion
+                        case "758200": // Produits exceptionnels sur opérations en capital
+                        case "758300": // Produits exceptionnels sur cessions d'éléments d'actif
+                            produitsExceptionnels = produitsExceptionnels.add(montant);
+                            detailsExceptionnel.add(new SoldesIntermediairesGestionDTO.DetailSoldeDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                compteNum,
+                                commentaire
+                            ));
+                            break;
+                    }
+                }
+                
+                // CONSOMMATION ET CHARGES (débits)
+                if (ligne.getDebit().compareTo(BigDecimal.ZERO) > 0) {
+                    montant = ligne.getDebit();
+                    
+                    switch (compteNum) {
+                        // Consommation en provenance des tiers
+                        case "606000": // Achats non stockés de petits matériels
+                        case "606300": // Fournitures administratives
+                        case "606800": // Autres charges non classées
+                        case "606100": // Consommation électrique
+                        case "606200": // Consommation d'eau
+                        case "606400": // Consommation de chauffage
+                        case "615000": // Entretien et réparations
+                        case "616000": // Primes d'assurances
+                        case "616100": // Assurance emprunteur
+                        case "618000": // Frais de gestion (honoraires, assistance...)
+                        case "622000": // Frais de gestion locative, conciergerie
+                        case "622600": // Frais d'expert-comptable
+                        case "623000": // Publicité / annonces
+                        case "623100": // Abonnement logiciel LMNP
+                        case "625100": // Frais de déplacement
+                        case "626000": // Frais postaux, téléphone
+                        case "627000": // Frais de dossier ou garantie
+                        case "614000": // Charges de copropriété
+                        case "635100": // Taxe foncière
+                        case "635800": // Cotisation CFE
+                        case "637000": // Cotisations CFE ou autres
+                            consommationTiers = consommationTiers.add(montant);
+                            detailsConsommation.add(new SoldesIntermediairesGestionDTO.DetailSoldeDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                compteNum,
+                                commentaire
+                            ));
+                            break;
+                            
+                        // Charges de personnel
+                        case "641000": // Charges de personnel
+                        case "642000": // Rémunérations d'intermédiaires et honoraires
+                        case "643000": // Charges sociales
+                        case "644000": // Charges de sécurité sociale et de prévoyance
+                        case "645000": // Autres charges sociales
+                        case "646000": // Charges sociales de l'exploitant
+                            chargesPersonnel = chargesPersonnel.add(montant);
+                            detailsChargesPersonnel.add(new SoldesIntermediairesGestionDTO.DetailSoldeDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                compteNum,
+                                commentaire
+                            ));
+                            break;
+                            
+                        // Dotations
+                        case "681100": // Dotations aux amortissements
+                            dotationsAmortissements = dotationsAmortissements.add(montant);
+                            break;
+                            
+                        case "681200": // Dotations aux provisions
+                        case "681300": // Dotations exceptionnelles
+                            dotationsProvisions = dotationsProvisions.add(montant);
+                            break;
+                            
+                        // Charges financières
+                        case "661100": // Intérêts des emprunts
+                        case "662000": // Pertes sur créances irrécouvrables
+                        case "663000": // Pertes de change
+                        case "664000": // Pertes nettes sur cessions de valeurs mobilières de placement
+                        case "665000": // Charges nettes sur cessions de valeurs mobilières de placement
+                        case "666000": // Escomptes accordés
+                        case "667000": // Charges nettes sur cessions de valeurs mobilières de placement
+                            chargesFinancieres = chargesFinancieres.add(montant);
+                            detailsChargesFinancieres.add(new SoldesIntermediairesGestionDTO.DetailSoldeDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                compteNum,
+                                commentaire
+                            ));
+                            break;
+                            
+                        // Charges exceptionnelles
+                        case "671000": // Charges exceptionnelles sur opérations de gestion
+                        case "678000": // Charges exceptionnelles sur opérations en capital
+                        case "658000": // Charges exceptionnelles diverses
+                        case "675000": // Valeurs comptables des éléments d'actif cédés
+                        case "675100": // Moins-values de cession d'éléments d'actif
+                            chargesExceptionnelles = chargesExceptionnelles.add(montant);
+                            detailsExceptionnel.add(new SoldesIntermediairesGestionDTO.DetailSoldeDTO(
+                                ecriture.getLibelle(),
+                                ecriture.getDateEcriture().toString(),
+                                montant,
+                                compteNum,
+                                commentaire
+                            ));
+                            break;
+                            
+                        // Impôts sur bénéfices
+                        case "695000": // Impôts sur bénéfices
+                            impotsSurBenefices = impotsSurBenefices.add(montant);
+                            break;
+                    }
+                }
+            }
+        }
+        
+        // Attribution des valeurs
+        sig.setProductionExercice(productionExercice);
+        sig.setConsommationTiers(consommationTiers);
+        sig.setChargesPersonnel(chargesPersonnel);
+        sig.setDotationsAmortissements(dotationsAmortissements);
+        sig.setDotationsProvisions(dotationsProvisions);
+        sig.setChargesFinancieres(chargesFinancieres);
+        sig.setProduitsFinanciers(produitsFinanciers);
+        sig.setProduitsExceptionnels(produitsExceptionnels);
+        sig.setChargesExceptionnelles(chargesExceptionnelles);
+        sig.setImpotsSurBenefices(impotsSurBenefices);
+        
+        // Attribution des détails
+        sig.setDetailsProduction(detailsProduction);
+        sig.setDetailsConsommation(detailsConsommation);
+        sig.setDetailsChargesPersonnel(detailsChargesPersonnel);
+        sig.setDetailsChargesFinancieres(detailsChargesFinancieres);
+        sig.setDetailsExceptionnel(detailsExceptionnel);
+        
+        // Calcul automatique de tous les soldes
+        sig.calculerSoldes();
+        
+        return sig;
     }
 
     // ===== SERVICES POUR LES PRODUITS ET CHARGES EXCEPTIONNELS (2033-F) =====

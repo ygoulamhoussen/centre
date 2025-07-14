@@ -111,6 +111,7 @@ declare module 'vue-router/auto-routes' {
     '/recette-edit.[id]': RouteRecordInfo<'/recette-edit.[id]', '/recette-edit/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/repartition-charges': RouteRecordInfo<'/repartition-charges', '/repartition-charges', Record<never, never>, Record<never, never>>,
     '/resultat-fiscal': RouteRecordInfo<'/resultat-fiscal', '/resultat-fiscal', Record<never, never>, Record<never, never>>,
+    '/soldes-intermediaires-gestion': RouteRecordInfo<'/soldes-intermediaires-gestion', '/soldes-intermediaires-gestion', Record<never, never>, Record<never, never>>,
     '/suivi-immobilisations': RouteRecordInfo<'/suivi-immobilisations', '/suivi-immobilisations', Record<never, never>, Record<never, never>>,
     '/user-center': RouteRecordInfo<'/user-center', '/user-center', Record<never, never>, Record<never, never>>,
   }

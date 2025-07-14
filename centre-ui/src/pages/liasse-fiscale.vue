@@ -3,6 +3,15 @@ import { useRouter } from 'vue-router'
 import { CalculatorOutline, ScaleOutline, ConstructOutline, InformationCircleOutline, PersonOutline, PieChartOutline, WarningOutline } from '@vicons/ionicons5'
 
 const router = useRouter()
+
+definePage({
+  meta: {
+    title: 'Liasse Fiscale',
+    icon: 'material-symbols:account-balance-outline',
+    order: 19,
+  },
+})
+
 </script>
 
 <template>
@@ -12,7 +21,7 @@ const router = useRouter()
         <p>Accédez à tous les modules de la liasse fiscale LMNP :</p>
       </div>
 
-      <n-grid :cols="6" :x-gap="16" :y-gap="16">
+      <n-grid :cols="7" :x-gap="16" :y-gap="16">
         <!-- Résultat Fiscal -->
         <n-grid-item>
           <n-card 
@@ -158,6 +167,31 @@ const router = useRouter()
             </div>
           </n-card>
         </n-grid-item>
+
+        <!-- Soldes Intermédiaires de Gestion -->
+        <n-grid-item>
+          <n-card 
+            title="📄 Formulaire 2033-G" 
+            subtitle="Soldes intermédiaires de gestion"
+            class="module-card"
+            @click="router.push('/soldes-intermediaires-gestion')"
+          >
+            <template #header-extra>
+              <n-icon size="24" class="text-indigo-500">
+                <CalculatorOutline />
+              </n-icon>
+            </template>
+            <div class="space-y-2">
+              <p class="text-sm text-gray-600">Analyse de la rentabilité</p>
+              <ul class="text-xs text-gray-500 space-y-1">
+                <li>• Production et consommation</li>
+                <li>• Valeur ajoutée et EBE</li>
+                <li>• Résultats par étapes</li>
+                <li>• Calculs automatiques</li>
+              </ul>
+            </div>
+          </n-card>
+        </n-grid-item>
       </n-grid>
 
       <!-- Informations complémentaires -->
@@ -171,7 +205,7 @@ const router = useRouter()
             <ul class="list-disc list-inside space-y-1 text-sm">
               <li>Régime fiscal pour les propriétaires louant des biens meublés</li>
               <li>Obligation de tenir une comptabilité complète</li>
-              <li>Déclaration annuelle avec les formulaires 2033-A, 2033-B, 2033-C, 2033-D, 2033-E et 2033-F</li>
+              <li>Déclaration annuelle avec les formulaires 2033-A, 2033-B, 2033-C, 2033-D, 2033-E, 2033-F et 2033-G</li>
               <li>Amortissement des immobilisations sur leur durée d'usage</li>
             </ul>
           </div>

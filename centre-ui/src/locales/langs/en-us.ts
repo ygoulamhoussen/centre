@@ -141,6 +141,7 @@ const local: App.I18n.Schema = {
     '/credits':'Crédits',
     '/immobilisations': 'Immobilisation',
     '/fec': 'Journal',
+    '/liasse-fiscale': 'Liasse fiscale',
     '/comptabilite': 'Comptabilite',
     '/plan-comptable': 'Plan comptable',
     '/resultat-fiscal': 'Résultat fiscal',

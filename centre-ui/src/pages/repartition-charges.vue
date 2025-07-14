@@ -279,6 +279,15 @@ import { RefreshOutline, DocumentTextOutline } from '@vicons/ionicons5'
 import { repartitionChargesApi, type RepartitionChargesDTO } from '@/service/api/repartition-charges'
 import { useAuthStore } from '@/store/modules/auth'
 
+
+definePage({
+  meta: {
+    title: '2033-D - Répartition des charges',
+    hideInMenu: true,
+    activeMenu: '/liasse-fiscale',
+  },
+})
+
 const message = useMessage()
 const authStore = useAuthStore()
 

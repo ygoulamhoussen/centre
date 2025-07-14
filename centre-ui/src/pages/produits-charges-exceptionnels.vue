@@ -217,6 +217,14 @@ import { RefreshOutline, DocumentTextOutline, InformationCircleOutline } from '@
 import { produitsChargesExceptionnelsApi, type ProduitsChargesExceptionnelsDTO } from '@/service/api/produits-charges-exceptionnels'
 import { useAuthStore } from '@/store/modules/auth'
 
+definePage({
+  meta: {
+    title: '2033-F - Produits et charges exceptionnels',
+    hideInMenu: true,
+    activeMenu: '/liasse-fiscale',
+  },
+})
+
 const message = useMessage()
 const authStore = useAuthStore()
 

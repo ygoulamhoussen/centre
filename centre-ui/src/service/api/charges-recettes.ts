@@ -638,3 +638,20 @@ export async function getRecettesWithProprieteNom(utilisateurId: string): Promis
 
   return response.json()
 } 
+
+export async function getSoldesIntermediairesGestion(annee: number, utilisateurId: string) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/soldes-intermediaires-gestion?annee=${annee}&utilisateurId=${utilisateurId}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de la récupération des soldes intermédiaires de gestion')
+  }
+
+  return response.json()
+} 

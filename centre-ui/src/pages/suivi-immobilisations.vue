@@ -126,6 +126,14 @@ import { InformationCircleOutline } from '@vicons/ionicons5'
 import { suiviImmobilisationsApi } from '@/service/api/immobilisation'
 import { useAuthStore } from '@/store/modules/auth'
 
+definePage({
+  meta: {
+    title: '2033-C - Suivi des immobilisations et amortissements',
+    hideInMenu: true,
+    activeMenu: '/liasse-fiscale',
+  },
+})
+
 const message = useMessage()
 const authStore = useAuthStore()
 

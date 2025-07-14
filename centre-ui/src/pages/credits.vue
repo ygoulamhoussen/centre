@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, onMounted, ref } from 'vue'
+import { h, onMounted, ref, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import { NButton, NDataTable, NPopconfirm, NSpace, useMessage, NCard, NH1 } from 'naive-ui'
@@ -30,6 +30,10 @@ const authStore = useAuthStore()
 const credits = ref<Credit[]>([])
 const loading = ref(false)
 const isMobile = ref(false)
+
+function checkMobile() {
+  isMobile.value = window.innerWidth < 768
+}
 
 function navigateToCreate() {
   router.push('/credits-create')
@@ -78,13 +82,20 @@ async function loadCredits() {
   }
 }
 
-onMounted(async () => {
-  await loadCredits()
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+  loadCredits()
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
 <template>
   <div class="credits-page">
+    <!-- Indicateur temporaire pour debug -->
+    <div style="font-size:12px;color:#888;margin-bottom:4px;">isMobile: {{ isMobile }}</div>
     <div v-if="!isMobile" class="flex items-center justify-between">
       <NH1 class="titre-principal">Gestion des Crédits</NH1>
       <NButton type="primary" @click="navigateToCreate">
@@ -96,7 +107,7 @@ onMounted(async () => {
     </div>
     <div v-else class="mobile-header">
       <NH1 class="titre-principal mobile-title">Crédits</NH1>
-      <NButton block size="small" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
+      <NButton block size="large" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
         <template #icon>
           <Icon icon="material-symbols:add" />
         </template>
@@ -148,34 +159,26 @@ onMounted(async () => {
         class="mobile-card clickable-card" 
         @click="viewEcheancier(credit)"
       >
-        <div class="card-header">
-          <div class="credit-info">
-            <div class="credit-title">{{ credit.intitule }}</div>
-            <div class="credit-amount">{{ credit.montant.toLocaleString('fr-FR') }} €</div>
-            <div class="credit-details">
-              <span class="detail-item">{{ credit.duree }} mois</span>
-              <span class="detail-item">{{ credit.taux }}%</span>
-            </div>
-            <div class="credit-property">{{ credit.proprieteNom }}</div>
-          </div>
+        <div class="mobile-card-header">
+          <div class="credit-title">{{ credit.intitule }}</div>
           <NPopconfirm @positive-click="deleteCredit(credit)">
             <template #trigger>
-              <NButton 
-                size="small" 
-                quaternary 
-                type="error" 
-                class="delete-btn"
-                @click.stop
-              >
+              <NButton quaternary size="small" class="delete-icon-btn" type="error" @click.stop>
                 <Icon icon="material-symbols:delete-outline" />
               </NButton>
             </template>
-            Êtes-vous sûr de vouloir supprimer ce crédit et toutes ses échéances ?
+            Supprimer ce crédit et ses échéances ?
           </NPopconfirm>
         </div>
-        <div class="edit-hint">
-          <Icon icon="material-symbols:schedule" />
-          <span>Cliquez pour voir l'échéancier</span>
+        <div class="credit-amount">{{ credit.montant.toLocaleString('fr-FR') }} €</div>
+        <div class="credit-details">
+          <span class="detail-item">{{ credit.duree }} mois</span>
+          <span class="detail-item">{{ credit.taux }}%</span>
+        </div>
+        <div class="credit-property">{{ credit.proprieteNom }}</div>
+        <div class="edit-hint-mobile">
+          <Icon icon="material-symbols:edit-outline" />
+          <span>Modifier</span>
         </div>
       </NCard>
     </div>
@@ -214,18 +217,50 @@ onMounted(async () => {
   max-width: 320px;
   width: 100%;
   align-self: center;
+  display: block;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
 }
 .mobile-card {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 14px 14px 10px 14px;
   background: #fff;
+  position: relative;
+  box-shadow: 0 2px 8px #0001;
+  transition: box-shadow 0.18s, border-color 0.18s, transform 0.18s;
 }
-.mobile-card .actions {
-  margin-top: 8px;
+.mobile-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px #0002;
+}
+.mobile-card-header {
   display: flex;
-  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.delete-icon-btn {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  padding: 2px;
+  border-radius: 50%;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+}
+.delete-icon-btn:hover {
+  background: #ffeaea;
+  color: #b71c1c;
 }
 .actions {
   display: flex;
@@ -338,6 +373,16 @@ onMounted(async () => {
   font-size: 0.8rem;
   color: #888;
 }
+.edit-hint-mobile {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #2563eb;
+  opacity: 0.85;
+  justify-content: flex-end;
+}
 @media (max-width: 768px) {
   .titre-principal, h1, h2, h3 {
     font-size: 1.25rem !important;
@@ -346,6 +391,17 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+  }
+  .mobile-journal-btn {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    margin-bottom: 10px;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
   }
 }
 </style> 

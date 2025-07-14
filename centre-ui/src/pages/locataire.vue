@@ -15,7 +15,7 @@ import {
   NText,
   useMessage,
 } from 'naive-ui'
-import { h, onMounted, ref } from 'vue'
+import { h, onMounted, ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/modules/auth'
 
@@ -33,6 +33,15 @@ const locataires = ref<any[]>([])
 const loading = ref(true)
 const authStore = useAuthStore()
 const utilisateurId = authStore.userInfo.userId
+const gridCols = ref(4)
+function updateGridCols() {
+  const w = window.innerWidth
+  if (w < 600) gridCols.value = 1
+  else if (w < 900) gridCols.value = 2
+  else if (w < 1200) gridCols.value = 3
+  else if (w < 1600) gridCols.value = 4
+  else gridCols.value = 5
+}
 
 // Charger les locataires
 async function fetchLocataires() {
@@ -92,7 +101,12 @@ function stringToColor(str: string) {
 
 // Charger les données au montage
 onMounted(() => {
+  updateGridCols()
+  window.addEventListener('resize', updateGridCols)
   fetchLocataires()
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', updateGridCols)
 })
 </script>
 
@@ -122,7 +136,7 @@ onMounted(() => {
         </NEmpty>
       </div>
 
-      <NGrid v-else :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4" class="locataires-grid">
+      <NGrid v-else :x-gap="24" :y-gap="32" :cols="gridCols" class="locataires-grid">
         <NGi v-for="locataire in locataires" :key="locataire.id">
           <NCard
             hoverable
@@ -142,7 +156,6 @@ onMounted(() => {
                   <div v-if="locataire.telephone" class="flex items-center gap-2">
                     <span class="i-carbon-phone" />
                     <NText depth="3">{{ locataire.telephone }}</NText>
-                    <NTag type="success" size="small" v-if="locataire.telephone">Vérifié</NTag>
                   </div>
                   <div v-if="locataire.email" class="flex items-center gap-2">
                     <span class="i-carbon-email" />
@@ -152,14 +165,6 @@ onMounted(() => {
                     <span class="i-carbon-calendar" />
                     <NText depth="3">{{ formatDate(locataire.dateNaissance) }}</NText>
                   </div>
-                </div>
-                <div class="actions-rapides mt-2">
-                  <NButton v-if="locataire.telephone" size="tiny" tertiary tag="a" :href="'tel:' + locataire.telephone" @click.stop>
-                    <span class="i-carbon-phone" /> Appeler
-                  </NButton>
-                  <NButton v-if="locataire.email" size="tiny" tertiary tag="a" :href="'mailto:' + locataire.email" @click.stop>
-                    <span class="i-carbon-email" /> Email
-                  </NButton>
                 </div>
               </div>
             </div>
@@ -172,8 +177,10 @@ onMounted(() => {
 
 <style scoped>
 .locataire-page {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 .header-locataire {
   display: flex;
@@ -195,12 +202,13 @@ onMounted(() => {
 .titre-principal {
   color: var(--n-text-color) !important;
   font-weight: bold;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
 }
 .locataire-nom {
   color: var(--n-text-color) !important;
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
 }
 .locataire-card {
   cursor: pointer;
@@ -210,24 +218,28 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1rem 0.5rem;
+  padding: 2rem 1.2rem;
   outline: none;
+  min-height: 180px;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #0001;
+  background: #fff;
 }
 .locataire-card:hover, .locataire-card:focus {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.13);
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 10px 32px rgba(37,99,235,0.10);
   border-color: #2563eb;
 }
 .locataire-avatar {
   background-color: #f0f4ff;
   color: #3b82f6;
   border-radius: 50%;
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: bold;
   box-shadow: 0 2px 8px #0001;
 }
@@ -238,6 +250,7 @@ onMounted(() => {
 }
 .locataires-grid {
   margin: 0 -8px;
+  row-gap: 32px;
 }
 .actions-rapides {
   display: flex;
@@ -251,6 +264,13 @@ onMounted(() => {
   padding-top: 12px;
   border-top: 1px solid #f0f0f0;
   margin-top: 12px;
+}
+@media (max-width: 1200px) {
+  .locataire-page {
+    max-width: 100vw;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
 }
 @media (max-width: 900px) {
   .locataire-page {
@@ -270,6 +290,10 @@ onMounted(() => {
   .titre-principal {
     font-size: 1.2rem;
     text-align: center;
+  }
+  .locataire-card {
+    padding: 1rem 0.5rem;
+    min-height: 120px;
   }
 }
 @media (max-width: 600px) {

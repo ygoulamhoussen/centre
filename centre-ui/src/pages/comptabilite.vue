@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { useAuthStore } from '@/store/modules/auth'
-import { useAppStore } from '@/store/modules/app'
+import { computed, onMounted, ref, watch, reactive } from 'vue'
 import {
   NAlert,
   NButton,
@@ -22,45 +21,50 @@ import {
   NTabs,
   NTag,
   NText,
-  useMessage,
   NDatePicker,
   NH1,
   NTooltip,
+  useMessage,
+  NPopconfirm,
 } from 'naive-ui'
-import { storeToRefs } from 'pinia'
 import {
-  Add24Filled,
-  Calculator24Filled,
-  Delete24Filled,
-  Edit24Filled,
-  ArrowDownload24Filled,
-  Money24Filled,
-} from '@vicons/fluent'
-import { computed, onMounted, ref, watch } from 'vue'
-import type { ChargeDTO, EcritureComptableDTO, RecetteDTO } from '@/types/dto'
+  getChargeByValue,
+  naturesCharges,
+  typesRecettes,
+} from '@/constants/compta'
 import {
   createCharge,
   createRecette,
+  deleteAmortissement,
   deleteCharge,
+  deleteEcritureComptable,
   deleteRecette,
+  downloadDocument,
   fetchCharges,
   fetchDocuments,
   fetchEcrituresComptables,
   fetchEcrituresComptablesByUtilisateurAndAnnee,
   fetchRecettes,
-  uploadDocument,
-  updateCharge,
-  updateRecette,
   getChargesWithProprieteNom,
   getEcrituresComptablesWithProprieteNom,
   getRecettesWithProprieteNom,
-  downloadDocument,
+  updateCharge,
   updateEcritureComptable,
-  deleteEcritureComptable,
-  deleteAmortissement,
+  updateRecette,
+  uploadDocument,
 } from '@/service/api/charges-recettes'
-import { useRouter } from 'vue-router'
-import { naturesCharges, typesRecettes, getChargeByValue } from '@/constants/compta'
+import {
+  Add24Filled,
+  ArrowDownload24Filled,
+  Calculator24Filled,
+  Delete24Filled,
+  Edit24Filled,
+  Money24Filled,
+} from '@vicons/fluent'
+import type { ChargeDTO, EcritureComptableDTO, RecetteDTO } from '@/types/dto'
+import { storeToRefs } from 'pinia'
+import { useAppStore } from '@/store/modules/app'
+import { useAuthStore } from '@/store/modules/auth'
 
 definePage({
   meta: {
@@ -72,7 +76,6 @@ definePage({
 
 const authStore = useAuthStore()
 const message = useMessage()
-const router = useRouter()
 const appStore = useAppStore()
 const isMobile = appStore.isMobile
 
@@ -82,7 +85,6 @@ const recettes = ref<RecetteDTO[]>([])
 const ecrituresComptables = ref<EcritureComptableDTO[]>([])
 const documents = ref<Array<{ label: string; value: string }>>([])
 const proprietes = ref<Array<{ label: string; value: string }>>([])
-const anneeFiscale = ref(new Date().getFullYear())
 const proprieteSelectionnee = ref<string>('')
 const chargement = ref(false)
 
@@ -295,21 +297,21 @@ const colonnesAmortissements = [
 
 // Calculs
 const totalCharges = computed(() => {
-  return charges.value.reduce((sum, charge) => sum + Number.parseFloat(charge.montant), 0)
+  return charges.value.reduce((sum: number, charge: ChargeDTO) => sum + Number.parseFloat(charge.montant), 0)
 })
 
 const totalRecettes = computed(() => {
-  return recettes.value.reduce((sum, recette) => sum + Number.parseFloat(recette.montant), 0)
+  return recettes.value.reduce((sum: number, recette: RecetteDTO) => sum + Number.parseFloat(recette.montant), 0)
 })
 
 const solde = computed(() => totalRecettes.value - totalCharges.value)
 
 // Calculs groupés par année
 const anneesDisponibles = computed(() => {
-  const anneesCharges = charges.value.map(c => c.dateCharge ? new Date(c.dateCharge).getFullYear() : null)
-  const anneesAmortissements = amortissements.value.map(a => a.annee)
-  const anneesRecettes = recettes.value.map(r => r.dateRecette ? new Date(r.dateRecette).getFullYear() : null)
-  return Array.from(new Set([...anneesCharges, ...anneesAmortissements, ...anneesRecettes].filter(a => !!a))).sort((a, b) => (b || 0) - (a || 0))
+  const anneesCharges = charges.value.map((c: ChargeDTO) => c.dateCharge ? new Date(c.dateCharge).getFullYear() : null)
+  const anneesAmortissements = amortissements.value.map((a: AmortissementDTO) => a.annee)
+  const anneesRecettes = recettes.value.map((r: RecetteDTO) => r.dateRecette ? new Date(r.dateRecette).getFullYear() : null)
+  return Array.from(new Set([...anneesCharges, ...anneesAmortissements, ...anneesRecettes].filter((a: number | null) => !!a))).sort((a, b) => (b || 0) - (a || 0))
 })
 
 const anneeSelectionnee = ref<number | null>(null)
@@ -319,11 +321,11 @@ const anneesEcrituresDisponibles = computed(() => anneesDisponibles.value.filter
 
 // Fonction pour compter les charges exceptionnelles
 const chargesExceptionnelles = computed(() => {
-  return chargesFiltrees.value.filter(c => getChargeByValue(c.nature)?.categorie === 'EXCEPTIONNELLES')
+  return chargesFiltrees.value.filter((c: ChargeDTO) => getChargeByValue(c.nature)?.categorie === 'EXCEPTIONNELLES')
 })
 
 const totalChargesExceptionnelles = computed(() => {
-  return chargesExceptionnelles.value.reduce((sum, charge) => sum + Number.parseFloat(charge.montant), 0)
+  return chargesExceptionnelles.value.reduce((sum: number, charge: ChargeDTO) => sum + Number.parseFloat(charge.montant), 0)
 })
 
 onMounted(() => {
@@ -340,15 +342,15 @@ onMounted(() => {
 function totalParAnnee(type: 'charges' | 'amortissements' | 'recettes', annee: number) {
   if (type === 'charges') {
     return charges.value.filter(c => c.dateCharge && new Date(c.dateCharge).getFullYear() === annee)
-      .reduce((sum, c) => sum + Number.parseFloat(c.montant), 0)
+      .reduce((sum: number, c: ChargeDTO) => sum + Number.parseFloat(c.montant), 0)
   }
   if (type === 'amortissements') {
     return amortissements.value.filter(a => a.annee === annee)
-      .reduce((sum, a) => sum + Number.parseFloat(a.montantAmortissement), 0)
+      .reduce((sum: number, a: AmortissementDTO) => sum + Number.parseFloat(a.montantAmortissement), 0)
   }
   if (type === 'recettes') {
     return recettes.value.filter(r => r.dateRecette && new Date(r.dateRecette).getFullYear() === annee)
-      .reduce((sum, r) => sum + Number.parseFloat(r.montant), 0)
+      .reduce((sum: number, r: RecetteDTO) => sum + Number.parseFloat(r.montant), 0)
   }
   return 0
 }
@@ -571,6 +573,7 @@ async function sauvegarderCharge() {
 }
 
 function supprimerCharge(id: string) {
+  // TODO: Remplacer confirm par une modale Naive UI
   if (confirm('Êtes-vous sûr de vouloir supprimer cette charge ?')) {
     deleteCharge(id)
       .then(() => {
@@ -689,25 +692,6 @@ async function sauvegarderEcriture() {
     await chargerDonnees()
   } catch (error: any) {
     message.error(error.message || 'Erreur lors de la sauvegarde')
-  }
-}
-
-const loadEcrituresComptables = async () => {
-  try {
-    chargement.value = true
-    if (proprieteSelectionnee.value && proprieteSelectionnee.value !== 'all') {
-      // Charger les écritures pour une propriété spécifique
-      const anneeCourante = new Date().getFullYear()
-      ecrituresComptables.value = await getEcrituresComptablesWithProprieteNom(authStore.userInfo.userId)
-    } else {
-      // Charger toutes les écritures avec les noms de propriétés
-      ecrituresComptables.value = await getEcrituresComptablesWithProprieteNom(authStore.userInfo.userId)
-    }
-  } catch (error) {
-    console.error('Erreur lors du chargement des écritures comptables:', error)
-    message.error('Erreur lors du chargement des écritures comptables')
-  } finally {
-    chargement.value = false
   }
 }
 
@@ -934,15 +918,15 @@ async function editerJournalComptable() {
 // Ajout des computed pour filtrer selon l'année sélectionnée
 const chargesFiltrees = computed(() => {
   if (!anneeSelectionnee.value) return []
-  return charges.value.filter(c => c.dateCharge && new Date(c.dateCharge).getFullYear() === anneeSelectionnee.value)
+  return charges.value.filter((c: ChargeDTO) => c.dateCharge && new Date(c.dateCharge).getFullYear() === anneeSelectionnee.value)
 })
 const recettesFiltrees = computed(() => {
   if (!anneeSelectionnee.value) return []
-  return recettes.value.filter(r => r.dateRecette && new Date(r.dateRecette).getFullYear() === anneeSelectionnee.value)
+  return recettes.value.filter((r: RecetteDTO) => r.dateRecette && new Date(r.dateRecette).getFullYear() === anneeSelectionnee.value)
 })
 const amortissementsFiltres = computed(() => {
   if (!anneeSelectionnee.value) return []
-  return amortissements.value.filter(a => a.annee === anneeSelectionnee.value)
+  return amortissements.value.filter((a: AmortissementDTO) => a.annee === anneeSelectionnee.value)
 })
 
 // Fonction utilitaire pour obtenir le nom de la propriété
@@ -977,6 +961,7 @@ function editerAmortissement(amortissement: AmortissementDTO) {
 }
 
 function supprimerAmortissement(id: string) {
+  // TODO: Remplacer confirm par une modale Naive UI
   if (confirm('Êtes-vous sûr de vouloir supprimer cette dotation aux amortissements ?')) {
     deleteCharge(id) // Utilise l'API des charges car les amortissements sont des charges de nature AMORTISSEMENT
       .then(() => {
@@ -988,6 +973,67 @@ function supprimerAmortissement(id: string) {
       })
   }
 }
+
+// --- Variables réactives pour la confirmation par carte ---
+const chargeASupprimer = ref<string | null>(null)
+const amortissementASupprimer = ref<string | null>(null)
+const recetteASupprimer = ref<string | null>(null)
+// --- 1. Suppression : remplacer confirm natif par NPopconfirm ---
+// Méthode suppression charge
+function demanderSuppressionCharge(id: string) {
+  chargeASupprimer.value = id
+}
+async function supprimerChargeConfirme() {
+  if (!chargeASupprimer.value) return
+  try {
+    await deleteCharge(chargeASupprimer.value)
+    message.success('Charge supprimée avec succès')
+    await chargerDonnees()
+  } catch (error: any) {
+    message.error(error.message || 'Erreur lors de la suppression')
+  } finally {
+    chargeASupprimer.value = null
+  }
+}
+// Méthode suppression amortissement
+function demanderSuppressionAmortissement(id: string) {
+  amortissementASupprimer.value = id
+}
+async function supprimerAmortissementConfirme() {
+  if (!amortissementASupprimer.value) return
+  try {
+    await deleteCharge(amortissementASupprimer.value)
+    message.success('Dotation aux amortissements supprimée avec succès')
+    await chargerDonnees()
+  } catch (error: any) {
+    message.error(error.message || 'Erreur lors de la suppression')
+  } finally {
+    amortissementASupprimer.value = null
+  }
+}
+function demanderSuppressionRecette(id: string) {
+  recetteASupprimer.value = id
+}
+async function supprimerRecetteConfirme() {
+  if (!recetteASupprimer.value) return
+  try {
+    await deleteRecette(recetteASupprimer.value)
+    message.success('Recette supprimée')
+    await chargerDonnees()
+  } catch (error: any) {
+    message.error(error.message || 'Erreur lors de la suppression')
+  } finally {
+    recetteASupprimer.value = null
+  }
+}
+// --- 2. Template mobile : NPopconfirm par carte ---
+// Pour chaque carte charge :
+// <NPopconfirm v-if="chargeASupprimer === charge.id" :show="true" ... >
+// Pour chaque carte amortissement :
+// <NPopconfirm v-if="amortissementASupprimer === amort.id" :show="true" ... >
+// Pour chaque carte recette :
+// <NPopconfirm v-if="recetteASupprimer === recette.id" :show="true" ... >
+// ... existing code ...
 </script>
 
 <template>
@@ -1133,7 +1179,27 @@ function supprimerAmortissement(id: string) {
             striped
           />
           <div v-else>
-            <NCard v-for="charge in chargesFiltrees" :key="charge.id" class="mobile-card" :class="{ 'exceptionnelle': getChargeByValue(charge.nature)?.categorie === 'EXCEPTIONNELLES' }">
+            <NCard v-for="charge in chargesFiltrees" :key="charge.id" class="mobile-card clickable-card" :class="{ 'exceptionnelle': getChargeByValue(charge.nature)?.categorie === 'EXCEPTIONNELLES' }" @click="editerCharge(charge)">
+              <template #header>
+                <div class="delete-float-btn">
+                  <NPopconfirm
+                    v-if="chargeASupprimer === charge.id"
+                    :show="true"
+                    @positive-click="supprimerChargeConfirme"
+                    @negative-click="chargeASupprimer = null"
+                  >
+                    <template #trigger>
+                      <NButton size="small" quaternary type="error" @click.stop="demanderSuppressionCharge(charge.id)">
+                        <NIcon :component="Delete24Filled" />
+                      </NButton>
+                    </template>
+                    Supprimer cette charge ?
+                  </NPopconfirm>
+                  <NButton v-else size="small" quaternary type="error" @click.stop="demanderSuppressionCharge(charge.id)">
+                    <NIcon :component="Delete24Filled" />
+                  </NButton>
+                </div>
+              </template>
               <div><b>Date :</b> {{ charge.dateCharge }}</div>
               <div><b>Propriété :</b> {{ getProprieteNom(charge) }}</div>
               <div><b>Intitulé :</b> {{ charge.intitule }}</div>
@@ -1145,10 +1211,6 @@ function supprimerAmortissement(id: string) {
               </div>
               <div><b>Montant :</b> {{ charge.montant }} €</div>
               <div v-if="charge.documentNom"><b>Document :</b> {{ charge.documentNom }}</div>
-              <div class="actions">
-                <NButton size="small" type="primary" @click="editerCharge(charge)">Éditer</NButton>
-                <NButton size="small" type="error" @click="supprimerCharge(charge.id || '')">Supprimer</NButton>
-              </div>
             </NCard>
           </div>
         </NTabPane>
@@ -1163,17 +1225,33 @@ function supprimerAmortissement(id: string) {
             striped
           />
           <div v-else>
-            <NCard v-for="recette in recettesFiltrees" :key="recette.id" class="mobile-card">
+            <NCard v-for="recette in recettesFiltrees" :key="recette.id" class="mobile-card clickable-card" @click="editerRecette(recette)">
+              <template #header>
+                <div class="delete-float-btn">
+                  <NPopconfirm
+                    v-if="recetteASupprimer === recette.id"
+                    :show="true"
+                    @positive-click="supprimerRecetteConfirme"
+                    @negative-click="recetteASupprimer = null"
+                  >
+                    <template #trigger>
+                      <NButton size="small" quaternary type="error" @click.stop="demanderSuppressionRecette(recette.id)">
+                        <NIcon :component="Delete24Filled" />
+                      </NButton>
+                    </template>
+                    Supprimer cette recette ?
+                  </NPopconfirm>
+                  <NButton v-else size="small" quaternary type="error" @click.stop="demanderSuppressionRecette(recette.id)">
+                    <NIcon :component="Delete24Filled" />
+                  </NButton>
+                </div>
+              </template>
               <div><b>Date :</b> {{ recette.dateRecette }}</div>
               <div><b>Propriété :</b> {{ getProprieteNom(recette) }}</div>
               <div><b>Intitulé :</b> {{ recette.intitule }}</div>
               <div><b>Type :</b> {{ recette.type }}</div>
               <div><b>Montant :</b> {{ recette.montant }} €</div>
               <div v-if="recette.documentNom"><b>Document :</b> {{ recette.documentNom }}</div>
-              <div class="actions">
-                <NButton size="small" type="primary" @click="editerRecette(recette)">Éditer</NButton>
-                <NButton size="small" type="error" @click="supprimerRecette(recette.id || '')">Supprimer</NButton>
-              </div>
             </NCard>
           </div>
         </NTabPane>
@@ -1188,17 +1266,33 @@ function supprimerAmortissement(id: string) {
             striped
           />
           <div v-else>
-            <NCard v-for="amort in amortissementsFiltres" :key="amort.id" class="mobile-card">
+            <NCard v-for="amort in amortissementsFiltres" :key="amort.id" class="mobile-card clickable-card" @click="editerAmortissement(amort)">
+              <template #header>
+                <div class="delete-float-btn">
+                  <NPopconfirm
+                    v-if="amortissementASupprimer === amort.id"
+                    :show="true"
+                    @positive-click="supprimerAmortissementConfirme"
+                    @negative-click="amortissementASupprimer = null"
+                  >
+                    <template #trigger>
+                      <NButton size="small" quaternary type="error" @click.stop="demanderSuppressionAmortissement(amort.id)">
+                        <NIcon :component="Delete24Filled" />
+                      </NButton>
+                    </template>
+                    Supprimer cette dotation aux amortissements ?
+                  </NPopconfirm>
+                  <NButton v-else size="small" quaternary type="error" @click.stop="demanderSuppressionAmortissement(amort.id)">
+                    <NIcon :component="Delete24Filled" />
+                  </NButton>
+                </div>
+              </template>
               <div><b>Date :</b> {{ amort.dateCharge }}</div>
               <div><b>Propriété :</b> {{ amort.proprieteNom }}</div>
               <div><b>Immobilisation :</b> {{ amort.immobilisationIntitule }}</div>
               <div><b>Année :</b> {{ amort.annee }}</div>
               <div><b>Montant :</b> {{ amort.montantAmortissement }} €</div>
               <div v-if="amort.documentNom"><b>Document :</b> {{ amort.documentNom }}</div>
-              <div class="actions">
-                <NButton size="small" type="primary" @click="editerAmortissement(amort)">Éditer</NButton>
-                <NButton size="small" type="error" @click="supprimerAmortissement(amort.id || '')">Supprimer</NButton>
-              </div>
             </NCard>
           </div>
         </NTabPane>
@@ -1635,6 +1729,8 @@ function supprimerAmortissement(id: string) {
   width: 100%;
   align-self: center;
 }
+.delete-float-btn { position: absolute; top: 8px; right: 8px; z-index: 2; }
+.mobile-card.clickable-card { position: relative; cursor: pointer; }
 @media (max-width: 768px) {
   .titre-principal, h1, h2, h3 {
     font-size: 1.25rem !important;

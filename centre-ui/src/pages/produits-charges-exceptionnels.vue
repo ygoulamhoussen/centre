@@ -1,24 +1,26 @@
 <template>
   <div class="produits-charges-exceptionnels-container">
-    <n-card title="📄 Formulaire 2033-F — Produits et charges exceptionnels" class="main-card">
-      <template #header-extra>
-        <n-space>
-          <n-select
-            v-model:value="selectedYear"
-            :options="yearOptions"
-            placeholder="Sélectionner l'année"
-            style="width: 120px"
-            @update:value="loadProduitsChargesExceptionnels"
-          />
-          <n-button type="primary" @click="loadProduitsChargesExceptionnels" :loading="loading">
-            <template #icon>
-              <RefreshOutline />
-            </template>
-            Actualiser
-          </n-button>
-        </n-space>
+    <n-card class="main-card">
+      <template #header>
+        <div :class="['main-header', isMobile ? 'main-header-mobile' : 'main-header-desktop']">
+          <span class="main-title">📄 Formulaire 2033-F — Produits et charges exceptionnels</span>
+          <n-space>
+            <n-select
+              v-model:value="selectedYear"
+              :options="yearOptions"
+              placeholder="Sélectionner l'année"
+              style="width: 120px"
+              @update:value="loadProduitsChargesExceptionnels"
+            />
+            <n-button type="primary" @click="loadProduitsChargesExceptionnels" :loading="loading">
+              <template #icon>
+                <RefreshOutline />
+              </template>
+              Actualiser
+            </n-button>
+          </n-space>
+        </div>
       </template>
-
       <div v-if="loading" class="loading-container">
         <n-spin size="large">
           <template #description>
@@ -26,30 +28,37 @@
           </template>
         </n-spin>
       </div>
-
       <div v-else-if="produitsChargesExceptionnels" class="exceptionnels-content">
         <!-- Résumé des totaux -->
-        <n-card title="📈 Résumé des opérations exceptionnelles" class="summary-card">
-          <n-grid :cols="4" :x-gap="16" :y-gap="16">
-            <n-grid-item>
-              <n-statistic label="Produits exceptionnels" :value="formatCurrency(produitsChargesExceptionnels.produitsExceptionnels)" />
-            </n-grid-item>
-            <n-grid-item>
-              <n-statistic label="Charges exceptionnelles" :value="formatCurrency(produitsChargesExceptionnels.chargesExceptionnelles)" />
-            </n-grid-item>
-            <n-grid-item>
-              <n-statistic label="Plus-values à long terme" :value="formatCurrency(produitsChargesExceptionnels.plusValuesLongTerme)" />
-            </n-grid-item>
-            <n-grid-item>
-              <n-statistic label="Moins-values à long terme" :value="formatCurrency(produitsChargesExceptionnels.moinsValuesLongTerme)" />
-            </n-grid-item>
-            <n-grid-item :span="4">
-              <n-divider />
-              <n-statistic label="Total des opérations exceptionnelles" :value="formatCurrency(produitsChargesExceptionnels.totalOperationsExceptionnelles)" class="total-statistic" />
-            </n-grid-item>
-          </n-grid>
-        </n-card>
-
+        <div v-if="!isMobile">
+          <n-card title="📈 Résumé des opérations exceptionnelles" class="summary-card">
+            <n-grid :cols="4" :x-gap="16" :y-gap="16">
+              <n-grid-item>
+                <n-statistic label="Produits exceptionnels" :value="formatCurrency(produitsChargesExceptionnels.produitsExceptionnels)" />
+              </n-grid-item>
+              <n-grid-item>
+                <n-statistic label="Charges exceptionnelles" :value="formatCurrency(produitsChargesExceptionnels.chargesExceptionnelles)" />
+              </n-grid-item>
+              <n-grid-item>
+                <n-statistic label="Plus-values à long terme" :value="formatCurrency(produitsChargesExceptionnels.plusValuesLongTerme)" />
+              </n-grid-item>
+              <n-grid-item>
+                <n-statistic label="Moins-values à long terme" :value="formatCurrency(produitsChargesExceptionnels.moinsValuesLongTerme)" />
+              </n-grid-item>
+              <n-grid-item :span="4">
+                <n-divider />
+                <n-statistic label="Total des opérations exceptionnelles" :value="formatCurrency(produitsChargesExceptionnels.totalOperationsExceptionnelles)" class="total-statistic" />
+              </n-grid-item>
+            </n-grid>
+          </n-card>
+        </div>
+        <div v-else class="summary-cards-mobile">
+          <n-card class="summary-mobile-card mb-2"><n-statistic label="Produits exceptionnels" :value="formatCurrency(produitsChargesExceptionnels.produitsExceptionnels)" /></n-card>
+          <n-card class="summary-mobile-card mb-2"><n-statistic label="Charges exceptionnelles" :value="formatCurrency(produitsChargesExceptionnels.chargesExceptionnelles)" /></n-card>
+          <n-card class="summary-mobile-card mb-2"><n-statistic label="Plus-values à long terme" :value="formatCurrency(produitsChargesExceptionnels.plusValuesLongTerme)" /></n-card>
+          <n-card class="summary-mobile-card mb-2"><n-statistic label="Moins-values à long terme" :value="formatCurrency(produitsChargesExceptionnels.moinsValuesLongTerme)" /></n-card>
+          <n-card class="summary-mobile-card mb-2"><n-statistic label="Total des opérations exceptionnelles" :value="formatCurrency(produitsChargesExceptionnels.totalOperationsExceptionnelles)" class="total-statistic" /></n-card>
+        </div>
         <!-- Détails par catégorie -->
         <n-space vertical size="large" class="details-section">
           
@@ -58,26 +67,39 @@
             <template #header-extra>
               <n-tag type="success">{{ formatCurrency(produitsChargesExceptionnels.produitsExceptionnels) }}</n-tag>
             </template>
-            <n-table :bordered="false" :single-line="false" size="small">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Libellé</th>
-                  <th>Compte</th>
-                  <th>Montant</th>
-                  <th>Commentaire</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="detail in produitsChargesExceptionnels.detailsProduitsExceptionnels" :key="detail.libelle + detail.dateOperation">
-                  <td>{{ formatDate(detail.dateOperation) }}</td>
-                  <td>{{ detail.libelle }}</td>
-                  <td><n-tag size="small">{{ detail.compteComptable }}</n-tag></td>
-                  <td>{{ formatCurrency(detail.montant) }}</td>
-                  <td>{{ detail.commentaire }}</td>
-                </tr>
-              </tbody>
-            </n-table>
+            <div v-if="!isMobile">
+              <n-table :bordered="false" :single-line="false" size="small">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Libellé</th>
+                    <th>Compte</th>
+                    <th>Montant</th>
+                    <th>Commentaire</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="detail in produitsChargesExceptionnels.detailsProduitsExceptionnels" :key="detail.libelle + detail.dateOperation">
+                    <td>{{ formatDate(detail.dateOperation) }}</td>
+                    <td>{{ detail.libelle }}</td>
+                    <td><n-tag size="small">{{ detail.compteComptable }}</n-tag></td>
+                    <td>{{ formatCurrency(detail.montant) }}</td>
+                    <td>{{ detail.commentaire }}</td>
+                  </tr>
+                </tbody>
+              </n-table>
+            </div>
+            <div v-else class="cards-mobile-list">
+              <n-card v-for="detail in produitsChargesExceptionnels.detailsProduitsExceptionnels" :key="detail.libelle + detail.dateOperation" class="mobile-detail-card mb-2" size="small">
+                <div class="flex justify-between items-center mb-1">
+                  <div class="font-bold">{{ formatDate(detail.dateOperation) }}</div>
+                  <n-tag type="success" size="small">{{ formatCurrency(detail.montant) }}</n-tag>
+                </div>
+                <div class="text-xs text-gray-500 mb-1">Libellé : <b>{{ detail.libelle }}</b></div>
+                <div class="text-xs text-gray-500 mb-1">Compte : <b>{{ detail.compteComptable }}</b></div>
+                <div class="text-xs text-gray-500 mb-1">Commentaire : <b>{{ detail.commentaire }}</b></div>
+              </n-card>
+            </div>
           </n-card>
 
           <!-- Charges exceptionnelles -->
@@ -85,26 +107,39 @@
             <template #header-extra>
               <n-tag type="error">{{ formatCurrency(produitsChargesExceptionnels.chargesExceptionnelles) }}</n-tag>
             </template>
-            <n-table :bordered="false" :single-line="false" size="small">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Libellé</th>
-                  <th>Compte</th>
-                  <th>Montant</th>
-                  <th>Commentaire</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="detail in produitsChargesExceptionnels.detailsChargesExceptionnelles" :key="detail.libelle + detail.dateOperation">
-                  <td>{{ formatDate(detail.dateOperation) }}</td>
-                  <td>{{ detail.libelle }}</td>
-                  <td><n-tag size="small">{{ detail.compteComptable }}</n-tag></td>
-                  <td>{{ formatCurrency(detail.montant) }}</td>
-                  <td>{{ detail.commentaire }}</td>
-                </tr>
-              </tbody>
-            </n-table>
+            <div v-if="!isMobile">
+              <n-table :bordered="false" :single-line="false" size="small">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Libellé</th>
+                    <th>Compte</th>
+                    <th>Montant</th>
+                    <th>Commentaire</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="detail in produitsChargesExceptionnels.detailsChargesExceptionnelles" :key="detail.libelle + detail.dateOperation">
+                    <td>{{ formatDate(detail.dateOperation) }}</td>
+                    <td>{{ detail.libelle }}</td>
+                    <td><n-tag size="small">{{ detail.compteComptable }}</n-tag></td>
+                    <td>{{ formatCurrency(detail.montant) }}</td>
+                    <td>{{ detail.commentaire }}</td>
+                  </tr>
+                </tbody>
+              </n-table>
+            </div>
+            <div v-else class="cards-mobile-list">
+              <n-card v-for="detail in produitsChargesExceptionnels.detailsChargesExceptionnelles" :key="detail.libelle + detail.dateOperation" class="mobile-detail-card mb-2" size="small">
+                <div class="flex justify-between items-center mb-1">
+                  <div class="font-bold">{{ formatDate(detail.dateOperation) }}</div>
+                  <n-tag type="error" size="small">{{ formatCurrency(detail.montant) }}</n-tag>
+                </div>
+                <div class="text-xs text-gray-500 mb-1">Libellé : <b>{{ detail.libelle }}</b></div>
+                <div class="text-xs text-gray-500 mb-1">Compte : <b>{{ detail.compteComptable }}</b></div>
+                <div class="text-xs text-gray-500 mb-1">Commentaire : <b>{{ detail.commentaire }}</b></div>
+              </n-card>
+            </div>
           </n-card>
 
           <!-- Plus-values à long terme -->
@@ -112,26 +147,39 @@
             <template #header-extra>
               <n-tag type="success">{{ formatCurrency(produitsChargesExceptionnels.plusValuesLongTerme) }}</n-tag>
             </template>
-            <n-table :bordered="false" :single-line="false" size="small">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Libellé</th>
-                  <th>Compte</th>
-                  <th>Montant</th>
-                  <th>Commentaire</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="detail in produitsChargesExceptionnels.detailsPlusValues" :key="detail.libelle + detail.dateOperation">
-                  <td>{{ formatDate(detail.dateOperation) }}</td>
-                  <td>{{ detail.libelle }}</td>
-                  <td><n-tag size="small">{{ detail.compteComptable }}</n-tag></td>
-                  <td>{{ formatCurrency(detail.montant) }}</td>
-                  <td>{{ detail.commentaire }}</td>
-                </tr>
-              </tbody>
-            </n-table>
+            <div v-if="!isMobile">
+              <n-table :bordered="false" :single-line="false" size="small">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Libellé</th>
+                    <th>Compte</th>
+                    <th>Montant</th>
+                    <th>Commentaire</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="detail in produitsChargesExceptionnels.detailsPlusValues" :key="detail.libelle + detail.dateOperation">
+                    <td>{{ formatDate(detail.dateOperation) }}</td>
+                    <td>{{ detail.libelle }}</td>
+                    <td><n-tag size="small">{{ detail.compteComptable }}</n-tag></td>
+                    <td>{{ formatCurrency(detail.montant) }}</td>
+                    <td>{{ detail.commentaire }}</td>
+                  </tr>
+                </tbody>
+              </n-table>
+            </div>
+            <div v-else class="cards-mobile-list">
+              <n-card v-for="detail in produitsChargesExceptionnels.detailsPlusValues" :key="detail.libelle + detail.dateOperation" class="mobile-detail-card mb-2" size="small">
+                <div class="flex justify-between items-center mb-1">
+                  <div class="font-bold">{{ formatDate(detail.dateOperation) }}</div>
+                  <n-tag type="success" size="small">{{ formatCurrency(detail.montant) }}</n-tag>
+                </div>
+                <div class="text-xs text-gray-500 mb-1">Libellé : <b>{{ detail.libelle }}</b></div>
+                <div class="text-xs text-gray-500 mb-1">Compte : <b>{{ detail.compteComptable }}</b></div>
+                <div class="text-xs text-gray-500 mb-1">Commentaire : <b>{{ detail.commentaire }}</b></div>
+              </n-card>
+            </div>
           </n-card>
 
           <!-- Moins-values à long terme -->
@@ -139,26 +187,39 @@
             <template #header-extra>
               <n-tag type="error">{{ formatCurrency(produitsChargesExceptionnels.moinsValuesLongTerme) }}</n-tag>
             </template>
-            <n-table :bordered="false" :single-line="false" size="small">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Libellé</th>
-                  <th>Compte</th>
-                  <th>Montant</th>
-                  <th>Commentaire</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="detail in produitsChargesExceptionnels.detailsMoinsValues" :key="detail.libelle + detail.dateOperation">
-                  <td>{{ formatDate(detail.dateOperation) }}</td>
-                  <td>{{ detail.libelle }}</td>
-                  <td><n-tag size="small">{{ detail.compteComptable }}</n-tag></td>
-                  <td>{{ formatCurrency(detail.montant) }}</td>
-                  <td>{{ detail.commentaire }}</td>
-                </tr>
-              </tbody>
-            </n-table>
+            <div v-if="!isMobile">
+              <n-table :bordered="false" :single-line="false" size="small">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Libellé</th>
+                    <th>Compte</th>
+                    <th>Montant</th>
+                    <th>Commentaire</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="detail in produitsChargesExceptionnels.detailsMoinsValues" :key="detail.libelle + detail.dateOperation">
+                    <td>{{ formatDate(detail.dateOperation) }}</td>
+                    <td>{{ detail.libelle }}</td>
+                    <td><n-tag size="small">{{ detail.compteComptable }}</n-tag></td>
+                    <td>{{ formatCurrency(detail.montant) }}</td>
+                    <td>{{ detail.commentaire }}</td>
+                  </tr>
+                </tbody>
+              </n-table>
+            </div>
+            <div v-else class="cards-mobile-list">
+              <n-card v-for="detail in produitsChargesExceptionnels.detailsMoinsValues" :key="detail.libelle + detail.dateOperation" class="mobile-detail-card mb-2" size="small">
+                <div class="flex justify-between items-center mb-1">
+                  <div class="font-bold">{{ formatDate(detail.dateOperation) }}</div>
+                  <n-tag type="error" size="small">{{ formatCurrency(detail.montant) }}</n-tag>
+                </div>
+                <div class="text-xs text-gray-500 mb-1">Libellé : <b>{{ detail.libelle }}</b></div>
+                <div class="text-xs text-gray-500 mb-1">Compte : <b>{{ detail.compteComptable }}</b></div>
+                <div class="text-xs text-gray-500 mb-1">Commentaire : <b>{{ detail.commentaire }}</b></div>
+              </n-card>
+            </div>
           </n-card>
 
           <!-- Message si aucune opération exceptionnelle -->
@@ -216,6 +277,7 @@ import { useMessage } from 'naive-ui'
 import { RefreshOutline, DocumentTextOutline, InformationCircleOutline } from '@vicons/ionicons5'
 import { produitsChargesExceptionnelsApi, type ProduitsChargesExceptionnelsDTO } from '@/service/api/produits-charges-exceptionnels'
 import { useAuthStore } from '@/store/modules/auth'
+import { useWindowSize } from '@vueuse/core'
 
 definePage({
   meta: {
@@ -246,6 +308,9 @@ const yearOptions = computed(() => {
   }
   return options
 })
+
+const { width } = useWindowSize()
+const isMobile = computed(() => width.value <= 640)
 
 // Méthodes
 const loadProduitsChargesExceptionnels = async () => {
@@ -300,6 +365,22 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.main-header-mobile {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.main-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #222;
+}
 .summary-card {
   margin-bottom: 30px;
 }
@@ -331,6 +412,18 @@ onMounted(() => {
   margin-top: 20px;
 }
 
+.summary-cards-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.summary-mobile-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: 10px;
+  padding: 10px 8px;
+}
+
 .empty-description {
   text-align: center;
 }
@@ -346,5 +439,28 @@ onMounted(() => {
 
 :deep(.n-tag) {
   font-weight: 500;
+}
+
+.cards-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mobile-detail-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: 10px;
+  padding: 12px 10px;
+}
+@media (max-width: 640px) {
+  .main-title {
+    font-size: 1.05rem;
+  }
+  .main-header {
+    gap: 8px;
+  }
+  .mobile-detail-card {
+    font-size: 0.97rem;
+    padding: 10px 6px;
+  }
 }
 </style> 

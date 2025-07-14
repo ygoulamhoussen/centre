@@ -153,6 +153,15 @@ const tresorerieColumns: DataTableColumns<TresorerieDetail> = [
   { title: 'Date du solde', key: 'dateSolde', render: row => formatDate(row.dateSolde) },
 ]
 
+// Détection mobile
+const isMobile = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', handleResize)
+}
+
 onMounted(async () => {
   // Lancer le calcul automatiquement à l'arrivée sur la page
   await calculerBilan()
@@ -277,13 +286,45 @@ onMounted(async () => {
       
       <NCollapse arrow-placement="right" class="details-collapse">
         <NCollapseItem title="Détail des immobilisations" :name="1">
-          <NDataTable :columns="immobilisationColumns" :data="bilan?.immobilisationsDetail ?? []" :bordered="false" size="small" />
+          <template v-if="!isMobile">
+            <NDataTable :columns="immobilisationColumns" :data="bilan?.immobilisationsDetail ?? []" :bordered="false" size="small" />
+          </template>
+          <template v-else>
+            <div v-for="immo in bilan?.immobilisationsDetail ?? []" :key="immo.intitule + immo.proprieteNom" class="mobile-card">
+              <div><b>Intitulé :</b> {{ immo.intitule }}</div>
+              <div><b>Propriété :</b> {{ immo.proprieteNom }}</div>
+              <div><b>Type :</b> {{ immo.typeImmobilisation }}</div>
+              <div><b>Valeur brute :</b> {{ formatCurrency(immo.montantBrut) }}</div>
+              <div><b>Amortissements cumulés :</b> {{ formatCurrency(immo.amortissementsCumules) }}</div>
+              <div><b>Valeur nette :</b> {{ formatCurrency(immo.valeurNette) }}</div>
+            </div>
+          </template>
         </NCollapseItem>
         <NCollapseItem title="Détail des emprunts" :name="2">
-          <NDataTable :columns="empruntColumns" :data="bilan?.empruntsDetail ?? []" :bordered="false" size="small" />
+          <template v-if="!isMobile">
+            <NDataTable :columns="empruntColumns" :data="bilan?.empruntsDetail ?? []" :bordered="false" size="small" />
+          </template>
+          <template v-else>
+            <div v-for="emprunt in bilan?.empruntsDetail ?? []" :key="emprunt.intitule + emprunt.proprieteNom" class="mobile-card">
+              <div><b>Intitulé :</b> {{ emprunt.intitule }}</div>
+              <div><b>Propriété :</b> {{ emprunt.proprieteNom }}</div>
+              <div><b>Banque :</b> {{ emprunt.banque }}</div>
+              <div><b>Capital restant dû :</b> {{ formatCurrency(emprunt.capitalRestantDu) }}</div>
+              <div><b>Échéance :</b> {{ formatDate(emprunt.dateFin) }}</div>
+            </div>
+          </template>
         </NCollapseItem>
         <NCollapseItem title="Détail de la trésorerie" :name="3">
-          <NDataTable :columns="tresorerieColumns" :data="bilan?.tresorerieDetail ?? []" :bordered="false" size="small" />
+          <template v-if="!isMobile">
+            <NDataTable :columns="tresorerieColumns" :data="bilan?.tresorerieDetail ?? []" :bordered="false" size="small" />
+          </template>
+          <template v-else>
+            <div v-for="treso in bilan?.tresorerieDetail ?? []" :key="treso.compte + treso.dateSolde" class="mobile-card">
+              <div><b>Compte :</b> {{ treso.compte }}</div>
+              <div><b>Solde :</b> {{ formatCurrency(treso.solde) }}</div>
+              <div><b>Date du solde :</b> {{ formatDate(treso.dateSolde) }}</div>
+            </div>
+          </template>
         </NCollapseItem>
       </NCollapse>
     </div>
@@ -441,6 +482,15 @@ onMounted(async () => {
   align-items: center;
 }
 
+.mobile-card {
+  margin-bottom: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+  box-shadow: 0 1px 4px #0001;
+}
+
 @media (max-width: 768px) {
   .titre-principal, h1, h2, h3 {
     font-size: 1.25rem !important;
@@ -455,6 +505,13 @@ onMounted(async () => {
   .bilan-table th, .bilan-table td {
     padding: 6px 4px;
     font-size: 0.95em;
+  }
+  .bilan-card {
+    padding: 4px !important;
+  }
+  .mobile-card {
+    font-size: 0.98em;
+    padding: 10px 8px;
   }
 }
 </style> 

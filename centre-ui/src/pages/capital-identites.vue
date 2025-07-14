@@ -20,9 +20,9 @@
         {{ success }}
       </n-alert>
 
-      <div v-if="!loading" class="space-y-6">
+      <div v-if="!loading" :class="isMobile ? 'mobile-form' : 'space-y-6'">
         <!-- Formulaire -->
-        <n-card title="Informations de l'exploitant" size="small">
+        <n-card title="Informations de l'exploitant" size="small" :class="isMobile ? 'mobile-card' : ''">
           <n-form
             ref="formRef"
             :model="formData"
@@ -96,7 +96,7 @@
         </n-card>
 
         <!-- Apports -->
-        <n-card title="Apports au capital" size="small">
+        <n-card title="Apports au capital" size="small" :class="isMobile ? 'mobile-card' : ''">
           <n-grid :cols="3" :x-gap="16" :y-gap="16">
             <n-grid-item>
               <n-form-item label="Apports en numéraire" path="apportsNumeraires">
@@ -147,18 +147,26 @@
         </n-card>
 
         <!-- Résumé -->
-        <n-card title="Résumé" size="small">
-          <n-descriptions :column="1" bordered>
-            <n-descriptions-item label="Total du capital">
-              <span class="text-lg font-bold text-blue-600">
-                {{ formatCurrency(totalCapital) }}
-              </span>
-            </n-descriptions-item>
-          </n-descriptions>
+        <n-card title="Résumé" size="small" :class="isMobile ? 'mobile-card' : ''">
+          <template v-if="!isMobile">
+            <n-descriptions :column="1" bordered>
+              <n-descriptions-item label="Total du capital">
+                <span class="text-lg font-bold text-blue-600">
+                  {{ formatCurrency(totalCapital) }}
+                </span>
+              </n-descriptions-item>
+            </n-descriptions>
+          </template>
+          <template v-else>
+            <div class="mobile-summary">
+              <div class="summary-label">Total du capital</div>
+              <div class="summary-value">{{ formatCurrency(totalCapital) }}</div>
+            </div>
+          </template>
         </n-card>
 
         <!-- Actions -->
-        <div class="flex justify-end space-x-4">
+        <div :class="isMobile ? 'mobile-actions' : 'flex justify-end space-x-4'">
           <n-button @click="resetForm" :disabled="saving">
             Réinitialiser
           </n-button>
@@ -194,6 +202,15 @@ const saving = ref(false)
 const error = ref('')
 const success = ref('')
 const isEditing = ref(false)
+
+// Détection mobile
+const isMobile = ref(window.innerWidth < 768)
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', handleResize)
+}
 
 // Référence du formulaire
 const formRef = ref()
@@ -382,5 +399,47 @@ onMounted(() => {
 
 .n-form-item {
   margin-bottom: 16px;
+}
+
+.mobile-card {
+  margin-bottom: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+  box-shadow: 0 1px 4px #0001;
+}
+.mobile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mobile-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px 0;
+}
+.summary-label {
+  font-size: 1em;
+  color: #888;
+}
+.summary-value {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #2563eb;
+}
+.mobile-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+@media (max-width: 768px) {
+  .mobile-card {
+    font-size: 0.98em;
+    padding: 10px 8px;
+  }
 }
 </style> 

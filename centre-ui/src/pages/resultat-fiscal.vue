@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { DataTableColumns } from 'naive-ui'
 import type { ResultatFiscal } from '@/service/api/resultat-fiscal'
+import { resultatFiscalApi } from '@/service/api/resultat-fiscal'
+import { Icon } from '@iconify/vue'
+import { useWindowSize } from '@vueuse/core'
+import { computed, onMounted, ref } from 'vue'
+import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NGi, NGrid, NSelect, NSpin, NStatistic, NH1, useMessage } from 'naive-ui'
 
 type RecetteDetail = {
   intitule: string
@@ -22,10 +27,6 @@ type AmortissementDetail = {
   montantAmortissement: number
 }
 
-import { computed, onMounted, ref } from 'vue'
-import { Icon } from '@iconify/vue'
-import { resultatFiscalApi } from '@/service/api/resultat-fiscal'
-import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NGi, NGrid, NSelect, NSpin, NStatistic, useMessage, NH1 } from 'naive-ui'
 
 definePage({
   meta: {
@@ -195,6 +196,9 @@ function getResultatClass(value?: number) {
   return value > 0 ? 'result-positive' : 'result-negative'
 }
 
+const { width } = useWindowSize()
+const isMobile = computed(() => width.value <= 640)
+
 onMounted(async () => {
   // Lancer le calcul automatiquement à l'arrivée sur la page
   await calculerResultat()
@@ -206,7 +210,6 @@ onMounted(async () => {
     <div class="page-header flex items-center justify-between">
       <NH1 class="titre-principal">Compte de Résultat LMNP (2033-B)</NH1>
     </div>
-
     <NCard class="filters-card">
       <div class="filters">
         <NSelect
@@ -224,99 +227,160 @@ onMounted(async () => {
         </NButton>
       </div>
     </NCard>
-
     <div v-if="loading" class="loading-container">
       <NSpin size="large" />
     </div>
-
     <div v-if="!loading && resultat" class="result-container">
-      <NCard class="recap-2033b-card">
-        <table class="recap-2033b-table">
-          <thead>
-            <tr><th colspan="2">Compte de Résultat LMNP (2033-B)</th></tr>
-          </thead>
-          <tbody>
-            <tr class="section"><td colspan="2">1. Produits d'exploitation</td></tr>
-            <tr>
-              <td>Loyers meublés (706000)</td>
-              <td class="amount">{{ formatCurrency(loyersNets) }}</td>
-            </tr>
-            <tr>
-              <td>Produits accessoires (708000)</td>
-              <td class="amount">{{ formatCurrency(produitsAccessoires) }}</td>
-            </tr>
-            <tr class="total-row">
-              <td><strong>Total produits d'exploitation</strong></td>
-              <td class="amount"><strong>{{ formatCurrency(totalProduits) }}</strong></td>
-            </tr>
-            
-            <tr class="section"><td colspan="2">2. Charges d'exploitation</td></tr>
-            <tr>
-              <td>Charges externes (606000, 614000, 615000, 622000, 623000, 626000)</td>
-              <td class="amount">{{ formatCurrency(chargesExternes) }}</td>
-            </tr>
-            <tr>
-              <td>Impôts et taxes (635100, 637000)</td>
-              <td class="amount">{{ formatCurrency(impotsEtTaxes) }}</td>
-            </tr>
-            <tr>
-              <td>Dotations aux amortissements (681100)</td>
-              <td class="amount">{{ formatCurrency(resultat.amortissements) }}</td>
-            </tr>
-            <tr class="total-row">
-              <td><strong>Total charges d'exploitation</strong></td>
-              <td class="amount"><strong>{{ formatCurrency(totalChargesExploitation) }}</strong></td>
-            </tr>
-            
-            <tr class="section"><td colspan="2">3. Résultat d'exploitation</td></tr>
-            <tr class="result-row">
-              <td><strong>Total produits – Total charges d'exploitation</strong></td>
-              <td class="amount"><strong>{{ formatCurrency(resultatExploitation) }}</strong></td>
-            </tr>
-            
-            <tr class="section"><td colspan="2">4. Résultat financier</td></tr>
-            <tr>
-              <td>Charges financières - Intérêts d'emprunt (661100)</td>
-              <td class="amount">{{ formatCurrency(-interetsEmprunt) }}</td>
-            </tr>
-            <tr class="result-row">
-              <td><strong>Résultat financier</strong></td>
-              <td class="amount"><strong>{{ formatCurrency(resultatFinancier) }}</strong></td>
-            </tr>
-            
-            <tr class="section"><td colspan="2">5. Résultat courant avant impôt</td></tr>
-            <tr class="result-row">
-              <td><strong>Résultat d'exploitation + résultat financier</strong></td>
-              <td class="amount"><strong>{{ formatCurrency(resultatCourant) }}</strong></td>
-            </tr>
-            
-            <tr class="section"><td colspan="2">6. Résultat exceptionnel</td></tr>
-            <tr>
-              <td>Produits exceptionnels</td>
-              <td class="amount">0,00 €</td>
-            </tr>
-            <tr>
-              <td>Charges exceptionnelles</td>
-              <td class="amount">0,00 €</td>
-            </tr>
-            <tr class="result-row">
-              <td><strong>Résultat exceptionnel</strong></td>
-              <td class="amount"><strong>0,00 €</strong></td>
-            </tr>
-            
-            <tr class="section"><td colspan="2">7. Impôt sur les bénéfices</td></tr>
-            <tr>
-              <td>Impôt sur les bénéfices</td>
-              <td class="amount">0,00 €</td>
-            </tr>
-            
-            <tr class="section"><td colspan="2">8. Résultat net</td></tr>
-            <tr class="final-result">
-              <td><strong>Résultat net de l'exercice</strong></td>
-              <td class="amount"><strong>{{ formatCurrency(resultat.resultatFiscal) }}</strong></td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-if="!isMobile">
+        <NCard class="recap-2033b-card">
+          <table class="recap-2033b-table">
+            <thead>
+              <tr><th colspan="2">Compte de Résultat LMNP (2033-B)</th></tr>
+            </thead>
+            <tbody>
+              <tr class="section"><td colspan="2">1. Produits d'exploitation</td></tr>
+              <tr>
+                <td>Loyers meublés (706000)</td>
+                <td class="amount">{{ formatCurrency(loyersNets) }}</td>
+              </tr>
+              <tr>
+                <td>Produits accessoires (708000)</td>
+                <td class="amount">{{ formatCurrency(produitsAccessoires) }}</td>
+              </tr>
+              <tr class="total-row">
+                <td><strong>Total produits d'exploitation</strong></td>
+                <td class="amount"><strong>{{ formatCurrency(totalProduits) }}</strong></td>
+              </tr>
+              
+              <tr class="section"><td colspan="2">2. Charges d'exploitation</td></tr>
+              <tr>
+                <td>Charges externes (606000, 614000, 615000, 622000, 623000, 626000)</td>
+                <td class="amount">{{ formatCurrency(chargesExternes) }}</td>
+              </tr>
+              <tr>
+                <td>Impôts et taxes (635100, 637000)</td>
+                <td class="amount">{{ formatCurrency(impotsEtTaxes) }}</td>
+              </tr>
+              <tr>
+                <td>Dotations aux amortissements (681100)</td>
+                <td class="amount">{{ formatCurrency(resultat.amortissements) }}</td>
+              </tr>
+              <tr class="total-row">
+                <td><strong>Total charges d'exploitation</strong></td>
+                <td class="amount"><strong>{{ formatCurrency(totalChargesExploitation) }}</strong></td>
+              </tr>
+              
+              <tr class="section"><td colspan="2">3. Résultat d'exploitation</td></tr>
+              <tr class="result-row">
+                <td><strong>Total produits – Total charges d'exploitation</strong></td>
+                <td class="amount"><strong>{{ formatCurrency(resultatExploitation) }}</strong></td>
+              </tr>
+              
+              <tr class="section"><td colspan="2">4. Résultat financier</td></tr>
+              <tr>
+                <td>Charges financières - Intérêts d'emprunt (661100)</td>
+                <td class="amount">{{ formatCurrency(-interetsEmprunt) }}</td>
+              </tr>
+              <tr class="result-row">
+                <td><strong>Résultat financier</strong></td>
+                <td class="amount"><strong>{{ formatCurrency(resultatFinancier) }}</strong></td>
+              </tr>
+              
+              <tr class="section"><td colspan="2">5. Résultat courant avant impôt</td></tr>
+              <tr class="result-row">
+                <td><strong>Résultat d'exploitation + résultat financier</strong></td>
+                <td class="amount"><strong>{{ formatCurrency(resultatCourant) }}</strong></td>
+              </tr>
+              
+              <tr class="section"><td colspan="2">6. Résultat exceptionnel</td></tr>
+              <tr>
+                <td>Produits exceptionnels</td>
+                <td class="amount">0,00 €</td>
+              </tr>
+              <tr>
+                <td>Charges exceptionnelles</td>
+                <td class="amount">0,00 €</td>
+              </tr>
+              <tr class="result-row">
+                <td><strong>Résultat exceptionnel</strong></td>
+                <td class="amount"><strong>0,00 €</strong></td>
+              </tr>
+              
+              <tr class="section"><td colspan="2">7. Impôt sur les bénéfices</td></tr>
+              <tr>
+                <td>Impôt sur les bénéfices</td>
+                <td class="amount">0,00 €</td>
+              </tr>
+              
+              <tr class="section"><td colspan="2">8. Résultat net</td></tr>
+              <tr class="final-result">
+                <td><strong>Résultat net de l'exercice</strong></td>
+                <td class="amount"><strong>{{ formatCurrency(resultat.resultatFiscal) }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="actions-footer">
+            <NButton type="default" disabled>
+              <template #icon>
+                <Icon icon="material-symbols:download" />
+              </template>
+              Télécharger la 2033-B (bientôt disponible)
+            </NButton>
+          </div>
+        </NCard>
+        <NCollapse arrow-placement="right" class="details-collapse">
+          <NCollapseItem title="Détail des recettes" :name="1">
+            <NDataTable :columns="recetteColumns" :data="resultat?.recettesDetail ?? []" :bordered="false" size="small" />
+          </NCollapseItem>
+          <NCollapseItem title="Détail des charges" :name="2">
+            <NDataTable :columns="chargeColumns" :data="resultat?.chargesDetail ?? []" :bordered="false" size="small" />
+          </NCollapseItem>
+          <NCollapseItem title="Détail des amortissements" :name="3">
+            <NDataTable :columns="amortissementColumns" :data="resultat?.amortissementsDetail ?? []" :bordered="false" size="small" />
+          </NCollapseItem>
+        </NCollapse>
+      </div>
+      <div v-else class="recap-mobile-list">
+        <NCard class="recap-mobile-card mb-2">
+          <div class="recap-section-title">1. Produits d'exploitation</div>
+          <div class="recap-row"><b>Loyers meublés :</b> {{ formatCurrency(loyersNets) }}</div>
+          <div class="recap-row"><b>Produits accessoires :</b> {{ formatCurrency(produitsAccessoires) }}</div>
+          <div class="recap-row recap-total"><b>Total produits :</b> {{ formatCurrency(totalProduits) }}</div>
+        </NCard>
+        <NCard class="recap-mobile-card mb-2">
+          <div class="recap-section-title">2. Charges d'exploitation</div>
+          <div class="recap-row"><b>Charges externes :</b> {{ formatCurrency(chargesExternes) }}</div>
+          <div class="recap-row"><b>Impôts et taxes :</b> {{ formatCurrency(impotsEtTaxes) }}</div>
+          <div class="recap-row"><b>Dotations aux amortissements :</b> {{ formatCurrency(resultat.amortissements) }}</div>
+          <div class="recap-row recap-total"><b>Total charges :</b> {{ formatCurrency(totalChargesExploitation) }}</div>
+        </NCard>
+        <NCard class="recap-mobile-card mb-2">
+          <div class="recap-section-title">3. Résultat d'exploitation</div>
+          <div class="recap-row recap-total"><b>Résultat d'exploitation :</b> {{ formatCurrency(resultatExploitation) }}</div>
+        </NCard>
+        <NCard class="recap-mobile-card mb-2">
+          <div class="recap-section-title">4. Résultat financier</div>
+          <div class="recap-row"><b>Charges financières - Intérêts d'emprunt :</b> {{ formatCurrency(-interetsEmprunt) }}</div>
+          <div class="recap-row recap-total"><b>Résultat financier :</b> {{ formatCurrency(resultatFinancier) }}</div>
+        </NCard>
+        <NCard class="recap-mobile-card mb-2">
+          <div class="recap-section-title">5. Résultat courant avant impôt</div>
+          <div class="recap-row recap-total"><b>Résultat courant :</b> {{ formatCurrency(resultatCourant) }}</div>
+        </NCard>
+        <NCard class="recap-mobile-card mb-2">
+          <div class="recap-section-title">6. Résultat exceptionnel</div>
+          <div class="recap-row"><b>Produits exceptionnels :</b> 0,00 €</div>
+          <div class="recap-row"><b>Charges exceptionnelles :</b> 0,00 €</div>
+          <div class="recap-row recap-total"><b>Résultat exceptionnel :</b> 0,00 €</div>
+        </NCard>
+        <NCard class="recap-mobile-card mb-2">
+          <div class="recap-section-title">7. Impôt sur les bénéfices</div>
+          <div class="recap-row"><b>Impôt sur les bénéfices :</b> 0,00 €</div>
+        </NCard>
+        <NCard class="recap-mobile-card mb-2">
+          <div class="recap-section-title">8. Résultat net</div>
+          <div class="recap-row recap-final"><b>Résultat net de l'exercice :</b> {{ formatCurrency(resultat.resultatFiscal) }}</div>
+        </NCard>
         <div class="actions-footer">
           <NButton type="default" disabled>
             <template #icon>
@@ -325,18 +389,43 @@ onMounted(async () => {
             Télécharger la 2033-B (bientôt disponible)
           </NButton>
         </div>
-      </NCard>
-      <NCollapse arrow-placement="right" class="details-collapse">
-        <NCollapseItem title="Détail des recettes" :name="1">
-          <NDataTable :columns="recetteColumns" :data="resultat?.recettesDetail ?? []" :bordered="false" size="small" />
-        </NCollapseItem>
-        <NCollapseItem title="Détail des charges" :name="2">
-          <NDataTable :columns="chargeColumns" :data="resultat?.chargesDetail ?? []" :bordered="false" size="small" />
-        </NCollapseItem>
-        <NCollapseItem title="Détail des amortissements" :name="3">
-          <NDataTable :columns="amortissementColumns" :data="resultat?.amortissementsDetail ?? []" :bordered="false" size="small" />
-        </NCollapseItem>
-      </NCollapse>
+        <NCollapse arrow-placement="right" class="details-collapse mt-4">
+          <NCollapseItem title="Détail des recettes" :name="1">
+            <div v-if="resultat?.recettesDetail?.length">
+              <NCard v-for="(rec, i) in resultat.recettesDetail" :key="'recette-' + i" class="mobile-detail-card mb-2">
+                <div class="recap-row"><b>Intitulé :</b> {{ rec.intitule }}</div>
+                <div class="recap-row"><b>Propriété :</b> {{ rec.proprieteNom }}</div>
+                <div class="recap-row"><b>Date :</b> {{ formatDate(rec.dateRecette) }}</div>
+                <div class="recap-row"><b>Montant :</b> {{ formatCurrency(rec.montant) }}</div>
+              </NCard>
+            </div>
+            <div v-else class="text-gray-500 text-sm">Aucune recette</div>
+          </NCollapseItem>
+          <NCollapseItem title="Détail des charges" :name="2">
+            <div v-if="resultat?.chargesDetail?.length">
+              <NCard v-for="(charge, i) in resultat.chargesDetail" :key="'charge-' + i" class="mobile-detail-card mb-2">
+                <div class="recap-row"><b>Intitulé :</b> {{ charge.intitule }}</div>
+                <div class="recap-row"><b>Propriété :</b> {{ charge.proprieteNom }}</div>
+                <div class="recap-row"><b>Nature :</b> {{ charge.nature }}</div>
+                <div class="recap-row"><b>Date :</b> {{ formatDate(charge.dateCharge) }}</div>
+                <div class="recap-row"><b>Montant :</b> {{ formatCurrency(charge.montant) }}</div>
+              </NCard>
+            </div>
+            <div v-else class="text-gray-500 text-sm">Aucune charge</div>
+          </NCollapseItem>
+          <NCollapseItem title="Détail des amortissements" :name="3">
+            <div v-if="resultat?.amortissementsDetail?.length">
+              <NCard v-for="(amort, i) in resultat.amortissementsDetail" :key="'amort-' + i" class="mobile-detail-card mb-2">
+                <div class="recap-row"><b>Immobilisation :</b> {{ amort.immobilisationIntitule }}</div>
+                <div class="recap-row"><b>Propriété :</b> {{ amort.proprieteNom }}</div>
+                <div class="recap-row"><b>Année :</b> {{ amort.annee }}</div>
+                <div class="recap-row"><b>Montant :</b> {{ formatCurrency(amort.montantAmortissement) }}</div>
+              </NCard>
+            </div>
+            <div v-else class="text-gray-500 text-sm">Aucun amortissement</div>
+          </NCollapseItem>
+        </NCollapse>
+      </div>
     </div>
     <div v-if="!loading && !resultat" class="empty-state">
       <NEmpty description="Aucun résultat à afficher. Veuillez lancer un calcul." />
@@ -461,6 +550,41 @@ onMounted(async () => {
   align-items: center;
 }
 
+.recap-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.recap-mobile-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: 10px;
+  padding: 12px 10px;
+}
+.recap-section-title {
+  font-weight: bold;
+  font-size: 1.08rem;
+  margin-bottom: 4px;
+  color: #2563eb;
+}
+.recap-row {
+  font-size: 0.98em;
+  margin-bottom: 2px;
+}
+.recap-total {
+  font-weight: bold;
+  color: #18a058;
+}
+.recap-final {
+  font-weight: bold;
+  color: #d03050;
+}
+.mobile-detail-card {
+  box-shadow: 0 1px 4px #0001;
+  border-radius: 8px;
+  padding: 10px 8px;
+  background: #fff;
+}
+
 @media (max-width: 768px) {
   .titre-principal, h1, h2, h3 {
     font-size: 1.25rem !important;
@@ -473,6 +597,16 @@ onMounted(async () => {
   .recap-2033b-table th, .recap-2033b-table td {
     padding: 6px 4px;
     font-size: 0.95em;
+  }
+}
+@media (max-width: 640px) {
+  .recap-mobile-card {
+    font-size: 0.97rem;
+    padding: 10px 6px;
+  }
+  .mobile-detail-card {
+    font-size: 0.97rem;
+    padding: 8px 5px;
   }
 }
 </style> 

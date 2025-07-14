@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/modules/auth'
 import { ArrowDownload24Filled, Document24Filled } from '@vicons/fluent'
 import { NButton, NCard, NDataTable, NH1, NIcon, NSelect, NSpace, NTag, NTooltip, useMessage } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
+import { useWindowSize } from '@vueuse/core'
 
 definePage({
   meta: {
@@ -19,6 +20,10 @@ const lignesFEC = ref<any[]>([])
 const chargement = ref(false)
 const annees = ref<number[]>([])
 const anneeSelectionnee = ref<number | null>(null)
+
+// Détection du mode mobile
+const { width } = useWindowSize()
+const isMobile = computed(() => width.value <= 640)
 
 // Colonnes simplifiées pour l'affichage web
 const colonnesFEC = [
@@ -156,21 +161,21 @@ async function telechargerFEC() {
     // On récupère toutes les lignes filtrées par année
     const lignes = lignesFEC.value.filter(l => !annee || (l.dateEcriture && new Date(l.dateEcriture).getFullYear() === annee));
     // Génération du CSV
-    const header = colonnesExport.join(';');
-    const rows = lignes.map(l => colonnesExport.map(k => toCsvValue(l[k])).join(';'));
-    const csv = [header, ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const urlBlob = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = urlBlob;
-    a.download = `FEC-${annee}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(urlBlob);
-    document.body.removeChild(a);
-    message.success('FEC exporté en CSV avec succès');
+    const header = colonnesExport.join(';')
+    const rows = lignes.map(l => colonnesExport.map(k => toCsvValue(l[k])).join(';'))
+    const csv = [header, ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const urlBlob = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = urlBlob
+    a.download = `FEC-${annee}.csv`
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(urlBlob)
+    document.body.removeChild(a)
+    message.success('FEC exporté en CSV avec succès')
   } catch {
-    message.error('Erreur lors de l\'export du FEC');
+    message.error('Erreur lors de l\'export du FEC')
   }
 }
 
@@ -233,14 +238,50 @@ async function handleDownloadDocument(documentId: string, documentNom: string) {
           style="width: 120px"
         />
       </div>
-      <NDataTable
-        :columns="colonnesFEC"
-        :data="lignesFECFiltrees"
-        :loading="chargement"
-        :pagination="{ pageSize: 20 }"
-        striped
-        class="fec-table"
-      />
+      <div v-if="!isMobile">
+        <NDataTable
+          :columns="colonnesFEC"
+          :data="lignesFECFiltrees"
+          :loading="chargement"
+          :pagination="{ pageSize: 20 }"
+          striped
+          class="fec-table"
+        />
+      </div>
+      <div v-else>
+        <div v-if="chargement" class="text-center py-8">Chargement...</div>
+        <div v-else>
+          <div v-if="lignesFECFiltrees.length === 0" class="text-center text-gray-500 py-8">Aucune écriture pour cette année.</div>
+          <div class="fec-cards-mobile">
+            <NCard
+              v-for="(ligne, idx) in lignesFECFiltrees"
+              :key="idx"
+              class="fec-mobile-card mb-3"
+              size="small"
+              :bordered="true"
+            >
+              <div class="flex justify-between items-center mb-1">
+                <div class="font-bold">{{ ligne.dateEcriture ? new Date(ligne.dateEcriture).toLocaleDateString() : '-' }}</div>
+                <NTooltip v-if="ligne.documentId && ligne.documentNom">
+                  <template #trigger>
+                    <NButton quaternary circle size="small" @click="() => handleDownloadDocument(ligne.documentId, ligne.documentNom)">
+                      <NIcon :component="ArrowDownload24Filled" />
+                    </NButton>
+                  </template>
+                  Télécharger le document
+                </NTooltip>
+              </div>
+              <div class="text-xs text-gray-500 mb-1">N° écriture : <b>{{ ligne.ecritureNum }}</b></div>
+              <div class="text-xs text-gray-500 mb-1">Compte : <b>{{ ligne.compteNum }}</b> ({{ ligne.compteLibelle }})</div>
+              <div class="text-xs text-gray-500 mb-1">Libellé : <b>{{ ligne.libelle }}</b></div>
+              <div class="flex gap-2 mt-2">
+                <NTag type="success" size="small">Débit : {{ ligne.debit ? Number(ligne.debit).toFixed(2) : '0.00' }} €</NTag>
+                <NTag type="error" size="small">Crédit : {{ ligne.credit ? Number(ligne.credit).toFixed(2) : '0.00' }} €</NTag>
+              </div>
+            </NCard>
+          </div>
+        </div>
+      </div>
     </NCard>
   </div>
 </template>
@@ -326,7 +367,16 @@ async function handleDownloadDocument(documentId: string, documentNom: string) {
 .fec-table :deep(.n-data-table-th[data-col-key='JournalLib']) {
   min-width: 160px;
 }
-
+.fec-cards-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fec-mobile-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: 10px;
+  padding: 12px 10px;
+}
 @media (max-width: 900px) {
   .compta-bg {
     padding: 8px;
@@ -363,6 +413,10 @@ async function handleDownloadDocument(documentId: string, documentNom: string) {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
+  }
+  .fec-mobile-card {
+    font-size: 0.97rem;
+    padding: 10px 6px;
   }
 }
 </style> 

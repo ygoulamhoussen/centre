@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useAppStore } from '@/store/modules/app'
+import { useWindowSize } from '@vueuse/core'
 import {
   NAlert,
   NButton,
@@ -56,7 +57,8 @@ definePage({
 const authStore = useAuthStore()
 const message = useMessage()
 const appStore = useAppStore()
-const isMobile = appStore.isMobile
+const { width } = useWindowSize()
+const isMobile = computed(() => width.value <= 640)
 
 // États réactifs
 const soldes = ref<SoldesIntermediairesGestionDTO | null>(null)
@@ -235,153 +237,169 @@ onMounted(() => {
     <!-- Résultats -->
     <div v-if="soldes" class="results-section">
       <!-- Tableau principal des soldes -->
-      <NCard title="Soldes Intermédiaires de Gestion" class="mb-4">
-        <NGrid :cols="isMobile ? 1 : 2" :x-gap="24" :y-gap="16">
-          <!-- Production de l'exercice -->
-          <NGi>
-            <NStatistic
-              label="Production de l'exercice"
-              :value="soldes.productionExercice"
-              :precision="2"
-              suffix="€"
-              color="#52c41a"
-            >
-              <template #prefix>
-                <NIcon color="#52c41a">
-                  <DataTrending24Filled />
-                </NIcon>
-              </template>
-            </NStatistic>
-          </NGi>
+      <div v-if="!isMobile">
+        <NCard title="Soldes Intermédiaires de Gestion" class="mb-4">
+          <NGrid :cols="2" :x-gap="24" :y-gap="16">
+            <!-- Production de l'exercice -->
+            <NGi>
+              <NStatistic
+                label="Production de l'exercice"
+                :value="soldes.productionExercice"
+                :precision="2"
+                suffix="€"
+                color="#52c41a"
+              >
+                <template #prefix>
+                  <NIcon color="#52c41a">
+                    <DataTrending24Filled />
+                  </NIcon>
+                </template>
+              </NStatistic>
+            </NGi>
 
-          <!-- Consommation en provenance des tiers -->
-          <NGi>
-            <NStatistic
-              label="Consommation en provenance des tiers"
-              :value="soldes.consommationTiers"
-              :precision="2"
-              suffix="€"
-              color="#ff4d4f"
-            >
-              <template #prefix>
-                <NIcon color="#ff4d4f">
-                  <ArrowTrending24Filled />
-                </NIcon>
-              </template>
-            </NStatistic>
-          </NGi>
+            <!-- Consommation en provenance des tiers -->
+            <NGi>
+              <NStatistic
+                label="Consommation en provenance des tiers"
+                :value="soldes.consommationTiers"
+                :precision="2"
+                suffix="€"
+                color="#ff4d4f"
+              >
+                <template #prefix>
+                  <NIcon color="#ff4d4f">
+                    <ArrowTrending24Filled />
+                  </NIcon>
+                </template>
+              </NStatistic>
+            </NGi>
 
-          <!-- Valeur ajoutée -->
-          <NGi>
-            <NStatistic
-              label="Valeur ajoutée"
-              :value="soldes.valeurAjoutee"
-              :precision="2"
-              suffix="€"
-              :color="soldes.valeurAjoutee >= 0 ? '#52c41a' : '#ff4d4f'"
-            />
-          </NGi>
+            <!-- Valeur ajoutée -->
+            <NGi>
+              <NStatistic
+                label="Valeur ajoutée"
+                :value="soldes.valeurAjoutee"
+                :precision="2"
+                suffix="€"
+                :color="soldes.valeurAjoutee >= 0 ? '#52c41a' : '#ff4d4f'"
+              />
+            </NGi>
 
-          <!-- Charges de personnel -->
-          <NGi>
-            <NStatistic
-              label="Charges de personnel"
-              :value="soldes.chargesPersonnel"
-              :precision="2"
-              suffix="€"
-              color="#ff4d4f"
-            />
-          </NGi>
+            <!-- Charges de personnel -->
+            <NGi>
+              <NStatistic
+                label="Charges de personnel"
+                :value="soldes.chargesPersonnel"
+                :precision="2"
+                suffix="€"
+                color="#ff4d4f"
+              />
+            </NGi>
 
-          <!-- Excédent brut d'exploitation -->
-          <NGi>
-            <NStatistic
-              label="Excédent brut d'exploitation (EBE)"
-              :value="soldes.excedentBrutExploitation"
-              :precision="2"
-              suffix="€"
-              :color="soldes.excedentBrutExploitation >= 0 ? '#52c41a' : '#ff4d4f'"
-            />
-          </NGi>
+            <!-- Excédent brut d'exploitation -->
+            <NGi>
+              <NStatistic
+                label="Excédent brut d'exploitation (EBE)"
+                :value="soldes.excedentBrutExploitation"
+                :precision="2"
+                suffix="€"
+                :color="soldes.excedentBrutExploitation >= 0 ? '#52c41a' : '#ff4d4f'"
+              />
+            </NGi>
 
-          <!-- Dotations -->
-          <NGi>
-            <NStatistic
-              label="Dotations (amortissements + provisions)"
-              :value="totalDotations"
-              :precision="2"
-              suffix="€"
-              color="#ff4d4f"
-            />
-          </NGi>
+            <!-- Dotations -->
+            <NGi>
+              <NStatistic
+                label="Dotations (amortissements + provisions)"
+                :value="totalDotations"
+                :precision="2"
+                suffix="€"
+                color="#ff4d4f"
+              />
+            </NGi>
 
-          <!-- Résultat d'exploitation -->
-          <NGi>
-            <NStatistic
-              label="Résultat d'exploitation"
-              :value="soldes.resultatExploitation"
-              :precision="2"
-              suffix="€"
-              :color="soldes.resultatExploitation >= 0 ? '#52c41a' : '#ff4d4f'"
-            />
-          </NGi>
+            <!-- Résultat d'exploitation -->
+            <NGi>
+              <NStatistic
+                label="Résultat d'exploitation"
+                :value="soldes.resultatExploitation"
+                :precision="2"
+                suffix="€"
+                :color="soldes.resultatExploitation >= 0 ? '#52c41a' : '#ff4d4f'"
+              />
+            </NGi>
 
-          <!-- Résultat financier -->
-          <NGi>
-            <NStatistic
-              label="Résultat financier"
-              :value="resultatFinancier"
-              :precision="2"
-              suffix="€"
-              :color="resultatFinancier >= 0 ? '#52c41a' : '#ff4d4f'"
-            />
-          </NGi>
+            <!-- Résultat financier -->
+            <NGi>
+              <NStatistic
+                label="Résultat financier"
+                :value="resultatFinancier"
+                :precision="2"
+                suffix="€"
+                :color="resultatFinancier >= 0 ? '#52c41a' : '#ff4d4f'"
+              />
+            </NGi>
 
-          <!-- Résultat courant avant impôts -->
-          <NGi>
-            <NStatistic
-              label="Résultat courant avant impôts"
-              :value="soldes.resultatCourantAvantImpot"
-              :precision="2"
-              suffix="€"
-              :color="soldes.resultatCourantAvantImpot >= 0 ? '#52c41a' : '#ff4d4f'"
-            />
-          </NGi>
+            <!-- Résultat courant avant impôts -->
+            <NGi>
+              <NStatistic
+                label="Résultat courant avant impôts"
+                :value="soldes.resultatCourantAvantImpot"
+                :precision="2"
+                suffix="€"
+                :color="soldes.resultatCourantAvantImpot >= 0 ? '#52c41a' : '#ff4d4f'"
+              />
+            </NGi>
 
-          <!-- Résultat exceptionnel -->
-          <NGi>
-            <NStatistic
-              label="Résultat exceptionnel"
-              :value="soldes.resultatExceptionnel"
-              :precision="2"
-              suffix="€"
-              :color="soldes.resultatExceptionnel >= 0 ? '#52c41a' : '#ff4d4f'"
-            />
-          </NGi>
+            <!-- Résultat exceptionnel -->
+            <NGi>
+              <NStatistic
+                label="Résultat exceptionnel"
+                :value="soldes.resultatExceptionnel"
+                :precision="2"
+                suffix="€"
+                :color="soldes.resultatExceptionnel >= 0 ? '#52c41a' : '#ff4d4f'"
+              />
+            </NGi>
 
-          <!-- Impôts sur bénéfices -->
-          <NGi>
-            <NStatistic
-              label="Impôts sur bénéfices"
-              :value="soldes.impotsSurBenefices"
-              :precision="2"
-              suffix="€"
-              color="#ff4d4f"
-            />
-          </NGi>
+            <!-- Impôts sur bénéfices -->
+            <NGi>
+              <NStatistic
+                label="Impôts sur bénéfices"
+                :value="soldes.impotsSurBenefices"
+                :precision="2"
+                suffix="€"
+                color="#ff4d4f"
+              />
+            </NGi>
 
-          <!-- Résultat net -->
-          <NGi>
-            <NStatistic
-              label="Résultat net"
-              :value="soldes.resultatNet"
-              :precision="2"
-              suffix="€"
-              :color="soldes.resultatNet >= 0 ? '#52c41a' : '#ff4d4f'"
-            />
-          </NGi>
-        </NGrid>
-      </NCard>
+            <!-- Résultat net -->
+            <NGi>
+              <NStatistic
+                label="Résultat net"
+                :value="soldes.resultatNet"
+                :precision="2"
+                suffix="€"
+                :color="soldes.resultatNet >= 0 ? '#52c41a' : '#ff4d4f'"
+              />
+            </NGi>
+          </NGrid>
+        </NCard>
+      </div>
+      <div v-else class="summary-cards-mobile">
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Production de l'exercice" :value="soldes.productionExercice" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Consommation en provenance des tiers" :value="soldes.consommationTiers" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Valeur ajoutée" :value="soldes.valeurAjoutee" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Charges de personnel" :value="soldes.chargesPersonnel" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Excédent brut d'exploitation (EBE)" :value="soldes.excedentBrutExploitation" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Dotations (amortissements + provisions)" :value="totalDotations" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Résultat d'exploitation" :value="soldes.resultatExploitation" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Résultat financier" :value="resultatFinancier" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Résultat courant avant impôts" :value="soldes.resultatCourantAvantImpot" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Résultat exceptionnel" :value="soldes.resultatExceptionnel" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Impôts sur bénéfices" :value="soldes.impotsSurBenefices" :precision="2" suffix="€" /></NCard>
+        <NCard class="summary-mobile-card mb-2"><NStatistic label="Résultat net" :value="soldes.resultatNet" :precision="2" suffix="€" /></NCard>
+      </div>
 
       <!-- Détails (optionnels) -->
       <div v-if="afficherDetails">
@@ -562,6 +580,24 @@ onMounted(() => {
 .py-8 {
   padding-top: 32px;
   padding-bottom: 32px;
+}
+
+.summary-cards-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.summary-mobile-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: 10px;
+  padding: 10px 8px;
+}
+@media (max-width: 640px) {
+  .summary-mobile-card {
+    font-size: 0.97rem;
+    padding: 10px 6px;
+  }
 }
 
 @media (max-width: 768px) {

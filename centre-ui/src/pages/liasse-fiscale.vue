@@ -1,17 +1,38 @@
 <script setup lang="ts">
+import { CalculatorOutline, ConstructOutline, InformationCircleOutline, PersonOutline, PieChartOutline, ScaleOutline, WarningOutline } from '@vicons/ionicons5'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { CalculatorOutline, ScaleOutline, ConstructOutline, InformationCircleOutline, PersonOutline, PieChartOutline, WarningOutline } from '@vicons/ionicons5'
 
 const router = useRouter()
+
+const gridCols = ref(7)
+
+function updateGridCols() {
+  if (window.innerWidth < 640) {
+    gridCols.value = 1
+  } else if (window.innerWidth < 900) {
+    gridCols.value = 2
+  } else if (window.innerWidth < 1200) {
+    gridCols.value = 3
+  } else if (window.innerWidth < 1500) {
+    gridCols.value = 4
+  } else {
+    gridCols.value = 7
+  }
+}
+
+onMounted(() => {
+  updateGridCols()
+  window.addEventListener('resize', updateGridCols)
+})
 
 definePage({
   meta: {
     title: 'Liasse Fiscale',
     icon: 'material-symbols:account-balance-outline',
     order: 19,
-  },
+  }
 })
-
 </script>
 
 <template>
@@ -21,7 +42,30 @@ definePage({
         <p>Accédez à tous les modules de la liasse fiscale LMNP :</p>
       </div>
 
-      <n-grid :cols="7" :x-gap="16" :y-gap="16">
+      <n-grid :cols="gridCols" :x-gap="16" :y-gap="16">
+                <!-- Bilan Simplifié -->
+                <n-grid-item>
+          <n-card 
+            title="📄 Formulaire 2033-A" 
+            subtitle="Bilan simplifié LMNP"
+            class="module-card"
+            @click="router.push('/bilan-simplifie')"
+          >
+            <template #header-extra>
+              <n-icon size="24" class="text-green-500">
+                <ScaleOutline />
+              </n-icon>
+            </template>
+            <div class="space-y-2">
+              <p class="text-sm text-gray-600">État du patrimoine à la clôture</p>
+              <ul class="text-xs text-gray-500 space-y-1">
+                <li>• Actif (immobilisations, trésorerie)</li>
+                <li>• Passif (emprunts, capitaux)</li>
+                <li>• Équilibre du bilan</li>
+              </ul>
+            </div>
+          </n-card>
+        </n-grid-item>
         <!-- Résultat Fiscal -->
         <n-grid-item>
           <n-card 
@@ -46,29 +90,7 @@ definePage({
           </n-card>
         </n-grid-item>
 
-        <!-- Bilan Simplifié -->
-        <n-grid-item>
-          <n-card 
-            title="📄 Formulaire 2033-A" 
-            subtitle="Bilan simplifié LMNP"
-            class="module-card"
-            @click="router.push('/bilan-simplifie')"
-          >
-            <template #header-extra>
-              <n-icon size="24" class="text-green-500">
-                <ScaleOutline />
-              </n-icon>
-            </template>
-            <div class="space-y-2">
-              <p class="text-sm text-gray-600">État du patrimoine à la clôture</p>
-              <ul class="text-xs text-gray-500 space-y-1">
-                <li>• Actif (immobilisations, trésorerie)</li>
-                <li>• Passif (emprunts, capitaux)</li>
-                <li>• Équilibre du bilan</li>
-              </ul>
-            </div>
-          </n-card>
-        </n-grid-item>
+
 
         <!-- Suivi Immobilisations -->
         <n-grid-item>
@@ -224,6 +246,7 @@ definePage({
   cursor: pointer;
   transition: all 0.3s ease;
   height: 100%;
+  min-width: 0;
 }
 
 .module-card:hover {
@@ -237,5 +260,28 @@ definePage({
 
 .module-card .n-card__content {
   padding: 16px;
+}
+
+@media (max-width: 900px) {
+  .comptabilite-page {
+    padding: 8px;
+  }
+  .module-card {
+    font-size: 15px;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .comptabilite-page {
+    padding: 2px;
+  }
+  .module-card {
+    font-size: 14px;
+    min-width: 0;
+  }
+  .n-grid {
+    --n-cols: 1 !important;
+  }
 }
 </style> 

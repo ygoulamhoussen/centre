@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import GlobalBuildDesc from '@/layouts/modules/global-build-desc/index.vue'
 import { getEnvVariable } from '@/utils/env'
 import { darkTheme, NConfigProvider } from 'naive-ui'
 import { naiveDateLocales, naiveLocales } from './locales/naive'
@@ -22,8 +21,6 @@ const naiveLocale = computed(() => {
 const naiveDateLocale = computed(() => {
   return naiveDateLocales[appStore.locale]
 })
-
-const buildDesc = computed(() => `${getEnvVariable('VITE_BUILD_PREFIX')}${BUILD_DESC}`)
 </script>
 
 <template>
@@ -36,7 +33,7 @@ const buildDesc = computed(() => `${getEnvVariable('VITE_BUILD_PREFIX')}${BUILD_
   >
     <AppProvider>
       <RouterView class="bg-layout" />
-      <GlobalBuildDesc v-if="Boolean(buildDesc)" :data="buildDesc" />
+      <!-- <GlobalBuildDesc v-if="Boolean(buildDesc)" :data="buildDesc" /> -->
     </AppProvider>
   </NConfigProvider>
 </template>

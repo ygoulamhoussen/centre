@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { EcritureComptableDTO, LigneEcritureDTO } from '@/types/dto'
 import { downloadDocument, getEcrituresComptablesWithProprieteNom } from '@/service/api/charges-recettes'
 import { useAuthStore } from '@/store/modules/auth'
 import { ArrowDownload24Filled, Document24Filled } from '@vicons/fluent'
@@ -21,20 +20,14 @@ const chargement = ref(false)
 const annees = ref<number[]>([])
 const anneeSelectionnee = ref<number | null>(null)
 
+// Colonnes simplifiées pour l'affichage web
 const colonnesFEC = [
-  { title: 'JournalCode', key: 'journalCode', width: 80 },
-  { title: 'JournalLib', key: 'journalLib', width: 160 },
-  { title: 'EcritureNum', key: 'ecritureNum', width: 120 },
-  { title: 'DateEcriture', key: 'dateEcriture', width: 110 },
-  { title: 'CompteNum', key: 'compteNum', width: 100 },
-  { title: 'CompteLib', key: 'compteLibelle', width: 180 },
-  { title: 'CompAuxNum', key: 'tiers', width: 120 },
-  { title: 'CompAuxLib', key: 'tiers', width: 120 },
-  { title: 'PieceRef', key: 'numeroPiece', width: 120 },
-  { title: 'PieceDate', key: 'pieceDate', width: 110 },
-  { title: 'LibelleEcriture', key: 'libelle', width: 200 },
-  { title: 'MontantDebit', key: 'debit', width: 110, render: (row: any) => row.debit ? Number(row.debit).toFixed(2) : '' },
-  { title: 'MontantCredit', key: 'credit', width: 110, render: (row: any) => row.credit ? Number(row.credit).toFixed(2) : '' },
+  { title: 'Date', key: 'dateEcriture', width: 110 },
+  { title: 'Numéro écriture', key: 'ecritureNum', width: 120 },
+  { title: 'Compte', key: 'compteNum', width: 100 },
+  { title: 'Libellé', key: 'libelle', width: 200 },
+  { title: 'Débit', key: 'debit', width: 110, render: (row: any) => row.debit ? Number(row.debit).toFixed(2) : '' },
+  { title: 'Crédit', key: 'credit', width: 110, render: (row: any) => row.credit ? Number(row.credit).toFixed(2) : '' },
   {
     title: 'Document',
     key: 'document',
@@ -65,10 +58,37 @@ const colonnesFEC = [
   },
 ]
 
+// Colonnes complètes pour l'export CSV
+const colonnesExport = [
+  'journalCode',
+  'journalLib',
+  'ecritureNum',
+  'dateEcriture',
+  'compteNum',
+  'compteLibelle',
+  'tiers',
+  'numeroPiece',
+  'pieceDate',
+  'libelle',
+  'debit',
+  'credit',
+  'documentNom',
+]
+
+function toCsvValue(val: any) {
+  if (val == null) return ''
+  const str = String(val)
+  if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+    return '"' + str.replace(/"/g, '""') + '"'
+  }
+  return str
+}
+
 const lignesFECFiltrees = computed(() => {
   if (!anneeSelectionnee.value) {
     return lignesFEC.value
   }
+
   return lignesFEC.value.filter(l => l.dateEcriture && new Date(l.dateEcriture).getFullYear() === anneeSelectionnee.value)
 })
 
@@ -80,7 +100,7 @@ async function chargerEcritures() {
     const lignes: any[] = []
     for (const e of data as any[]) {
       if (Array.isArray(e.lignes)) {
-        for (const l of e.lignes as LigneEcritureDTO[]) {
+        for (const l of e.lignes) {
           lignes.push({
             journalCode: e.journalCode,
             journalLib: e.journalLib,
@@ -105,7 +125,7 @@ async function chargerEcritures() {
     const anneesUniques = Array.from(new Set(
       lignes
         .map(l => l.dateEcriture ? new Date(l.dateEcriture).getFullYear() : null)
-        .filter((a): a is number => a !== null),
+        .filter((a): a is number => a !== null)
     )).sort((a, b) => b - a)
     annees.value = anneesUniques
 
@@ -113,12 +133,15 @@ async function chargerEcritures() {
     const anneeCourante = new Date().getFullYear()
     if (annees.value.includes(anneeCourante)) {
       anneeSelectionnee.value = anneeCourante
-    } else if (annees.value.length > 0) {
+    }
+    else if (annees.value.length > 0) {
       anneeSelectionnee.value = annees.value[0] // Fallback sur la première année disponible
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     message.error(error.message || 'Erreur lors du chargement des écritures')
-  } finally {
+  }
+  finally {
     chargement.value = false
   }
 }
@@ -129,27 +152,25 @@ onMounted(() => {
 
 async function telechargerFEC() {
   try {
-    const userId = authStore.userInfo.userId
-    const annee = anneeSelectionnee.value
-    const url = `${import.meta.env.VITE_SERVICE_BASE_URL}/api/fec?utilisateurId=${userId}&annee=${annee}`
-    const response = await fetch(url, { method: 'GET', credentials: 'include' })
-
-    if (!response.ok) {
-      throw new Error('Erreur lors du téléchargement du FEC')
-    }
-
-    const blob = await response.blob()
-    const urlBlob = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = urlBlob
-    a.download = `FEC-${annee}.txt`
-    document.body.appendChild(a)
-    a.click()
-    window.URL.revokeObjectURL(urlBlob)
-    document.body.removeChild(a)
-    message.success('FEC téléchargé avec succès')
+    const annee = anneeSelectionnee.value;
+    // On récupère toutes les lignes filtrées par année
+    const lignes = lignesFEC.value.filter(l => !annee || (l.dateEcriture && new Date(l.dateEcriture).getFullYear() === annee));
+    // Génération du CSV
+    const header = colonnesExport.join(';');
+    const rows = lignes.map(l => colonnesExport.map(k => toCsvValue(l[k])).join(';'));
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const urlBlob = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = urlBlob;
+    a.download = `FEC-${annee}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(urlBlob);
+    document.body.removeChild(a);
+    message.success('FEC exporté en CSV avec succès');
   } catch {
-    message.error('Erreur lors du téléchargement du FEC')
+    message.error('Erreur lors de l\'export du FEC');
   }
 }
 
@@ -261,6 +282,10 @@ async function handleDownloadDocument(documentId: string, documentNom: string) {
 .compta-bg {
   background-color: var(--n-body-color);
   min-height: 100vh;
+  padding: 24px;
+}
+.fec-table {
+  overflow-x: auto;
 }
 .fec-table :deep(.n-data-table-th) {
   position: sticky;
@@ -300,5 +325,44 @@ async function handleDownloadDocument(documentId: string, documentNom: string) {
 }
 .fec-table :deep(.n-data-table-th[data-col-key='JournalLib']) {
   min-width: 160px;
+}
+
+@media (max-width: 900px) {
+  .compta-bg {
+    padding: 8px;
+  }
+  .titre-principal {
+    font-size: 1.1rem;
+  }
+  .text-2xl {
+    font-size: 1.1rem;
+  }
+  .fec-table {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .compta-bg {
+    padding: 2px;
+  }
+  .titre-principal {
+    font-size: 1rem;
+    text-align: left;
+  }
+  .flex {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .fec-table {
+    overflow-x: auto;
+    font-size: 0.92rem;
+  }
+  .annee-row-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
 }
 </style> 

@@ -60,6 +60,7 @@ export const useUnifiedStore = defineStore('unified', {
       statut: 'IMPAYEE' as string | null,
       inclureCaution: false,
       depotGarantie: '0' as string | null,
+      selectedMonth: null as number | null,
     },
     paiementDTO: {
       id: null as string | null,
@@ -145,6 +146,7 @@ export const useUnifiedStore = defineStore('unified', {
         statut: 'IMPAYEE',
         inclureCaution: false,
         depotGarantie: '0',
+        selectedMonth: null,
       }
     },
     updatePaiementField(field: string, value: any) {

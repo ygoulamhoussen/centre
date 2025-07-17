@@ -84,6 +84,13 @@ async function enregistrer() {
 function precedent() {
   router.push('/location-etape-2')
 }
+
+function formatDateFr(dateStr: string | undefined) {
+  if (!dateStr) return 'Non définie'
+  const [y, m, d] = dateStr.split('-')
+  if (!y || !m || !d) return dateStr
+  return `${d}/${m}/${y}`
+}
 </script>
 
 <template>
@@ -111,10 +118,10 @@ function precedent() {
           {{ locationDTO.locataireNom || 'Non défini' }}
         </NDescriptionsItem>
         <NDescriptionsItem label="Date de début">
-          {{ locationDTO.dateDebut || 'Non définie' }}
+          {{ formatDateFr(locationDTO.dateDebut) }}
         </NDescriptionsItem>
         <NDescriptionsItem label="Date de fin">
-          {{ locationDTO.dateFin || 'Non définie' }}
+          {{ formatDateFr(locationDTO.dateFin) }}
         </NDescriptionsItem>
         <NDescriptionsItem label="Loyer mensuel">
           {{ locationDTO.loyerMensuel }} €

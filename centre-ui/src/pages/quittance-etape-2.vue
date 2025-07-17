@@ -20,7 +20,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
 import { format } from 'date-fns'
 import { useRouter } from 'vue-router'
 
@@ -42,7 +42,10 @@ const message = useMessage()
 const selectedLocation = computed(() => locations.value.find(l => l.id === quittanceDTO.value.locationId))
 const frequence = computed(() => selectedLocation.value?.frequenceLoyer)
 const selectedYear = ref(new Date().getFullYear())
-const selectedMonth = ref<number | null>(null)
+const selectedMonth = computed({
+  get: () => quittanceDTO.value.selectedMonth ?? null,
+  set: (val: number | null) => { quittanceDTO.value.selectedMonth = val }
+})
 const selectedQuarter = ref<number | null>(null)
 
 // calcul du loyer selon la fréquence
@@ -83,8 +86,8 @@ function computeEcheanceFromDebut(dateDebut: string, jourEcheance: number | stri
 watch(
   [() => quittanceDTO.value.dateDebut, selectedLocation],
   ([dateDebut, loc]) => {
-    if (dateDebut && loc) {
-      quittanceDTO.value.dateEcheance = computeEcheanceFromDebut(dateDebut, loc.jourEcheance)
+    if (loc) {
+      quittanceDTO.value.dateEcheance = computeEcheanceFromDebut(dateDebut || '', loc.jourEcheance)
     }
   },
   { immediate: true }
@@ -131,15 +134,34 @@ function precedent() {
   router.push('/quittance-etape-1')
 }
 
-function suivant() {
-  if (!selectedYear.value || (frequence.value === 'MENSUEL' && selectedMonth.value === null) || (frequence.value === 'TRIMESTRIEL' && selectedQuarter.value === null)) {
+const errors = ref({
+  year: false,
+  month: false,
+  quarter: false
+})
+
+async function suivant() {
+  errors.value = { year: false, month: false, quarter: false }
+  let hasError = false
+  if (!selectedYear.value) {
+    errors.value.year = true
+    hasError = true
+  }
+  if (frequence.value === 'MENSUEL' && selectedMonth.value === null) {
+    errors.value.month = true
+    hasError = true
+  }
+  if (frequence.value === 'TRIMESTRIEL' && selectedQuarter.value === null) {
+    errors.value.quarter = true
+    hasError = true
+  }
+  if (hasError) {
     message.warning('Veuillez sélectionner la période complète')
     return
   }
-  // Calcul de la période selon la fréquence
+  // Recalcule systématiquement la période juste avant de passer à l'étape 3
   let startDate: Date | null = null
   let endDate: Date | null = null
-
   if (selectedYear.value) {
     if (frequence.value === 'MENSUEL' && selectedMonth.value !== null) {
       startDate = new Date(selectedYear.value, selectedMonth.value, 1)
@@ -153,14 +175,15 @@ function suivant() {
       endDate = new Date(selectedYear.value, 11, 31)
     }
   }
-
   quittanceDTO.value.dateDebut = startDate
     ? `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`
     : null
   quittanceDTO.value.dateFin = endDate
     ? `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
     : null
-
+  // Log temporaire pour debug
+  console.log('dateDebut transmise:', quittanceDTO.value.dateDebut, 'dateFin transmise:', quittanceDTO.value.dateFin)
+  await nextTick()
   router.push('/quittance-etape-3')
 }
 
@@ -209,10 +232,10 @@ const quarterOptions = [
       <NH2 class="titre-principal mb-4">Étape 2 : Sélection de la période</NH2>
       <NForm label-placement="top">
         <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
-          <NFormItemGi v-if="frequence" label="Année">
+          <NFormItemGi v-if="frequence" label="Année" :validation-status="errors.year ? 'error' : undefined" :feedback="errors.year ? 'Ce champ est obligatoire' : ''">
             <NSelect v-model:value="selectedYear" :options="yearOptions" size="large" />
           </NFormItemGi>
-          <NFormItemGi v-if="frequence === 'MENSUEL'" label="Mois">
+          <NFormItemGi v-if="frequence && frequence.toString().trim().toUpperCase() === 'MENSUEL'" label="Mois" :validation-status="errors.month ? 'error' : undefined" :feedback="errors.month ? 'Ce champ est obligatoire' : ''">
             <NSelect
               v-model:value="selectedMonth"
               :options="monthOptions"
@@ -221,7 +244,7 @@ const quarterOptions = [
               size="large"
             />
           </NFormItemGi>
-          <NFormItemGi v-if="frequence === 'TRIMESTRIEL'" label="Trimestre">
+          <NFormItemGi v-if="frequence === 'TRIMESTRIEL'" label="Trimestre" :validation-status="errors.quarter ? 'error' : undefined" :feedback="errors.quarter ? 'Ce champ est obligatoire' : ''">
             <NSelect
               v-model:value="selectedQuarter"
               :options="quarterOptions"

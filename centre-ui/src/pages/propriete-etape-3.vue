@@ -146,22 +146,7 @@ const currentStep = 2
             </NInputNumber>
           </NFormItemGi>
 
-          <NFormItemGi :span="2" label="Tantième">
-            <NInputNumber
-              v-model:value="proprieteDTO.tantieme"
-              min="0"
-              step="1"
-              placeholder="ex: 1000"
-              style="width: 100%"
-              size="large"
-              inputmode="numeric"
-              pattern="[0-9]*"
-            >
-              <template #prefix>
-                <NIcon :component="ChartMultiple24Filled" />
-              </template>
-            </NInputNumber>
-          </NFormItemGi>
+          <!-- Champ Tantième supprimé ici -->
         </NGrid>
       </NForm>
 

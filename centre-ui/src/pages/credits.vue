@@ -95,7 +95,7 @@ onUnmounted(() => {
 <template>
   <div class="credits-page">
     <!-- Indicateur temporaire pour debug -->
-    <div style="font-size:12px;color:#888;margin-bottom:4px;">isMobile: {{ isMobile }}</div>
+    <div style="font-size:12px;color:#888;margin-bottom:4px;"></div>
     <div v-if="!isMobile" class="flex items-center justify-between">
       <NH1 class="titre-principal">Gestion des Crédits</NH1>
       <NButton type="primary" @click="navigateToCreate">

@@ -74,18 +74,47 @@ function precedent() {
   router.push('/quittance-etape-2')
 }
 
+const errors = ref({
+  dateEmission: false,
+  montantLoyer: false,
+  montantCharges: false,
+  statut: false
+})
+
 function suivant() {
-  // validation sommaire
-  if (
-    !quittanceDTO.value.dateDebut
-    || !quittanceDTO.value.dateFin
-    || !quittanceDTO.value.dateEmission
-    || !quittanceDTO.value.statut
-  ) {
+  // Réinitialise les erreurs
+  errors.value = {
+    dateEmission: false,
+    montantLoyer: false,
+    montantCharges: false,
+    statut: false
+  }
+  let hasError = false
+  if (!quittanceDTO.value.dateEmission) {
+    errors.value.dateEmission = true
+    hasError = true
+  }
+  if (!quittanceDTO.value.montantLoyer || Number(quittanceDTO.value.montantLoyer) <= 0) {
+    errors.value.montantLoyer = true
+    hasError = true
+  }
+  if (!quittanceDTO.value.montantCharges || Number(quittanceDTO.value.montantCharges) < 0) {
+    errors.value.montantCharges = true
+    hasError = true
+  }
+  if (!quittanceDTO.value.statut) {
+    errors.value.statut = true
+    hasError = true
+  }
+  // On vérifie aussi dateDebut/dateFin (étape précédente)
+  if (!quittanceDTO.value.dateDebut || !quittanceDTO.value.dateFin) {
+    message.warning('Merci de renseigner la période (étape précédente)')
+    return
+  }
+  if (hasError) {
     message.warning('Merci de renseigner tous les champs obligatoires (*)')
     return
   }
-  // on stocke le total calculé
   quittanceDTO.value.montantTotal = computedTotal.value.toFixed(2)
   router.push('/quittance-etape-4')
 }
@@ -174,12 +203,12 @@ watch(
       <NH2 class="titre-principal mb-4">Étape 3 : Détails de la quittance</NH2>
       <NForm label-placement="top">
         <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
-          <NFormItemGi label="Date émission *">
-            <NDatePicker :value="quittanceDTO.dateEmission || undefined" @update:value="val => quittanceDTO.dateEmission = val" type="date" value-format="yyyy-MM-dd" size="large" />
+          <NFormItemGi label="Date émission *" :validation-status="errors.dateEmission ? 'error' : undefined" :feedback="errors.dateEmission ? 'Ce champ est obligatoire' : ''">
+            <NDatePicker :value="quittanceDTO.dateEmission || null" @update:value="val => quittanceDTO.dateEmission = val" type="date" value-format="yyyy-MM-dd" size="large" />
           </NFormItemGi>
           <NFormItemGi label="Date échéance">
             <NDatePicker
-              :value="quittanceDTO.dateEcheance || undefined"
+              :value="quittanceDTO.dateEcheance || null"
               @update:value="val => quittanceDTO.dateEcheance = val"
               type="date"
               value-format="yyyy-MM-dd"
@@ -187,14 +216,11 @@ watch(
               placeholder="Date calculée automatiquement"
             />
           </NFormItemGi>
-          <NFormItemGi label="Montant loyer (€) *">
-            <NInputNumber :value="Number.parseFloat(quittanceDTO.montantLoyer || '0')" @update:value="val => quittanceDTO.montantLoyer = String(val)" min="0" placeholder="0.00" size="large" />
-            <div v-if="isTrimestriel" style="color: #1976d2; font-weight: bold; font-size: 1em; margin-top: 2px;">
-              {{ loyerDetail }}
-            </div>
+          <NFormItemGi label="Montant loyer (€) *" :validation-status="errors.montantLoyer ? 'error' : undefined" :feedback="errors.montantLoyer ? 'Ce champ est obligatoire' : ''">
+            <NInputNumber :value="quittanceDTO.montantLoyer ? Number.parseFloat(quittanceDTO.montantLoyer) : null" @update:value="val => quittanceDTO.montantLoyer = String(val)" min="0" placeholder="0.00" size="large" />
           </NFormItemGi>
-          <NFormItemGi label="Montant charges (€) *">
-            <NInputNumber :value="Number.parseFloat(quittanceDTO.montantCharges || '0')" @update:value="val => quittanceDTO.montantCharges = String(val)" min="0" placeholder="0.00" size="large" />
+          <NFormItemGi label="Montant charges (€) *" :validation-status="errors.montantCharges ? 'error' : undefined" :feedback="errors.montantCharges ? 'Ce champ est obligatoire' : ''">
+            <NInputNumber :value="quittanceDTO.montantCharges ? Number.parseFloat(quittanceDTO.montantCharges) : null" @update:value="val => quittanceDTO.montantCharges = String(val)" min="0" placeholder="0.00" size="large" />
           </NFormItemGi>
           <NFormItemGi label="Inclure caution ?">
             <NRadioGroup v-model:value="quittanceDTO.inclureCaution">
@@ -203,12 +229,12 @@ watch(
             </NRadioGroup>
           </NFormItemGi>
           <NFormItemGi v-if="quittanceDTO.inclureCaution" label="Montant caution (€)">
-            <NInputNumber :value="Number.parseFloat(quittanceDTO.depotGarantie || '0')" @update:value="val => quittanceDTO.depotGarantie = String(val)" min="0" placeholder="0.00" size="large" />
+            <NInputNumber :value="quittanceDTO.depotGarantie ? Number.parseFloat(quittanceDTO.depotGarantie) : null" @update:value="val => quittanceDTO.depotGarantie = String(val)" min="0" placeholder="0.00" size="large" />
           </NFormItemGi>
           <NFormItemGi label="Montant total (€)">
             <NInputNumber :value="computedTotal" disabled size="large" />
           </NFormItemGi>
-          <NFormItemGi label="Statut *">
+          <NFormItemGi label="Statut *" :validation-status="errors.statut ? 'error' : undefined" :feedback="errors.statut ? 'Ce champ est obligatoire' : ''">
             <NSelect
               v-model:value="quittanceDTO.statut"
               :options="[

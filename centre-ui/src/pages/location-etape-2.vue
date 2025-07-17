@@ -123,6 +123,7 @@ function precedent() {
             <NDatePicker
               v-model:formatted-value="locationDTO.dateDebut"
               value-format="yyyy-MM-dd"
+              format="dd/MM/yyyy"
               type="date"
               clearable
               class="w-full"
@@ -133,6 +134,7 @@ function precedent() {
             <NDatePicker
               v-model:formatted-value="locationDTO.dateFin"
               value-format="yyyy-MM-dd"
+              format="dd/MM/yyyy"
               type="date"
               clearable
               class="w-full"

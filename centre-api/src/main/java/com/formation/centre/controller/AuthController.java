@@ -18,6 +18,9 @@ import com.formation.centre.dto.UserInfoResponseDTO;
 import com.formation.centre.service.AuthService;
 import com.formation.centre.service.JwtService;
 import com.formation.centre.service.UnifiedService;
+import com.formation.centre.dto.CapitalIdentitesDTO;
+import com.formation.centre.dto.RegisterRequestDTO;
+import org.springframework.http.HttpStatus;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -44,6 +47,16 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(401).body(new ApiResponse<>("401", e.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequestDTO dto) {
+        try {
+            authService.register(dto);
+            return ResponseEntity.ok().body("Inscription réussie");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 

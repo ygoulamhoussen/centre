@@ -14,6 +14,8 @@ import {
   NStep,
   NSteps,
   useMessage,
+  NGrid,
+  NGi,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, onUnmounted } from 'vue'
@@ -73,6 +75,20 @@ function precedent() {
   router.push('/location-etape-1')
 }
 
+function formatDate(dateString: string) {
+  if (!dateString) return 'Non spécifié'
+  return new Date(dateString).toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+function selectLocataire(locataire: any) {
+  locationDTO.value.locataireId = locataire.id
+  locationDTO.value.locataireNom = locataire.nom
+  router.push('/location-etape-3')
+}
+
 onMounted(() => {
   fetchData()
   window.addEventListener('resize', handleResize)
@@ -101,27 +117,43 @@ onUnmounted(() => {
 
       <NH2 class="titre-principal mb-4">Étape 2: Sélection du locataire</NH2>
 
-      <NForm label-placement="top">
-        <NFormItem label="Sélectionner un locataire">
-          <NSelect
-            v-model:value="locationDTO.locataireId"
-            :options="locataires.map(l => ({ label: l.nom, value: l.id }))"
-            placeholder="Choisir un locataire"
-            @update:value="handleLocataireChange"
-            size="large"
-          />
-        </NFormItem>
-      </NForm>
-
+      <NGrid :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
+        <NGi v-for="locataire in locataires" :key="locataire.id">
+          <NCard
+            hoverable
+            class="locataire-card"
+            @click="selectLocataire(locataire)"
+          >
+            <div class="flex items-start gap-4">
+              <div class="locataire-avatar">
+                <span v-if="!locataire.photo" class="avatar-initiales">{{ (locataire.prenom?.[0] || '') + (locataire.nom?.[0] || '') }}</span>
+                <!-- Si photo, afficher ici -->
+              </div>
+              <div class="flex-1">
+                <div class="locataire-nom mb-2">{{ locataire.prenom }} {{ locataire.nom }}</div>
+                <div class="text-sm space-y-1">
+                  <div v-if="locataire.telephone" class="flex items-center gap-2">
+                    <span class="i-carbon-phone" />
+                    <span>{{ locataire.telephone }}</span>
+                  </div>
+                  <div v-if="locataire.email" class="flex items-center gap-2">
+                    <span class="i-carbon-email" />
+                    <span>{{ locataire.email }}</span>
+                  </div>
+                  <div v-if="locataire.dateNaissance" class="flex items-center gap-2">
+                    <span class="i-carbon-calendar" />
+                    <span>{{ formatDate(locataire.dateNaissance) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </NCard>
+        </NGi>
+      </NGrid>
       <NSpace class="flex justify-between mt-8">
         <NButton @click="precedent" size="large" title="Précédent">
           <template #icon>
             <NIcon :component="ArrowLeft24Filled" />
-          </template>
-        </NButton>
-        <NButton type="primary" @click="suivant" size="large" title="Suivant">
-          <template #icon>
-            <NIcon :component="ArrowRight24Filled" />
           </template>
         </NButton>
       </NSpace>
@@ -184,5 +216,37 @@ h3 {
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
+}
+.locataire-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.locataire-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: #1976d2;
+}
+.locataire-avatar {
+  background-color: var(--n-color-embedded);
+  color: var(--n-color-target);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avatar-initiales {
+  color: #2563eb;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+.locataire-nom {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--n-text-color);
 }
 </style>

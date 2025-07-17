@@ -18,6 +18,7 @@ import {
   NStep,
   NSteps,
   useMessage,
+  NIcon,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
@@ -41,28 +42,34 @@ const message = useMessage()
 // trouver la location choisie à l'étape 1
 const selectedLocation = computed(() => locations.value.find(l => l.id === quittanceDTO.value.locationId))
 const frequence = computed(() => selectedLocation.value?.frequenceLoyer)
-const selectedYear = ref(new Date().getFullYear())
+const selectedYear = computed({
+  get: () => quittanceDTO.value.selectedYear ?? new Date().getFullYear(),
+  set: (val: number) => { quittanceDTO.value.selectedYear = val }
+})
 const selectedMonth = computed({
   get: () => quittanceDTO.value.selectedMonth ?? null,
   set: (val: number | null) => { quittanceDTO.value.selectedMonth = val }
 })
-const selectedQuarter = ref<number | null>(null)
+const selectedQuarter = computed({
+  get: () => quittanceDTO.value.selectedQuarter ?? null,
+  set: (val: number | null) => { quittanceDTO.value.selectedQuarter = val }
+})
 
 // calcul du loyer selon la fréquence
 const isTrimestriel = computed(() => {
   if (!selectedLocation.value) {
     return false
   }
-  return (selectedLocation.value.frequenceLoyer || '').toString().trim().toLowerCase() === 'trimestriel'
+  return (selectedLocation.value.frequenceLoyer || '').toUpperCase() === 'TRIMESTRIEL'
 })
 
 const loyerDetail = computed(() => {
   if (!selectedLocation.value) {
     return ''
   }
-  const freq = (selectedLocation.value.frequenceLoyer || '').toString().trim().toLowerCase()
+  const freq = (selectedLocation.value.frequenceLoyer || '').toUpperCase()
   const loyerMensuel = Number.parseFloat(selectedLocation.value.loyerMensuel || '0')
-  if (freq === 'trimestriel') {
+  if (freq === 'TRIMESTRIEL') {
     return `= 3 × ${loyerMensuel.toFixed(2)} € = ${(3 * loyerMensuel).toFixed(2)} €`
   }
   return ''
@@ -147,11 +154,11 @@ async function suivant() {
     errors.value.year = true
     hasError = true
   }
-  if (frequence.value === 'MENSUEL' && selectedMonth.value === null) {
+  if (frequence.value && frequence.value.toString().toUpperCase() === 'MENSUEL' && selectedMonth.value === null) {
     errors.value.month = true
     hasError = true
   }
-  if (frequence.value === 'TRIMESTRIEL' && selectedQuarter.value === null) {
+  if (frequence.value && frequence.value.toString().toUpperCase() === 'TRIMESTRIEL' && selectedQuarter.value === null) {
     errors.value.quarter = true
     hasError = true
   }
@@ -159,33 +166,80 @@ async function suivant() {
     message.warning('Veuillez sélectionner la période complète')
     return
   }
-  // Recalcule systématiquement la période juste avant de passer à l'étape 3
-  let startDate: Date | null = null
-  let endDate: Date | null = null
+  // Stocker explicitement les sélections dans le DTO
+  quittanceDTO.value.selectedYear = selectedYear.value
+  quittanceDTO.value.selectedMonth = selectedMonth.value
+  quittanceDTO.value.selectedQuarter = selectedQuarter.value
+  // Harmonisation de la casse de la fréquence
+  const freq = frequence.value ? frequence.value.toString().toUpperCase() : ''
+  let startDate = null
+  let endDate = null
   if (selectedYear.value) {
-    if (frequence.value === 'MENSUEL' && selectedMonth.value !== null) {
+    if (freq === 'MENSUEL' && selectedMonth.value !== null) {
       startDate = new Date(selectedYear.value, selectedMonth.value, 1)
       endDate = new Date(selectedYear.value, selectedMonth.value + 1, 0)
-    } else if (frequence.value === 'TRIMESTRIEL' && selectedQuarter.value !== null) {
+    } else if (freq === 'TRIMESTRIEL' && selectedQuarter.value !== null) {
       const startMonth = (selectedQuarter.value - 1) * 3
       startDate = new Date(selectedYear.value, startMonth, 1)
       endDate = new Date(selectedYear.value, startMonth + 3, 0)
-    } else if (frequence.value === 'ANNUEL') {
+    } else if (freq === 'ANNUEL') {
       startDate = new Date(selectedYear.value, 0, 1)
       endDate = new Date(selectedYear.value, 11, 31)
     }
   }
-  quittanceDTO.value.dateDebut = startDate
-    ? `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`
-    : null
-  quittanceDTO.value.dateFin = endDate
-    ? `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
-    : null
-  // Log temporaire pour debug
-  console.log('dateDebut transmise:', quittanceDTO.value.dateDebut, 'dateFin transmise:', quittanceDTO.value.dateFin)
+  const formatDate = (date) => {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  quittanceDTO.value.dateDebut = startDate ? formatDate(startDate) : null
+  quittanceDTO.value.dateFin = endDate ? formatDate(endDate) : null
+  // Log debug JSON.stringify
+  console.log('DTO transmis à l\'étape 3', JSON.parse(JSON.stringify(quittanceDTO.value)))
   await nextTick()
   router.push('/quittance-etape-3')
 }
+
+watch([
+  selectedYear, selectedMonth, selectedQuarter, frequence],
+  ([year, month, quarter, freq]) => {
+    console.log('WATCH:', { year, month, quarter, freq });
+    let startDate: Date | null = null
+    let endDate: Date | null = null
+    const formatDate = (date: Date) => {
+      const y = date.getFullYear()
+      const m = String(date.getMonth() + 1).padStart(2, '0')
+      const d = String(date.getDate()).padStart(2, '0')
+      return `${y}-${m}-${d}`
+    }
+    if (year) {
+      const freqUpper = (freq || '').toUpperCase();
+      switch (freqUpper) {
+        case 'MENSUEL':
+          if (month !== null && month !== undefined) {
+            startDate = new Date(year, month, 1)
+            endDate = new Date(year, month + 1, 0)
+          }
+          break
+        case 'TRIMESTRIEL':
+          if (quarter !== null && quarter !== undefined) {
+            const startMonth = (quarter - 1) * 3
+            startDate = new Date(year, startMonth, 1)
+            endDate = new Date(year, startMonth + 3, 0)
+          }
+          break
+        case 'ANNUEL':
+          startDate = new Date(year, 0, 1)
+          endDate = new Date(year, 11, 31)
+          break
+      }
+    }
+    quittanceDTO.value.dateDebut = startDate ? formatDate(startDate) : null
+    quittanceDTO.value.dateFin = endDate ? formatDate(endDate) : null
+  },
+  { immediate: true }
+)
 
 const stepTitles = ['Location', 'Période', 'Détails', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
@@ -235,7 +289,7 @@ const quarterOptions = [
           <NFormItemGi v-if="frequence" label="Année" :validation-status="errors.year ? 'error' : undefined" :feedback="errors.year ? 'Ce champ est obligatoire' : ''">
             <NSelect v-model:value="selectedYear" :options="yearOptions" size="large" />
           </NFormItemGi>
-          <NFormItemGi v-if="frequence && frequence.toString().trim().toUpperCase() === 'MENSUEL'" label="Mois" :validation-status="errors.month ? 'error' : undefined" :feedback="errors.month ? 'Ce champ est obligatoire' : ''">
+          <NFormItemGi v-if="frequence && frequence.toString().toUpperCase() === 'MENSUEL'" label="Mois" :validation-status="errors.month ? 'error' : undefined" :feedback="errors.month ? 'Ce champ est obligatoire' : ''">
             <NSelect
               v-model:value="selectedMonth"
               :options="monthOptions"
@@ -244,7 +298,7 @@ const quarterOptions = [
               size="large"
             />
           </NFormItemGi>
-          <NFormItemGi v-if="frequence === 'TRIMESTRIEL'" label="Trimestre" :validation-status="errors.quarter ? 'error' : undefined" :feedback="errors.quarter ? 'Ce champ est obligatoire' : ''">
+          <NFormItemGi v-if="frequence && frequence.toString().toUpperCase() === 'TRIMESTRIEL'" label="Trimestre" :validation-status="errors.quarter ? 'error' : undefined" :feedback="errors.quarter ? 'Ce champ est obligatoire' : ''">
             <NSelect
               v-model:value="selectedQuarter"
               :options="quarterOptions"
@@ -255,10 +309,18 @@ const quarterOptions = [
           </NFormItemGi>
         </NGrid>
       </NForm>
-      <div class="flex justify-between mt-8">
-        <NButton @click="precedent" size="large">Précédent</NButton>
-        <NButton type="primary" @click="suivant" size="large">Suivant</NButton>
+      <div v-if="quittanceDTO && quittanceDTO.value && quittanceDTO.value.dateDebut && quittanceDTO.value.dateFin" class="periode-resume mt-4 mb-2">
+        <strong>Période sélectionnée :</strong>
+        du {{ quittanceDTO.value.dateDebut }} au {{ quittanceDTO.value.dateFin }}
       </div>
+      <pre>{{ quittanceDTO }}</pre>
+      <NSpace justify="end" class="mt-8">
+        <NButton type="primary" @click="suivant" size="large" title="Suivant">
+          <template #icon>
+            <NIcon :component="ArrowRight24Filled" />
+          </template>
+        </NButton>
+      </NSpace>
     </NCard>
   </div>
 </template>
@@ -328,5 +390,13 @@ h3 {
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
+}
+.periode-resume {
+  font-size: 1.1rem;
+  color: #1976d2;
+  background: #f5faff;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  display: inline-block;
 }
 </style>

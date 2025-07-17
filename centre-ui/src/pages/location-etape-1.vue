@@ -14,6 +14,8 @@ import {
   NStep,
   NSteps,
   useMessage,
+  NGrid,
+  NGi,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, onUnmounted } from 'vue'
@@ -53,19 +55,9 @@ async function fetchData() {
   }
 }
 
-function handleProprieteChange(value: string) {
-  const selected = proprietes.value.find(p => p.id === value)
-  if (selected) {
-    locationDTO.value.proprieteId = selected.id
-    locationDTO.value.proprieteNom = selected.nom
-  }
-}
-
-function suivant() {
-  if (!locationDTO.value.proprieteId) {
-    message.warning('Merci de choisir une propriété')
-    return
-  }
+function selectPropriete(propriete: any) {
+  locationDTO.value.proprieteId = propriete.id
+  locationDTO.value.proprieteNom = propriete.nom
   router.push('/location-etape-2')
 }
 
@@ -97,25 +89,29 @@ onUnmounted(() => {
 
       <NH2 class="titre-principal mb-4">Étape 1: Sélection de la propriété</NH2>
 
-      <NForm label-placement="top">
-        <NFormItem label="Sélectionner une propriété">
-          <NSelect
-            v-model:value="locationDTO.proprieteId"
-            :options="proprietes.map(p => ({ label: p.nom, value: p.id }))"
-            placeholder="Choisir une propriété"
-            @update:value="handleProprieteChange"
-            size="large"
-          />
-        </NFormItem>
-      </NForm>
-
-      <NSpace justify="end" class="mt-8">
-        <NButton type="primary" @click="suivant" size="large" title="Suivant">
-          <template #icon>
-            <NIcon :component="ArrowRight24Filled" />
-          </template>
-        </NButton>
-      </NSpace>
+      <NGrid :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
+        <NGi v-for="propriete in proprietes" :key="propriete.id">
+          <NCard
+            hoverable
+            class="propriete-card"
+            @click="selectPropriete(propriete)"
+          >
+            <div class="flex items-start gap-4">
+              <div class="propriete-avatar">
+                <NIcon :component="BuildingHome24Filled" size="32" />
+              </div>
+              <div class="flex-1">
+                <div class="propriete-nom mb-2">{{ propriete.nom }}</div>
+                <div class="text-sm space-y-1">
+                  <div v-if="propriete.adresse">{{ propriete.adresse }}</div>
+                  <div v-if="propriete.surface">Surface : {{ propriete.surface }} m²</div>
+                  <div v-if="propriete.type">Type : {{ propriete.type }}</div>
+                </div>
+              </div>
+            </div>
+          </NCard>
+        </NGi>
+      </NGrid>
     </NCard>
   </div>
 </template>
@@ -175,5 +171,32 @@ h3 {
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
+}
+.propriete-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.propriete-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: #1976d2;
+}
+.propriete-avatar {
+  background-color: var(--n-color-embedded);
+  color: var(--n-color-target);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.propriete-nom {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--n-text-color);
 }
 </style>

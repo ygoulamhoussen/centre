@@ -28,8 +28,9 @@ import {
   useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import type { NDatePicker as NDatePickerType, NInputNumber as NInputNumberType } from 'naive-ui'
 
 definePage({
   meta: {
@@ -87,9 +88,32 @@ function handleResize() {
 onMounted(() => window.addEventListener('resize', handleResize))
 onUnmounted(() => window.removeEventListener('resize', handleResize))
 
-function suivant() {
-  if (!locationDTO.value.loyerMensuel || !locationDTO.value.dateDebut) {
-    message.warning('Veuillez saisir les informations obligatoires')
+const champsObligatoires = [
+  { key: 'dateDebut', label: 'Date de début' },
+  { key: 'loyerMensuel', label: 'Loyer mensuel' }
+]
+
+const champsRefs = {
+  dateDebut: ref<InstanceType<typeof NDatePickerType> | null>(null),
+  loyerMensuel: ref<InstanceType<typeof NInputNumberType> | null>(null)
+}
+
+const champsInvalides = ref<{ [key: string]: boolean }>({})
+
+async function suivant() {
+  const invalid: { [key: string]: boolean } = {}
+  if (!locationDTO.value.dateDebut) invalid.dateDebut = true
+  if (!locationDTO.value.loyerMensuel) invalid.loyerMensuel = true
+  champsInvalides.value = invalid
+  if (Object.keys(invalid).length > 0) {
+    // Focus sur le premier champ invalide
+    await nextTick()
+    if (invalid.dateDebut && champsRefs.dateDebut.value) {
+      champsRefs.dateDebut.value.focus && champsRefs.dateDebut.value.focus()
+    } else if (invalid.loyerMensuel && champsRefs.loyerMensuel.value) {
+      champsRefs.loyerMensuel.value.focus && champsRefs.loyerMensuel.value.focus()
+    }
+    message.error('Veuillez remplir les champs obligatoires')
     return
   }
   router.push('/location-etape-4')
@@ -120,8 +144,9 @@ function precedent() {
 
       <NForm label-placement="top">
         <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
-          <NFormItemGi label="Date de début *">
+          <NFormItemGi label="Date de début *" :feedback="champsInvalides.dateDebut ? 'Champ obligatoire' : ''" :validation-status="champsInvalides.dateDebut ? 'error' : undefined">
             <NDatePicker
+              ref="champsRefs.dateDebut"
               v-model:formatted-value="locationDTO.dateDebut"
               value-format="yyyy-MM-dd"
               format="dd/MM/yyyy"
@@ -142,8 +167,8 @@ function precedent() {
               size="large"
             />
           </NFormItemGi>
-          <NFormItemGi label="Loyer mensuel (€) *">
-            <NInputNumber v-model:value="loyerMensuel" min="0" placeholder="0.00" class="w-full" size="large" />
+          <NFormItemGi label="Loyer mensuel (€) *" :feedback="champsInvalides.loyerMensuel ? 'Champ obligatoire' : ''" :validation-status="champsInvalides.loyerMensuel ? 'error' : undefined">
+            <NInputNumber ref="champsRefs.loyerMensuel" v-model:value="loyerMensuel" min="0" placeholder="0.00" class="w-full" size="large" />
           </NFormItemGi>
           <NFormItemGi label="Charges mensuelles (€)">
             <NInputNumber v-model:value="chargesMensuelles" min="0" placeholder="0.00" class="w-full" size="large" />

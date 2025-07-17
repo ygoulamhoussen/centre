@@ -22,7 +22,7 @@ import {
   NSelect
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePage({
@@ -81,6 +81,44 @@ const errors = ref({
   statut: false
 })
 
+// Calcul automatique de la période si absente à l'arrivée sur l'étape 3
+function calculerPeriodeSiAbsente() {
+  if (!quittanceDTO.value.dateDebut || !quittanceDTO.value.dateFin) {
+    const freq = selectedLocation.value?.frequenceLoyer ? selectedLocation.value.frequenceLoyer.toString().toUpperCase() : ''
+    const year = quittanceDTO.value.selectedYear || new Date().getFullYear()
+    const month = quittanceDTO.value.selectedMonth
+    const quarter = quittanceDTO.value.selectedQuarter
+    let startDate = null
+    let endDate = null
+    if (year) {
+      if (freq === 'MENSUEL' && month !== null && month !== undefined) {
+        startDate = new Date(year, month, 1)
+        endDate = new Date(year, month + 1, 0)
+      } else if (freq === 'TRIMESTRIEL' && quarter !== null && quarter !== undefined) {
+        const startMonth = (quarter - 1) * 3
+        startDate = new Date(year, startMonth, 1)
+        endDate = new Date(year, startMonth + 3, 0)
+      } else if (freq === 'ANNUEL') {
+        startDate = new Date(year, 0, 1)
+        endDate = new Date(year, 11, 31)
+      }
+    }
+    const formatDate = (date) => {
+      const y = date.getFullYear()
+      const m = String(date.getMonth() + 1).padStart(2, '0')
+      const d = String(date.getDate()).padStart(2, '0')
+      return `${y}-${m}-${d}`
+    }
+    quittanceDTO.value.dateDebut = startDate ? formatDate(startDate) : null
+    quittanceDTO.value.dateFin = endDate ? formatDate(endDate) : null
+  }
+}
+
+onMounted(() => {
+  console.log('DTO reçu à l\'étape 3', JSON.parse(JSON.stringify(quittanceDTO.value)))
+  calculerPeriodeSiAbsente()
+})
+
 function suivant() {
   // Réinitialise les erreurs
   errors.value = {
@@ -106,8 +144,12 @@ function suivant() {
     errors.value.statut = true
     hasError = true
   }
+  // Log debug JSON.stringify
+  console.log('DTO étape 3', JSON.parse(JSON.stringify(quittanceDTO.value)))
+  // Calcul automatique de la période si besoin
+  calculerPeriodeSiAbsente()
   // On vérifie aussi dateDebut/dateFin (étape précédente)
-  if (!quittanceDTO.value.dateDebut || !quittanceDTO.value.dateFin) {
+  if (!quittanceDTO.value.dateDebut?.trim() || !quittanceDTO.value.dateFin?.trim()) {
     message.warning('Merci de renseigner la période (étape précédente)')
     return
   }

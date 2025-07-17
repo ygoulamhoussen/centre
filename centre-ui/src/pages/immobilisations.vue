@@ -3,6 +3,7 @@ import type { Immobilisation } from '@/types/immobilisation'
 import type { DataTableColumns } from 'naive-ui'
 import { immobilisationApi } from '@/service/api/immobilisation'
 import { useAppStore } from '@/store/modules/app'
+import { useAuthStore } from '@/store/modules/auth'
 import { CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
 import { Icon } from '@iconify/vue'
 import { NButton, NCard, NDataTable, NH1, NSelect, useMessage } from 'naive-ui'
@@ -19,6 +20,8 @@ definePage({
 const router = useRouter()
 const message = useMessage()
 const isMobile = useAppStore().isMobile
+const authStore = useAuthStore()
+const userId = authStore.userInfo.userId
 
 const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
 
@@ -97,7 +100,7 @@ const filteredImmobilisations = computed(() => {
 async function loadImmobilisations() {
   loading.value = true
   try {
-    immobilisations.value = await immobilisationApi.getImmobilisationsByUtilisateur('00000000-0000-0000-0000-000000000003')
+    immobilisations.value = await immobilisationApi.getImmobilisationsByUtilisateur(userId)
   } catch (error) {
     message.error('Erreur lors du chargement des immobilisations')
     console.error(error)
@@ -108,7 +111,7 @@ async function loadImmobilisations() {
 
 async function loadProprietes() {
   try {
-    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003`)
+    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/${userId}`)
     proprietes.value = await response.json()
   } catch (error) {
     console.error('Erreur lors du chargement des propriétés:', error)

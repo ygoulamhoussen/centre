@@ -236,7 +236,7 @@
                 <td>{{ component.percent }}</td>
                 <td>{{ formatCurrency(component.percent * formData.montant / 100) }}</td>
                 <td>{{ component.dureeAmortissement || '—' }}</td>
-                <td>{{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation] || '—' }}</td>
+                <td>{{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation as TypeImmobilisation] || '—' }}</td>
                 <td>{{ CATEGORIE_FISCALE_LABELS[getCategorieFiscaleFromDuree(String(component.dureeAmortissement))] || '—' }}</td>
               </tr>
             </tbody>
@@ -294,6 +294,7 @@ import { CategorieFiscale, TypeImmobilisation } from '@/types/immobilisation.d'
 import { CATEGORIE_FISCALE_DUREES, CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
 import { immobilisationApi } from '@/service/api/immobilisation'
 import { useAppStore } from '@/store/modules/app'
+import { useAuthStore } from '@/store/modules/auth'
 
 definePage({
   meta: {
@@ -399,6 +400,7 @@ const steps = [
 
 // Formulaire
 const formRef = ref()
+const authStore = useAuthStore()
 const formData = ref({
   intitule: '',
   montant: 0,
@@ -409,7 +411,7 @@ const formData = ref({
   proprieteId: '',
   commentaire: '',
   dureeAmortissement: '',
-  utilisateurId: '00000000-0000-0000-0000-000000000003', // Yussouf par défaut
+  utilisateurId: authStore.userInfo.userId,
 })
 
 // Règles de validation
@@ -542,7 +544,7 @@ function onProprieteSelect(proprieteId: string) {
 
 async function loadProprietes() {
   try {
-    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/00000000-0000-0000-0000-000000000003`)
+    const response = await fetch(`${baseUrl}/api/getProprietesByUtilisateur/${authStore.userInfo.userId}`)
     proprietes.value = await response.json()
   } catch (error) {
     message.error('Erreur lors du chargement des propriétés')
@@ -561,32 +563,33 @@ async function saveImmobilisation() {
       return
     }
 
-    // Créer une immobilisation pour chaque composant amortissable
-    const composantsAmortissables = immobilisationComponents.value.filter(c => c.amortissable && Number(c.percent) > 0)
+    // Créer une immobilisation pour chaque composant ayant un pourcentage > 0
+    const composantsAEnregistrer = immobilisationComponents.value.filter(c => Number(c.percent) > 0)
     
-    for (const composant of composantsAmortissables) {
+    for (const composant of composantsAEnregistrer) {
       const montant = (Number(composant.percent) * formData.value.montant) / 100
-      const data = {
+      const data: any = {
         intitule: `${formData.value.intitule} - ${composant.label}`,
         montant: montant.toString(),
         dateAcquisition: formData.value.dateAcquisition ? new Date(formData.value.dateAcquisition).toISOString().split('T')[0] : '',
-        typeImmobilisation: composant.typeImmobilisation as TypeImmobilisation,
-        categorieFiscale: getCategorieFiscaleFromDuree(String(composant.dureeAmortissement)),
-        dureeAmortissement: String(composant.dureeAmortissement),
         proprieteId: formData.value.proprieteId,
         commentaire: formData.value.commentaire,
         utilisateurId: formData.value.utilisateurId,
+        typeImmobilisation: composant.typeImmobilisation as TypeImmobilisation,
       }
-
+      if (composant.amortissable) {
+        data.categorieFiscale = getCategorieFiscaleFromDuree(String(composant.dureeAmortissement))
+        data.dureeAmortissement = String(composant.dureeAmortissement)
+      }
+      // Les non amortissables (ex : terrain) n'ont pas de catégorie fiscale ni de durée
       console.error('=== CRÉATION COMPOSANT ===')
       console.error('Composant:', composant.label)
       console.error('Données à envoyer:', data)
-      
       const result = await immobilisationApi.createImmobilisation(data)
       console.error('Résultat de la création:', result)
     }
 
-    message.success(`${composantsAmortissables.length} immobilisation(s) créée(s) avec succès`)
+    message.success(`${composantsAEnregistrer.length} immobilisation(s) créée(s) avec succès`)
     router.push('/immobilisations')
   } catch (error) {
     console.error('Erreur complète:', error)

@@ -304,6 +304,14 @@ INSERT INTO compte_comptable (code, libelle, type, description) VALUES
 ('512000', 'Banque', 'Trésorerie', 'Compte courant bancaire'),
 ('530000', 'Caisse', 'Trésorerie', 'Espèces détenues (rare en LMNP)');
 
+-- Comptes comptables pour immobilisations (ajoutés pour conformité)
+INSERT INTO compte_comptable (code, libelle, type, description) VALUES
+('213100', 'Immeubles', 'Immobilisations', 'Immeubles bâtis et terrains'),
+('218100', 'Mobilier', 'Immobilisations', 'Mobilier et équipements'),
+('213500', 'Agencements/Travaux', 'Immobilisations', 'Travaux, aménagements, agencements'),
+('215400', 'Matériel', 'Immobilisations', 'Matériel d''équipement'),
+('203000', 'Frais d''acquisition', 'Immobilisations', 'Frais d''acquisition d''immobilisation');
+
 -- Comptes complémentaires pour la cohérence frontend/backend
 INSERT INTO compte_comptable (code, libelle, type, description) VALUES
 ('614000', 'Charges de copropriété', 'Charge', 'Quote-part propriétaire (hors travaux non déductibles)'),

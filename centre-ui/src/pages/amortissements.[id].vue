@@ -70,6 +70,7 @@ import {
 import type { Amortissement, Immobilisation } from '@/types/immobilisation'
 import { amortissementApi, immobilisationApi } from '@/service/api/immobilisation'
 import { CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION_LABELS } from '@/types/immobilisation-constants'
+import { useAuthStore } from '@/store/modules/auth'
 
 definePage({
   meta: {
@@ -108,11 +109,12 @@ function goBack() {
 }
 
 // Chargement des données
+const authStore = useAuthStore()
 async function loadImmobilisation() {
   const immobilisationId = route.params.id as string
   try {
-    // Récupérer l'immobilisation depuis la liste des immobilisations
-    const allImmobilisations = await immobilisationApi.getImmobilisationsByUtilisateur('00000000-0000-0000-0000-000000000003')
+    // Récupérer l'immobilisation depuis la liste des immobilisations de l'utilisateur connecté
+    const allImmobilisations = await immobilisationApi.getImmobilisationsByUtilisateur(authStore.userInfo.userId)
     immobilisation.value = allImmobilisations.find(i => i.id === immobilisationId) || null
     
     if (!immobilisation.value) {

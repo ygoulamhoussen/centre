@@ -1148,12 +1148,14 @@ public List<ImmobilisationDTO> getImmobilisationsByPropriete(String proprieteId)
 
 public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
     Immobilisation i;
+    boolean isNew = false;
     if (dto.getId() != null && !dto.getId().isEmpty()) {
         i = immobilisationRepository.findById(UUID.fromString(dto.getId()))
                 .orElseThrow(() -> new IllegalArgumentException("Immobilisation introuvable"));
     } else {
         i = new Immobilisation();
         i.setCreeLe(LocalDateTime.now());
+        isNew = true;
     }
 
     i.setIntitule(dto.getIntitule());
@@ -1173,6 +1175,11 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
     i.setModifieLe(LocalDateTime.now());
 
     Immobilisation saved = immobilisationRepository.save(i);
+
+    // Générer l'écriture comptable d'acquisition uniquement à la création
+    if (isNew) {
+        createEcritureComptableAcquisitionImmobilisation(saved);
+    }
     
     // Générer automatiquement le plan d'amortissement
     try {
@@ -1821,6 +1828,8 @@ private CompteComptable getCompteComptablePourRecette(Recette recette) {
             return compteComptableRepository.findByCode("706000"); // Loyers meublés
         case "BUREAUX":
             return compteComptableRepository.findByCode("706000"); // Loyers meublés
+        case "PARKING":
+            return compteComptableRepository.findByCode("706000"); // Loyers meublés (ou adapter si besoin)
         default:
             throw new IllegalArgumentException("Type de recette inconnu : " + recette.getType());
     }
@@ -3057,6 +3066,69 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         exceptionnels.calculerTotal();
         
         return exceptionnels;
+    }
+
+    // Ajout de la méthode privée pour l'écriture d'acquisition
+    private void createEcritureComptableAcquisitionImmobilisation(Immobilisation immo) {
+        // Détermination du compte d'immobilisation selon le type
+        String type = immo.getTypeImmobilisation();
+        CompteComptable compteImmo;
+        switch (type) {
+            case "BIEN_IMMOBILIER":
+                compteImmo = compteComptableRepository.findByCode("213100"); // Immeubles
+                break;
+            case "MOBILIER":
+                compteImmo = compteComptableRepository.findByCode("218100"); // Mobilier
+                break;
+            case "TRAVAUX":
+                compteImmo = compteComptableRepository.findByCode("213500"); // Agencements/Travaux
+                break;
+            case "EQUIPEMENT":
+                compteImmo = compteComptableRepository.findByCode("215400"); // Matériel
+                break;
+            case "FRAIS":
+                compteImmo = compteComptableRepository.findByCode("203000"); // Frais d'acquisition
+                break;
+            default:
+                compteImmo = compteComptableRepository.findByCode("218100"); // Par défaut Mobilier
+        }
+        CompteComptable compteBanque = compteComptableRepository.findByCode("512000"); // Banque
+
+        // Création de l'écriture comptable
+        EcritureComptable ecriture = new EcritureComptable();
+        ecriture.setDateEcriture(immo.getDateAcquisition());
+        ecriture.setLibelle("Acquisition immobilisation : " + immo.getIntitule());
+        ecriture.setJournalCode("ACH");
+        ecriture.setJournalLib(getJournalLibForCode("ACH"));
+        ecriture.setNumeroPiece(immo.getId().toString());
+        ecriture.setUtilisateur(immo.getUtilisateur());
+        ecriture.setCreatedAt(LocalDateTime.now());
+        ecriture.setPieceDate(immo.getDateAcquisition());
+        EcritureComptable savedEcriture = ecritureComptableRepository.save(ecriture);
+
+        // Débit immobilisation
+        LigneEcriture ligneDebit = new LigneEcriture();
+        ligneDebit.setEcriture(savedEcriture);
+        ligneDebit.setCompteNum(compteImmo.getCode());
+        ligneDebit.setCompteLibelle(compteImmo.getLibelle());
+        ligneDebit.setDebit(immo.getMontant());
+        ligneDebit.setCredit(BigDecimal.ZERO);
+        ligneDebit.setCommentaire(immo.getPropriete().getNom());
+        ligneEcritureRepository.save(ligneDebit);
+
+        // Crédit banque
+        LigneEcriture ligneCredit = new LigneEcriture();
+        ligneCredit.setEcriture(savedEcriture);
+        ligneCredit.setCompteNum(compteBanque.getCode());
+        ligneCredit.setCompteLibelle(compteBanque.getLibelle());
+        ligneCredit.setDebit(BigDecimal.ZERO);
+        ligneCredit.setCredit(immo.getMontant());
+        ligneCredit.setCommentaire(immo.getPropriete().getNom());
+        ligneEcritureRepository.save(ligneCredit);
+
+        // (Optionnel) Lier l'écriture à l'immobilisation si tu ajoutes un champ dédié
+        // immo.setEcritureComptable(savedEcriture);
+        // immobilisationRepository.save(immo);
     }
 }
 

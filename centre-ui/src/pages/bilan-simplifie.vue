@@ -25,92 +25,110 @@ type TresorerieDetail = {
 }
 
 import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/store/modules/auth'
 import { Icon } from '@iconify/vue'
 import { bilanSimplifieApi } from '@/service/api/bilan-simplifie'
 import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NSelect, NSpin, useMessage, NH1 } from 'naive-ui'
+// --- CALCUL DU BILAN À PARTIR DU JOURNAL COMPTABLE (FEC) ---
+import { getEcrituresComptablesWithProprieteNom } from '@/service/api/charges-recettes'
+const lignesFEC = ref<any[]>([])
 
-definePage({
-  meta: {
-    title: '2033-A - Bilan simplifié',
-    icon: 'material-symbols:account-balance',
-    hideInMenu:true,
-    order: 11,
-  },
-})
-
-
-
-const message = useMessage()
-
-// State
-const loading = ref(false)
-const selectedYear = ref<number | null>(new Date().getFullYear())
-const bilan = ref<any>(null)
-const utilisateurId = '00000000-0000-0000-0000-000000000003' // Hardcoded for now
-
-// Options for selects
-const yearOptions = computed(() => {
-  const currentYear = new Date().getFullYear()
-  return Array.from({ length: 5 }, (_, i) => ({
-    label: (currentYear - i).toString(),
-    value: currentYear - i,
-  }))
-})
-
-// Computed values for bilan
-const totalImmobilisationsBrutes = computed(() => {
-  if (!bilan.value?.immobilisationsDetail) return 0
-  return bilan.value.immobilisationsDetail.reduce((sum: number, immo: any) => sum + immo.montantBrut, 0)
-})
-
-const totalAmortissementsCumules = computed(() => {
-  if (!bilan.value?.immobilisationsDetail) return 0
-  return bilan.value.immobilisationsDetail.reduce((sum: number, immo: any) => sum + immo.amortissementsCumules, 0)
-})
-
-const totalImmobilisationsNettes = computed(() => {
-  return totalImmobilisationsBrutes.value - totalAmortissementsCumules.value
-})
-
-const totalEmprunts = computed(() => {
-  if (!bilan.value?.empruntsDetail) return 0
-  return bilan.value.empruntsDetail.reduce((sum: number, emprunt: any) => sum + emprunt.capitalRestantDu, 0)
-})
-
-const totalTresorerie = computed(() => {
-  if (!bilan.value?.tresorerieDetail) return 0
-  return bilan.value.tresorerieDetail.reduce((sum: number, treso: any) => sum + treso.solde, 0)
-})
-
-const totalActif = computed(() => {
-  return totalImmobilisationsNettes.value + (bilan.value?.creancesClients ?? 0) + totalTresorerie.value
-})
-
-const totalPassif = computed(() => {
-  return (bilan.value?.capital ?? 0) + (bilan.value?.resultatExercice ?? 0) + totalEmprunts.value + (bilan.value?.dettesFournisseurs ?? 0)
-})
-
-// Functions
-async function calculerBilan() {
-  if (!selectedYear.value) {
-    message.warning('Veuillez sélectionner une année.')
-    return
-  }
-
-  loading.value = true
-  bilan.value = null
+async function chargerEcritures() {
   try {
-    bilan.value = await bilanSimplifieApi.calculerBilanSimplifie(
-      selectedYear.value,
-      utilisateurId,
-    )
+    const data = await getEcrituresComptablesWithProprieteNom(utilisateurId)
+    const lignes: any[] = []
+    for (const e of data as any[]) {
+      if (Array.isArray(e.lignes)) {
+        for (const l of e.lignes) {
+          lignes.push({
+            ...l,
+            dateEcriture: e.dateEcriture,
+            compteNum: l.compteNum,
+            debit: l.debit,
+            credit: l.credit,
+          })
+        }
+      }
+    }
+    lignesFEC.value = lignes
   } catch (error) {
-    message.error('Erreur lors du calcul du bilan.')
-    console.error(error)
-  } finally {
-    loading.value = false
+    message.error('Erreur lors du chargement des écritures')
   }
 }
+
+onMounted(async () => {
+  await chargerEcritures()
+  // Log diagnostic : somme dotations 681100 année sélectionnée
+  const dotations = lignesFEC.value
+    .filter(l => l.compteNum === '681100' && l.dateEcriture && new Date(l.dateEcriture).getFullYear() === selectedYear.value)
+    .reduce((sum, l) => sum + (Number(l.debit) || 0), 0)
+  console.log('Somme dotations amortissement (681100) année', selectedYear.value, ':', dotations)
+  // Log diagnostic : cumul crédits 281xx jusqu'au 31/12 année sélectionnée
+  const comptesAmortissements = ['28161', '28185']
+  const cumulAmortissements = lignesFEC.value
+    .filter(l => comptesAmortissements.includes(l.compteNum) && l.dateEcriture && new Date(l.dateEcriture) <= new Date(`${selectedYear.value}-12-31`))
+    .reduce((sum, l) => sum + (Number(l.credit) || 0), 0)
+  console.log('Cumul crédits amortissements (281xx) jusqu\'au 31/12/', selectedYear.value, ':', cumulAmortissements)
+})
+
+// Comptes principaux (à adapter selon ton plan comptable)
+const comptesImmobilisations = ['213100', '213500']
+const comptesAmortissements = ['28161', '28185']
+const comptesEmprunts = ['164000']
+const comptesTresorerie = ['512000', '530000']
+const comptesCreances = ['411000']
+const comptesDettesFournisseurs = ['401000']
+const comptesCapital = ['101000']
+const comptesResultat = ['120000']
+
+const selectedYear = ref<number | null>(new Date().getFullYear())
+
+const lignesFECFiltrees = computed(() => {
+  if (!selectedYear.value) return lignesFEC.value
+  return lignesFEC.value.filter(l => l.dateEcriture && new Date(l.dateEcriture).getFullYear() === selectedYear.value)
+})
+
+function sumFEC(comptes: string[], sens: 'debit'|'credit' = 'debit') {
+  return lignesFECFiltrees.value
+    .filter(l => comptes.includes(l.compteNum))
+    .reduce((sum, l) => sum + (Number(l[sens]) || 0), 0)
+}
+
+function soldeCumuleComptesFiltre(filtreCompte: (compte: string) => boolean, annee: number | null) {
+  if (!annee) return 0
+  return lignesFEC.value
+    .filter(l => filtreCompte(l.compteNum) && l.dateEcriture && new Date(l.dateEcriture) <= new Date(`${annee}-12-31`))
+    .reduce((sum, l) => sum + (Number(l.debit) || 0) - (Number(l.credit) || 0), 0)
+}
+
+const totalImmobilisationsBrutes = computed(() => soldeCumuleComptesFiltre(
+  compte => comptesImmobilisations.includes(compte),
+  selectedYear.value
+))
+const totalAmortissementsCumules = computed(() => {
+  return -soldeCumuleComptesFiltre(
+    compte => compte.startsWith('28'),
+    selectedYear.value
+  )
+}) // amortissements = crédit
+const totalImmobilisationsNettes = computed(() => totalImmobilisationsBrutes.value - totalAmortissementsCumules.value)
+const totalEmprunts = computed(() => sumFEC(comptesEmprunts, 'credit'))
+const totalTresorerie = computed(() => sumFEC(comptesTresorerie, 'debit'))
+const totalCreances = computed(() => sumFEC(comptesCreances, 'debit'))
+const totalDettesFournisseurs = computed(() => sumFEC(comptesDettesFournisseurs, 'credit'))
+const totalCapital = computed(() => sumFEC(comptesCapital, 'credit'))
+const totalResultat = computed(() => sumFEC(comptesResultat, 'credit'))
+
+const totalActif = computed(() => totalImmobilisationsNettes.value + totalCreances.value + totalTresorerie.value)
+// Comptes produits/charges pour le calcul dynamique du résultat
+const comptesProduits = ['706000', '708000', '758000']
+const comptesCharges = ['606000', '606100', '606200', '606300', '606400', '606800', '615000', '614000', '622000', '623000', '626000', '627000', '635100', '635800', '637000', '661100', '681100']
+
+const totalProduits = computed(() => sumFEC(comptesProduits, 'credit'))
+const totalCharges = computed(() => sumFEC(comptesCharges, 'debit'))
+const resultatExercice = computed(() => totalProduits.value - totalCharges.value)
+
+const totalPassif = computed(() => totalCapital.value + resultatExercice.value + totalEmprunts.value + totalDettesFournisseurs.value)
 
 function formatCurrency(value?: number) {
   if (value === undefined || value === null) {
@@ -162,9 +180,19 @@ if (typeof window !== 'undefined') {
   window.addEventListener('resize', handleResize)
 }
 
+const message = useMessage()
+const authStore = useAuthStore()
+const utilisateurId = authStore.userInfo.userId
+const loading = ref(false)
+
+// Options pour le select d'années (calculées à partir du FEC)
+const anneesDisponibles = computed(() => {
+  const allYears = lignesFEC.value.map(l => l.dateEcriture ? new Date(l.dateEcriture).getFullYear() : null).filter((a): a is number => a !== null)
+  return Array.from(new Set(allYears)).sort((a, b) => b - a)
+})
+
 onMounted(async () => {
   // Lancer le calcul automatiquement à l'arrivée sur la page
-  await calculerBilan()
 })
 </script>
 
@@ -178,12 +206,11 @@ onMounted(async () => {
       <div class="filters">
         <NSelect
           v-model:value="selectedYear"
-          :options="yearOptions"
+          :options="anneesDisponibles.map(a => ({ label: a ? a.toString() : '', value: a }))"
           placeholder="Année"
           style="width: 150px"
-          @update:value="calculerBilan"
         />
-        <NButton type="primary" :loading="loading" @click="calculerBilan">
+        <NButton type="primary" :loading="loading" @click="chargerEcritures">
           <template #icon>
             <Icon icon="material-symbols:calculate-outline" />
           </template>
@@ -196,7 +223,7 @@ onMounted(async () => {
       <NSpin size="large" />
     </div>
 
-    <div v-if="!loading && bilan" class="result-container">
+    <div v-if="!loading" class="result-container">
       <NCard class="bilan-card">
         <table class="bilan-table">
           <thead>
@@ -223,7 +250,7 @@ onMounted(async () => {
             <tr class="subsection"><td colspan="2">Actif circulant</td></tr>
             <tr>
               <td>Créances clients (411000)</td>
-              <td class="amount">{{ formatCurrency(bilan.creancesClients) }}</td>
+               <td class="amount">{{ formatCurrency(totalCreances) }}</td>
             </tr>
             <tr>
               <td>Disponibilités (512000, 530000)</td>
@@ -241,11 +268,11 @@ onMounted(async () => {
             <tr class="subsection"><td colspan="2">Capitaux propres</td></tr>
             <tr>
               <td>Capital personnel (101000)</td>
-              <td class="amount">{{ formatCurrency(bilan.capital) }}</td>
+               <td class="amount">{{ formatCurrency(totalCapital) }}</td>
             </tr>
             <tr>
-              <td>Résultat de l'exercice (120000)</td>
-              <td class="amount">{{ formatCurrency(bilan.resultatExercice) }}</td>
+              <td>Résultat de l'exercice</td>
+              <td class="amount">{{ formatCurrency(resultatExercice) }}</td>
             </tr>
             
             <tr class="subsection"><td colspan="2">Dettes</td></tr>
@@ -255,7 +282,7 @@ onMounted(async () => {
             </tr>
             <tr>
               <td>Dettes fournisseurs (401000)</td>
-              <td class="amount">{{ formatCurrency(bilan.dettesFournisseurs) }}</td>
+               <td class="amount">{{ formatCurrency(totalDettesFournisseurs) }}</td>
             </tr>
             
             <tr class="final-total">
@@ -283,53 +310,9 @@ onMounted(async () => {
           </NButton>
         </div>
       </NCard>
-      
-      <NCollapse arrow-placement="right" class="details-collapse">
-        <NCollapseItem title="Détail des immobilisations" :name="1">
-          <template v-if="!isMobile">
-            <NDataTable :columns="immobilisationColumns" :data="bilan?.immobilisationsDetail ?? []" :bordered="false" size="small" />
-          </template>
-          <template v-else>
-            <div v-for="immo in bilan?.immobilisationsDetail ?? []" :key="immo.intitule + immo.proprieteNom" class="mobile-card">
-              <div><b>Intitulé :</b> {{ immo.intitule }}</div>
-              <div><b>Propriété :</b> {{ immo.proprieteNom }}</div>
-              <div><b>Type :</b> {{ immo.typeImmobilisation }}</div>
-              <div><b>Valeur brute :</b> {{ formatCurrency(immo.montantBrut) }}</div>
-              <div><b>Amortissements cumulés :</b> {{ formatCurrency(immo.amortissementsCumules) }}</div>
-              <div><b>Valeur nette :</b> {{ formatCurrency(immo.valeurNette) }}</div>
-            </div>
-          </template>
-        </NCollapseItem>
-        <NCollapseItem title="Détail des emprunts" :name="2">
-          <template v-if="!isMobile">
-            <NDataTable :columns="empruntColumns" :data="bilan?.empruntsDetail ?? []" :bordered="false" size="small" />
-          </template>
-          <template v-else>
-            <div v-for="emprunt in bilan?.empruntsDetail ?? []" :key="emprunt.intitule + emprunt.proprieteNom" class="mobile-card">
-              <div><b>Intitulé :</b> {{ emprunt.intitule }}</div>
-              <div><b>Propriété :</b> {{ emprunt.proprieteNom }}</div>
-              <div><b>Banque :</b> {{ emprunt.banque }}</div>
-              <div><b>Capital restant dû :</b> {{ formatCurrency(emprunt.capitalRestantDu) }}</div>
-              <div><b>Échéance :</b> {{ formatDate(emprunt.dateFin) }}</div>
-            </div>
-          </template>
-        </NCollapseItem>
-        <NCollapseItem title="Détail de la trésorerie" :name="3">
-          <template v-if="!isMobile">
-            <NDataTable :columns="tresorerieColumns" :data="bilan?.tresorerieDetail ?? []" :bordered="false" size="small" />
-          </template>
-          <template v-else>
-            <div v-for="treso in bilan?.tresorerieDetail ?? []" :key="treso.compte + treso.dateSolde" class="mobile-card">
-              <div><b>Compte :</b> {{ treso.compte }}</div>
-              <div><b>Solde :</b> {{ formatCurrency(treso.solde) }}</div>
-              <div><b>Date du solde :</b> {{ formatDate(treso.dateSolde) }}</div>
-            </div>
-          </template>
-        </NCollapseItem>
-      </NCollapse>
     </div>
     
-    <div v-if="!loading && !bilan" class="empty-state">
+    <div v-if="!loading && lignesFECFiltrees.length === 0" class="empty-state">
       <NEmpty description="Aucun bilan à afficher. Veuillez lancer un calcul." />
     </div>
   </div>

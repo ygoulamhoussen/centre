@@ -5,7 +5,9 @@ import { resultatFiscalApi } from '@/service/api/resultat-fiscal'
 import { Icon } from '@iconify/vue'
 import { useWindowSize } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/store/modules/auth'
 import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NGi, NGrid, NSelect, NSpin, NStatistic, NH1, useMessage } from 'naive-ui'
+import { getEcrituresComptablesWithProprieteNom } from '@/service/api/charges-recettes'
 
 type RecetteDetail = {
   intitule: string
@@ -42,7 +44,9 @@ const message = useMessage()
 const loading = ref(false)
 const selectedYear = ref<number | null>(new Date().getFullYear())
 const resultat = ref<ResultatFiscal | null>(null)
-const utilisateurId = '00000000-0000-0000-0000-000000000003' // Hardcoded for now
+const authStore = useAuthStore()
+const utilisateurId = authStore.userInfo.userId
+const lignesFEC = ref<any[]>([])
 
 // Options for selects
 const yearOptions = computed(() => {
@@ -149,6 +153,47 @@ async function calculerResultat() {
   }
 }
 
+async function chargerEcritures() {
+  try {
+    const data = await getEcrituresComptablesWithProprieteNom(utilisateurId)
+    const lignes: any[] = []
+    for (const e of data as any[]) {
+      if (Array.isArray(e.lignes)) {
+        for (const l of e.lignes) {
+          lignes.push({
+            ...l,
+            dateEcriture: e.dateEcriture,
+            compteNum: l.compteNum,
+            debit: l.debit,
+            credit: l.credit,
+          })
+        }
+      }
+    }
+    lignesFEC.value = lignes
+  } catch (error) {
+    message.error('Erreur lors du chargement des écritures')
+  }
+}
+
+onMounted(async () => {
+  await chargerEcritures()
+})
+
+// Comptes principaux (à adapter selon ton plan comptable)
+const comptesProduits = ['706000', '708000', '758000']
+const comptesCharges = ['606000', '606100', '606200', '606300', '606400', '606800', '615000', '614000', '622000', '623000', '626000', '627000', '635100', '635800', '637000', '661100', '681100']
+
+function sumFEC(comptes: string[], sens: 'debit'|'credit' = 'debit') {
+  return lignesFEC.value
+    .filter(l => comptes.includes(l.compteNum))
+    .reduce((sum, l) => sum + (Number(l[sens]) || 0), 0)
+}
+
+const totalProduitsFEC = computed(() => sumFEC(comptesProduits, 'credit'))
+const totalChargesFEC = computed(() => sumFEC(comptesCharges, 'debit'))
+const resultatFiscalFEC = computed(() => totalProduitsFEC.value - totalChargesFEC.value)
+
 function formatCurrency(value?: number) {
   if (value === undefined || value === null) {
     return '0,00 €'
@@ -199,10 +244,6 @@ function getResultatClass(value?: number) {
 const { width } = useWindowSize()
 const isMobile = computed(() => width.value <= 640)
 
-onMounted(async () => {
-  // Lancer le calcul automatiquement à l'arrivée sur la page
-  await calculerResultat()
-})
 </script>
 
 <template>

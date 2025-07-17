@@ -7,6 +7,7 @@ definePage({
     title: 'Plan comptable',
     icon: 'mdi:book-open-variant',
     order: 10,
+    hideInMenu:true,
   },
 })
 

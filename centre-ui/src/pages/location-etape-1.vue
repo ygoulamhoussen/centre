@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { ArrowRight24Filled, BuildingHome24Filled, Person24Filled } from '@vicons/fluent'
+import { ArrowRight24Filled, BuildingHome24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -31,15 +31,13 @@ const store = useUnifiedStore()
 const { locationDTO } = storeToRefs(store)
 
 const authStore = useAuthStore()
-const utilisateurId = authStore.userInfo.userId // 👈 récupération de l'ID connecté
+const utilisateurId = authStore.userInfo.userId
 
 const router = useRouter()
 const message = useMessage()
 
 const proprietes = ref<any[]>([])
-const locataires = ref<any[]>([])
-
-const stepTitles = ['Sélection', 'Détails du bail', 'Récapitulatif']
+const stepTitles = ['Propriété', 'Locataire', 'Détails du bail', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 function handleResize() {
   isMobile.value = window.innerWidth < 768
@@ -49,9 +47,6 @@ async function fetchData() {
   try {
     const propResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/${utilisateurId}`)
     proprietes.value = await propResponse.json()
-
-    const locResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocatairesByUtilisateur/${utilisateurId}`)
-    locataires.value = await locResponse.json()
   } catch (e) {
     console.error(e)
     message.error('Erreur de chargement')
@@ -66,17 +61,9 @@ function handleProprieteChange(value: string) {
   }
 }
 
-function handleLocataireChange(value: string) {
-  const selected = locataires.value.find(l => l.id === value)
-  if (selected) {
-    locationDTO.value.locataireId = selected.id
-    locationDTO.value.locataireNom = selected.nom
-  }
-}
-
 function suivant() {
-  if (!locationDTO.value.proprieteId || !locationDTO.value.locataireId) {
-    message.warning('Merci de choisir une propriété et un locataire')
+  if (!locationDTO.value.proprieteId) {
+    message.warning('Merci de choisir une propriété')
     return
   }
   router.push('/location-etape-2')
@@ -97,17 +84,18 @@ onUnmounted(() => {
     <NCard :bordered="false">
       <div class="mb-8" v-if="!isMobile">
         <NSteps :current="0" size="small">
-          <NStep title="Sélection" status="process" description="Propriété et locataire" />
+          <NStep title="Propriété" status="process" description="Choix du bien" />
+          <NStep title="Locataire" description="Choix du locataire" />
           <NStep title="Détails du bail" description="Loyer, dates, etc." />
           <NStep title="Récapitulatif" description="Vérification finale" />
         </NSteps>
       </div>
       <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 1/3</div>
+        <div class="step-mobile-number">Étape 1/4</div>
         <div class="step-mobile-label">{{ stepTitles[0] }}</div>
       </div>
 
-      <NH2 class="titre-principal mb-4">Étape 1: Sélection de la propriété et du locataire</NH2>
+      <NH2 class="titre-principal mb-4">Étape 1: Sélection de la propriété</NH2>
 
       <NForm label-placement="top">
         <NFormItem label="Sélectionner une propriété">
@@ -116,16 +104,6 @@ onUnmounted(() => {
             :options="proprietes.map(p => ({ label: p.nom, value: p.id }))"
             placeholder="Choisir une propriété"
             @update:value="handleProprieteChange"
-            size="large"
-          />
-        </NFormItem>
-
-        <NFormItem label="Sélectionner un locataire">
-          <NSelect
-            v-model:value="locationDTO.locataireId"
-            :options="locataires.map(l => ({ label: l.nom, value: l.id }))"
-            placeholder="Choisir un locataire"
-            @update:value="handleLocataireChange"
             size="large"
           />
         </NFormItem>

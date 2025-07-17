@@ -51,6 +51,7 @@ declare module 'vue-router/auto-routes' {
     '/location-etape-1': RouteRecordInfo<'/location-etape-1', '/location-etape-1', Record<never, never>, Record<never, never>>,
     '/location-etape-2': RouteRecordInfo<'/location-etape-2', '/location-etape-2', Record<never, never>, Record<never, never>>,
     '/location-etape-3': RouteRecordInfo<'/location-etape-3', '/location-etape-3', Record<never, never>, Record<never, never>>,
+    '/location-etape-4': RouteRecordInfo<'/location-etape-4', '/location-etape-4', Record<never, never>, Record<never, never>>,
     '/location.[id]': RouteRecordInfo<'/location.[id]', '/location/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/login': RouteRecordInfo<'/login', '/login/:module(pwd-login|code-login|register|reset-pwd)?', Record<never, never>, Record<never, never>>,
     '/manage': RouteRecordInfo<'/manage', '/manage', Record<never, never>, Record<never, never>>,

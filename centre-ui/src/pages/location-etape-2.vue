@@ -1,26 +1,14 @@
 <script setup lang="ts">
+import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import {
-  ArrowLeft24Filled,
-  ArrowRight24Filled,
-  ArrowSync20Filled,
-  CalendarClock24Filled,
-  CalendarDay24Filled,
-  CalendarLtr24Filled,
-  Key24Filled,
-  Money24Filled,
-} from '@vicons/fluent'
+import { ArrowLeft24Filled, ArrowRight24Filled, Person24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
-  NDatePicker,
   NForm,
   NFormItem,
-  NFormItemGi,
-  NGrid,
   NH2,
   NIcon,
-  NInputNumber,
   NSelect,
   NSpace,
   NStep,
@@ -28,7 +16,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePage({
@@ -36,60 +24,46 @@ definePage({
     title: 'Nouvelle location - Étape 2',
     hideInMenu: true,
     activeMenu: '/location',
-  }
+  },
 })
 
 const store = useUnifiedStore()
 const { locationDTO } = storeToRefs(store)
 
+const authStore = useAuthStore()
+const utilisateurId = authStore.userInfo.userId
+
 const router = useRouter()
 const message = useMessage()
 
-const frequences = [
-  { label: 'Mensuel', value: 'MENSUEL' },
-  { label: 'Trimestriel', value: 'TRIMESTRIEL' },
-  { label: 'Annuel', value: 'ANNUEL' }
-]
-
-const loyerMensuel = computed({
-  get: () => (locationDTO.value.loyerMensuel ? Number(locationDTO.value.loyerMensuel) : null),
-  set: (val: number | null) => {
-    locationDTO.value.loyerMensuel = val === null ? '' : String(val)
-  },
-})
-
-const chargesMensuelles = computed({
-  get: () => (locationDTO.value.chargesMensuelles ? Number(locationDTO.value.chargesMensuelles) : null),
-  set: (val: number | null) => {
-    locationDTO.value.chargesMensuelles = val === null ? '' : String(val)
-  },
-})
-
-const depotGarantie = computed({
-  get: () => (locationDTO.value.depotGarantie ? Number(locationDTO.value.depotGarantie) : null),
-  set: (val: number | null) => {
-    locationDTO.value.depotGarantie = val === null ? '' : String(val)
-  },
-})
-
-const jourEcheance = computed({
-  get: () => (locationDTO.value.jourEcheance ? Number(locationDTO.value.jourEcheance) : null),
-  set: (val: number | null) => {
-    locationDTO.value.jourEcheance = val === null ? '' : String(val)
-  },
-})
-
-const stepTitles = ['Sélection', 'Détails du bail', 'Récapitulatif']
+const locataires = ref<any[]>([])
+const stepTitles = ['Propriété', 'Locataire', 'Détails du bail', 'Récapitulatif']
 const isMobile = ref(window.innerWidth < 768)
 function handleResize() {
   isMobile.value = window.innerWidth < 768
 }
-onMounted(() => window.addEventListener('resize', handleResize))
-onUnmounted(() => window.removeEventListener('resize', handleResize))
+
+async function fetchData() {
+  try {
+    const locResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocatairesByUtilisateur/${utilisateurId}`)
+    locataires.value = await locResponse.json()
+  } catch (e) {
+    console.error(e)
+    message.error('Erreur de chargement')
+  }
+}
+
+function handleLocataireChange(value: string) {
+  const selected = locataires.value.find(l => l.id === value)
+  if (selected) {
+    locationDTO.value.locataireId = selected.id
+    locationDTO.value.locataireNom = selected.nom
+  }
+}
 
 function suivant() {
-  if (!locationDTO.value.loyerMensuel || !locationDTO.value.dateDebut) {
-    message.warning('Veuillez saisir les informations obligatoires')
+  if (!locationDTO.value.locataireId) {
+    message.warning('Merci de choisir un locataire')
     return
   }
   router.push('/location-etape-3')
@@ -98,6 +72,15 @@ function suivant() {
 function precedent() {
   router.push('/location-etape-1')
 }
+
+onMounted(() => {
+  fetchData()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <template>
@@ -105,58 +88,29 @@ function precedent() {
     <NCard :bordered="false">
       <div class="mb-8" v-if="!isMobile">
         <NSteps :current="1" size="small">
-          <NStep title="Sélection" status="finish" description="Propriété et locataire" />
-          <NStep title="Détails du bail" status="process" description="Loyer, dates, etc." />
+          <NStep title="Propriété" status="finish" description="Choix du bien" />
+          <NStep title="Locataire" status="process" description="Choix du locataire" />
+          <NStep title="Détails du bail" description="Loyer, dates, etc." />
           <NStep title="Récapitulatif" description="Vérification finale" />
         </NSteps>
       </div>
       <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 2/3</div>
+        <div class="step-mobile-number">Étape 2/4</div>
         <div class="step-mobile-label">{{ stepTitles[1] }}</div>
       </div>
 
-      <NH2 class="titre-principal mb-4">Étape 2: Détails du bail</NH2>
+      <NH2 class="titre-principal mb-4">Étape 2: Sélection du locataire</NH2>
 
       <NForm label-placement="top">
-        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
-          <NFormItemGi label="Date de début *">
-            <NDatePicker
-              v-model:formatted-value="locationDTO.dateDebut"
-              value-format="yyyy-MM-dd"
-              format="dd/MM/yyyy"
-              type="date"
-              clearable
-              class="w-full"
-              size="large"
-            />
-          </NFormItemGi>
-          <NFormItemGi label="Date de fin (optionnel)">
-            <NDatePicker
-              v-model:formatted-value="locationDTO.dateFin"
-              value-format="yyyy-MM-dd"
-              format="dd/MM/yyyy"
-              type="date"
-              clearable
-              class="w-full"
-              size="large"
-            />
-          </NFormItemGi>
-          <NFormItemGi label="Loyer mensuel (€) *">
-            <NInputNumber v-model:value="loyerMensuel" min="0" placeholder="0.00" class="w-full" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Charges mensuelles (€)">
-            <NInputNumber v-model:value="chargesMensuelles" min="0" placeholder="0.00" class="w-full" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Dépôt de garantie (€)">
-            <NInputNumber v-model:value="depotGarantie" min="0" placeholder="0.00" class="w-full" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Fréquence de paiement">
-            <NSelect v-model:value="locationDTO.frequenceLoyer" :options="frequences" placeholder="Choisir une fréquence" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Jour d'échéance du loyer">
-            <NInputNumber v-model:value="jourEcheance" min="1" max="31" placeholder="ex: 5" class="w-full" size="large" />
-          </NFormItemGi>
-        </NGrid>
+        <NFormItem label="Sélectionner un locataire">
+          <NSelect
+            v-model:value="locationDTO.locataireId"
+            :options="locataires.map(l => ({ label: l.nom, value: l.id }))"
+            placeholder="Choisir un locataire"
+            @update:value="handleLocataireChange"
+            size="large"
+          />
+        </NFormItem>
       </NForm>
 
       <NSpace class="flex justify-between mt-8">

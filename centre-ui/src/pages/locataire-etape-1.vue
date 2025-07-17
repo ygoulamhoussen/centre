@@ -16,6 +16,7 @@ import {
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useAuthStore } from '@/store/modules/auth'
 
 definePage({
   meta: {
@@ -29,8 +30,8 @@ const store = useUnifiedStore()
 const { locataireDTO } = storeToRefs(store)
 const router = useRouter()
 const message = useMessage()
-const currentStep = 0 // étape 1 (0-based pour le stepper custom)
-const stepTitles = ['Informations personnelles', 'Adresse', 'Récapitulatif']
+const authStore = useAuthStore()
+// Plus de stepper ni d'étape récapitulative
 const isMobile = ref(window.innerWidth < 768)
 
 function handleResize() {
@@ -40,30 +41,41 @@ function handleResize() {
 onMounted(() => window.addEventListener('resize', handleResize))
 onUnmounted(() => window.removeEventListener('resize', handleResize))
 
-function suivant() {
+async function valider() {
   if (!locataireDTO.value.nom || !locataireDTO.value.telephone || !locataireDTO.value.email) {
     message.warning('Veuillez remplir tous les champs obligatoires.')
     return
   }
-  router.push('/locataire-etape-2')
+  const utilisateurId = authStore.userInfo?.userId
+  if (!utilisateurId) {
+    message.error('Utilisateur non authentifié. Veuillez vous reconnecter.')
+    return
+  }
+  const payload = {
+    nom: locataireDTO.value.nom,
+    telephone: locataireDTO.value.telephone,
+    email: locataireDTO.value.email,
+    utilisateurId
+  }
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/createLocataire`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) throw new Error('Erreur lors de la création du locataire')
+    message.success('Locataire ajouté avec succès !')
+    router.push('/locataire')
+  } catch (e) {
+    message.error(e.message || 'Erreur lors de la création du locataire')
+  }
 }
 </script>
 
 <template>
   <div class="p-4">
     <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="0" size="small">
-          <NStep title="Informations personnelles" status="process" />
-          <NStep title="Adresse" />
-          <NStep title="Récapitulatif" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 1/3</div>
-        <div class="step-mobile-label">{{ stepTitles[0] }}</div>
-      </div>
-
+      <!-- Plus de stepper ni d'étape mobile -->
       <NForm>
         <NGrid :x-gap="24" :y-gap="24" :cols="1">
           <NFormItemGi label="Nom complet *">
@@ -91,7 +103,7 @@ function suivant() {
       </NForm>
 
       <div class="flex justify-end mt-8">
-        <NButton type="primary" @click="suivant" title="Suivant">
+        <NButton type="primary" @click="valider" title="Valider">
           <template #icon>
             <NIcon :component="ArrowRight24Filled" />
           </template>

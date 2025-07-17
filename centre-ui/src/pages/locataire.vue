@@ -111,13 +111,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-4 locataire-page">
-    <div class="header-locataire">
-      <div class="header-title">
-        <NIcon :component="Person24Filled" size="28" class="mr-2 text-primary" />
-        <NH1 class="titre-principal">Mes locataires</NH1>
-      </div>
-      <NButton type="primary" class="ajouter-btn" @click="addNewLocataire">
+  <div class="p-4">
+    <div class="flex justify-between items-center mb-6">
+      <NH1 class="titre-principal">Mes locataires</NH1>
+      <NButton type="primary" @click="addNewLocataire">
         <template #icon>
           <NIcon :component="Add24Filled" />
         </template>
@@ -136,23 +133,21 @@ onUnmounted(() => {
         </NEmpty>
       </div>
 
-      <NGrid v-else :x-gap="24" :y-gap="32" :cols="gridCols" class="locataires-grid">
+      <NGrid v-else :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
         <NGi v-for="locataire in locataires" :key="locataire.id">
           <NCard
             hoverable
             class="locataire-card"
             @click="viewLocataireDetails(locataire.id)"
-            tabindex="0"
-            @keydown.enter="viewLocataireDetails(locataire.id)"
           >
             <div class="flex items-start gap-4">
-              <div class="locataire-avatar" :style="{ background: stringToColor(locataire.nom + locataire.prenom) }">
+              <div class="locataire-avatar">
                 <span v-if="!locataire.photo" class="avatar-initiales">{{ (locataire.prenom?.[0] || '') + (locataire.nom?.[0] || '') }}</span>
                 <!-- Si photo, afficher ici -->
               </div>
               <div class="flex-1">
-                <NH2 class="locataire-nom mb-1">{{ locataire.prenom }} {{ locataire.nom }}</NH2>
-                <div class="text-gray-600 text-sm space-y-1">
+                <NH3 class="locataire-nom mb-2">{{ locataire.prenom }} {{ locataire.nom }}</NH3>
+                <div class="text-sm space-y-1">
                   <div v-if="locataire.telephone" class="flex items-center gap-2">
                     <span class="i-carbon-phone" />
                     <NText depth="3">{{ locataire.telephone }}</NText>
@@ -176,137 +171,76 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.locataire-page {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding-left: 16px;
-  padding-right: 16px;
-}
-.header-locataire {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ajouter-btn {
-  min-width: 180px;
-  font-weight: 500;
-}
-.titre-principal {
+.titre-principal,
+h1,
+h2,
+h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
-  font-size: 1.7rem;
 }
 .locataire-nom {
-  color: var(--n-text-color) !important;
-  font-weight: 700;
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--n-text-color);
 }
 .locataire-card {
   cursor: pointer;
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 2rem 1.2rem;
-  outline: none;
-  min-height: 180px;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px #0001;
-  background: #fff;
 }
-.locataire-card:hover, .locataire-card:focus {
-  transform: translateY(-4px) scale(1.015);
-  box-shadow: 0 10px 32px rgba(37,99,235,0.10);
-  border-color: #2563eb;
+.locataire-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 .locataire-avatar {
-  background-color: #f0f4ff;
-  color: #3b82f6;
+  background-color: var(--n-color-embedded);
+  color: var(--n-color-target);
   border-radius: 50%;
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  font-weight: bold;
-  box-shadow: 0 2px 8px #0001;
 }
 .avatar-initiales {
   color: #2563eb;
   font-weight: bold;
   font-size: 1.2em;
 }
-.locataires-grid {
-  margin: 0 -8px;
-  row-gap: 32px;
-}
-.actions-rapides {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
 :deep(.n-card__content) {
   flex: 1;
 }
-:deep(.n-card__footer) {
-  padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
-  margin-top: 12px;
-}
-@media (max-width: 1200px) {
-  .locataire-page {
-    max-width: 100vw;
-    padding-left: 4px;
-    padding-right: 4px;
-  }
-}
-@media (max-width: 900px) {
-  .locataire-page {
-    padding: 0 2px;
-  }
-  .header-locataire {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  .ajouter-btn {
-    width: 100%;
-    min-width: 0;
-    max-width: 320px;
-    align-self: center;
-  }
-  .titre-principal {
-    font-size: 1.2rem;
-    text-align: center;
-  }
-  .locataire-card {
-    padding: 1rem 0.5rem;
-    min-height: 120px;
-  }
-}
-@media (max-width: 600px) {
-  .locataire-avatar {
-    width: 44px;
-    height: 44px;
-    font-size: 1rem;
+@media (max-width: 768px) {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
   }
   .locataire-nom {
     font-size: 1rem;
   }
-  .header-title {
-    font-size: 1rem;
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .mb-6 {
+    margin-bottom: 1rem !important;
+  }
+  .flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .titre-principal {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .n-button {
+    width: 100%;
+    max-width: 320px;
+    align-self: center;
   }
 }
 </style>

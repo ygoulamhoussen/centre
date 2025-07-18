@@ -1207,6 +1207,7 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
             chargeDTO.setUtilisateurId(saved.getUtilisateur().getId().toString());
             chargeDTO.setNature("AMORTISSEMENT");
             chargeDTO.setCommentaire("Dotation automatique depuis immobilisation " + saved.getIntitule());
+            chargeDTO.setImmobilisationId(saved.getId().toString());
             System.out.println("Création charge pour année " + amortissement.getAnnee() + " avec date: " + chargeDTO.getDateCharge());
             ChargeDTO savedCharge = saveCharge(chargeDTO);
             System.out.println("Charge créée avec ID: " + savedCharge.getId());
@@ -1222,29 +1223,34 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
     
     return ImmobilisationDTO.fromEntity(saved);
 }
-
+@Transactional
 public void deleteImmobilisation(String id) {
-    UUID immobilisationId = UUID.fromString(id);
-    // Supprimer les écritures comptables associées à l'immobilisation
-    List<EcritureComptable> ecritures = ecritureComptableRepository.findByImmobilisation_Id(immobilisationId);
-    for (EcritureComptable ecriture : ecritures) {
-        ligneEcritureRepository.deleteByEcritureId(ecriture.getId());
-        ecritureComptableRepository.deleteById(ecriture.getId());
-    }
-    // Supprimer toutes les charges associées à l'immobilisation (dotations, etc.)
-    List<Charge> charges = chargeRepository.findByImmobilisation_Id(immobilisationId);
-    for (Charge charge : charges) {
-        if (charge.getEcritureComptable() != null) {
-            ligneEcritureRepository.deleteByEcritureId(charge.getEcritureComptable().getId());
-            ecritureComptableRepository.deleteById(charge.getEcritureComptable().getId());
+    try {
+        UUID immobilisationId = UUID.fromString(id);
+        // Supprimer les écritures comptables associées à l'immobilisation
+        List<EcritureComptable> ecritures = ecritureComptableRepository.findByImmobilisation_Id(immobilisationId);
+        for (EcritureComptable ecriture : ecritures) {
+            ligneEcritureRepository.deleteByEcritureId(ecriture.getId());
+            ecritureComptableRepository.deleteById(ecriture.getId());
         }
-        chargeRepository.deleteById(charge.getId());
+        // Supprimer toutes les charges associées à l'immobilisation (dotations, etc.)
+        List<Charge> charges = chargeRepository.findByImmobilisation_Id(immobilisationId);
+        for (Charge charge : charges) {
+            if (charge.getEcritureComptable() != null) {
+                ligneEcritureRepository.deleteByEcritureId(charge.getEcritureComptable().getId());
+                ecritureComptableRepository.deleteById(charge.getEcritureComptable().getId());
+            }
+            chargeRepository.deleteById(charge.getId());
+        }
+        // Supprimer les amortissements associés
+        List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(immobilisationId);
+        amortissementRepository.deleteAll(amortissements);
+        // Supprimer l'immobilisation
+        immobilisationRepository.deleteById(immobilisationId);
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw e;
     }
-    // Supprimer les amortissements associés
-    List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(immobilisationId);
-    amortissementRepository.deleteAll(amortissements);
-    // Supprimer l'immobilisation
-    immobilisationRepository.deleteById(immobilisationId);
 }
 
 // ===== SERVICES POUR LES AMORTISSEMENTS =====
@@ -1446,6 +1452,10 @@ public ChargeDTO saveCharge(ChargeDTO dto) {
         c.setDocument(documentEntityRepository.findById(UUID.fromString(dto.getDocumentId())).orElse(null));
     } else {
         c.setDocument(null);
+    }
+    
+    if (dto.getImmobilisationId() != null && !dto.getImmobilisationId().isEmpty()) {
+        c.setImmobilisation(immobilisationRepository.findById(UUID.fromString(dto.getImmobilisationId())).orElse(null));
     }
     
     c.setModifieLe(LocalDateTime.now());

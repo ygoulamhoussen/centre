@@ -17,6 +17,7 @@ public class ChargeDTO {
     private String createdAt;
     private String updatedAt;
     private String statut;
+    private String immobilisationId;
 
     // Constructeurs
     public ChargeDTO() {}
@@ -60,6 +61,7 @@ public class ChargeDTO {
         dto.setDocumentNom(charge.getDocument() != null ? charge.getDocument().getTitre() : null);
         dto.setCreatedAt(charge.getCreeLe() != null ? charge.getCreeLe().toString() : null);
         dto.setUpdatedAt(charge.getModifieLe() != null ? charge.getModifieLe().toString() : null);
+        dto.setImmobilisationId(charge.getImmobilisation() != null ? charge.getImmobilisation().getId().toString() : null);
 
         return dto;
     }
@@ -175,5 +177,12 @@ public class ChargeDTO {
 
     public void setStatut(String statut) {
         this.statut = statut;
+    }
+
+    public String getImmobilisationId() {
+        return immobilisationId;
+    }
+    public void setImmobilisationId(String immobilisationId) {
+        this.immobilisationId = immobilisationId;
     }
 } 

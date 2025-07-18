@@ -1161,9 +1161,17 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
     i.setIntitule(dto.getIntitule());
     i.setMontant(new BigDecimal(dto.getMontant()));
     i.setDateAcquisition(LocalDate.parse(dto.getDateAcquisition()));
-    i.setDureeAmortissement(Integer.valueOf(dto.getDureeAmortissement()));
+    if (dto.getDureeAmortissement() != null && !dto.getDureeAmortissement().isEmpty()) {
+        i.setDureeAmortissement(Integer.valueOf(dto.getDureeAmortissement()));
+    } else {
+        i.setDureeAmortissement(0); // ou ne rien faire selon la logique métier
+    }
     i.setTypeImmobilisation(dto.getTypeImmobilisation());
-    i.setCategorieFiscale(Immobilisation.CategorieFiscale.valueOf(dto.getCategorieFiscale()));
+    if (dto.getCategorieFiscale() != null && !dto.getCategorieFiscale().isEmpty()) {
+        i.setCategorieFiscale(Immobilisation.CategorieFiscale.valueOf(dto.getCategorieFiscale()));
+    } else if ("TERRAIN".equals(dto.getTypeImmobilisation())) {
+        i.setCategorieFiscale(Immobilisation.CategorieFiscale.TERRAIN);
+    }
     
     if (dto.getValeurTerrain() != null && !dto.getValeurTerrain().isEmpty()) {
         i.setValeurTerrain(new BigDecimal(dto.getValeurTerrain()));
@@ -3088,6 +3096,9 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                 break;
             case "FRAIS":
                 compteImmo = compteComptableRepository.findByCode("203000"); // Frais d'acquisition
+                break;
+            case "TERRAIN":
+                compteImmo = compteComptableRepository.findByCode("211000"); // Terrains
                 break;
             default:
                 compteImmo = compteComptableRepository.findByCode("218100"); // Par défaut Mobilier

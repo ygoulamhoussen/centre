@@ -508,3 +508,6 @@ INSERT INTO ecriture_comptable (id, date_ecriture, libelle, journal_code, journa
 INSERT INTO ligne_ecriture (id, ecriture_id, compte_num, compte_libelle, debit, credit, tiers, commentaire) VALUES
 ('B0000000-0000-0000-0000-000000002001', 'B0000000-0000-0000-0000-000000000020', '635800', 'Cotisation CFE', 120.00, 0.00, NULL, 'Cotisation CFE 2024'),
 ('B0000000-0000-0000-0000-000000002002', 'B0000000-0000-0000-0000-000000000020', '512000', 'Banque', 0.00, 120.00, NULL, 'Paiement CFE');
+
+-- Ajout du compte comptable 211000 (Terrains)
+INSERT INTO compte_comptable (code, libelle, type, description) VALUES ('211000', 'Terrains', 'Immobilisations', 'Terrains non amortissables');

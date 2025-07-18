@@ -542,6 +542,7 @@ async function saveImmobilisation() {
     
     for (const composant of composantsAEnregistrer) {
       const montant = (Number(composant.percent) * formData.value.montant) / 100
+      const typeImmobilisationValue = composant.typeImmobilisation || (composant.key === 'terrain' ? 'TERRAIN' : undefined)
       const data: any = {
         intitule: `${formData.value.intitule} - ${composant.label}`,
         montant: montant.toString(),
@@ -549,9 +550,12 @@ async function saveImmobilisation() {
         proprieteId: formData.value.proprieteId,
         commentaire: formData.value.commentaire,
         utilisateurId: formData.value.utilisateurId,
-        typeImmobilisation: composant.typeImmobilisation as TypeImmobilisation,
       }
-      if (composant.amortissable) {
+      if (typeImmobilisationValue) {
+        data.typeImmobilisation = typeImmobilisationValue
+      }
+      // Seulement pour les amortissables ET si la durée existe
+      if (composant.amortissable && composant.dureeAmortissement) {
         data.categorieFiscale = getCategorieFiscaleFromDuree(String(composant.dureeAmortissement))
         data.dureeAmortissement = String(composant.dureeAmortissement)
       }

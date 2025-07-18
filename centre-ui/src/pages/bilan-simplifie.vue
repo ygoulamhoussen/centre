@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import type { DataTableColumns } from 'naive-ui'
+import { computed, onMounted, ref } from 'vue'
+import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NSelect, NSpin, useMessage, NH1, type DataTableColumns } from 'naive-ui'
+import { Icon } from '@iconify/vue'
+import { useAuthStore } from '@/store/modules/auth'
+import { bilanSimplifieApi } from '@/service/api/bilan-simplifie'
+import { getEcrituresComptablesWithProprieteNom } from '@/service/api/charges-recettes'
+
+// --- CALCUL DU BILAN À PARTIR DU JOURNAL COMPTABLE (FEC) ---
 
 type ImmobilisationDetail = {
   intitule: string
@@ -24,13 +31,6 @@ type TresorerieDetail = {
   dateSolde: string
 }
 
-import { computed, onMounted, ref } from 'vue'
-import { useAuthStore } from '@/store/modules/auth'
-import { Icon } from '@iconify/vue'
-import { bilanSimplifieApi } from '@/service/api/bilan-simplifie'
-import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NSelect, NSpin, useMessage, NH1 } from 'naive-ui'
-// --- CALCUL DU BILAN À PARTIR DU JOURNAL COMPTABLE (FEC) ---
-import { getEcrituresComptablesWithProprieteNom } from '@/service/api/charges-recettes'
 const lignesFEC = ref<any[]>([])
 
 async function chargerEcritures() {
@@ -72,7 +72,7 @@ onMounted(async () => {
 })
 
 // Comptes principaux (à adapter selon ton plan comptable)
-const comptesImmobilisations = ['213100', '213500']
+const comptesImmobilisations = ['211000', '213100', '213500']
 const comptesAmortissements = ['28161', '28185']
 const comptesEmprunts = ['164000']
 const comptesTresorerie = ['512000', '530000']
@@ -113,7 +113,15 @@ const totalAmortissementsCumules = computed(() => {
 }) // amortissements = crédit
 const totalImmobilisationsNettes = computed(() => totalImmobilisationsBrutes.value - totalAmortissementsCumules.value)
 const totalEmprunts = computed(() => sumFEC(comptesEmprunts, 'credit'))
-const totalTresorerie = computed(() => sumFEC(comptesTresorerie, 'debit'))
+const totalTresorerie = computed(() =>
+  lignesFEC.value
+    .filter(l =>
+      comptesTresorerie.includes(l.compteNum) &&
+      l.dateEcriture &&
+      new Date(l.dateEcriture) <= new Date(`${selectedYear.value}-12-31`)
+    )
+    .reduce((sum, l) => sum + (Number(l.debit) || 0) - (Number(l.credit) || 0), 0)
+)
 const totalCreances = computed(() => sumFEC(comptesCreances, 'debit'))
 const totalDettesFournisseurs = computed(() => sumFEC(comptesDettesFournisseurs, 'credit'))
 const totalCapital = computed(() => sumFEC(comptesCapital, 'credit'))
@@ -152,23 +160,23 @@ const immobilisationColumns: DataTableColumns<ImmobilisationDetail> = [
   { title: 'Intitulé', key: 'intitule' },
   { title: 'Propriété', key: 'proprieteNom' },
   { title: 'Type', key: 'typeImmobilisation' },
-  { title: 'Valeur brute', key: 'montantBrut', render: row => formatCurrency(row.montantBrut), align: 'right' },
-  { title: 'Amortissements cumulés', key: 'amortissementsCumules', render: row => formatCurrency(row.amortissementsCumules), align: 'right' },
-  { title: 'Valeur nette', key: 'valeurNette', render: row => formatCurrency(row.valeurNette), align: 'right' },
+  { title: 'Valeur brute', key: 'montantBrut', render: (row: ImmobilisationDetail) => formatCurrency(row.montantBrut), align: 'right' },
+  { title: 'Amortissements cumulés', key: 'amortissementsCumules', render: (row: ImmobilisationDetail) => formatCurrency(row.amortissementsCumules), align: 'right' },
+  { title: 'Valeur nette', key: 'valeurNette', render: (row: ImmobilisationDetail) => formatCurrency(row.valeurNette), align: 'right' },
 ]
 
 const empruntColumns: DataTableColumns<EmpruntDetail> = [
   { title: 'Intitulé', key: 'intitule' },
   { title: 'Propriété', key: 'proprieteNom' },
   { title: 'Banque', key: 'banque' },
-  { title: 'Capital restant dû', key: 'capitalRestantDu', render: row => formatCurrency(row.capitalRestantDu), align: 'right' },
-  { title: 'Échéance', key: 'dateFin', render: row => formatDate(row.dateFin) },
+  { title: 'Capital restant dû', key: 'capitalRestantDu', render: (row: EmpruntDetail) => formatCurrency(row.capitalRestantDu), align: 'right' },
+  { title: 'Échéance', key: 'dateFin', render: (row: EmpruntDetail) => formatDate(row.dateFin) },
 ]
 
 const tresorerieColumns: DataTableColumns<TresorerieDetail> = [
   { title: 'Compte', key: 'compte' },
-  { title: 'Solde', key: 'solde', render: row => formatCurrency(row.solde), align: 'right' },
-  { title: 'Date du solde', key: 'dateSolde', render: row => formatDate(row.dateSolde) },
+  { title: 'Solde', key: 'solde', render: (row: TresorerieDetail) => formatCurrency(row.solde), align: 'right' },
+  { title: 'Date du solde', key: 'dateSolde', render: (row: TresorerieDetail) => formatDate(row.dateSolde) },
 ]
 
 // Détection mobile

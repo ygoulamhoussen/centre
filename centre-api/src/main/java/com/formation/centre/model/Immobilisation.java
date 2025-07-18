@@ -179,7 +179,8 @@ public class Immobilisation {
         TRAVAUX_10_ANS("Travaux (10 ans)"),
         TRAVAUX_5_ANS("Travaux (5 ans)"),
         EQUIPEMENT_5_ANS("Équipement (5 ans)"),
-        EQUIPEMENT_3_ANS("Équipement (3 ans)");
+        EQUIPEMENT_3_ANS("Équipement (3 ans)"),
+        TERRAIN("Terrain (non amortissable)");
 
         private final String libelle;
 

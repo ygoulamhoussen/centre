@@ -83,4 +83,10 @@ public interface ChargeRepository extends JpaRepository<Charge, UUID> {
      */
     @Query("SELECT c FROM Charge c WHERE c.nature = :nature AND c.propriete.id = :proprieteId")
     List<Charge> findByNatureAndProprieteId(@Param("nature") String nature, @Param("proprieteId") UUID proprieteId);
+
+    @Query("SELECT c FROM Charge c WHERE c.echeanceCredit.id = :echeanceCreditId")
+    List<Charge> findByEcheanceCredit_Id(@Param("echeanceCreditId") UUID echeanceCreditId);
+
+    @Query("SELECT c FROM Charge c WHERE c.immobilisation.id = :immobilisationId")
+    List<Charge> findByImmobilisation_Id(@Param("immobilisationId") UUID immobilisationId);
 } 

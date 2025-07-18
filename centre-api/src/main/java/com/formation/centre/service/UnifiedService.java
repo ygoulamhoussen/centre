@@ -1224,12 +1224,27 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
 }
 
 public void deleteImmobilisation(String id) {
+    UUID immobilisationId = UUID.fromString(id);
+    // Supprimer les écritures comptables associées à l'immobilisation
+    List<EcritureComptable> ecritures = ecritureComptableRepository.findByImmobilisation_Id(immobilisationId);
+    for (EcritureComptable ecriture : ecritures) {
+        ligneEcritureRepository.deleteByEcritureId(ecriture.getId());
+        ecritureComptableRepository.deleteById(ecriture.getId());
+    }
+    // Supprimer toutes les charges associées à l'immobilisation (dotations, etc.)
+    List<Charge> charges = chargeRepository.findByImmobilisation_Id(immobilisationId);
+    for (Charge charge : charges) {
+        if (charge.getEcritureComptable() != null) {
+            ligneEcritureRepository.deleteByEcritureId(charge.getEcritureComptable().getId());
+            ecritureComptableRepository.deleteById(charge.getEcritureComptable().getId());
+        }
+        chargeRepository.deleteById(charge.getId());
+    }
     // Supprimer les amortissements associés
-    List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(UUID.fromString(id));
+    List<Amortissement> amortissements = amortissementRepository.findByImmobilisationId(immobilisationId);
     amortissementRepository.deleteAll(amortissements);
-    
     // Supprimer l'immobilisation
-    immobilisationRepository.deleteById(UUID.fromString(id));
+    immobilisationRepository.deleteById(immobilisationId);
 }
 
 // ===== SERVICES POUR LES AMORTISSEMENTS =====
@@ -3115,6 +3130,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         ecriture.setUtilisateur(immo.getUtilisateur());
         ecriture.setCreatedAt(LocalDateTime.now());
         ecriture.setPieceDate(immo.getDateAcquisition());
+        ecriture.setImmobilisation(immo);
         EcritureComptable savedEcriture = ecritureComptableRepository.save(ecriture);
 
         // Débit immobilisation
@@ -3140,6 +3156,22 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         // (Optionnel) Lier l'écriture à l'immobilisation si tu ajoutes un champ dédié
         // immo.setEcritureComptable(savedEcriture);
         // immobilisationRepository.save(immo);
+    }
+
+    @Transactional
+    public void deleteEcheanceCredit(String echeanceId) {
+        UUID id = UUID.fromString(echeanceId);
+        // Supprimer les charges associées à cette échéance
+        List<Charge> charges = chargeRepository.findByEcheanceCredit_Id(id);
+        for (Charge charge : charges) {
+            if (charge.getEcritureComptable() != null) {
+                ligneEcritureRepository.deleteByEcritureId(charge.getEcritureComptable().getId());
+                ecritureComptableRepository.deleteById(charge.getEcritureComptable().getId());
+            }
+            chargeRepository.deleteById(charge.getId());
+        }
+        // Supprimer l'échéance de crédit
+        echeanceCreditRepository.deleteById(id);
     }
 }
 

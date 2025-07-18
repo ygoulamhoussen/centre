@@ -256,6 +256,8 @@ CREATE TABLE ecriture_comptable (
     numero_piece VARCHAR(50),
     piece_date DATE,
     utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
+    immobilisation_id UUID REFERENCES immobilisation(id),
+    echeance_credit_id UUID REFERENCES echeance_credit(id),
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -271,6 +273,8 @@ CREATE TABLE charges (
     utilisateur_id UUID REFERENCES utilisateur(id) NOT NULL,
     document_id UUID REFERENCES document(id),
     ecriture_comptable_id UUID REFERENCES ecriture_comptable(id),
+    immobilisation_id UUID REFERENCES immobilisation(id),
+    echeance_credit_id UUID REFERENCES echeance_credit(id),
     cree_le TIMESTAMP,
     modifie_le TIMESTAMP
 );

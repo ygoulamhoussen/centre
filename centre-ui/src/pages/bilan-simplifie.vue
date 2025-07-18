@@ -72,7 +72,8 @@ onMounted(async () => {
 })
 
 // Comptes principaux (à adapter selon ton plan comptable)
-const comptesImmobilisations = ['211000', '213100', '213500']
+// Terrains (211000) ~0-20%, Immeubles (213100) ~40-60%, Travaux (213500) ~10-20%, Frais (203000) ~5-10%, Mobilier (218100) ~5-10%
+const comptesImmobilisations = ['211000', '213100', '213500', '203000', '218100']
 const comptesAmortissements = ['28161', '28185']
 const comptesEmprunts = ['164000']
 const comptesTresorerie = ['512000', '530000']
@@ -202,6 +203,28 @@ const anneesDisponibles = computed(() => {
 onMounted(async () => {
   // Lancer le calcul automatiquement à l'arrivée sur la page
 })
+
+// Ajout des sous-totaux par type d'immobilisation
+const totalTerrains = computed(() => soldeCumuleComptesFiltre(
+  compte => compte === '211000',
+  selectedYear.value
+))
+const totalImmeubles = computed(() => soldeCumuleComptesFiltre(
+  compte => compte === '213100',
+  selectedYear.value
+))
+const totalTravaux = computed(() => soldeCumuleComptesFiltre(
+  compte => compte === '213500',
+  selectedYear.value
+))
+const totalFrais = computed(() => soldeCumuleComptesFiltre(
+  compte => compte === '203000',
+  selectedYear.value
+))
+const totalMobilier = computed(() => soldeCumuleComptesFiltre(
+  compte => compte === '218100',
+  selectedYear.value
+))
 </script>
 
 <template>
@@ -242,12 +265,13 @@ onMounted(async () => {
             <tr class="section"><td colspan="2">ACTIF (ce que vous possédez)</td></tr>
             
             <tr class="subsection"><td colspan="2">Immobilisations</td></tr>
+            <tr><td>Terrains (211000) ~0-20%</td><td class="amount">{{ formatCurrency(totalTerrains) }}</td></tr>
+            <tr><td>Immeubles (213100) ~40-60%</td><td class="amount">{{ formatCurrency(totalImmeubles) }}</td></tr>
+            <tr><td>Travaux/Agencements (213500) ~10-20%</td><td class="amount">{{ formatCurrency(totalTravaux) }}</td></tr>
+            <tr><td>Frais d'acquisition (203000) ~5-10%</td><td class="amount">{{ formatCurrency(totalFrais) }}</td></tr>
+            <tr><td>Mobilier (218100) ~5-10%</td><td class="amount">{{ formatCurrency(totalMobilier) }}</td></tr>
             <tr>
-              <td>Immobilisations corporelles (213000, 215000)</td>
-              <td class="amount">{{ formatCurrency(totalImmobilisationsBrutes) }}</td>
-            </tr>
-            <tr>
-              <td>Amortissements cumulés (280000)</td>
+              <td>Amortissements cumulés (28xxxx)</td>
               <td class="amount negative">{{ formatCurrency(-totalAmortissementsCumules) }}</td>
             </tr>
             <tr class="total-row">

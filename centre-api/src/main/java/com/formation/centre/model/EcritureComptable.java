@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+import com.formation.centre.model.EcheanceCredit;
 
 @Entity
 @Table(name = "ecriture_comptable")
@@ -35,6 +38,14 @@ public class EcritureComptable {
     @ManyToOne
     @JoinColumn(name = "utilisateur_id", nullable = false)
     private Utilisateur utilisateur;
+
+    @ManyToOne
+    @JoinColumn(name = "immobilisation_id")
+    private Immobilisation immobilisation;
+
+    @ManyToOne
+    @JoinColumn(name = "echeance_credit_id")
+    private EcheanceCredit echeanceCredit;
 
     @OneToMany(mappedBy = "ecriture", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<LigneEcriture> lignes = new ArrayList<>();
@@ -67,6 +78,20 @@ public class EcritureComptable {
 
     public Utilisateur getUtilisateur() { return utilisateur; }
     public void setUtilisateur(Utilisateur utilisateur) { this.utilisateur = utilisateur; }
+
+    public Immobilisation getImmobilisation() {
+        return immobilisation;
+    }
+    public void setImmobilisation(Immobilisation immobilisation) {
+        this.immobilisation = immobilisation;
+    }
+
+    public EcheanceCredit getEcheanceCredit() {
+        return echeanceCredit;
+    }
+    public void setEcheanceCredit(EcheanceCredit echeanceCredit) {
+        this.echeanceCredit = echeanceCredit;
+    }
 
     public List<LigneEcriture> getLignes() { return lignes; }
     public void setLignes(List<LigneEcriture> lignes) { this.lignes = lignes; }

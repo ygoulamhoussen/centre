@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.List;
+import jakarta.persistence.OneToMany;
 
 @Entity
 @Table(name = "echeance_credit")
@@ -28,6 +30,9 @@ public class EcheanceCredit {
 
     @Column(name = "total_echeance")
     private BigDecimal totalEcheance;
+
+    @OneToMany(mappedBy = "echeanceCredit")
+    private List<EcritureComptable> ecrituresComptables;
 
     // Getters & Setters
 
@@ -85,5 +90,12 @@ public class EcheanceCredit {
 
     public void setTotalEcheance(BigDecimal totalEcheance) {
         this.totalEcheance = totalEcheance;
+    }
+
+    public List<EcritureComptable> getEcrituresComptables() {
+        return ecrituresComptables;
+    }
+    public void setEcrituresComptables(List<EcritureComptable> ecrituresComptables) {
+        this.ecrituresComptables = ecrituresComptables;
     }
 }

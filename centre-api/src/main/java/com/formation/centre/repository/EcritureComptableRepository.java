@@ -20,4 +20,7 @@ public interface EcritureComptableRepository extends JpaRepository<EcritureCompt
      */
     @Query("SELECT e FROM EcritureComptable e LEFT JOIN FETCH e.lignes WHERE e.utilisateur.id = :utilisateurId AND YEAR(e.dateEcriture) = :annee ORDER BY e.dateEcriture")
     List<EcritureComptable> findByUtilisateurIdAndAnnee(@Param("utilisateurId") UUID utilisateurId, @Param("annee") int annee);
+
+    @Query("SELECT e FROM EcritureComptable e WHERE e.immobilisation.id = :immobilisationId")
+    List<EcritureComptable> findByImmobilisation_Id(@Param("immobilisationId") UUID immobilisationId);
 }

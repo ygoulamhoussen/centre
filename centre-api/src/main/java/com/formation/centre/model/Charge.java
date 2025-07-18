@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.formation.centre.model.EcritureComptable;
+import com.formation.centre.model.EcheanceCredit;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -53,6 +54,14 @@ public class Charge {
     @ManyToOne
     @JoinColumn(name = "ecriture_comptable_id")
     private EcritureComptable ecritureComptable;
+
+    @ManyToOne
+    @JoinColumn(name = "immobilisation_id")
+    private Immobilisation immobilisation;
+
+    @ManyToOne
+    @JoinColumn(name = "echeance_credit_id")
+    private EcheanceCredit echeanceCredit;
 
     @Column(name = "cree_le")
     private LocalDateTime creeLe;
@@ -138,6 +147,20 @@ public class Charge {
 
     public EcritureComptable getEcritureComptable() { return ecritureComptable; }
     public void setEcritureComptable(EcritureComptable ecritureComptable) { this.ecritureComptable = ecritureComptable; }
+
+    public Immobilisation getImmobilisation() {
+        return immobilisation;
+    }
+    public void setImmobilisation(Immobilisation immobilisation) {
+        this.immobilisation = immobilisation;
+    }
+
+    public EcheanceCredit getEcheanceCredit() {
+        return echeanceCredit;
+    }
+    public void setEcheanceCredit(EcheanceCredit echeanceCredit) {
+        this.echeanceCredit = echeanceCredit;
+    }
 
     public LocalDateTime getCreeLe() {
         return creeLe;

@@ -1,281 +1,247 @@
 <template>
-  <div class="immobilisation-create-page">
-    <div class="page-header">
-      <h1>Nouvelle Immobilisation</h1>
-      <NButton @click="goBack">
-        <template #icon>
-          <Icon icon="material-symbols:arrow-back" />
-        </template>
-        Retour
-      </NButton>
-    </div>
-
-    <!-- Indicateur de progression -->
-    <NCard class="progress-card">
-      <div v-if="!isMobile" class="progress-steps">
-        <div 
-          v-for="(step, index) in steps" 
-          :key="index"
-          class="step"
-          :class="{ 
-            'active': currentStep === index,
-            'completed': currentStep > index,
-            'disabled': currentStep < index
-          }"
-        >
-          <div class="step-number">{{ index + 1 }}</div>
-          <div class="step-label">{{ step.label }}</div>
+  <div class="p-4 immobilisation-create-page">
+    <NCard :bordered="false">
+      <div class="mb-8" v-if="!isMobile">
+        <NSteps :current="currentStep + 1" size="small">
+          <NStep title="Propriété" status="process" description="Choix du bien" />
+          <NStep title="Décomposition" description="Décomposition des composants" />
+          <NStep title="Validation" description="Vérification finale" />
+        </NSteps>
+      </div>
+      <div v-else class="mobile-stepper mb-8">
+        <div class="step-mobile-number">Étape {{ currentStep + 1 }}/3</div>
+        <div class="step-mobile-label">{{ steps[currentStep].label }}</div>
+      </div>
+      <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la propriété</NH2>
+      <div v-if="currentStep === 0">
+        <NGrid :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
+          <NGi v-for="propriete in proprietes" :key="propriete.id">
+            <NCard
+              hoverable
+              class="propriete-card"
+              @click="selectProprieteImmobilisation(propriete)"
+            >
+              <div class="flex items-start gap-4">
+                <div class="propriete-avatar">
+                  <NIcon :component="BuildingHome24Filled" size="32" />
+                </div>
+                <div class="flex-1">
+                  <div class="propriete-nom mb-2">{{ propriete.nom }}</div>
+                  <div class="text-sm space-y-1">
+                    <div v-if="propriete.adresse">{{ propriete.adresse }}</div>
+                    <div v-if="propriete.surface">Surface : {{ propriete.surface }} m²</div>
+                    <div v-if="propriete.type">Type : {{ propriete.type }}</div>
+                  </div>
+                </div>
+              </div>
+            </NCard>
+          </NGi>
+        </NGrid>
+      </div>
+      <!-- Étape 2 et 3 inchangées -->
+      <div v-if="currentStep === 1">
+        <div class="decomposition-info mb-4">
+          <p class="info-text">
+            Propriété sélectionnée : <strong>{{ selectedProprieteInfo?.nom }}</strong>
+          </p>
+          <p class="info-text">
+            Montant total : <strong>{{ formatCurrency(formData.montant) }}</strong>
+          </p>
+          <p class="info-text">
+            Nous proposons une décomposition automatique selon les standards immobiliers. Vous pouvez ajuster les montants.
+          </p>
         </div>
-      </div>
-      <div v-else class="progress-steps-mobile-simple">
-        <span class="step-mobile-number">Étape {{ currentStep + 1 }}/{{ steps.length }}</span>
-        <span class="step-mobile-label">{{ steps[currentStep].label }}</span>
-      </div>
-    </NCard>
-
-    <!-- Étape 1: Sélection de la propriété -->
-    <NCard v-if="currentStep === 0" class="step-card">
-      <NForm label-placement="left" label-width="auto">
-        <NFormItem label="Propriété" required>
-          <NSelect
-            v-model:value="selectedPropriete"
-            :options="proprieteOptions"
-            placeholder="Sélectionner une propriété"
-            style="width: 100%"
-            @update:value="onProprieteSelect"
-          />
-        </NFormItem>
-      </NForm>
-      
-      <div class="step-actions">
-        <NButton @click="goBack">Annuler</NButton>
-        <NButton 
-          type="primary" 
-          :disabled="!selectedPropriete"
-          @click="nextStep"
-        >
-          Suivant
-          <template #icon>
-            <Icon icon="material-symbols:arrow-forward" />
-          </template>
-        </NButton>
-      </div>
-    </NCard>
-
-    <!-- Étape 2: Décomposition de l'immobilisation -->
-    <NCard v-if="currentStep === 1" class="step-card">
-      <div class="decomposition-info">
-        <p class="info-text">
-          Propriété sélectionnée : <strong>{{ selectedProprieteInfo?.nom }}</strong>
-        </p>
-        <p class="info-text">
-          Montant total : <strong>{{ formatCurrency(formData.montant) }}</strong>
-        </p>
-        <p class="info-text">
-          Nous proposons une décomposition automatique selon les standards immobiliers. Vous pouvez ajuster les montants.
-        </p>
-      </div>
-
-      <div class="decomposition-section">
-        <div :class="['section-header', { 'section-header-mobile': isMobile }]">
-          <h3 :class="{ 'mobile-title': isMobile }">Décomposition par composants</h3>
-          <div v-if="isMobile" class="section-header-actions">
-            <NButton size="small" @click="applyDefaultDecomposition">
-              <template #icon>
-                <Icon icon="material-symbols:refresh" />
-              </template>
-              Appliquer la décomposition standard
-            </NButton>
-            <NButton size="small" @click="setAllToZero">
-              <template #icon>
-                <Icon icon="material-symbols:close" />
-              </template>
-              Tout mettre à 0
-            </NButton>
+        <div class="decomposition-section mb-4">
+          <div class="section-header" :class="{ 'section-header-mobile': isMobile }">
+            <h3 :class="{ 'mobile-title': isMobile }">Décomposition par composants</h3>
+            <div v-if="isMobile" class="section-header-actions">
+              <NButton size="small" @click="applyDefaultDecomposition">
+                <template #icon>
+                  <Icon icon="material-symbols:refresh" />
+                </template>
+                Appliquer la décomposition standard
+              </NButton>
+              <NButton size="small" @click="setAllToZero">
+                <template #icon>
+                  <Icon icon="material-symbols:close" />
+                </template>
+                Tout mettre à 0
+              </NButton>
+            </div>
+            <template v-else>
+              <NButton size="small" @click="applyDefaultDecomposition">
+                <template #icon>
+                  <Icon icon="material-symbols:refresh" />
+                </template>
+                Appliquer la décomposition standard
+              </NButton>
+              <NButton size="small" @click="setAllToZero">
+                <template #icon>
+                  <Icon icon="material-symbols:close" />
+                </template>
+                Tout mettre à 0
+              </NButton>
+            </template>
           </div>
-          <template v-else>
-            <NButton size="small" @click="applyDefaultDecomposition">
-              <template #icon>
-                <Icon icon="material-symbols:refresh" />
-              </template>
-              Appliquer la décomposition standard
-            </NButton>
-            <NButton size="small" @click="setAllToZero">
-              <template #icon>
-                <Icon icon="material-symbols:close" />
-              </template>
-              Tout mettre à 0
-            </NButton>
-          </template>
+          <div class="components-grid" :class="{ 'components-grid-mobile': isMobile }">
+            <div 
+              v-for="component in immobilisationComponents" 
+              :key="component.key"
+              class="component-card"
+            >
+              <div class="component-header">
+                <h4>{{ component.label }}</h4>
+                <span class="component-percentage">{{ component.defaultPercentage }}%</span>
+              </div>
+              <div class="component-details">
+                <div class="detail-item">
+                  <span class="detail-label">Pourcentage :</span>
+                  <NInputNumber
+                    v-model:value="component.percent"
+                    :min="0"
+                    :max="100"
+                    :precision="2"
+                    suffix="%"
+                  />
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Durée d'amortissement :</span>
+                  <NSelect
+                    :value="String(component.dureeAmortissement)"
+                    :options="getDureeOptions(component)"
+                    style="width: 100%"
+                    @update:value="val => component.dureeAmortissement = String(val)"
+                  />
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Type :</span>
+                  <NSelect
+                    v-model:value="component.typeImmobilisation"
+                    :options="typeImmobilisationOptions"
+                    style="width: 100%"
+                    @update:value="val => component.typeImmobilisation = val"
+                  />
+                </div>
+              </div>
+              <div class="component-montant">Montant : {{ formatCurrency(Number(component.percent) * formData.montant / 100) }}</div>
+            </div>
+          </div>
+          <div class="decomposition-summary mt-4">
+            <div class="summary-header">
+              <h3>Résumé de la décomposition</h3>
+            </div>
+            <div class="summary-content">
+              <div class="summary-item">
+                <span>Total des composants :</span>
+                <span class="summary-value">{{ formatCurrency(totalComponents) }}</span>
+              </div>
+              <div class="summary-item" :class="{ error: totalComponents !== formData.montant }">
+                <span>Différence :</span>
+                <span class="summary-value">{{ formatCurrency(formData.montant - totalComponents) }}</span>
+              </div>
+              <div class="summary-item">
+                <span>Pourcentage utilisé :</span>
+                <span class="summary-value">{{ totalPercent }}%</span>
+              </div>
+              <div class="summary-item" :class="{ error: Math.abs(totalPercent - 100) > 0.01 }">
+                <span>Total des pourcentages :</span>
+                <span class="summary-value">{{ totalPercent }} %</span>
+              </div>
+              <div v-if="Math.abs(totalPercent - 100) > 0.01" class="summary-item error">⚠️ La somme des pourcentages doit faire 100 %</div>
+            </div>
+          </div>
         </div>
-
-        <div :class="['components-grid', { 'components-grid-mobile': isMobile }]">
-          <div 
-            v-for="component in immobilisationComponents" 
-            :key="component.key"
-            class="component-card"
+        <div class="step-actions mt-8">
+          <NButton @click="previousStep">
+            <template #icon>
+              <Icon icon="material-symbols:arrow-back" />
+            </template>
+            Précédent
+          </NButton>
+          <NButton 
+            type="primary" 
+            :disabled="Math.abs(totalPercent - 100) > 0.01"
+            @click="nextStep"
           >
-            <div class="component-header">
-              <h4>{{ component.label }}</h4>
-              <span class="component-percentage">{{ component.defaultPercentage }}%</span>
-            </div>
-            
-            <div class="component-details">
-              <div class="detail-item">
-                <span class="detail-label">Pourcentage :</span>
-                <NInputNumber
-                  v-model:value="component.percent"
-                  :min="0"
-                  :max="100"
-                  :precision="2"
-                  suffix="%"
-                />
-              </div>
-              
-              <div class="detail-item">
-                <span class="detail-label">Durée d'amortissement :</span>
-                <NSelect
-                  :value="String(component.dureeAmortissement)"
-                  :options="getDureeOptions(component)"
-                  style="width: 100%"
-                  @update:value="val => component.dureeAmortissement = String(val)"
-                />
-              </div>
-              
-              <div class="detail-item">
-                <span class="detail-label">Type :</span>
-                <NSelect
-                  v-model:value="component.typeImmobilisation"
-                  :options="typeImmobilisationOptions"
-                  style="width: 100%"
-                  @update:value="val => component.typeImmobilisation = val"
-                />
-              </div>
-            </div>
-
-            <div class="component-montant">Montant : {{ formatCurrency(Number(component.percent) * formData.montant / 100) }}</div>
+            Suivant
+            <template #icon>
+              <Icon icon="material-symbols:arrow-forward" />
+            </template>
+          </NButton>
+        </div>
+      </div>
+      <!-- Étape 3: Récapitulatif et validation -->
+      <div v-if="currentStep === 2">
+        <div class="recap-section mb-4">
+          <h3>Informations de la propriété</h3>
+          <div class="recap-item">
+            <strong>Nom :</strong> {{ selectedProprieteInfo?.nom }}
+          </div>
+          <div class="recap-item">
+            <strong>Adresse :</strong> {{ selectedProprieteInfo?.adresse }}, {{ selectedProprieteInfo?.codePostal }} {{ selectedProprieteInfo?.ville }}
           </div>
         </div>
-
-        <!-- Résumé de la décomposition -->
-        <div class="decomposition-summary">
-          <div class="summary-header">
-            <h3>Résumé de la décomposition</h3>
+        <div class="recap-section mb-4">
+          <h3>Décomposition de l'immobilisation</h3>
+          <div class="recap-table-wrapper">
+            <table class="recap-table">
+              <thead>
+                <tr>
+                  <th>Composant</th>
+                  <th>%</th>
+                  <th>Montant</th>
+                  <th>Durée</th>
+                  <th>Type</th>
+                  <th>Catégorie fiscale</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="component in immobilisationComponents" :key="component.key">
+                  <td>{{ component.label }}</td>
+                  <td>{{ component.percent }}</td>
+                  <td>{{ formatCurrency(component.percent * formData.montant / 100) }}</td>
+                  <td>{{ component.dureeAmortissement || '—' }}</td>
+                  <td>{{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation as TypeImmobilisation] || '—' }}</td>
+                  <td>{{ CATEGORIE_FISCALE_LABELS[getCategorieFiscaleFromDuree(String(component.dureeAmortissement))] || '—' }}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Total</th>
+                  <th>{{ totalPercent }}</th>
+                  <th>{{ formatCurrency(totalComponents) }}</th>
+                  <th colspan="3"></th>
+                </tr>
+              </tfoot>
+            </table>
           </div>
-          <div class="summary-content">
-            <div class="summary-item">
-              <span>Total des composants :</span>
-              <span class="summary-value">{{ formatCurrency(totalComponents) }}</span>
-            </div>
-            <div class="summary-item" :class="{ 'error': totalComponents !== formData.montant }">
-              <span>Différence :</span>
-              <span class="summary-value">{{ formatCurrency(formData.montant - totalComponents) }}</span>
-            </div>
-            <div class="summary-item">
-              <span>Pourcentage utilisé :</span>
-              <span class="summary-value">{{ totalPercent }}%</span>
-            </div>
-            <div class="summary-item" :class="{ 'error': Math.abs(totalPercent - 100) > 0.01 }">
-              <span>Total des pourcentages :</span>
-              <span class="summary-value">{{ totalPercent }} %</span>
-            </div>
-            <div v-if="Math.abs(totalPercent - 100) > 0.01" class="summary-item error">⚠️ La somme des pourcentages doit faire 100 %</div>
-          </div>
         </div>
-      </div>
-
-      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
-        <NButton @click="previousStep">
-          <template #icon>
-            <Icon icon="material-symbols:arrow-back" />
-          </template>
-          Précédent
-        </NButton>
-        <NButton 
-          type="primary" 
-          :disabled="Math.abs(totalPercent - 100) > 0.01"
-          @click="nextStep"
-        >
-          Suivant
-          <template #icon>
-            <Icon icon="material-symbols:arrow-forward" />
-          </template>
-        </NButton>
-      </div>
-    </NCard>
-
-    <!-- Étape 3: Récapitulatif et validation -->
-    <NCard v-if="currentStep === 2" class="step-card">
-      <div class="recap-section">
-        <h3>Informations de la propriété</h3>
-        <div class="recap-item">
-          <strong>Nom :</strong> {{ selectedProprieteInfo?.nom }}
+        <div class="step-actions mt-8">
+          <NButton @click="previousStep">
+            <template #icon>
+              <Icon icon="material-symbols:arrow-back" />
+            </template>
+            Précédent
+          </NButton>
+          <NButton 
+            type="primary" 
+            :loading="saving"
+            @click="saveImmobilisation"
+          >
+            Valider
+            <template #icon>
+              <Icon icon="material-symbols:check" />
+            </template>
+          </NButton>
         </div>
-        <div class="recap-item">
-          <strong>Adresse :</strong> {{ selectedProprieteInfo?.adresse }}, {{ selectedProprieteInfo?.codePostal }} {{ selectedProprieteInfo?.ville }}
-        </div>
-      </div>
-
-      <div class="recap-section">
-        <h3>Décomposition de l'immobilisation</h3>
-        <div class="recap-table-wrapper">
-          <table class="recap-table">
-            <thead>
-              <tr>
-                <th>Composant</th>
-                <th>%</th>
-                <th>Montant</th>
-                <th>Durée</th>
-                <th>Type</th>
-                <th>Catégorie fiscale</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="component in immobilisationComponents" :key="component.key">
-                <td>{{ component.label }}</td>
-                <td>{{ component.percent }}</td>
-                <td>{{ formatCurrency(component.percent * formData.montant / 100) }}</td>
-                <td>{{ component.dureeAmortissement || '—' }}</td>
-                <td>{{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation as TypeImmobilisation] || '—' }}</td>
-                <td>{{ CATEGORIE_FISCALE_LABELS[getCategorieFiscaleFromDuree(String(component.dureeAmortissement))] || '—' }}</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <th>Total</th>
-                <th>{{ totalPercent }}</th>
-                <th>{{ formatCurrency(totalComponents) }}</th>
-                <th colspan="3"></th>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
-      <div :class="['step-actions', { 'step-actions-mobile': isMobile }]">
-        <NButton @click="previousStep">
-          <template #icon>
-            <Icon icon="material-symbols:arrow-back" />
-          </template>
-          Précédent
-        </NButton>
-        <NButton 
-          type="primary" 
-          :loading="saving"
-          @click="saveImmobilisation"
-        >
-          Valider
-          <template #icon>
-            <Icon icon="material-symbols:check" />
-          </template>
-        </NButton>
       </div>
     </NCard>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue'
+import type { StepsProps } from 'naive-ui'
+import { ref, computed, h, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { 
@@ -287,7 +253,13 @@ import {
   NInput, 
   NInputNumber, 
   NSelect, 
-  useMessage 
+  useMessage, 
+  NSteps, 
+  NStep,
+  NH2,
+  NGrid,
+  NGi,
+  NIcon
 } from 'naive-ui'
 
 import { CategorieFiscale, TypeImmobilisation } from '@/types/immobilisation.d'
@@ -295,6 +267,7 @@ import { CATEGORIE_FISCALE_DUREES, CATEGORIE_FISCALE_LABELS, TYPE_IMMOBILISATION
 import { immobilisationApi } from '@/service/api/immobilisation'
 import { useAppStore } from '@/store/modules/app'
 import { useAuthStore } from '@/store/modules/auth'
+import { BuildingHome24Filled } from '@vicons/fluent'
 
 definePage({
   meta: {
@@ -314,6 +287,7 @@ const saving = ref(false)
 const proprietes = ref<any[]>([])
 const currentStep = ref(0)
 const selectedPropriete = ref('')
+const currentStatus = ref<StepsProps['status']>('process')
 
 // Composants immobiliers avec leurs pourcentages par défaut
 const immobilisationComponents = ref([
@@ -395,7 +369,7 @@ const immobilisationComponents = ref([
 const steps = [
   { label: 'Sélection propriété' },
   { label: 'Décomposition' },
-  { label: 'Validation' },
+  { label: 'Validation'},
 ]
 
 // Formulaire
@@ -669,6 +643,18 @@ function getDureeOptions(component: any) {
   return durees
 }
 
+function getStepStatus(index: number) {
+  if (index < currentStep.value) return 'finish'
+  if (index === currentStep.value) return 'process'
+  return 'wait'
+}
+
+function selectProprieteImmobilisation(propriete: any) {
+  selectedPropriete.value = propriete.id
+  onProprieteSelect(propriete.id)
+  nextStep()
+}
+
 // Initialisation
 onMounted(async () => {
   await loadProprietes()
@@ -676,109 +662,49 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.immobilisation-create-page {
-  padding: 20px;
+.titre-principal,
+h1,
+h2,
+h3 {
+  color: var(--n-text-color) !important;
+  font-weight: bold;
 }
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h1 {
-  margin: 0;
-  color: #333;
-}
-
-.progress-card {
-  margin-bottom: 20px;
-}
-
-.progress-steps {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 0;
-}
-
-.step {
+.propriete-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  position: relative;
 }
-
-.step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  width: 100%;
-  height: 2px;
-  background-color: #e5e7eb;
-  z-index: 1;
+.propriete-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: #1976d2;
 }
-
-.step.completed:not(:last-child)::after {
-  background-color: #10b981;
-}
-
-.step-number {
-  width: 40px;
-  height: 40px;
+.propriete-avatar {
+  background-color: var(--n-color-embedded);
+  color: var(--n-color-target);
   border-radius: 50%;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  background-color: #e5e7eb;
-  color: #6b7280;
-  z-index: 2;
-  position: relative;
 }
-
-.step.active .step-number {
-  background-color: #3b82f6;
-  color: white;
+.propriete-nom {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--n-text-color);
 }
-
-.step.completed .step-number {
-  background-color: #10b981;
-  color: white;
+.mb-8 {
+  margin-bottom: 2rem !important;
 }
-
-.step-label {
-  font-size: 14px;
-  color: #6b7280;
-  text-align: center;
+.mb-4 {
+  margin-bottom: 1rem !important;
 }
-
-.step.active .step-label {
-  color: #3b82f6;
-  font-weight: 500;
+.p-4 {
+  padding: 1rem !important;
 }
-
-.step.completed .step-label {
-  color: #10b981;
-  font-weight: 500;
-}
-
-.step-card {
-  margin-bottom: 20px;
-}
-
-.step-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #eee;
-}
-
 .decomposition-info {
   background-color: #f3f4f6;
   padding: 16px;
@@ -1092,4 +1018,4 @@ onMounted(async () => {
     opacity: 1 !important;
   }
 }
-</style> 
+</style>

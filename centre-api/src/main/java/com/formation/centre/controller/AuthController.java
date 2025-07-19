@@ -60,6 +60,45 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/send-reset-code")
+    public ResponseEntity<?> sendResetCode(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        try {
+            authService.sendResetCode(email);
+            return ResponseEntity.ok().body("Code envoyé");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur lors de l'envoi du code : " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String code = body.get("code");
+        String newPassword = body.get("password");
+        if (!authService.verifyResetCode(email, code)) {
+            return ResponseEntity.status(400).body("Code de vérification invalide");
+        }
+        try {
+            authService.changePasswordByEmail(email, newPassword);
+            authService.clearResetCode(email);
+            return ResponseEntity.ok().body("Mot de passe réinitialisé");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur lors de la réinitialisation : " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/getEmailByUserName")
+    public ResponseEntity<?> getEmailByUserName(@RequestBody Map<String, String> body) {
+        String userName = body.get("userName");
+        var userOpt = authService.getUserByUserName(userName);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "Utilisateur non trouvé"));
+        }
+        String email = userOpt.get().getEmail();
+        return ResponseEntity.ok(Map.of("email", email));
+    }
+
     @GetMapping("/getUserInfo")
     public ResponseEntity<ApiResponse<UserInfoResponseDTO>> getInfosUtilisateur(
             @RequestHeader("Authorization") String authHeader) {

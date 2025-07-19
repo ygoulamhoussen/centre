@@ -20,6 +20,13 @@ import java.util.Collections;
 import com.formation.centre.model.Role;
 import com.formation.centre.repository.RoleRepository;
 import com.formation.centre.repository.UtilisateurRepository;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.mail.internet.MimeMessage;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Random;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class AuthService {
@@ -36,6 +43,15 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    // Stockage temporaire des codes (email -> code)
+    private final ConcurrentHashMap<String, String> resetCodes = new ConcurrentHashMap<>();
+
     public LoginResponseDTO login(String userName, String password) {
         Optional<Utilisateur> utilisateurOpt = utilisateurRepository.findByUserName(userName);
 
@@ -45,8 +61,8 @@ public class AuthService {
 
         Utilisateur utilisateur = utilisateurOpt.get();
 
-        // Comparaison directe (⚠️ mot de passe stocké en clair !)
-        if (!password.equals(utilisateur.getMotDePasseHash())) {
+        // Comparaison avec hash BCrypt
+        if (!passwordEncoder.matches(password, utilisateur.getMotDePasseHash())) {
             throw new RuntimeException("Mot de passe incorrect");
         }
 
@@ -70,6 +86,10 @@ public UserInfoResponseDTO getInfosUtilisateur(String userName) {
     );
 }
 
+    public Optional<Utilisateur> getUserByUserName(String userName) {
+        return utilisateurRepository.findByUserName(userName);
+    }
+
     @Transactional
     public void register(RegisterRequestDTO dto) {
         // Vérifier unicité userName/email
@@ -86,7 +106,7 @@ public UserInfoResponseDTO getInfosUtilisateur(String userName) {
         user.setNom(dto.nom);
         user.setPrenom(dto.prenom);
         user.setEmail(dto.email);
-        user.setMotDePasseHash(dto.password); // ⚠️ à remplacer par un hash réel en prod
+        user.setMotDePasseHash(passwordEncoder.encode(dto.password)); // Hash du mot de passe
         user.setCreeLe(LocalDateTime.now());
         user.setModifieLe(LocalDateTime.now());
         // Rôle USER par défaut
@@ -116,4 +136,33 @@ public UserInfoResponseDTO getInfosUtilisateur(String userName) {
         }
     }
 
+    public void sendResetCode(String email) throws Exception {
+        // Générer un code à 6 chiffres
+        String code = String.format("%06d", new Random().nextInt(999999));
+        resetCodes.put(email, code);
+        // Envoyer l’email
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(email);
+        helper.setSubject("Votre code de réinitialisation");
+        helper.setText("Votre code de réinitialisation est : " + code, true);
+        mailSender.send(message);
+    }
+
+    public boolean verifyResetCode(String email, String code) {
+        String stored = resetCodes.get(email);
+        return stored != null && stored.equals(code);
+    }
+
+    public void clearResetCode(String email) {
+        resetCodes.remove(email);
+    }
+
+    public void changePasswordByEmail(String email, String newPassword) {
+        Optional<Utilisateur> userOpt = utilisateurRepository.findByEmail(email);
+        if (userOpt.isEmpty()) throw new RuntimeException("Utilisateur non trouvé");
+        Utilisateur user = userOpt.get();
+        user.setMotDePasseHash(passwordEncoder.encode(newPassword));
+        utilisateurRepository.save(user);
+    }
 }

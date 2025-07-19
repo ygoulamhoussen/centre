@@ -1162,7 +1162,11 @@ public ImmobilisationDTO saveImmobilisation(ImmobilisationDTO dto) {
     i.setMontant(new BigDecimal(dto.getMontant()));
     i.setDateAcquisition(LocalDate.parse(dto.getDateAcquisition()));
     if (dto.getDureeAmortissement() != null && !dto.getDureeAmortissement().isEmpty()) {
-        i.setDureeAmortissement(Integer.valueOf(dto.getDureeAmortissement()));
+        try {
+            i.setDureeAmortissement(Integer.valueOf(dto.getDureeAmortissement()));
+        } catch (NumberFormatException e) {
+            i.setDureeAmortissement(0);
+        }
     } else {
         i.setDureeAmortissement(0); // ou ne rien faire selon la logique métier
     }
@@ -2522,7 +2526,10 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                 BigDecimal vnc = immo.getMontant().subtract(cumulCloture);
                 
                 // Taux d'amortissement (linéaire)
-                BigDecimal taux = BigDecimal.valueOf(100.0 / immo.getDureeAmortissement());
+                BigDecimal taux = BigDecimal.ZERO;
+                if (immo.getDureeAmortissement() != null && immo.getDureeAmortissement() > 0) {
+                    taux = BigDecimal.valueOf(100.0 / immo.getDureeAmortissement());
+                }
                 
                 // Base amortissable (souvent égale au montant HT, sauf pour les terrains)
                 BigDecimal baseAmortissable = immo.getMontant();

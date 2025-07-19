@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import CodeLogin from '@/components/modules/login/code-login.vue'
 import PwdLogin from '@/components/modules/login/pwd-login.vue'
 import Register from '@/components/modules/login/register.vue'
 import ResetPwd from '@/components/modules/login/reset-pwd.vue'
 import { loginModuleRecord } from '@/constants/app'
 import { $t } from '@/locales'
-import { useAppStore } from '@/store/modules/app'
 import { useThemeStore } from '@/store/modules/theme'
 import { getPaletteColorByNumber, mixColor } from '@sa/color'
 
@@ -20,7 +18,6 @@ definePage({
   props: true,
 })
 
-const appStore = useAppStore()
 const themeStore = useThemeStore()
 
 interface LoginModule {
@@ -30,7 +27,6 @@ interface LoginModule {
 
 const moduleMap: Record<UnionKey.LoginModule, LoginModule> = {
   'pwd-login': { label: loginModuleRecord['pwd-login'], component: PwdLogin },
-  'code-login': { label: loginModuleRecord['code-login'], component: CodeLogin },
   'register': { label: loginModuleRecord.register, component: Register },
   'reset-pwd': { label: loginModuleRecord['reset-pwd'], component: ResetPwd },
 }

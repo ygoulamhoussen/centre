@@ -14,7 +14,7 @@ definePage({
   meta: {
     title: 'Immobilisations',
     icon: 'mdi:domain',
-    order: 7,
+    order: 8,
   },
 })
 const router = useRouter()

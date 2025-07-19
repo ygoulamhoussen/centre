@@ -98,7 +98,7 @@ async function handleSubmit() {
       await authStore.login(model.login, model.password)
       window.$message?.success($t('page.login.common.validateSuccess'))
       window.location.href = '/'
-    } catch (e) {
+    } catch {
       // Erreur de connexion automatique, on affiche un message mais on ne l'utilise pas
       window.$message?.error('Inscription réussie, mais connexion impossible. Veuillez vous connecter manuellement.')
       window.location.href = '/login'
@@ -110,6 +110,10 @@ async function handleSubmit() {
   finally {
     registerLoading.value = false
   }
+}
+
+function goBackToLogin() {
+  window.location.href = '/login'
 }
 </script>
 
@@ -149,7 +153,9 @@ async function handleSubmit() {
       <NButton type="primary" size="large" round block @click="handleSubmit">
         {{ $t('common.confirm') }}
       </NButton>
-      <!-- Bouton retour supprimé car toggleLoginModule n'existe plus -->
+      <NButton type="primary" size="large" round block @click="goBackToLogin">
+        {{ $t('page.login.common.back') }}
+      </NButton>
     </NSpace>
   </NForm>
 </template>

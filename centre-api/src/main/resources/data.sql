@@ -31,12 +31,12 @@
 
 -- Utilisateurs
 INSERT INTO utilisateur (id, user_name, nom, prenom, email, mot_de_passe_hash, cree_le, modifie_le) VALUES
-('00000000-0000-0000-0000-000000000001', 'jdupont', 'Dupont', 'Jean', 'jean.dupont@example.com', 'hash1', now(), now()),
-('00000000-0000-0000-0000-000000000002', 'cmartin', 'Martin', 'Claire', 'claire.martin@example.com', 'hash2', now(), now()),
-('00000000-0000-0000-0000-000000000003', 'Yussouf', 'Martin', 'Claire', 'yussouf.goulamhoussen@gmail.com', '123456', now(), now()),
-('00000000-0000-0000-0000-000000000004', 'Taha', 'Martin', 'Claire', 'taha.goulamhoussen@gmail.com', '123456', now(), now()),
-('00000000-0000-0000-0000-000000000005', 'bmorel', 'Morel', 'Benoit', 'benoit.morel@example.com', 'hash3', now(), now()),
-('00000000-0000-0000-0000-000000000006', 'lperrin', 'Perrin', 'Laura', 'laura.perrin@example.com', 'hash4', now(), now());
+('00000000-0000-0000-0000-000000000001', 'jdupont', 'Dupont', 'Jean', 'jean.dupont@example.com', '$2a$10$O7OD13VYrxx89Eb7bpVS6uSzrv6Skw8XQM9jRZTEvuMZN0z.6CEH.', now(), now()),
+('00000000-0000-0000-0000-000000000002', 'cmartin', 'Martin', 'Claire', 'claire.martin@example.com', '$2a$10$O7OD13VYrxx89Eb7bpVS6uSzrv6Skw8XQM9jRZTEvuMZN0z.6CEH.', now(), now()),
+('00000000-0000-0000-0000-000000000003', 'Yussouf', 'Martin', 'Claire', 'yussouf.goulamhoussen@gmail.com', '$2a$10$O7OD13VYrxx89Eb7bpVS6uSzrv6Skw8XQM9jRZTEvuMZN0z.6CEH.', now(), now()),
+('00000000-0000-0000-0000-000000000004', 'Taha', 'Martin', 'Claire', 'taha.goulamhoussen@gmail.com', '$2a$10$O7OD13VYrxx89Eb7bpVS6uSzrv6Skw8XQM9jRZTEvuMZN0z.6CEH.', now(), now()),
+('00000000-0000-0000-0000-000000000005', 'bmorel', 'Morel', 'Benoit', 'benoit.morel@example.com', '$2a$10$O7OD13VYrxx89Eb7bpVS6uSzrv6Skw8XQM9jRZTEvuMZN0z.6CEH.', now(), now()),
+('00000000-0000-0000-0000-000000000006', 'lperrin', 'Perrin', 'Laura', 'laura.perrin@example.com', '$2a$10$O7OD13VYrxx89Eb7bpVS6uSzrv6Skw8XQM9jRZTEvuMZN0z.6CEH.', now(), now());
 
 
 -- Création des rôles

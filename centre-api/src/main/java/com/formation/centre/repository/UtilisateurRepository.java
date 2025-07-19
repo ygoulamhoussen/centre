@@ -10,4 +10,5 @@ import com.formation.centre.model.Utilisateur;
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, UUID> {
 
     Optional<Utilisateur> findByUserName(String userName);
+    Optional<Utilisateur> findByEmail(String email);
 }

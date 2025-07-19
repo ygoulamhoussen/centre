@@ -1300,7 +1300,7 @@ async function supprimerRecetteConfirme() {
     </NCard>
 
     <!-- Modal Écriture -->
-    <NModal v-model:show="modalEcritureVisible" preset="card" title="Écriture Comptable" style="width: 600px">
+    <NModal v-model:show="modalEcritureVisible" preset="card" title="Écriture Comptable" :style="modalStyle">
       <NForm :model="ecritureEnCours" label-placement="top">
         <NGrid :cols="2" :x-gap="16">
           <NGi>
@@ -1398,7 +1398,7 @@ async function supprimerRecetteConfirme() {
     </NModal>
 
     <!-- Modal Charge -->
-    <NModal v-model:show="modalChargeVisible" preset="card" title="Charge" style="width: 600px">
+    <NModal v-model:show="modalChargeVisible" preset="card" title="Charge" :style="modalStyle">
       <NForm :model="chargeEnCours" label-placement="top">
         <NGrid :cols="2" :x-gap="16">
           <NGi>
@@ -1500,7 +1500,7 @@ async function supprimerRecetteConfirme() {
     </NModal>
 
     <!-- Modal Recette -->
-    <NModal v-model:show="modalRecetteVisible" preset="card" title="Recette" style="width: 600px">
+    <NModal v-model:show="modalRecetteVisible" preset="card" title="Recette" :style="modalStyle">
       <NForm :model="recetteEnCours" label-placement="top">
         <NGrid :cols="2" :x-gap="16">
           <NGi>
@@ -1766,5 +1766,21 @@ async function supprimerRecetteConfirme() {
 .compta-bg {
   background-color: var(--n-body-color);
   min-height: 100vh;
+}
+@media (max-width: 600px) {
+  .n-modal {
+    width: 98vw !important;
+    min-width: 90vw !important;
+    max-width: 98vw !important;
+    padding: 8px !important;
+    overflow: auto !important;
+    max-height: 90vh !important;
+  }
+  .n-modal .n-card__content {
+    padding: 8px !important;
+  }
+  .n-form-item {
+    margin-bottom: 10px !important;
+  }
 }
 </style> 

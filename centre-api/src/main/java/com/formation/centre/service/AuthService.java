@@ -52,6 +52,9 @@ public class AuthService {
     // Stockage temporaire des codes (email -> code)
     private final ConcurrentHashMap<String, String> resetCodes = new ConcurrentHashMap<>();
 
+    // Stockage temporaire pour inscription différée (email -> {code, infos})
+    private final ConcurrentHashMap<String, PendingRegistration> pendingRegistrations = new ConcurrentHashMap<>();
+
     public LoginResponseDTO login(String userName, String password) {
         Optional<Utilisateur> utilisateurOpt = utilisateurRepository.findByUserName(userName);
 
@@ -136,6 +139,78 @@ public UserInfoResponseDTO getInfosUtilisateur(String userName) {
         }
     }
 
+    public void startRegistration(RegisterRequestDTO dto) throws Exception {
+        // Vérifier unicité userName/email
+        if (utilisateurRepository.findByUserName(dto.userName).isPresent()) {
+            throw new RuntimeException("Nom d'utilisateur déjà utilisé");
+        }
+        if (utilisateurRepository.findByEmail(dto.email).isPresent()) {
+            throw new RuntimeException("Email déjà utilisé");
+        }
+        // Générer un code à 6 chiffres
+        String code = String.format("%06d", new Random().nextInt(999999));
+        pendingRegistrations.put(dto.email, new PendingRegistration(code, dto));
+        // Envoyer l’email
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(dto.email);
+        helper.setFrom("zymo97400@gmail.com", "Zymo noreply");
+        helper.setSubject("Votre code d'inscription");
+        helper.setText("Votre code de validation est : " + code, true);
+        mailSender.send(message);
+    }
+
+    public void confirmRegistration(String email, String code) {
+        PendingRegistration pending = pendingRegistrations.get(email);
+        if (pending == null || !pending.code.equals(code)) {
+            throw new RuntimeException("Code de validation incorrect ou expiré");
+        }
+        RegisterRequestDTO dto = pending.dto;
+        // Création effective du compte (copie de la logique de register)
+        Utilisateur user = new Utilisateur();
+        user.setId(UUID.randomUUID());
+        user.setUserName(dto.userName);
+        user.setNom(dto.nom);
+        user.setPrenom(dto.prenom);
+        user.setEmail(dto.email);
+        user.setMotDePasseHash(passwordEncoder.encode(dto.password));
+        user.setCreeLe(LocalDateTime.now());
+        user.setModifieLe(LocalDateTime.now());
+        Role userRole = roleRepository.findByName("USER").orElseThrow(() -> new RuntimeException("Rôle USER manquant"));
+        user.setRoles(Collections.singletonList(userRole));
+        Utilisateur savedUser = utilisateurRepository.save(user);
+        // Création capital-identites
+        if (dto.capitalIdentites != null) {
+            CapitalIdentitesDTO c = dto.capitalIdentites;
+            CapitalIdentites entity = new CapitalIdentites();
+            entity.setNomExploitant(c.getNomExploitant());
+            entity.setPrenomExploitant(c.getPrenomExploitant());
+            entity.setAdresseExploitant(c.getAdresseExploitant());
+            entity.setCodePostalExploitant(c.getCodePostalExploitant());
+            entity.setVilleExploitant(c.getVilleExploitant());
+            entity.setQualite(c.getQualite());
+            entity.setApportsNumeraires(c.getApportsNumeraires());
+            entity.setApportsNature(c.getApportsNature());
+            entity.setApportsIndustrie(c.getApportsIndustrie());
+            entity.setPartsDetenues(c.getPartsDetenues());
+            entity.setUtilisateur(savedUser);
+            entity.setDateCreation(LocalDate.now());
+            entity.setCreatedAt(LocalDateTime.now());
+            entity.calculerTotalCapital();
+            capitalIdentitesRepository.save(entity);
+        }
+        pendingRegistrations.remove(email);
+    }
+
+    private static class PendingRegistration {
+        String code;
+        RegisterRequestDTO dto;
+        PendingRegistration(String code, RegisterRequestDTO dto) {
+            this.code = code;
+            this.dto = dto;
+        }
+    }
+
     public void sendResetCode(String email) throws Exception {
         // Générer un code à 6 chiffres
         String code = String.format("%06d", new Random().nextInt(999999));
@@ -144,6 +219,7 @@ public UserInfoResponseDTO getInfosUtilisateur(String userName) {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo(email);
+        helper.setFrom("zymo97400@gmail.com", "Zymo noreply");
         helper.setSubject("Votre code de réinitialisation");
         helper.setText("Votre code de réinitialisation est : " + code, true);
         mailSender.send(message);

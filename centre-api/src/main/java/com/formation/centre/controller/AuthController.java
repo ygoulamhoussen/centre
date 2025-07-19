@@ -60,6 +60,28 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/start-registration")
+    public ResponseEntity<?> startRegistration(@RequestBody RegisterRequestDTO dto) {
+        try {
+            authService.startRegistration(dto);
+            return ResponseEntity.ok().body("Code envoyé à l'email");
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/confirm-registration")
+    public ResponseEntity<?> confirmRegistration(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String code = body.get("code");
+        try {
+            authService.confirmRegistration(email, code);
+            return ResponseEntity.ok().body("Inscription validée, compte créé");
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
     @PostMapping("/send-reset-code")
     public ResponseEntity<?> sendResetCode(@RequestBody Map<String, String> body) {
         String email = body.get("email");

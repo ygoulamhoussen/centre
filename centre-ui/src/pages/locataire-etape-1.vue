@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { ArrowRight24Filled, Call24Filled, Mail24Filled, Person24Filled } from '@vicons/fluent'
+import { Checkmark24Filled, Call24Filled, Mail24Filled, Person24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -105,7 +105,7 @@ async function valider() {
       <div class="flex justify-end mt-8">
         <NButton type="primary" @click="valider" title="Valider">
           <template #icon>
-            <NIcon :component="ArrowRight24Filled" />
+            <NIcon :component="Checkmark24Filled" />
           </template>
         </NButton>
       </div>

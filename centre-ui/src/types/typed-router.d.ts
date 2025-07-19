@@ -44,7 +44,6 @@ declare module 'vue-router/auto-routes' {
     '/liasse-fiscale': RouteRecordInfo<'/liasse-fiscale', '/liasse-fiscale', Record<never, never>, Record<never, never>>,
     '/locataire': RouteRecordInfo<'/locataire', '/locataire', Record<never, never>, Record<never, never>>,
     '/locataire-etape-1': RouteRecordInfo<'/locataire-etape-1', '/locataire-etape-1', Record<never, never>, Record<never, never>>,
-    '/locataire-etape-2': RouteRecordInfo<'/locataire-etape-2', '/locataire-etape-2', Record<never, never>, Record<never, never>>,
     '/locataire-etape-3': RouteRecordInfo<'/locataire-etape-3', '/locataire-etape-3', Record<never, never>, Record<never, never>>,
     '/locataire.[id]': RouteRecordInfo<'/locataire.[id]', '/locataire/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/location': RouteRecordInfo<'/location', '/location', Record<never, never>, Record<never, never>>,

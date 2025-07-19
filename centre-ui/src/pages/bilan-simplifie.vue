@@ -6,6 +6,14 @@ import { useAuthStore } from '@/store/modules/auth'
 import { bilanSimplifieApi } from '@/service/api/bilan-simplifie'
 import { getEcrituresComptablesWithProprieteNom } from '@/service/api/charges-recettes'
 
+definePage({
+  meta: {
+    title: 'Bilan simplifiée',
+    order: 10,
+    hideInMenu: true,
+  },
+})
+
 // --- CALCUL DU BILAN À PARTIR DU JOURNAL COMPTABLE (FEC) ---
 
 type ImmobilisationDetail = {

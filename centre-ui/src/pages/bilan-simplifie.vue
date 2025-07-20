@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NSelect, NSpin, useMessage, NH1, type DataTableColumns } from 'naive-ui'
+import { NButton, NCard, NCollapse, NCollapseItem, NDataTable, NEmpty, NSelect, NSpin, useMessage, NH1 } from 'naive-ui'
+import type { DataTableColumns } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import { useAuthStore } from '@/store/modules/auth'
 import { bilanSimplifieApi } from '@/service/api/bilan-simplifie'
@@ -138,14 +139,25 @@ const totalResultat = computed(() => sumFEC(comptesResultat, 'credit'))
 
 const totalActif = computed(() => totalImmobilisationsNettes.value + totalCreances.value + totalTresorerie.value)
 // Comptes produits/charges pour le calcul dynamique du résultat
-const comptesProduits = ['706000', '708000', '758000']
-const comptesCharges = ['606000', '606100', '606200', '606300', '606400', '606800', '615000', '614000', '622000', '623000', '626000', '627000', '635100', '635800', '637000', '661100', '681100']
+const comptesProduits = ['70', '74', '75', '77', '78', '79']; // 70x ventes, 74x subventions, 75x autres produits, 77x, 78x, 79x produits exceptionnels
+const comptesCharges = ['60', '61', '62', '63', '64', '65', '66', '67', '68', '69']; // 60x à 69x charges
 
-const totalProduits = computed(() => sumFEC(comptesProduits, 'credit'))
-const totalCharges = computed(() => sumFEC(comptesCharges, 'debit'))
-const resultatExercice = computed(() => totalProduits.value - totalCharges.value)
+// Lignes FEC pour le calcul du résultat de l'exercice (uniquement l'année sélectionnée)
+const lignesFECResultat = computed(() =>
+  lignesFEC.value.filter(l =>
+    l.dateEcriture && new Date(l.dateEcriture).getFullYear() === selectedYear.value
+  )
+)
 
-const totalPassif = computed(() => totalCapital.value + resultatExercice.value + totalEmprunts.value + totalDettesFournisseurs.value)
+const resultatExerciceBilan = computed(() => {
+  const produits = lignesFECResultat.value
+    .filter(l => comptesProduits.some(prefix => l.compteNum.startsWith(prefix)))
+    .reduce((sum, l) => sum + (Number(l.credit) || 0), 0)
+  const charges = lignesFECResultat.value
+    .filter(l => comptesCharges.some(prefix => l.compteNum.startsWith(prefix)))
+    .reduce((sum, l) => sum + (Number(l.debit) || 0), 0)
+  return produits - charges
+})
 
 function formatCurrency(value?: number) {
   if (value === undefined || value === null) {
@@ -212,6 +224,79 @@ onMounted(async () => {
   // Lancer le calcul automatiquement à l'arrivée sur la page
 })
 
+// === STRUCTURE OFFICIELLE 2033-A ===
+const postes2033A = [
+  // ACTIF
+  { code: '01', label: 'Immobilisations incorporelles', comptes: ['20'] },
+  { code: '02', label: 'Immobilisations corporelles', comptes: ['211','212','213','214','215','217','218','219'] },
+  { code: '03', label: 'Immobilisations financières', comptes: ['26', '27'] },
+  { code: '04', label: 'Amortissements incorporelles', comptes: ['280'], negatif: true },
+  { code: '05', label: 'Amortissements corporelles', comptes: ['281'], negatif: true },
+  { code: '06', label: 'Provisions dépréciation immo. financières', comptes: ['290'], negatif: true },
+  { code: '07', label: 'Stocks et en-cours', comptes: ['31','32','33','34','35','36','37'] },
+  { code: '08', label: 'Avances/acompte versés', comptes: ['4091','4096'] },
+  { code: '09', label: 'Créances clients', comptes: ['411'] },
+  { code: '10', label: 'Autres créances', comptes: ['412','413','414','415','416','417','418','4196','425','4282','431','437','4386','441','445','446','447','448','451','453','455','456','457','467','468','486','487'] },
+  { code: '11', label: 'Valeurs mobilières de placement', comptes: ['50'] },
+  { code: '12', label: 'Disponibilités', comptes: ['51','53'] },
+  { code: '13', label: 'Charges constatées d’avance, écarts de conversion actif', comptes: ['486','487','488'] },
+  // PASSIF
+  { code: '14', label: 'Capital', comptes: ['101'] },
+  { code: '15', label: 'Réserves', comptes: ['106'] },
+  { code: '16', label: 'Report à nouveau', comptes: ['110','119'] },
+  { code: '17', label: 'Résultat de l’exercice', comptes: ['120','129'] },
+  { code: '18', label: 'Provisions pour risques et charges', comptes: ['15'] },
+  { code: '19', label: 'Emprunts et dettes établissements de crédit', comptes: ['164','168'] },
+  { code: '20', label: 'Avances reçues sur commandes', comptes: ['419'] },
+  { code: '21', label: 'Dettes fournisseurs', comptes: ['401'] },
+  { code: '22', label: 'Dettes fiscales et sociales', comptes: ['43'] },
+  { code: '23', label: 'Autres dettes', comptes: ['42','44','45','46','47'], exclude: ['43'] },
+  { code: '24', label: 'Produits constatés d’avance, écarts de conversion passif', comptes: ['487','488'] },
+]
+
+// Filtrer toutes les écritures jusqu'à la date de clôture de l'année sélectionnée
+const lignesFECBilan = computed(() =>
+  lignesFEC.value.filter(l =>
+    l.dateEcriture && new Date(l.dateEcriture) <= new Date(`${selectedYear.value}-12-31`)
+  )
+)
+
+function sumPoste2033A(poste: { code: string, label: string, comptes: string[], negatif?: boolean, exclude?: string[] }, sens = 'debit') {
+  // Poste 17 : résultat de l'exercice = calcul dynamique
+  if (poste.code === '17') {
+    return resultatExerciceBilan.value
+  }
+  // Poste 14 : capital = variable d'équilibre
+  if (poste.code === '14') {
+    // Total actif cumulé
+    const totalActif = postes2033A.slice(0, 13).reduce((sum, p) => sum + sumPoste2033A(p), 0)
+    // Total passif hors capital (on retire le poste 14)
+    const totalPassifHorsCapital = postes2033A.slice(1 + 13).reduce((sum, p) => sum + (p.code === '14' ? 0 : sumPoste2033A(p)), 0)
+    return totalActif - totalPassifHorsCapital
+  }
+  // On construit le bilan uniquement à partir des écritures comptables (lignes FEC)
+  return lignesFECBilan.value
+    .filter(l => {
+      if (poste.exclude && poste.exclude.some((ex: string) => l.compteNum.startsWith(ex))) return false
+      // Inclusion stricte par préfixe de compte (ex: 213, 215, 218...)
+      return poste.comptes.some((c: string) => l.compteNum.startsWith(c))
+    })
+    .reduce((sum, l) => {
+      let val = 0
+      if (poste.negatif) {
+        // Amortissements/provisions : crédit (signe -)
+        val = -(Number(l.credit) || 0)
+      } else if (Number(poste.code) >= 14) {
+        // Passif : crédit
+        val = Number(l.credit) || 0
+      } else {
+        // Actif : débit
+        val = Number(l.debit) || 0
+      }
+      return sum + val
+    }, 0)
+}
+
 // Ajout des sous-totaux par type d'immobilisation
 const totalTerrains = computed(() => soldeCumuleComptesFiltre(
   compte => compte === '211000',
@@ -238,9 +323,8 @@ const totalMobilier = computed(() => soldeCumuleComptesFiltre(
 <template>
   <div class="bilan-simplifie-page">
     <div class="page-header flex items-center justify-between">
-      <NH1 class="titre-principal">Bilan Simplifié LMNP (2033-A)</NH1>
+      <NH1 class="titre-principal">Bilan Simplifié 2033-A (officiel)</NH1>
     </div>
-
     <NCard class="filters-card">
       <div class="filters">
         <NSelect
@@ -257,101 +341,48 @@ const totalMobilier = computed(() => soldeCumuleComptesFiltre(
         </NButton>
       </div>
     </NCard>
-
     <div v-if="loading" class="loading-container">
       <NSpin size="large" />
     </div>
-
     <div v-if="!loading" class="result-container">
       <NCard class="bilan-card">
         <table class="bilan-table">
           <thead>
-            <tr><th colspan="2">Bilan Simplifié LMNP (2033-A) au {{ formatDate(selectedYear + '-12-31') }}</th></tr>
+            <tr><th colspan="3">Bilan Simplifié 2033-A au {{ formatDate(selectedYear + '-12-31') }}</th></tr>
           </thead>
           <tbody>
-            <!-- ACTIF -->
-            <tr class="section"><td colspan="2">ACTIF (ce que vous possédez)</td></tr>
-            
-            <tr class="subsection"><td colspan="2">Immobilisations</td></tr>
-            <tr><td>Terrains (211000) ~0-20%</td><td class="amount">{{ formatCurrency(totalTerrains) }}</td></tr>
-            <tr><td>Immeubles (213100) ~40-60%</td><td class="amount">{{ formatCurrency(totalImmeubles) }}</td></tr>
-            <tr><td>Travaux/Agencements (213500) ~10-20%</td><td class="amount">{{ formatCurrency(totalTravaux) }}</td></tr>
-            <tr><td>Frais d'acquisition (203000) ~5-10%</td><td class="amount">{{ formatCurrency(totalFrais) }}</td></tr>
-            <tr><td>Mobilier (218100) ~5-10%</td><td class="amount">{{ formatCurrency(totalMobilier) }}</td></tr>
-            <tr>
-              <td>Amortissements cumulés (28xxxx)</td>
-              <td class="amount negative">{{ formatCurrency(-totalAmortissementsCumules) }}</td>
+            <tr class="section"><td colspan="3">ACTIF</td></tr>
+            <tr v-for="poste in postes2033A.slice(0, 13)" :key="poste.code">
+              <td>{{ poste.code }}</td>
+              <td>{{ poste.label }}</td>
+              <td class="amount">{{ formatCurrency(sumPoste2033A(poste)) }}</td>
             </tr>
-            <tr class="total-row">
-              <td><strong>Immobilisations nettes</strong></td>
-              <td class="amount"><strong>{{ formatCurrency(totalImmobilisationsNettes) }}</strong></td>
+            <tr class="section"><td colspan="3">PASSIF</td></tr>
+            <tr v-for="poste in postes2033A.slice(13)" :key="poste.code">
+              <td>{{ poste.code }}</td>
+              <td>{{ poste.label }}</td>
+              <td class="amount">{{ formatCurrency(sumPoste2033A(poste)) }}</td>
             </tr>
-            
-            <tr class="subsection"><td colspan="2">Actif circulant</td></tr>
-            <tr>
-              <td>Créances clients (411000)</td>
-               <td class="amount">{{ formatCurrency(totalCreances) }}</td>
-            </tr>
-            <tr>
-              <td>Disponibilités (512000, 530000)</td>
-              <td class="amount">{{ formatCurrency(totalTresorerie) }}</td>
-            </tr>
-            
             <tr class="final-total">
-              <td><strong>TOTAL ACTIF</strong></td>
-              <td class="amount"><strong>{{ formatCurrency(totalActif) }}</strong></td>
+              <td colspan="2"><strong>TOTAL ACTIF</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(postes2033A.slice(0, 13).reduce((sum, p) => sum + sumPoste2033A(p), 0)) }}</strong></td>
             </tr>
-            
-            <!-- PASSIF -->
-            <tr class="section"><td colspan="2">PASSIF (ce que vous devez)</td></tr>
-            
-            <tr class="subsection"><td colspan="2">Capitaux propres</td></tr>
-            <tr>
-              <td>Capital personnel (101000)</td>
-               <td class="amount">{{ formatCurrency(totalCapital) }}</td>
-            </tr>
-            <tr>
-              <td>Résultat de l'exercice</td>
-              <td class="amount">{{ formatCurrency(resultatExercice) }}</td>
-            </tr>
-            
-            <tr class="subsection"><td colspan="2">Dettes</td></tr>
-            <tr>
-              <td>Emprunts bancaires (164000)</td>
-              <td class="amount">{{ formatCurrency(totalEmprunts) }}</td>
-            </tr>
-            <tr>
-              <td>Dettes fournisseurs (401000)</td>
-               <td class="amount">{{ formatCurrency(totalDettesFournisseurs) }}</td>
-            </tr>
-            
             <tr class="final-total">
-              <td><strong>TOTAL PASSIF</strong></td>
-              <td class="amount"><strong>{{ formatCurrency(totalPassif) }}</strong></td>
+              <td colspan="2"><strong>TOTAL PASSIF</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(postes2033A.slice(13).reduce((sum, p) => sum + sumPoste2033A(p), 0)) }}</strong></td>
             </tr>
           </tbody>
         </table>
-        
-        <div class="equilibre-info" v-if="Math.abs(totalActif - totalPassif) < 0.01">
+        <div class="equilibre-info" v-if="Math.abs(postes2033A.slice(0, 13).reduce((sum, p) => sum + sumPoste2033A(p), 0) - postes2033A.slice(13).reduce((sum, p) => sum + sumPoste2033A(p), 0)) < 0.01">
           <Icon icon="material-symbols:check-circle" class="equilibre-icon" />
           <span>Le bilan est équilibré (Actif = Passif)</span>
         </div>
         <div class="equilibre-info error" v-else>
           <Icon icon="material-symbols:error" class="equilibre-icon" />
-          <span>Le bilan n'est pas équilibré (différence: {{ formatCurrency(totalActif - totalPassif) }})</span>
-        </div>
-        
-        <div class="actions-footer">
-          <NButton type="default" disabled>
-            <template #icon>
-              <Icon icon="material-symbols:download" />
-            </template>
-            Télécharger le bilan (bientôt disponible)
-          </NButton>
+          <span>Le bilan n'est pas équilibré (différence: {{ formatCurrency(postes2033A.slice(0, 13).reduce((sum, p) => sum + sumPoste2033A(p), 0) - postes2033A.slice(13).reduce((sum, p) => sum + sumPoste2033A(p), 0)) }})</span>
         </div>
       </NCard>
     </div>
-    
     <div v-if="!loading && lignesFECFiltrees.length === 0" class="empty-state">
       <NEmpty description="Aucun bilan à afficher. Veuillez lancer un calcul." />
     </div>

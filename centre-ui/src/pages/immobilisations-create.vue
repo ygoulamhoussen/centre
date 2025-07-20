@@ -12,7 +12,9 @@
         <div class="step-mobile-number">Étape {{ currentStep + 1 }}/3</div>
         <div class="step-mobile-label">{{ steps[currentStep].label }}</div>
       </div>
-      <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la propriété</NH2>
+      <NH2 v-if="currentStep === 0" class="titre-principal mb-4">Étape 1 : Sélection de la propriété</NH2>
+      <NH2 v-else-if="currentStep === 1" class="titre-principal mb-4">Étape 2 : Décomposition</NH2>
+      <NH2 v-else-if="currentStep === 2" class="titre-principal mb-4">Étape 3 : Validation</NH2>
       <div v-if="currentStep === 0">
         <NGrid :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
           <NGi v-for="propriete in proprietes" :key="propriete.id">

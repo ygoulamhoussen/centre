@@ -3136,6 +3136,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                 compteImmo = compteComptableRepository.findByCode("218100"); // Par défaut Mobilier
         }
         CompteComptable compteBanque = compteComptableRepository.findByCode("512000"); // Banque
+        CompteComptable compteCapitauxPropres = compteComptableRepository.findByCode("101000"); // Capitaux propres
 
         // Création de l'écriture comptable
         EcritureComptable ecriture = new EcritureComptable();
@@ -3160,15 +3161,15 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         ligneDebit.setCommentaire(immo.getPropriete().getNom());
         ligneEcritureRepository.save(ligneDebit);
 
-        // Crédit banque
-        LigneEcriture ligneCredit = new LigneEcriture();
-        ligneCredit.setEcriture(savedEcriture);
-        ligneCredit.setCompteNum(compteBanque.getCode());
-        ligneCredit.setCompteLibelle(compteBanque.getLibelle());
-        ligneCredit.setDebit(BigDecimal.ZERO);
-        ligneCredit.setCredit(immo.getMontant());
-        ligneCredit.setCommentaire(immo.getPropriete().getNom());
-        ligneEcritureRepository.save(ligneCredit);
+        // Crédit capitaux propres
+        LigneEcriture ligneCreditCapitauxPropres = new LigneEcriture();
+        ligneCreditCapitauxPropres.setEcriture(savedEcriture);
+        ligneCreditCapitauxPropres.setCompteNum(compteCapitauxPropres.getCode());
+        ligneCreditCapitauxPropres.setCompteLibelle(compteCapitauxPropres.getLibelle());
+        ligneCreditCapitauxPropres.setDebit(BigDecimal.ZERO);
+        ligneCreditCapitauxPropres.setCredit(immo.getMontant());
+        ligneCreditCapitauxPropres.setCommentaire(immo.getPropriete().getNom());
+        ligneEcritureRepository.save(ligneCreditCapitauxPropres);
 
         // (Optionnel) Lier l'écriture à l'immobilisation si tu ajoutes un champ dédié
         // immo.setEcritureComptable(savedEcriture);

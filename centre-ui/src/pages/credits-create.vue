@@ -14,11 +14,17 @@ const generatingEcheancier = ref(false)
 const editingRowsOriginalData = ref<Record<number, any>>({})
 const authStore = useAuthStore()
 
+// 1. Mets à jour les titres d'étape
 const steps = [
+  { label: 'Propriété' },
   { label: 'Caractéristiques' },
   { label: 'Échéancier' },
   { label: 'Confirmation' },
 ]
+const stepTitles = ['Étape 1 : Propriété', 'Étape 2 : Caractéristiques', 'Étape 3 : Échéancier', 'Étape 4 : Confirmation']
+
+// 2. Ajoute une ref pour la propriété sélectionnée
+const proprieteIdSelected = ref('')
 
 const formData = ref({
   montant: 0,
@@ -215,13 +221,21 @@ function goBack() {
   router.push('/credits')
 }
 
+// 3. Modifie la validation des étapes
+const isStep0Valid = computed(() => !!proprieteIdSelected.value)
+// Corrige la validation de l'étape 2 (isStep1Valid)
 const isStep1Valid = computed(() => {
   const f = formData.value
-  return !!(f.montant > 0 && f.duree > 0 && f.taux >= 0 && f.type && f.dateDebut && f.periodicite && f.proprieteId && f.banque)
+  return !!(f.montant > 0 && f.duree > 0 && f.taux >= 0 && f.type && f.dateDebut && f.periodicite && f.banque)
 })
 
+// 4. Modifie la navigation
 function nextStep() {
-  if (currentStep.value === 0 && !isStep1Valid.value) {
+  if (currentStep.value === 0 && !isStep0Valid.value) {
+    message.error('Veuillez sélectionner une propriété')
+    return
+  }
+  if (currentStep.value === 1 && !isStep1Valid.value) {
     message.error('Veuillez remplir tous les champs obligatoires')
     return
   }
@@ -327,7 +341,7 @@ async function saveCredit() {
     // Construction du DTO
     const baseUrl = import.meta.env.VITE_SERVICE_BASE_URL
     const creditDTO = {
-      proprieteId: formData.value.proprieteId,
+      proprieteId: proprieteIdSelected.value,
       banque: formData.value.banque,
       montantEmprunte: String(formData.value.montant),
       dateDebut: dateDebutStr,
@@ -397,7 +411,6 @@ onMounted(async () => {
   }
 })
 
-const stepTitles = ['Caractéristiques', 'Échéancier', 'Confirmation']
 const isMobileRef = ref(window.innerWidth < 768)
 function handleResize() {
   isMobileRef.value = window.innerWidth < 768
@@ -419,18 +432,43 @@ definePage({
     <NCard class="progress-card">
       <div v-if="!isMobileRef" class="mb-8">
         <NSteps :current="currentStep" size="small">
-          <NStep title="Caractéristiques" :status="currentStep === 0 ? 'process' : 'finish'" />
-          <NStep title="Échéancier" :status="currentStep === 1 ? 'process' : (currentStep > 1 ? 'finish' : undefined)" />
-          <NStep title="Confirmation" :status="currentStep === 2 ? 'process' : undefined" />
+          <NStep title="Propriété" :status="currentStep === 0 ? 'process' : 'finish'" />
+          <NStep title="Caractéristiques" :status="currentStep === 1 ? 'process' : (currentStep > 1 ? 'finish' : undefined)" />
+          <NStep title="Échéancier" :status="currentStep === 2 ? 'process' : (currentStep > 2 ? 'finish' : undefined)" />
+          <NStep title="Confirmation" :status="currentStep === 3 ? 'process' : undefined" />
         </NSteps>
       </div>
       <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape {{ currentStep + 1 }}/3</div>
+        <div class="step-mobile-number">Étape {{ currentStep + 1 }}/4</div>
         <div class="step-mobile-label">{{ stepTitles[currentStep] }}</div>
       </div>
     </NCard>
+    <!-- Étape 0 : Sélection de la propriété -->
+    <NCard v-if="currentStep === 0" title="Étape 1 : Sélection de la propriété" class="step-card">
+      <div class="proprietes-grid">
+        <NCard
+          v-for="p in proprieteOptions"
+          :key="p.value"
+          :class="['propriete-card', { selected: proprieteIdSelected === p.value }]"
+          @click="proprieteIdSelected = p.value"
+          hoverable
+        >
+          <div class="propriete-label">{{ p.label }}</div>
+        </NCard>
+      </div>
+      <div v-if="!loadingProprietes && proprieteOptions.length === 0" style="color: #dc2626; margin-top: 4px;">Aucune propriété disponible</div>
+      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
+        <NButton @click="goBack">Annuler</NButton>
+        <NButton type="primary" :disabled="!isStep0Valid" @click="nextStep">
+          Suivant
+          <template #icon>
+            <Icon icon="material-symbols:arrow-forward" />
+          </template>
+        </NButton>
+      </div>
+    </NCard>
     <!-- Étape 1 : Saisie des caractéristiques -->
-    <NCard v-if="currentStep === 0" title="Étape 1 : Caractéristiques du crédit" class="step-card">
+    <NCard v-if="currentStep === 1" title="Étape 2 : Caractéristiques du crédit" class="step-card">
       <NForm :class="{ 'mobile-form': isMobileRef }" :label-placement="isMobileRef ? 'top' : 'left'" label-width="auto">
         <NFormItem label="Montant emprunté (€)" required>
           <NInputNumber v-model:value="formData.montant as number" min="0" style="width: 100%" />
@@ -450,16 +488,6 @@ definePage({
         <NFormItem label="Périodicité" required>
           <NSelect v-model:value="formData.periodicite" :options="periodiciteOptions" style="width: 100%" />
         </NFormItem>
-        <NFormItem label="Propriété associée" required>
-          <NSelect
-            v-model:value="formData.proprieteId"
-            :options="proprieteOptions"
-            placeholder="Sélectionner une propriété"
-            style="width: 100%"
-            :loading="loadingProprietes"
-          />
-          <div v-if="!loadingProprietes && proprieteOptions.length === 0" style="color: #dc2626; margin-top: 4px;">Aucune propriété disponible</div>
-        </NFormItem>
         <NFormItem label="Banque" required>
           <NInput v-model:value="formData.banque" placeholder="Nom de la banque" />
         </NFormItem>
@@ -475,7 +503,7 @@ definePage({
       </div>
     </NCard>
     <!-- Étape 2 : Génération de l'échéancier -->
-    <NCard v-if="currentStep === 1" title="Étape 2 : Échéancier" class="step-card">
+    <NCard v-if="currentStep === 2" title="Étape 3 : Échéancier" class="step-card">
       <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]" style="margin-bottom: 16px;">
         <NButton @click="previousStep">
           <template #icon>
@@ -562,7 +590,7 @@ definePage({
       </div>
     </NCard>
     <!-- Étape 3 : Récapitulatif et confirmation -->
-    <NCard v-if="currentStep === 2" title="Étape 3 : Confirmation" class="step-card">
+    <NCard v-if="currentStep === 3" title="Étape 4 : Confirmation" class="step-card">
       <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]" style="margin-bottom: 16px;">
         <NButton @click="previousStep">
           <template #icon>
@@ -580,6 +608,7 @@ definePage({
       <div class="recap-section">
         <h3>Récapitulatif du crédit</h3>
         <ul>
+          <li><strong>Propriété :</strong> {{ proprieteOptions.find(p => p.value === proprieteIdSelected)?.label || 'Aucune sélection' }}</li>
           <li><strong>Montant :</strong> {{ formData.montant }} €</li>
           <li><strong>Durée :</strong> {{ formData.duree }} mois</li>
           <li><strong>Taux :</strong> {{ formData.taux }} %</li>
@@ -789,6 +818,11 @@ definePage({
 .n-form-item-label {
   color: #222;
 }
+.proprietes-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+.propriete-card { cursor: pointer; border: 2px solid #e5e7eb; transition: border-color 0.2s, box-shadow 0.2s; min-width: 180px; flex: 1 1 180px; text-align: center; }
+.propriete-card.selected { border-color: #1976d2; box-shadow: 0 0 0 2px #1976d233; }
+.propriete-label { font-size: 1.1rem; font-weight: 500; padding: 16px 0; }
+@media (max-width: 600px) { .proprietes-grid { flex-direction: column; gap: 10px; } .propriete-card { min-width: 0; } }
 @media (max-width: 768px) {
   .echeancier-section {
     display: flex;

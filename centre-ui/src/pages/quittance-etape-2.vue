@@ -313,7 +313,7 @@ const quarterOptions = [
         <strong>Période sélectionnée :</strong>
         du {{ quittanceDTO.value.dateDebut }} au {{ quittanceDTO.value.dateFin }}
       </div>
-      <pre>{{ quittanceDTO }}</pre>
+
       <NSpace justify="end" class="mt-8">
         <NButton type="primary" @click="suivant" size="large" title="Suivant">
           <template #icon>

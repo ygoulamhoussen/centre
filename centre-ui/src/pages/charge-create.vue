@@ -34,9 +34,22 @@ fetchProprietes()
 function selectPropriete(propriete: any) {
   selectedPropriete.value = propriete.id
   charge.value.proprieteId = propriete.id
-  step.value = 2 // Passage direct à l'étape suivante
+  step.value = 2
 }
-
+function selectNature() {
+  if (!charge.value.nature) {
+    message.error('Veuillez sélectionner une nature')
+    return
+  }
+  step.value = 3
+}
+function precedent() {
+  if (step.value > 1) step.value--
+}
+function selectNatureCard(nature) {
+  charge.value.nature = nature
+  step.value = 3
+}
 const selectedProprieteInfo = computed(() =>
   proprietes.value.find((p: any) => p.id === selectedPropriete.value)
 )
@@ -64,11 +77,12 @@ async function valider() {
     <div class="stepper-center">
       <NSteps :current="step" size="small">
         <NStep title="Propriété" description="Choix du bien" />
-        <NStep title="Détails" description="Saisie de la charge" />
+        <NStep title="Nature" description="Type de charge" />
+        <NStep title="Détails" description="Saisie des infos" />
       </NSteps>
     </div>
     <NH2 class="mb-4 titre-principal">
-      {{ step === 1 ? 'Étape 1 : Sélection de la propriété' : 'Étape 2 : Détails de la charge' }}
+      {{ step === 1 ? 'Étape 1 : Sélection de la propriété' : step === 2 ? 'Étape 2 : Nature de la charge' : 'Étape 3 : Détails de la charge' }}
     </NH2>
     <div v-if="step === 1">
       <NGrid :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
@@ -90,22 +104,23 @@ async function valider() {
           </NCard>
         </NGi>
       </NGrid>
-      <!-- Suppression du bouton Suivant -->
+    </div>
+    <div v-else-if="step === 2" class="form-section">
+      <div class="nature-grid">
+        <NGrid :x-gap="16" :y-gap="16" cols="1 s:2 m:3 l:4">
+          <NGi v-for="nature in naturesCharges" :key="nature.value">
+            <NCard hoverable class="nature-card" :class="{ selected: charge.nature === nature.value }" @click="selectNatureCard(nature.value)">
+              <div class="font-bold">{{ nature.label }}</div>
+              <div class="text-xs text-gray-500 mt-1">{{ nature.value }}</div>
+            </NCard>
+          </NGi>
+        </NGrid>
+      </div>
+      <NSpace justify="space-between" class="mt-6 btn-row">
+        <NButton @click="precedent" class="btn-responsive">Précédent</NButton>
+      </NSpace>
     </div>
     <div v-else class="form-section">
-      <div class="resume-propriete mb-6" v-if="selectedProprieteInfo">
-        <NCard size="small" class="resume-propriete-card">
-          <div class="flex items-center gap-4">
-            <NIcon :component="BuildingHome24Filled" size="32" />
-            <div>
-              <div class="font-bold">{{ selectedProprieteInfo.nom }}</div>
-              <div class="text-xs text-gray-500" v-if="selectedProprieteInfo.adresse">{{ selectedProprieteInfo.adresse }}</div>
-              <div class="text-xs text-gray-500" v-if="selectedProprieteInfo.surface">Surface : {{ selectedProprieteInfo.surface }} m²</div>
-              <div class="text-xs text-gray-500" v-if="selectedProprieteInfo.type">Type : {{ selectedProprieteInfo.type }}</div>
-            </div>
-          </div>
-        </NCard>
-      </div>
       <NGrid :x-gap="16" :y-gap="0" cols="1 m:2">
         <NGi>
           <NFormItem label="Date" required>
@@ -115,11 +130,6 @@ async function valider() {
         <NGi>
           <NFormItem label="Montant" required>
             <NInput v-model:value="charge.montant" placeholder="0.00" type="text" style="width: 100%" />
-          </NFormItem>
-        </NGi>
-        <NGi :span="2">
-          <NFormItem label="Nature" required>
-            <NSelect v-model:value="charge.nature" :options="naturesCharges" placeholder="Sélectionner une nature" style="width: 100%" />
           </NFormItem>
         </NGi>
         <NGi :span="2">
@@ -134,7 +144,7 @@ async function valider() {
         </NGi>
         <NGi :span="2">
           <NSpace justify="space-between" class="mt-6 btn-row">
-            <NButton @click="step = 1" class="btn-responsive">Précédent</NButton>
+            <NButton @click="precedent" class="btn-responsive">Précédent</NButton>
             <NButton type="primary" @click="valider" class="btn-responsive">Valider</NButton>
           </NSpace>
         </NGi>
@@ -190,6 +200,25 @@ async function valider() {
 }
 .btn-responsive {
   min-width: 120px;
+}
+.nature-grid {
+  margin-bottom: 24px;
+}
+.nature-card {
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  text-align: center;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.nature-card.selected {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #2563eb33;
+  background: #f0f6ff;
 }
 @media (max-width: 900px) {
   .charge-create-page {

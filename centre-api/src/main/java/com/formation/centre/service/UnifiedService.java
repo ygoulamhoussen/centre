@@ -2389,6 +2389,8 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         double totalImpotsTaxes = 0.0;
         double totalInteretsEmprunt = 0.0;
         double totalAmortissements = 0.0;
+        double totalProduitsExceptionnels = 0.0;
+        double totalChargesExceptionnelles = 0.0;
         
         // Détails pour les DTOs
         List<ResultatFiscalDetailDTOs.RecetteDetailDTO> recettesDetail = new ArrayList<>();
@@ -2398,29 +2400,65 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         for (EcritureComptable ecriture : ecritures) {
             for (LigneEcriture ligne : ecriture.getLignes()) {
                 String compteNum = ligne.getCompteNum();
-                double montant = ligne.getCredit().doubleValue(); // On prend le crédit pour les produits
-                
+                double montantCredit = ligne.getCredit().doubleValue();
+                double montantDebit = ligne.getDebit().doubleValue();
+                // On prend le crédit pour les produits, le débit pour les charges
                 switch (compteNum) {
                     case "706000": // Loyers meublés
-                        totalLoyers += montant;
+                        totalLoyers += montantCredit;
                         recettesDetail.add(new ResultatFiscalDetailDTOs.RecetteDetailDTO(
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture(),
                             ligne.getCredit(),
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A"
+                            null, // proprieteNom (à compléter si besoin)
+                            compteNum
                         ));
                         break;
-                        
                     case "708000": // Produits accessoires
-                        totalProduitsAccessoires += montant;
+                        totalProduitsAccessoires += montantCredit;
                         recettesDetail.add(new ResultatFiscalDetailDTOs.RecetteDetailDTO(
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture(),
                             ligne.getCredit(),
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A"
+                            null,
+                            compteNum
                         ));
                         break;
-                        
+                    // --- PRODUITS EXCEPTIONNELS ---
+                    case "775000": // Produits exceptionnels sur opérations de gestion
+                    case "777000": // Produits exceptionnels sur opérations en capital
+                    case "758000": // Produits exceptionnels divers
+                    case "758100": // Produits exceptionnels sur opérations de gestion
+                    case "758200": // Produits exceptionnels sur opérations en capital
+                    case "758300": // Produits exceptionnels sur cessions d'éléments d'actif
+                        totalProduitsExceptionnels += montantCredit;
+                        recettesDetail.add(new ResultatFiscalDetailDTOs.RecetteDetailDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture(),
+                            ligne.getCredit(),
+                            null,
+                            compteNum
+                        ));
+                        break;
+                    // --- CHARGES EXCEPTIONNELLES ---
+                    case "671000": // Charges exceptionnelles sur opérations de gestion
+                    case "678000": // Charges exceptionnelles sur opérations en capital
+                    case "658000": // Charges exceptionnelles diverses
+                    case "658100": // Charges exceptionnelles sur opérations de gestion
+                    case "658200": // Charges exceptionnelles sur opérations en capital
+                    case "658300": // Charges exceptionnelles sur cessions d'éléments d'actif
+                    case "675000": // Valeurs comptables des éléments d'actif cédés
+                    case "675100": // Moins-values de cession d'éléments d'actif
+                        totalChargesExceptionnelles += montantDebit;
+                        chargesDetail.add(new ResultatFiscalDetailDTOs.ChargeDetailDTO(
+                            ecriture.getLibelle(),
+                            ecriture.getDateEcriture(),
+                            ligne.getDebit(),
+                            null,
+                            "CHARGE_EXCEPTIONNELLE",
+                            compteNum
+                        ));
+                        break;
                     case "606000": // Achats non stockés
                     case "606300": // Fournitures administratives
                     case "606800": // Autres charges
@@ -2442,8 +2480,9 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture(),
                             ligne.getDebit(),
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
-                            getNatureFromCompte(compteNum)
+                            null,
+                            getNatureFromCompte(compteNum),
+                            compteNum
                         ));
                         break;
                         
@@ -2455,8 +2494,9 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture(),
                             ligne.getDebit(),
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
-                            getNatureFromCompte(compteNum)
+                            null,
+                            getNatureFromCompte(compteNum),
+                            compteNum
                         ));
                         break;
                         
@@ -2467,8 +2507,9 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture(),
                             ligne.getDebit(),
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
-                            getNatureFromCompte(compteNum)
+                            null,
+                            getNatureFromCompte(compteNum),
+                            compteNum
                         ));
                         break;
                         
@@ -2478,7 +2519,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getLibelle(),
                             annee,
                             ligne.getDebit(),
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A"
+                            null
                         ));
                         break;
                 }
@@ -2486,8 +2527,8 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
         }
         
         // Calcul du résultat fiscal
-        double totalProduits = totalLoyers + totalProduitsAccessoires;
-        double totalCharges = totalChargesExternes + totalImpotsTaxes + totalAmortissements;
+        double totalProduits = totalLoyers + totalProduitsAccessoires + totalProduitsExceptionnels;
+        double totalCharges = totalChargesExternes + totalImpotsTaxes + totalAmortissements + totalChargesExceptionnelles;
         double resultatFiscal = totalProduits - totalCharges - totalInteretsEmprunt;
         
         // Création du DTO final
@@ -3073,7 +3114,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture().toString(),
                             montant,
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            null,
                             compteNum,
                             typeOperation
                         ));
@@ -3091,7 +3132,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture().toString(),
                             montant,
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            null,
                             compteNum,
                             typeOperation
                         ));
@@ -3105,7 +3146,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture().toString(),
                             montant,
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            null,
                             compteNum,
                             "PLUS_VALUE"
                         ));
@@ -3119,7 +3160,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture().toString(),
                             montant,
-                            ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
+                            null,
                             compteNum,
                             "MOINS_VALUE"
                         ));

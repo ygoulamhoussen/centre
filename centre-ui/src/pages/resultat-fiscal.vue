@@ -130,6 +130,32 @@ const resultatCourant = computed(() => {
   return resultatExploitation.value + resultatFinancier.value
 })
 
+const comptesProduitsExceptionnels = [
+  '758000', '758100', '758200', '758300', '775000', '777000'
+]
+
+const produitsExceptionnels = computed(() => {
+  if (!resultat.value?.recettesDetail) return 0
+  return resultat.value.recettesDetail
+    .filter(recette =>
+      recette.compteNum && comptesProduitsExceptionnels.includes(recette.compteNum)
+    )
+    .reduce((sum, recette) => sum + (recette.montant ?? 0), 0)
+})
+
+const chargesExceptionnelles = computed(() => {
+  if (!resultat.value?.chargesDetail) return 0
+  return resultat.value.chargesDetail
+    .filter(charge =>
+      charge.nature === 'CHARGE_EXCEPTIONNELLE'
+    )
+    .reduce((sum, charge) => sum + (charge.montant ?? 0), 0)
+})
+
+const resultatExceptionnel = computed(() => {
+  return produitsExceptionnels.value - chargesExceptionnelles.value
+})
+
 // Functions
 async function calculerResultat() {
   if (!selectedYear.value) {
@@ -336,15 +362,15 @@ const isMobile = computed(() => width.value <= 640)
               <tr class="section"><td colspan="2">6. Résultat exceptionnel</td></tr>
               <tr>
                 <td>Produits exceptionnels</td>
-                <td class="amount">0,00 €</td>
+                <td class="amount">{{ formatCurrency(produitsExceptionnels) }}</td>
               </tr>
               <tr>
                 <td>Charges exceptionnelles</td>
-                <td class="amount">0,00 €</td>
+                <td class="amount">{{ formatCurrency(chargesExceptionnelles) }}</td>
               </tr>
               <tr class="result-row">
                 <td><strong>Résultat exceptionnel</strong></td>
-                <td class="amount"><strong>0,00 €</strong></td>
+                <td class="amount"><strong>{{ formatCurrency(resultatExceptionnel) }}</strong></td>
               </tr>
               
               <tr class="section"><td colspan="2">7. Impôt sur les bénéfices</td></tr>
@@ -410,9 +436,9 @@ const isMobile = computed(() => width.value <= 640)
         </NCard>
         <NCard class="recap-mobile-card mb-2">
           <div class="recap-section-title">6. Résultat exceptionnel</div>
-          <div class="recap-row"><b>Produits exceptionnels :</b> 0,00 €</div>
-          <div class="recap-row"><b>Charges exceptionnelles :</b> 0,00 €</div>
-          <div class="recap-row recap-total"><b>Résultat exceptionnel :</b> 0,00 €</div>
+          <div class="recap-row"><b>Produits exceptionnels :</b> {{ formatCurrency(produitsExceptionnels) }}</div>
+          <div class="recap-row"><b>Charges exceptionnelles :</b> {{ formatCurrency(chargesExceptionnelles) }}</div>
+          <div class="recap-row recap-total"><b>Résultat exceptionnel :</b> {{ formatCurrency(resultatExceptionnel) }}</div>
         </NCard>
         <NCard class="recap-mobile-card mb-2">
           <div class="recap-section-title">7. Impôt sur les bénéfices</div>

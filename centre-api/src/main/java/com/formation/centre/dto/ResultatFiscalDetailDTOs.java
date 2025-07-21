@@ -10,13 +10,15 @@ public class ResultatFiscalDetailDTOs {
         private LocalDate dateRecette;
         private BigDecimal montant;
         private String proprieteNom;
+        private String compteNum;
 
         public RecetteDetailDTO() {}
-        public RecetteDetailDTO(String intitule, LocalDate dateRecette, BigDecimal montant, String proprieteNom) {
+        public RecetteDetailDTO(String intitule, LocalDate dateRecette, BigDecimal montant, String proprieteNom, String compteNum) {
             this.intitule = intitule;
             this.dateRecette = dateRecette;
             this.montant = montant;
             this.proprieteNom = proprieteNom;
+            this.compteNum = compteNum;
         }
         public String getIntitule() { return intitule; }
         public void setIntitule(String intitule) { this.intitule = intitule; }
@@ -26,6 +28,8 @@ public class ResultatFiscalDetailDTOs {
         public void setMontant(BigDecimal montant) { this.montant = montant; }
         public String getProprieteNom() { return proprieteNom; }
         public void setProprieteNom(String proprieteNom) { this.proprieteNom = proprieteNom; }
+        public String getCompteNum() { return compteNum; }
+        public void setCompteNum(String compteNum) { this.compteNum = compteNum; }
     }
 
     public static class ChargeDetailDTO {
@@ -34,14 +38,16 @@ public class ResultatFiscalDetailDTOs {
         private BigDecimal montant;
         private String proprieteNom;
         private String nature;
+        private String compteNum;
 
         public ChargeDetailDTO() {}
-        public ChargeDetailDTO(String intitule, LocalDate dateCharge, BigDecimal montant, String proprieteNom, String nature) {
+        public ChargeDetailDTO(String intitule, LocalDate dateCharge, BigDecimal montant, String proprieteNom, String nature, String compteNum) {
             this.intitule = intitule;
             this.dateCharge = dateCharge;
             this.montant = montant;
             this.proprieteNom = proprieteNom;
             this.nature = nature;
+            this.compteNum = compteNum;
         }
         public String getIntitule() { return intitule; }
         public void setIntitule(String intitule) { this.intitule = intitule; }
@@ -53,6 +59,8 @@ public class ResultatFiscalDetailDTOs {
         public void setProprieteNom(String proprieteNom) { this.proprieteNom = proprieteNom; }
         public String getNature() { return nature; }
         public void setNature(String nature) { this.nature = nature; }
+        public String getCompteNum() { return compteNum; }
+        public void setCompteNum(String compteNum) { this.compteNum = compteNum; }
     }
 
     public static class AmortissementDetailDTO {

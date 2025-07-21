@@ -277,6 +277,12 @@ function sumPoste2033A(
     const totalPassifHorsCapital: number = postes2033A.slice(1 + 13).reduce((sum, p) => sum + (p.code === '14' ? 0 : sumPoste2033A(p)), 0)
     return totalActif - totalPassifHorsCapital
   }
+  // Correction pour Disponibilités (poste 12) : solde = débit - crédit
+  if (poste.code === '12') {
+    return lignesFECBilan.value
+      .filter(l => poste.comptes.some((c: string) => l.compteNum.startsWith(c)))
+      .reduce((sum, l) => sum + (Number(l.debit) || 0) - (Number(l.credit) || 0), 0)
+  }
   // On construit le bilan uniquement à partir des écritures comptables (lignes FEC)
   return lignesFECBilan.value
     .filter(l => {

@@ -117,12 +117,9 @@
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Type :</span>
-                  <NSelect
-                    v-model:value="component.typeImmobilisation"
-                    :options="typeImmobilisationOptions"
-                    style="width: 100%"
-                    @update:value="val => component.typeImmobilisation = val"
-                  />
+                  <div class="readonly-value">
+                    {{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation as TypeImmobilisation] || '—' }}
+                  </div>
                 </div>
               </div>
               <div class="component-montant">Montant : {{ formatCurrency(Number(component.percent) * formData.montant / 100) }}</div>
@@ -458,7 +455,7 @@ const categorieFiscaleOptions = computed(() =>
 
 // Calcul du total des composants (en montant)
 const totalComponents = computed(() =>
-  immobilisationComponents.value.reduce((total, component) => total + (Number(component.percent) * formData.value.montant / 100), 0) + Number(fraisAcquisition.value)
+  immobilisationComponents.value.reduce((total, component) => total + (Number(component.percent) * formData.value.montant / 100), 0)
 )
 
 // Calcul du total des pourcentages
@@ -1001,6 +998,15 @@ h3 {
   font-size: 1rem;
   color: #757575;
   text-align: center;
+}
+.readonly-value {
+  background-color: #f3f4f6;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  width: 100%;
 }
 
 @media (max-width: 768px) {

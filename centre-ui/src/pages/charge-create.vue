@@ -5,6 +5,7 @@ import { NFormItem, NSelect, NDatePicker, NInput, NSpace, NButton, useMessage, N
 import { naturesCharges } from '@/constants/compta'
 import { createCharge } from '@/service/api/charges-recettes'
 import { useAuthStore } from '@/store/modules/auth'
+import { useAppStore } from '@/store/modules/app'
 import { BuildingHome24Filled } from '@vicons/fluent'
 definePage({
   meta: {
@@ -17,6 +18,8 @@ definePage({
 const router = useRouter()
 const message = useMessage()
 const authStore = useAuthStore()
+const appStore = useAppStore()
+const isMobile = appStore.isMobile
 const proprietes = ref<any[]>([])
 const selectedPropriete = ref<string | null>(null)
 const step = ref(1)
@@ -48,6 +51,15 @@ function precedent() {
 }
 function selectNatureCard(nature) {
   charge.value.nature = nature
+  // Préremplir la date et l'intitulé à l'étape 3
+  if (!charge.value.dateCharge) {
+    charge.value.dateCharge = Date.now()
+  }
+  if (!charge.value.intitule) {
+    const prop = selectedProprieteInfo.value
+    const propNom = prop ? prop.nom || prop.label : ''
+    charge.value.intitule = `${propNom} - ${nature}`
+  }
   step.value = 3
 }
 const selectedProprieteInfo = computed(() =>
@@ -74,7 +86,7 @@ async function valider() {
 </script>
 <template>
   <div class="charge-create-page">
-    <div class="stepper-center">
+    <div v-if="!isMobile" class="stepper-center">
       <NSteps :current="step" size="small">
         <NStep title="Propriété" description="Choix du bien" />
         <NStep title="Nature" description="Type de charge" />

@@ -953,18 +953,22 @@ async function supprimerRecetteConfirme() {
             Éditer le journal comptable
           </NButton>
           <div class="mobile-actions">
-            <NButton size="small" type="primary" @click="demarrerWorkflowCharge">
-              <template #icon>
-                <NIcon :component="Add24Filled" />
-              </template>
-              Charge
-            </NButton>
-            <NButton size="small" type="success" @click="demarrerWorkflowRecette">
-              <template #icon>
-                <NIcon :component="Money24Filled" />
-              </template>
-              Recette
-            </NButton>
+            <router-link to="/charge-create">
+              <NButton size="small" type="primary">
+                <template #icon>
+                  <NIcon :component="Add24Filled" />
+                </template>
+                Charge
+              </NButton>
+            </router-link>
+            <router-link to="/recette-create">
+              <NButton size="small" type="success">
+                <template #icon>
+                  <NIcon :component="Money24Filled" />
+                </template>
+                Recette
+              </NButton>
+            </router-link>
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { NFormItem, NSelect, NDatePicker, NInput, NSpace, NButton, useMessage, N
 import { typesRecettes } from '@/constants/compta'
 import { createRecette } from '@/service/api/charges-recettes'
 import { useAuthStore } from '@/store/modules/auth'
+import { useAppStore } from '@/store/modules/app'
 import { BuildingHome24Filled } from '@vicons/fluent'
 definePage({
   meta: {
@@ -17,6 +18,8 @@ definePage({
 const router = useRouter()
 const message = useMessage()
 const authStore = useAuthStore()
+const appStore = useAppStore()
+const isMobile = appStore.isMobile
 const proprietes = ref<any[]>([])
 const selectedPropriete = ref<string | null>(null)
 const step = ref(1)
@@ -45,6 +48,15 @@ function selectType() {
 }
 function selectTypeCard(type: string) {
   recette.value.type = type
+  // Préremplir la date et l'intitulé à l'étape 3
+  if (!recette.value.dateRecette) {
+    recette.value.dateRecette = Date.now()
+  }
+  if (!recette.value.intitule) {
+    const prop = selectedProprieteInfo.value
+    const propNom = prop ? prop.nom || prop.label : ''
+    recette.value.intitule = `${propNom} - ${type}`
+  }
   step.value = 3
 }
 function precedent() {
@@ -74,7 +86,7 @@ async function valider() {
 </script>
 <template>
   <div class="recette-create-page">
-    <div class="stepper-center">
+    <div v-if="!isMobile" class="stepper-center">
       <NSteps :current="step" size="small">
         <NStep title="Propriété" description="Choix du bien" />
         <NStep title="Type" description="Type de recette" />

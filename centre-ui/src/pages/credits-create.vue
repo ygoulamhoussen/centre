@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage, NSteps, NStep } from 'naive-ui'
+import { NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage, NSteps, NStep, NH2, NIcon } from 'naive-ui'
 import { computed, h, onMounted, ref, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/store/modules/app'
 import { useAuthStore } from '@/store/modules/auth'
+import { BuildingHome24Filled } from '@vicons/fluent'
 
 const router = useRouter()
 const message = useMessage()
@@ -45,7 +46,8 @@ const periodiciteOptions = [
   { label: 'Mensuelle', value: 'MENSUELLE' },
   { label: 'Trimestrielle', value: 'TRIMESTRIELLE' },
 ]
-const proprieteOptions = ref<Array<{ label: string; value: string }>>([])
+type ProprieteOption = { label: string; value: string; adresse?: string; surface?: number; type?: string }
+const proprieteOptions = ref<ProprieteOption[]>([])
 
 const echeancier = ref<any[]>([])
 
@@ -391,6 +393,10 @@ async function saveCredit() {
     saving.value = false
   }
 }
+function selectProprieteCredit(p: ProprieteOption) {
+  proprieteIdSelected.value = String(p.value)
+  nextStep()
+}
 onMounted(async () => {
   loadingProprietes.value = true
   try {
@@ -401,7 +407,13 @@ onMounted(async () => {
       throw new Error('Erreur lors de la récupération des propriétés')
     }
     const proprietes = await response.json()
-    proprieteOptions.value = proprietes.map((p: any) => ({ label: p.nom, value: String(p.id) }))
+    proprieteOptions.value = proprietes.map((p: any) => ({
+      label: p.nom,
+      value: String(p.id),
+      adresse: p.adresse,
+      surface: p.surface,
+      type: p.type
+    }))
   }
   catch {
     message.error('Erreur lors du chargement des propriétés')
@@ -431,7 +443,7 @@ definePage({
   <div class="credits-create-page">
     <NCard class="progress-card">
       <div v-if="!isMobileRef" class="mb-8">
-        <NSteps :current="currentStep" size="small">
+        <NSteps :current="Number(currentStep)" size="small">
           <NStep title="Propriété" :status="currentStep === 0 ? 'process' : 'finish'" />
           <NStep title="Caractéristiques" :status="currentStep === 1 ? 'process' : (currentStep > 1 ? 'finish' : undefined)" />
           <NStep title="Échéancier" :status="currentStep === 2 ? 'process' : (currentStep > 2 ? 'finish' : undefined)" />
@@ -444,16 +456,31 @@ definePage({
       </div>
     </NCard>
     <!-- Étape 0 : Sélection de la propriété -->
-    <NCard v-if="currentStep === 0" title="Étape 1 : Sélection de la propriété" class="step-card">
+    <div v-if="currentStep === 0">
+      <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la propriété</NH2>
       <div class="proprietes-grid">
         <NCard
           v-for="p in proprieteOptions"
           :key="p.value"
-          :class="['propriete-card', { selected: proprieteIdSelected === p.value }]"
-          @click="proprieteIdSelected = p.value"
+          :class="['propriete-card', { selected: proprieteIdSelected === String(p.value) }]"
+          @click="selectProprieteCredit(p)"
           hoverable
+          tabindex="0"
+          @keydown.enter="selectProprieteCredit(p)"
         >
-          <div class="propriete-label">{{ p.label }}</div>
+          <div class="flex items-start gap-4">
+            <div class="propriete-avatar">
+              <NIcon :component="BuildingHome24Filled" size="32" />
+            </div>
+            <div class="flex-1">
+              <div class="propriete-nom mb-2">{{ p.label }}</div>
+              <div class="text-sm space-y-1">
+                <div v-if="p.adresse">{{ p.adresse }}</div>
+                <div v-if="p.surface">Surface : {{ p.surface }} m²</div>
+                <div v-if="p.type">Type : {{ p.type }}</div>
+              </div>
+            </div>
+          </div>
         </NCard>
       </div>
       <div v-if="!loadingProprietes && proprieteOptions.length === 0" style="color: #dc2626; margin-top: 4px;">Aucune propriété disponible</div>
@@ -466,7 +493,7 @@ definePage({
           </template>
         </NButton>
       </div>
-    </NCard>
+    </div>
     <!-- Étape 1 : Saisie des caractéristiques -->
     <NCard v-if="currentStep === 1" title="Étape 2 : Caractéristiques du crédit" class="step-card">
       <NForm :class="{ 'mobile-form': isMobileRef }" :label-placement="isMobileRef ? 'top' : 'left'" label-width="auto">
@@ -818,11 +845,47 @@ definePage({
 .n-form-item-label {
   color: #222;
 }
-.proprietes-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
-.propriete-card { cursor: pointer; border: 2px solid #e5e7eb; transition: border-color 0.2s, box-shadow 0.2s; min-width: 180px; flex: 1 1 180px; text-align: center; }
-.propriete-card.selected { border-color: #1976d2; box-shadow: 0 0 0 2px #1976d233; }
-.propriete-label { font-size: 1.1rem; font-weight: 500; padding: 16px 0; }
-@media (max-width: 600px) { .proprietes-grid { flex-direction: column; gap: 10px; } .propriete-card { min-width: 0; } }
+.proprietes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.propriete-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.propriete-card.selected {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px #1976d233;
+}
+.propriete-avatar {
+  background-color: var(--n-color-embedded);
+  color: var(--n-color-target);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.propriete-nom {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--n-text-color);
+}
+@media (max-width: 600px) {
+  .proprietes-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .propriete-card {
+    min-width: 0;
+  }
+}
 @media (max-width: 768px) {
   .echeancier-section {
     display: flex;

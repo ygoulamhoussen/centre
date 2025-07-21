@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, reactive } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import {
   NAlert,
   NButton,
@@ -22,16 +22,12 @@ import {
   NTag,
   NText,
   NDatePicker,
-  NH1,
+  NPopconfirm,
   NTooltip,
   useMessage,
-  NPopconfirm,
 } from 'naive-ui'
-import {
-  getChargeByValue,
-  naturesCharges,
-  typesRecettes,
-} from '@/constants/compta'
+import { Add24Filled, ArrowDownload24Filled, Calculator24Filled, Delete24Filled, Edit24Filled, Money24Filled } from '@vicons/fluent'
+import { getChargeByValue, naturesCharges, typesRecettes } from '@/constants/compta'
 import {
   createCharge,
   createRecette,
@@ -53,18 +49,10 @@ import {
   updateRecette,
   uploadDocument,
 } from '@/service/api/charges-recettes'
-import {
-  Add24Filled,
-  ArrowDownload24Filled,
-  Calculator24Filled,
-  Delete24Filled,
-  Edit24Filled,
-  Money24Filled,
-} from '@vicons/fluent'
-import type { ChargeDTO, EcritureComptableDTO, RecetteDTO } from '@/types/dto'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/store/modules/app'
 import { useAuthStore } from '@/store/modules/auth'
+import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
@@ -119,6 +107,14 @@ type AmortissementDTO = {
 const amortissements = ref<AmortissementDTO[]>([])
 
 // Colonnes pour les tableaux
+const router = useRouter()
+function editerCharge(charge) {
+  router.push(`/charge-edit/${charge.id}`)
+}
+function editerRecette(recette) {
+  router.push(`/recette-edit/${recette.id}`)
+}
+
 const colonnesCharges = [
   { title: 'Date', key: 'dateCharge', width: 120 },
   { title: 'Propriété', key: 'proprieteNom', width: 200 },
@@ -511,71 +507,6 @@ watch([anneeSelectionnee, proprieteSelectionnee], () => {
   }
 })
 
-function nouvelleCharge() {
-  chargeEnCours.value = {}
-  fichierCharge.value = null
-  modeEdition.value = false
-  modalChargeVisible.value = true
-}
-
-function editerCharge(charge: ChargeDTO) {
-  chargeEnCours.value = { ...charge }
-  fichierCharge.value = null
-  modeEdition.value = true
-  modalChargeVisible.value = true
-}
-
-async function sauvegarderCharge() {
-  if (!chargeEnCours.value.intitule || !chargeEnCours.value.montant || !chargeEnCours.value.dateCharge || !chargeEnCours.value.proprieteId || !chargeEnCours.value.nature) {
-    message.error('Veuillez remplir tous les champs obligatoires')
-    return
-  }
-
-  // Conversion dateCharge en string yyyy-MM-dd si c'est un timestamp
-  if (typeof chargeEnCours.value.dateCharge === 'number') {
-    const d = new Date(chargeEnCours.value.dateCharge)
-    chargeEnCours.value.dateCharge = d.toISOString().slice(0, 10)
-  }
-
-  try {
-    uploadEnCours.value = true
-    
-    // Upload du document si un fichier est sélectionné
-    if (fichierCharge.value) {
-      const documentUploaded = await uploadDocument(
-        fichierCharge.value,
-        `Document - ${chargeEnCours.value.intitule}`,
-        authStore.userInfo.userId,
-        chargeEnCours.value.proprieteId,
-        'JUSTIFICATIF'
-      )
-      chargeEnCours.value.documentId = documentUploaded.id
-    }
-
-    if (modeEdition.value && chargeEnCours.value.id) {
-      await updateCharge(chargeEnCours.value.id, chargeEnCours.value)
-      message.success('Charge mise à jour avec succès')
-    }
-    else {
-      await createCharge({
-        ...chargeEnCours.value,
-        utilisateurId: authStore.userInfo.userId,
-      })
-      message.success('Charge créée avec succès')
-    }
-
-    modalChargeVisible.value = false
-    fichierCharge.value = null
-    await chargerDonnees()
-  }
-  catch (error: any) {
-    message.error(error.message || 'Erreur lors de la sauvegarde')
-  }
-  finally {
-    uploadEnCours.value = false
-  }
-}
-
 function supprimerCharge(id: string) {
   // TODO: Remplacer confirm par une modale Naive UI
   if (confirm('Êtes-vous sûr de vouloir supprimer cette charge ?')) {
@@ -590,79 +521,15 @@ function supprimerCharge(id: string) {
   }
 }
 
-function nouvelleRecette() {
-  recetteEnCours.value = {}
-  fichierRecette.value = null
-  modeEdition.value = false
-  modalRecetteVisible.value = true
-}
-
-function editerRecette(recette: RecetteDTO) {
-  recetteEnCours.value = { ...recette }
-  fichierRecette.value = null
-  modeEdition.value = true
-  modalRecetteVisible.value = true
-}
-
-async function sauvegarderRecette() {
-  if (!recetteEnCours.value.intitule || !recetteEnCours.value.montant || !recetteEnCours.value.dateRecette || !recetteEnCours.value.proprieteId || !recetteEnCours.value.type) {
-    message.error('Veuillez remplir tous les champs obligatoires')
-    return
-  }
-
-  // Conversion dateRecette en string yyyy-MM-dd si c'est un timestamp
-  if (typeof recetteEnCours.value.dateRecette === 'number') {
-    const d = new Date(recetteEnCours.value.dateRecette)
-    recetteEnCours.value.dateRecette = d.toISOString().slice(0, 10)
-  }
-
-  try {
-    uploadEnCours.value = true
-    
-    // Upload du document si un fichier est sélectionné
-    if (fichierRecette.value) {
-      const documentUploaded = await uploadDocument(
-        fichierRecette.value,
-        `Document - ${recetteEnCours.value.intitule}`,
-        authStore.userInfo.userId,
-        recetteEnCours.value.proprieteId,
-        'JUSTIFICATIF'
-      )
-      recetteEnCours.value.documentId = documentUploaded.id
-    }
-
-    if (modeEdition.value && recetteEnCours.value.id) {
-      await updateRecette(recetteEnCours.value.id, recetteEnCours.value)
-      message.success('Recette mise à jour avec succès')
-    }
-    else {
-      await createRecette({
-        ...recetteEnCours.value,
-        utilisateurId: authStore.userInfo.userId,
-      })
-      message.success('Recette créée avec succès')
-    }
-
-    modalRecetteVisible.value = false
-    fichierRecette.value = null
-    await chargerDonnees()
-  }
-  catch (error: any) {
-    message.error(error.message || 'Erreur lors de la sauvegarde')
-  }
-  finally {
-    uploadEnCours.value = false
-  }
-}
-
-async function supprimerRecette(id: string) {
-  try {
-    await deleteRecette(id)
-    message.success('Recette supprimée')
-    await chargerDonnees()
-  } catch (error: any) {
-    message.error(error.message || 'Erreur lors de la suppression')
-  }
+function supprimerRecette(id: string) {
+  deleteRecette(id)
+    .then(() => {
+      message.success('Recette supprimée')
+      chargerDonnees()
+    })
+    .catch((error: any) => {
+      message.error(error.message || 'Erreur lors de la suppression')
+    })
 }
 
 function editerEcriture(ecriture: EcritureComptableDTO) {
@@ -672,13 +539,9 @@ function editerEcriture(ecriture: EcritureComptableDTO) {
 }
 
 async function supprimerEcriture(id: string) {
-  try {
-    await deleteEcritureComptable(id)
-    message.success('Écriture comptable supprimée')
-    await chargerDonnees()
-  } catch (error: any) {
-    message.error(error.message || 'Erreur lors de la suppression')
-  }
+  await deleteEcritureComptable(id)
+  message.success('Écriture comptable supprimée')
+  await chargerDonnees()
 }
 
 async function sauvegarderEcriture() {
@@ -1038,6 +901,16 @@ async function supprimerRecetteConfirme() {
 // Pour chaque carte recette :
 // <NPopconfirm v-if="recetteASupprimer === recette.id" :show="true" ... >
 // ... existing code ...
+
+// --- Nouveau workflow pour création de charge ---
+// SUPPRESSION :
+// - Toutes les variables, fonctions et modales du workflow de création de charge/recette (ex: workflowChargeStep, workflowChargeVisible, chargeWorkflow, demarrerWorkflowCharge, etc.)
+// - Toutes les références à workflowRecetteStep, workflowRecetteVisible, recetteWorkflow, demarrerWorkflowRecette, etc.
+// - Les <NModal> pour la création de charge et de recette
+// REMPLACEMENT :
+// - Les boutons 'Nouvelle Charge' et 'Nouvelle Recette' deviennent :
+// <router-link to="/comptabilite/charge-create"><NButton type="primary"><template #icon><NIcon :component="Add24Filled" /></template>Nouvelle Charge</NButton></router-link>
+// <router-link to="/comptabilite/recette-create"><NButton type="success"><template #icon><NIcon :component="Money24Filled" /></template>Nouvelle Recette</NButton></router-link> -->
 </script>
 
 <template>
@@ -1067,18 +940,8 @@ async function supprimerRecetteConfirme() {
             </NTooltip>
           </div>
           <NSpace>
-            <NButton type="primary" @click="nouvelleCharge">
-              <template #icon>
-                <NIcon :component="Add24Filled" />
-              </template>
-              Nouvelle Charge
-            </NButton>
-            <NButton type="success" @click="nouvelleRecette">
-              <template #icon>
-                <NIcon :component="Money24Filled" />
-              </template>
-              Nouvelle Recette
-            </NButton>
+            <router-link to="/charge-create"><NButton type="primary"><template #icon><NIcon :component="Add24Filled" /></template>Nouvelle Charge</NButton></router-link>
+            <router-link to="/recette-create"><NButton type="success"><template #icon><NIcon :component="Money24Filled" /></template>Nouvelle Recette</NButton></router-link>
           </NSpace>
         </div>
         <div v-else class="mobile-header">
@@ -1090,13 +953,13 @@ async function supprimerRecetteConfirme() {
             Éditer le journal comptable
           </NButton>
           <div class="mobile-actions">
-            <NButton size="small" type="primary" @click="nouvelleCharge">
+            <NButton size="small" type="primary" @click="demarrerWorkflowCharge">
               <template #icon>
                 <NIcon :component="Add24Filled" />
               </template>
               Charge
             </NButton>
-            <NButton size="small" type="success" @click="nouvelleRecette">
+            <NButton size="small" type="success" @click="demarrerWorkflowRecette">
               <template #icon>
                 <NIcon :component="Money24Filled" />
               </template>
@@ -1401,198 +1264,15 @@ async function supprimerRecetteConfirme() {
       </template>
     </NModal>
 
-    <!-- Modal Charge -->
-    <NModal v-model:show="modalChargeVisible" preset="card" title="Charge" :style="modalStyle">
-      <NForm :model="chargeEnCours" label-placement="top">
-        <NGrid :cols="2" :x-gap="16">
-          <NGi>
-            <NFormItem label="Date" required>
-              <NDatePicker
-                v-model:value="chargeEnCours.dateCharge"
-                type="date"
-                format="dd/MM/yyyy"
-                value-format="yyyy-MM-dd"
-                clearable
-                style="width: 100%"
-                placeholder="Choisir une date"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi>
-            <NFormItem label="Montant" required>
-              <NInput
-                v-model:value="chargeEnCours.montant"
-                placeholder="0.00"
-                type="text"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Nature" required>
-              <NSelect
-                v-model:value="chargeEnCours.nature"
-                :options="naturesCharges"
-                placeholder="Sélectionner une nature"
-              />
-              <div v-if="chargeEnCours.nature" class="mt-2">
-                <NTag v-if="getChargeByValue(chargeEnCours.nature)?.categorie === 'EXCEPTIONNELLES'" type="warning" size="small">
-                  ⚠️ Charge exceptionnelle - Compte {{ getChargeByValue(chargeEnCours.nature)?.compte }}
-                </NTag>
-                <div v-else class="text-sm text-gray-600">
-                  Compte : {{ getChargeByValue(chargeEnCours.nature)?.compte || 'Non défini' }}
-                </div>
-                <div v-if="getChargeByValue(chargeEnCours.nature)?.description" class="text-sm text-gray-500 mt-1">
-                  {{ getChargeByValue(chargeEnCours.nature)?.description }}
-                </div>
-              </div>
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Propriété" required>
-              <NSelect
-                v-model:value="chargeEnCours.proprieteId"
-                :options="proprietes"
-                placeholder="Sélectionner une propriété"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem required label="Intitulé">
-              <NInput
-                v-model:value="chargeEnCours.intitule"
-                type="text"
-                placeholder="Intitulé de la charge"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Description">
-              <NInput
-                v-model:value="chargeEnCours.commentaire"
-                type="textarea"
-                placeholder="Description de la charge"
-                :rows="3"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Document (optionnel)">
-              <input
-                type="file"
-                @change="handleFileSelectCharge"
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                class="w-full p-2 border border-gray-300 rounded"
-              />
-              <div class="text-sm text-gray-500 mt-1">
-                Formats acceptés : PDF, JPG, PNG, DOC, DOCX. Taille maximum : 10MB
-              </div>
-              <div v-if="fichierCharge" class="text-sm text-green-600 mt-1">
-                Fichier sélectionné : {{ fichierCharge.name }} ({{ formatFileSize(fichierCharge.size) }})
-              </div>
-            </NFormItem>
-          </NGi>
-        </NGrid>
-      </NForm>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="modalChargeVisible = false">Annuler</NButton>
-          <NButton type="primary" :loading="uploadEnCours" @click="sauvegarderCharge">
-            {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
-          </NButton>
-        </NSpace>
-      </template>
-    </NModal>
-
-    <!-- Modal Recette -->
-    <NModal v-model:show="modalRecetteVisible" preset="card" title="Recette" :style="modalStyle">
-      <NForm :model="recetteEnCours" label-placement="top">
-        <NGrid :cols="2" :x-gap="16">
-          <NGi>
-            <NFormItem label="Date" required>
-              <NDatePicker
-                v-model:value="recetteEnCours.dateRecette"
-                type="date"
-                format="dd/MM/yyyy"
-                value-format="yyyy-MM-dd"
-                clearable
-                style="width: 100%"
-                placeholder="Choisir une date"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi>
-            <NFormItem label="Montant" required>
-              <NInput
-                v-model:value="recetteEnCours.montant"
-                placeholder="0.00"
-                type="text"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Type" required>
-              <NSelect
-                v-model:value="recetteEnCours.type"
-                :options="typesRecettes"
-                placeholder="Sélectionner un type"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Propriété" required>
-              <NSelect
-                v-model:value="recetteEnCours.proprieteId"
-                :options="proprietes"
-                placeholder="Sélectionner une propriété"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem required label="Intitulé">
-              <NInput
-                v-model:value="recetteEnCours.intitule"
-                type="text"
-                placeholder="Intitulé de la recette"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Description">
-              <NInput
-                v-model:value="recetteEnCours.commentaire"
-                type="textarea"
-                placeholder="Description de la recette"
-                :rows="3"
-              />
-            </NFormItem>
-          </NGi>
-          <NGi :span="2">
-            <NFormItem label="Document (optionnel)">
-              <input
-                type="file"
-                @change="handleFileSelectRecette"
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                class="w-full p-2 border border-gray-300 rounded"
-              />
-              <div class="text-sm text-gray-500 mt-1">
-                Formats acceptés : PDF, JPG, PNG, DOC, DOCX. Taille maximum : 10MB
-              </div>
-              <div v-if="fichierRecette" class="text-sm text-green-600 mt-1">
-                Fichier sélectionné : {{ fichierRecette.name }} ({{ formatFileSize(fichierRecette.size) }})
-              </div>
-            </NFormItem>
-          </NGi>
-        </NGrid>
-      </NForm>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="modalRecetteVisible = false">Annuler</NButton>
-          <NButton type="primary" :loading="uploadEnCours" @click="sauvegarderRecette">
-            {{ modeEdition ? 'Mettre à jour' : 'Créer' }}
-          </NButton>
-        </NSpace>
-      </template>
-    </NModal>
+    <!-- Workflow pour la Charge -->
+    <!-- SUPPRESSION :
+    - Toutes les variables, fonctions et modales du workflow de création de charge/recette (ex: workflowChargeStep, workflowChargeVisible, chargeWorkflow, demarrerWorkflowCharge, etc.)
+    - Toutes les références à workflowRecetteStep, workflowRecetteVisible, recetteWorkflow, demarrerWorkflowRecette, etc.
+    - Les <NModal> pour la création de charge et de recette -->
+    <!-- REMPLACEMENT :
+    - Les boutons 'Nouvelle Charge' et 'Nouvelle Recette' deviennent :
+    <router-link to="/comptabilite/charge-create"><NButton type="primary"><template #icon><NIcon :component="Add24Filled" /></template>Nouvelle Charge</NButton></router-link>
+    <router-link to="/comptabilite/recette-create"><NButton type="success"><template #icon><NIcon :component="Money24Filled" /></template>Nouvelle Recette</NButton></router-link> -->
   </div>
 </template>
 

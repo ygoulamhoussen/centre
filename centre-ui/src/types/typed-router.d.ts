@@ -28,6 +28,7 @@ declare module 'vue-router/auto-routes' {
     '/bilan-simplifie': RouteRecordInfo<'/bilan-simplifie', '/bilan-simplifie', Record<never, never>, Record<never, never>>,
     '/capital-identites': RouteRecordInfo<'/capital-identites', '/capital-identites', Record<never, never>, Record<never, never>>,
     '/charge-create': RouteRecordInfo<'/charge-create', '/charge-create', Record<never, never>, Record<never, never>>,
+    '/charge-edit.[id]': RouteRecordInfo<'/charge-edit.[id]', '/charge-edit/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/comptabilite': RouteRecordInfo<'/comptabilite', '/comptabilite', Record<never, never>, Record<never, never>>,
     '/comptabilite-propriete.[id]': RouteRecordInfo<'/comptabilite-propriete.[id]', '/comptabilite-propriete/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/credits': RouteRecordInfo<'/credits', '/credits', Record<never, never>, Record<never, never>>,

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { NFormItem, NSelect, NDatePicker, NInput, NSpace, NButton, useMessage, NSteps, NStep, NH2, NGrid, NGi, NCard, NIcon } from 'naive-ui'
 import { naturesCharges } from '@/constants/compta'
-import { createCharge } from '@/service/api/charges-recettes'
+import { updateCharge } from '@/service/api/charges-recettes'
 import { useAuthStore } from '@/store/modules/auth'
 import { BuildingHome24Filled } from '@vicons/fluent'
 definePage({
@@ -15,11 +15,12 @@ definePage({
   },
 })
 const router = useRouter()
+const route = useRoute()
 const message = useMessage()
 const authStore = useAuthStore()
 const proprietes = ref<any[]>([])
 const selectedPropriete = ref<string | null>(null)
-const step = ref(1)
+const step = ref(2)
 const charge = ref<any>({})
 
 async function fetchProprietes() {
@@ -29,13 +30,21 @@ async function fetchProprietes() {
     proprietes.value = data
   }
 }
-fetchProprietes()
 
-function selectPropriete(propriete: any) {
-  selectedPropriete.value = propriete.id
-  charge.value.proprieteId = propriete.id
-  step.value = 2 // Passage direct à l'étape suivante
+async function fetchCharge() {
+  const id = route.params.id
+  const resp = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/charges/${id}`)
+  if (resp.ok) {
+    const data = await resp.json()
+    charge.value = data
+    selectedPropriete.value = data.proprieteId
+  }
 }
+
+onMounted(() => {
+  fetchProprietes()
+  fetchCharge()
+})
 
 const selectedProprieteInfo = computed(() =>
   proprietes.value.find((p: any) => p.id === selectedPropriete.value)
@@ -51,48 +60,24 @@ async function valider() {
     if (payload.dateCharge && typeof payload.dateCharge === 'number') {
       payload.dateCharge = new Date(payload.dateCharge).toISOString().slice(0, 10)
     }
-    await createCharge(payload)
-    message.success('Charge créée avec succès')
+    await updateCharge(payload)
+    message.success('Charge modifiée avec succès')
     router.push('/comptabilite')
   } catch (e: any) {
-    message.error(e.message || 'Erreur lors de la création de la charge')
+    message.error(e.message || 'Erreur lors de la modification de la charge')
   }
 }
 </script>
 <template>
   <div class="charge-create-page">
     <div class="stepper-center">
-      <NSteps :current="step" size="small">
+      <NSteps :current="2" size="small">
         <NStep title="Propriété" description="Choix du bien" />
-        <NStep title="Détails" description="Saisie de la charge" />
+        <NStep title="Détails" description="Modification de la charge" />
       </NSteps>
     </div>
-    <NH2 class="mb-4 titre-principal">
-      {{ step === 1 ? 'Étape 1 : Sélection de la propriété' : 'Étape 2 : Détails de la charge' }}
-    </NH2>
-    <div v-if="step === 1">
-      <NGrid :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
-        <NGi v-for="propriete in proprietes" :key="propriete.id">
-          <NCard hoverable class="propriete-card" :class="{ selected: selectedPropriete === propriete.id }" @click="selectPropriete(propriete)">
-            <div class="flex items-start gap-4">
-              <div class="propriete-avatar">
-                <NIcon :component="BuildingHome24Filled" size="32" />
-              </div>
-              <div class="flex-1">
-                <div class="propriete-nom mb-2">{{ propriete.nom }}</div>
-                <div class="text-sm space-y-1">
-                  <div v-if="propriete.adresse">{{ propriete.adresse }}</div>
-                  <div v-if="propriete.surface">Surface : {{ propriete.surface }} m²</div>
-                  <div v-if="propriete.type">Type : {{ propriete.type }}</div>
-                </div>
-              </div>
-            </div>
-          </NCard>
-        </NGi>
-      </NGrid>
-      <!-- Suppression du bouton Suivant -->
-    </div>
-    <div v-else class="form-section">
+    <NH2 class="mb-4 titre-principal">Édition de la charge</NH2>
+    <div class="form-section">
       <div class="resume-propriete mb-6" v-if="selectedProprieteInfo">
         <NCard size="small" class="resume-propriete-card">
           <div class="flex items-center gap-4">
@@ -134,7 +119,7 @@ async function valider() {
         </NGi>
         <NGi :span="2">
           <NSpace justify="space-between" class="mt-6 btn-row">
-            <NButton @click="step = 1" class="btn-responsive">Précédent</NButton>
+            <NButton @click="router.push('/comptabilite')" class="btn-responsive">Annuler</NButton>
             <NButton type="primary" @click="valider" class="btn-responsive">Valider</NButton>
           </NSpace>
         </NGi>

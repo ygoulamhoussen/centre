@@ -6,11 +6,12 @@ import {
   CalendarLtr24Filled,
   ChartMultiple24Filled,
   DocumentHeader24Filled,
-  Money24Filled,
+  Edit24Filled,
+  Home24Filled,
   PeopleCommunity24Filled,
   Tag24Filled,
-  Home24Filled,
-  Edit24Filled,
+  Money24Filled,
+  QuestionCircle24Filled,
 } from '@vicons/fluent'
 import {
   NButton,
@@ -22,13 +23,14 @@ import {
   NIcon,
   NInputNumber,
   NSpace,
-  useMessage,
+  NStep,
   NSteps,
-  NStep
+  useMessage,
+  NTooltip,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
@@ -83,7 +85,7 @@ const currentStep = 2
       </div>
       <NForm>
         <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
-          <NFormItemGi label="Date d'acquisition *">
+          <NFormItemGi label="Date d'acquisition ou date de démarrage de l'activité*">
             <NDatePicker
               v-model:formatted-value="proprieteDTO.dateAcquisition"
               value-format="yyyy-MM-dd"
@@ -91,17 +93,13 @@ const currentStep = 2
               clearable
               style="width: 100%"
               size="large"
-            >
-              <template #prefix>
-                <NIcon :component="CalendarLtr24Filled" />
-              </template>
-            </NDatePicker>
+            />
           </NFormItemGi>
 
           <NFormItemGi label="Montant d'acquisition (€) *">
             <NInputNumber
               v-model:value="proprieteDTO.montantAcquisition"
-              min="0"
+              :min="0"
               placeholder="0.00"
               style="width: 100%"
               size="large"
@@ -114,12 +112,34 @@ const currentStep = 2
             </NInputNumber>
           </NFormItemGi>
 
-          <NFormItemGi label="Frais de notaire (€)">
+          <NFormItemGi>
+            <template #label>
+              Frais d'acquisition (€)
+              <NTooltip placement="top">
+                <template #trigger>
+                  <NIcon :component="QuestionCircle24Filled" size="18" style="color: #1976d2; margin-left: 6px; cursor: pointer; vertical-align: middle;" />
+                </template>
+                <div style="max-width: 320px;">
+                  <b>Que comprennent les frais d’acquisition&nbsp;?</b><br>
+                  <span>
+                    Ils incluent généralement&nbsp;:
+                    <ul style="margin: 0.5em 0 0 1.2em; padding: 0; font-size: 0.95em;">
+                      <li>Droits d’enregistrement (ou TVA si bien neuf)</li>
+                      <li>Émoluments du notaire</li>
+                      <li>Frais de formalités</li>
+                      <li>Frais d’agence (si payés par l’acquéreur)</li>
+                      <li>Frais de dossier de prêt (si inclus dans l’acte)</li>
+                      <li>Honoraires de conseils liés à l’achat</li>
+                    </ul>
+                  </span>
+                </div>
+              </NTooltip>
+            </template>
             <NInputNumber
-              v-model:value="proprieteDTO.fraisNotaire"
-              min="0"
+              v-model:value="proprieteDTO.fraisAcquisition"
+              :min="0"
               placeholder="0.00"
-              style="width: 100%"
+              style="width: 100%;"
               size="large"
               inputmode="numeric"
               pattern="[0-9]*"
@@ -129,8 +149,11 @@ const currentStep = 2
               </template>
             </NInputNumber>
           </NFormItemGi>
+          
 
-          <NFormItemGi label="Frais d'agence (€)">
+
+
+<!--           <NFormItemGi label="Frais d'agence (€)">
             <NInputNumber
               v-model:value="proprieteDTO.fraisAgence"
               min="0"
@@ -144,7 +167,7 @@ const currentStep = 2
                 <NIcon :component="PeopleCommunity24Filled" />
               </template>
             </NInputNumber>
-          </NFormItemGi>
+          </NFormItemGi> -->
 
           <!-- Champ Tantième supprimé ici -->
         </NGrid>

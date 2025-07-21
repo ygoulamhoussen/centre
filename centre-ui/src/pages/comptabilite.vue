@@ -79,6 +79,10 @@ const message = useMessage()
 const appStore = useAppStore()
 const isMobile = appStore.isMobile
 
+const modalStyle = {
+  width: '700px',
+}
+
 // États réactifs
 const charges = ref<ChargeDTO[]>([])
 const recettes = ref<RecetteDTO[]>([])

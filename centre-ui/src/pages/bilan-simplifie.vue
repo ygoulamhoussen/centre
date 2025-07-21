@@ -261,7 +261,10 @@ const lignesFECBilan = computed(() =>
   )
 )
 
-function sumPoste2033A(poste: { code: string, label: string, comptes: string[], negatif?: boolean, exclude?: string[] }, sens = 'debit') {
+function sumPoste2033A(
+  poste: { code: string, label: string, comptes: string[], negatif?: boolean, exclude?: string[] },
+  sens: 'debit' | 'credit' = 'debit'
+): number {
   // Poste 17 : résultat de l'exercice = calcul dynamique
   if (poste.code === '17') {
     return resultatExerciceBilan.value
@@ -269,9 +272,9 @@ function sumPoste2033A(poste: { code: string, label: string, comptes: string[], 
   // Poste 14 : capital = variable d'équilibre
   if (poste.code === '14') {
     // Total actif cumulé
-    const totalActif = postes2033A.slice(0, 13).reduce((sum, p) => sum + sumPoste2033A(p), 0)
+    const totalActif: number = postes2033A.slice(0, 13).reduce((sum, p) => sum + sumPoste2033A(p), 0)
     // Total passif hors capital (on retire le poste 14)
-    const totalPassifHorsCapital = postes2033A.slice(1 + 13).reduce((sum, p) => sum + (p.code === '14' ? 0 : sumPoste2033A(p)), 0)
+    const totalPassifHorsCapital: number = postes2033A.slice(1 + 13).reduce((sum, p) => sum + (p.code === '14' ? 0 : sumPoste2033A(p)), 0)
     return totalActif - totalPassifHorsCapital
   }
   // On construit le bilan uniquement à partir des écritures comptables (lignes FEC)
@@ -346,7 +349,27 @@ const totalMobilier = computed(() => soldeCumuleComptesFiltre(
     </div>
     <div v-if="!loading" class="result-container">
       <NCard class="bilan-card">
-        <table class="bilan-table">
+        <div v-if="isMobile" class="bilan-mobile">
+          <div class="bilan-section">ACTIF</div>
+          <div v-for="poste in postes2033A.slice(0, 13)" :key="poste.code" class="bilan-mobile-card">
+            <div class="bilan-mobile-row"><span class="bilan-mobile-code">{{ poste.code }}</span> <span class="bilan-mobile-label">{{ poste.label }}</span></div>
+            <div class="bilan-mobile-amount">{{ formatCurrency(sumPoste2033A(poste)) }}</div>
+          </div>
+          <div class="bilan-section">PASSIF</div>
+          <div v-for="poste in postes2033A.slice(13)" :key="poste.code" class="bilan-mobile-card">
+            <div class="bilan-mobile-row"><span class="bilan-mobile-code">{{ poste.code }}</span> <span class="bilan-mobile-label">{{ poste.label }}</span></div>
+            <div class="bilan-mobile-amount">{{ formatCurrency(sumPoste2033A(poste)) }}</div>
+          </div>
+          <div class="bilan-mobile-total">
+            <div><strong>TOTAL ACTIF</strong></div>
+            <div class="bilan-mobile-amount"><strong>{{ formatCurrency(postes2033A.slice(0, 13).reduce((sum, p) => sum + sumPoste2033A(p), 0)) }}</strong></div>
+          </div>
+          <div class="bilan-mobile-total">
+            <div><strong>TOTAL PASSIF</strong></div>
+            <div class="bilan-mobile-amount"><strong>{{ formatCurrency(postes2033A.slice(13).reduce((sum, p) => sum + sumPoste2033A(p), 0)) }}</strong></div>
+          </div>
+        </div>
+        <table v-else class="bilan-table">
           <thead>
             <tr><th colspan="3">Bilan Simplifié 2033-A au {{ formatDate(selectedYear + '-12-31') }}</th></tr>
           </thead>
@@ -545,6 +568,61 @@ const totalMobilier = computed(() => soldeCumuleComptesFiltre(
   box-shadow: 0 1px 4px #0001;
 }
 
+.bilan-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bilan-section {
+  background: #1e40af;
+  color: white;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 12px;
+}
+.bilan-mobile-card {
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+  box-shadow: 0 1px 2px #0001;
+}
+.bilan-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.bilan-mobile-code {
+  font-weight: bold;
+  color: #1e40af;
+  min-width: 2.5em;
+}
+.bilan-mobile-label {
+  flex: 1;
+}
+.bilan-mobile-amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #0f5132;
+  margin-top: 2px;
+}
+.bilan-mobile-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #d4edda;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-weight: bold;
+  font-size: 1.08em;
+}
 @media (max-width: 768px) {
   .titre-principal, h1, h2, h3 {
     font-size: 1.25rem !important;
@@ -566,6 +644,17 @@ const totalMobilier = computed(() => soldeCumuleComptesFiltre(
   .mobile-card {
     font-size: 0.98em;
     padding: 10px 8px;
+  }
+  .bilan-table {
+    display: none;
+  }
+  .bilan-mobile {
+    display: flex;
+  }
+}
+@media (min-width: 769px) {
+  .bilan-mobile {
+    display: none;
   }
 }
 </style> 

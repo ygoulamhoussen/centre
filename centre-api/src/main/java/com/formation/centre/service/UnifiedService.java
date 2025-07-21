@@ -2423,21 +2423,27 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                         
                     case "606000": // Achats non stockés
                     case "606300": // Fournitures administratives
-                    case "606800": // Achats d'emballages
-                    case "606100": // Achats de matières premières
-                    case "606200": // Achats d'autres approvisionnements
-                    case "606400": // Achats de fournitures d'entretien et petit équipement
-                    case "606500": // Achats de fournitures d'atelier et d'usine
-                    case "606600": // Achats de fournitures de magasinage
-                    case "606700": // Achats de fournitures de transport
-                    case "606900": // Achats de fournitures diverses
+                    case "606800": // Autres charges
+                    case "606100": // Électricité
+                    case "606200": // Eau
+                    case "606400": // Chauffage
+                    case "614000": // Charges de copropriété
+                    case "615000": // Entretien et réparations
+                    case "616000": // Primes d'assurances (PNO)
+                    case "622000": // Gestion locative
+                    case "622600": // Expert-comptable
+                    case "623000": // Publicité
+                    case "623100": // Logiciel LMNP
+                    case "625100": // Déplacements
+                    case "626000": // Frais postaux, téléphone
+                    case "627000": // Frais de dossier
                         totalChargesExternes += ligne.getDebit().doubleValue();
                         chargesDetail.add(new ResultatFiscalDetailDTOs.ChargeDetailDTO(
                             ecriture.getLibelle(),
                             ecriture.getDateEcriture(),
                             ligne.getDebit(),
                             ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
-                            "CHARGES_EXTERNES"
+                            getNatureFromCompte(compteNum)
                         ));
                         break;
                         
@@ -2450,7 +2456,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getDateEcriture(),
                             ligne.getDebit(),
                             ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
-                            "IMPOTS_TAXES"
+                            getNatureFromCompte(compteNum)
                         ));
                         break;
                         
@@ -2462,7 +2468,7 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
                             ecriture.getDateEcriture(),
                             ligne.getDebit(),
                             ligne.getCommentaire() != null ? ligne.getCommentaire() : "N/A",
-                            "INTERETS_EMPRUNT"
+                            getNatureFromCompte(compteNum)
                         ));
                         break;
                         
@@ -2494,6 +2500,36 @@ public EcritureComptableDTO createEcritureComptableQuittance(String quittanceId)
             chargesDetail,
             amortissementsDetail
         );
+    }
+
+    private String getNatureFromCompte(String compteNum) {
+        switch (compteNum) {
+            // Charges de propriété
+            case "616000": return "ASSURANCE_PNO";
+            case "615000": return "ENTRETIEN_REPARATION";
+            case "614000": return "COPROPRIETE";
+            case "635100": return "TAXE_FONCIERE";
+            // Charges de gestion
+            case "622000": return "GESTION_LOCATIVE";
+            case "622600": return "EXPERT_COMPTABLE";
+            case "623100": return "LOGICIEL_LMNP";
+            case "626000": return "FRAIS_COMMUNICATION";
+            case "606300": return "FOURNITURES";
+            // Charges financières
+            case "661100": return "INTERETS_EMPRUNT";
+            case "616100": return "ASSURANCE_EMPRUNTEUR";
+            case "627000": return "FRAIS_DOSSIER";
+            // Autres charges
+            case "623000": return "PUBLICITE";
+            case "625100": return "DEPLACEMENT";
+            case "635800": return "CFE";
+            // Exploitation
+            case "606100": return "ELECTRICITE";
+            case "606200": return "EAU";
+            case "606400": return "CHAUFFAGE";
+            case "606800": return "AUTRES";
+            default: return "CHARGE_DIVERSE";
+        }
     }
 
     public SuiviImmobilisationsDTO calculerSuiviImmobilisations(int annee, String utilisateurId) {

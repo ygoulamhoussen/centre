@@ -127,6 +127,18 @@
               </div>
               <div class="component-montant">Montant : {{ formatCurrency(Number(component.percent) * formData.montant / 100) }}</div>
             </div>
+            <div class="component-card acquisition-fees-card">
+              <div class="component-header">
+                <h4>Frais d'acquisition</h4>
+              </div>
+              <div class="component-details">
+                <div class="detail-item">
+                  <span class="detail-label">Montant :</span>
+                  <span>{{ formatCurrency(fraisAcquisition) }}</span>
+                </div>
+              </div>
+              <div class="component-montant">Montant : {{ formatCurrency(fraisAcquisition) }}</div>
+            </div>
           </div>
           <div class="decomposition-summary mt-4">
             <div class="summary-header">
@@ -204,7 +216,7 @@
                   <td>{{ formatCurrency(component.percent * formData.montant / 100) }}</td>
                   <td>{{ component.dureeAmortissement || '—' }}</td>
                   <td>{{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation as TypeImmobilisation] || '—' }}</td>
-                  <td>{{ CATEGORIE_FISCALE_LABELS[getCategorieFiscaleFromDuree(String(component.dureeAmortissement))] || '—' }}</td>
+                  <td>{{ getCategorieFiscaleLabel(component) }}</td>
                 </tr>
               </tbody>
               <tfoot>
@@ -305,8 +317,8 @@ const immobilisationComponents = ref([
   {
     key: 'structure',
     label: 'Structure / Gros œuvre',
-    defaultPercentage: 50,
-    percent: 50,
+    defaultPercentage: 55,
+    percent: 55,
     dureeAmortissement: '40',
     typeImmobilisation: 'BIEN_IMMOBILIER',
     amortissable: true,
@@ -356,16 +368,13 @@ const immobilisationComponents = ref([
     typeImmobilisation: 'MOBILIER',
     amortissable: true,
   },
-  {
-    key: 'frais',
-    label: 'Frais d\'acquisition',
-    defaultPercentage: 5,
-    percent: 5,
-    dureeAmortissement: '8',
-    typeImmobilisation: 'FRAIS',
-    amortissable: true,
-  },
 ])
+
+// 2. Ajout d'une variable pour les frais d'acquisition récupérés de la propriété sélectionnée
+const fraisAcquisition = computed(() => {
+  const propriete = selectedProprieteInfo.value
+  return propriete?.fraisNotaire || 0
+})
 
 // Workflow steps
 const steps = [
@@ -449,7 +458,7 @@ const categorieFiscaleOptions = computed(() =>
 
 // Calcul du total des composants (en montant)
 const totalComponents = computed(() =>
-  immobilisationComponents.value.reduce((total, component) => total + (Number(component.percent) * formData.value.montant / 100), 0),
+  immobilisationComponents.value.reduce((total, component) => total + (Number(component.percent) * formData.value.montant / 100), 0) + Number(fraisAcquisition.value)
 )
 
 // Calcul du total des pourcentages
@@ -533,15 +542,14 @@ async function saveImmobilisation() {
     await formRef.value?.validate()
     saving.value = true
 
-    // Validation supplémentaire
     if (!formData.value.typeImmobilisation || !formData.value.categorieFiscale) {
       message.error('Veuillez sélectionner le type et la catégorie fiscale')
       return
     }
 
-    // Créer une immobilisation pour chaque composant ayant un pourcentage > 0
     const composantsAEnregistrer = immobilisationComponents.value.filter(c => Number(c.percent) > 0)
-    
+
+    // Enregistrer les composants classiques
     for (const composant of composantsAEnregistrer) {
       const montant = (Number(composant.percent) * formData.value.montant) / 100
       const typeImmobilisationValue = composant.typeImmobilisation || (composant.key === 'terrain' ? 'TERRAIN' : undefined)
@@ -556,20 +564,30 @@ async function saveImmobilisation() {
       if (typeImmobilisationValue) {
         data.typeImmobilisation = typeImmobilisationValue
       }
-      // Seulement pour les amortissables ET si la durée existe
       if (composant.amortissable && composant.dureeAmortissement) {
         data.categorieFiscale = getCategorieFiscaleFromDuree(String(composant.dureeAmortissement))
         data.dureeAmortissement = String(composant.dureeAmortissement)
       }
-      // Les non amortissables (ex : terrain) n'ont pas de catégorie fiscale ni de durée
-      console.error('=== CRÉATION COMPOSANT ===')
-      console.error('Composant:', composant.label)
-      console.error('Données à envoyer:', data)
-      const result = await immobilisationApi.createImmobilisation(data)
-      console.error('Résultat de la création:', result)
+      await immobilisationApi.createImmobilisation(data)
     }
 
-    message.success(`${composantsAEnregistrer.length} immobilisation(s) créée(s) avec succès`)
+    // Enregistrement séparé pour les frais d'acquisition
+    if (fraisAcquisition.value > 0) {
+      const dataFrais = {
+        intitule: `${formData.value.intitule} - Frais d'acquisition`,
+        montant: fraisAcquisition.value.toString(),
+        dateAcquisition: formData.value.dateAcquisition ? new Date(formData.value.dateAcquisition).toISOString().split('T')[0] : '',
+        proprieteId: formData.value.proprieteId,
+        commentaire: formData.value.commentaire,
+        utilisateurId: formData.value.utilisateurId,
+        typeImmobilisation: 'FRAIS',
+        categorieFiscale: getCategorieFiscaleFromDuree('8'),
+        dureeAmortissement: '8',
+      }
+      await immobilisationApi.createImmobilisation(dataFrais)
+    }
+
+    message.success(`${composantsAEnregistrer.length + (fraisAcquisition.value > 0 ? 1 : 0)} immobilisation(s) créée(s) avec succès`)
     router.push('/immobilisations')
   } catch (error) {
     console.error('Erreur complète:', error)
@@ -659,6 +677,21 @@ function selectProprieteImmobilisation(propriete: any) {
   selectedPropriete.value = propriete.id
   onProprieteSelect(propriete.id)
   nextStep()
+}
+
+// Ajout d'une fonction utilitaire pour afficher la catégorie fiscale réelle
+function getCategorieFiscaleLabel(component: any) {
+  if (component.key === 'terrain') {
+    return 'Non amortissable'
+  }
+  if (component.key === 'structure') {
+    return `Bien immobilier (${component.dureeAmortissement || '—'} ans)`
+  }
+  if (component.key === 'mobilier') {
+    return `Mobilier (${component.dureeAmortissement || '—'} ans)`
+  }
+  // Pour tous les autres composants
+  return `Travaux (${component.dureeAmortissement || '—'} ans)`
 }
 
 // Initialisation

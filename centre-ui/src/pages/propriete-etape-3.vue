@@ -136,7 +136,7 @@ const currentStep = 2
               </NTooltip>
             </template>
             <NInputNumber
-              v-model:value="proprieteDTO.fraisAcquisition"
+              v-model:value="proprieteDTO.fraisNotaire"
               :min="0"
               placeholder="0.00"
               style="width: 100%;"

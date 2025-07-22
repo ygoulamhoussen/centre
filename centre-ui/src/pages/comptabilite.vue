@@ -931,7 +931,7 @@ async function supprimerRecetteConfirme() {
                 </NButton>
               </template>
               <div style="max-width: 300px;">
-                <p><b>Charges exceptionnelles :</b></p>
+                <p><b>Charges exceptionnelles : </b></p>
                 <p>• Charges non récurrentes liées à des événements particuliers</p>
                 <p>• Exemples : cessions d'actifs, restructurations, litiges</p>
                 <p>• Apparaissent dans le formulaire 2033-F de la liasse fiscale</p>

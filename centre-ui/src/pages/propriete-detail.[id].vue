@@ -523,8 +523,9 @@ watch(showEditModal, (val) => {
             <div class="action-buttons">
               <NButton type="primary" @click="nouveauDocument" class="action-button" title="Ajouter un document">
                 <template #icon>
-                  <NIcon :component="Add24Filled" />
+                  <NIcon :component="Add24Filled"  />
                 </template>
+                Ajouter un document
               </NButton>
             </div>
 
@@ -651,95 +652,93 @@ watch(showEditModal, (val) => {
       <!-- Modal de modification des informations -->
       <NModal v-model:show="showEditModal" :mask-closable="false">
         <NCard
-          style="width: 700px; max-width: 90vw;"
+          style="width: 900px; max-width: 90vw;"
           title="Modifier les informations de la propriété"
           :bordered="false"
           size="huge"
           role="dialog"
           aria-modal="true"
         >
-          <NForm class="edit-form">
-            <div class="info-grid">
-              <div class="info-label">
-                Nom :
-              </div>
-              <div class="info-value-edit">
-                <NInput v-model:value="editForm.nom" size="large" style="width: 100%" />
-              </div>
-
-              <div class="info-label">
-                Adresse :
-              </div>
-              <div class="info-value-edit">
-                <NInput v-model:value="editForm.adresse" size="large" style="width: 100%" />
-              </div>
-
-              <div class="info-label">
-                Code postal :
-              </div>
-              <div class="info-value-edit">
-                <NInput v-model:value="editForm.codePostal" size="large" style="width: 100%" inputmode="numeric" pattern="[0-9]*" />
-              </div>
-
-              <div class="info-label">
-                Ville :
-              </div>
-              <div class="info-value-edit">
-                <NInput v-model:value="editForm.ville" size="large" style="width: 100%" />
-              </div>
-
-              <div class="info-label">
-                Type :
-              </div>
-              <div class="info-value-edit">
-                <NSelect
-                  v-model:value="editForm.typeBien"
-                  :options="[
-                    { label: 'Appartement', value: 'APPARTEMENT' },
-                    { label: 'Maison', value: 'MAISON' },
-                    { label: 'Local commercial', value: 'LOCAL_COMMERCIAL' },
-                  ]"
-                  size="large"
-                  style="width: 100%"
-                />
-              </div>
-
-              <div class="info-label">
-                Montant acquisition :
-              </div>
-              <div class="info-value-edit">
-                <NInputNumber v-model:value="editForm.montantAcquisition" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
-              </div>
-
-              <div class="info-label">
-                Date acquisition :
-              </div>
-              <div class="info-value-edit">
-                <NDatePicker v-model:formatted-value="editForm.dateAcquisition" value-format="yyyy-MM-dd" size="large" style="width: 100%" />
-              </div>
-
-              <div class="info-label">
-                Tantième :
-              </div>
-              <div class="info-value-edit">
-                <NInputNumber v-model:value="editForm.tantieme" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
-              </div>
-
-              <div class="info-label">
-                Frais notaire :
-              </div>
-              <div class="info-value-edit">
-                <NInputNumber v-model:value="editForm.fraisNotaire" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
-              </div>
-
-              <div class="info-label">
-                Frais agence :
-              </div>
-              <div class="info-value-edit">
-                <NInputNumber v-model:value="editForm.fraisAgence" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
-              </div>
+          <div class="info-grid">
+            <div class="info-label">
+              Nom :
             </div>
-          </NForm>
+            <div class="info-value-edit">
+              <NInput v-model:value="editForm.nom" size="large" style="width: 100%" />
+            </div>
+
+            <div class="info-label">
+              Adresse :
+            </div>
+            <div class="info-value-edit">
+              <NInput v-model:value="editForm.adresse" size="large" style="width: 100%" />
+            </div>
+
+            <div class="info-label">
+              Code postal :
+            </div>
+            <div class="info-value-edit">
+              <NInput v-model:value="editForm.codePostal" size="large" style="width: 100%" inputmode="numeric" pattern="[0-9]*" />
+            </div>
+
+            <div class="info-label">
+              Ville :
+            </div>
+            <div class="info-value-edit">
+              <NInput v-model:value="editForm.ville" size="large" style="width: 100%" />
+            </div>
+
+            <div class="info-label">
+              Type :
+            </div>
+            <div class="info-value-edit">
+              <NSelect
+                v-model:value="editForm.typeBien"
+                :options="[
+                  { label: 'Appartement', value: 'APPARTEMENT' },
+                  { label: 'Maison', value: 'MAISON' },
+                  { label: 'Local commercial', value: 'LOCAL_COMMERCIAL' },
+                ]"
+                size="large"
+                style="width: 100%"
+              />
+            </div>
+
+            <div class="info-label">
+              Montant acquisition :
+            </div>
+            <div class="info-value-edit">
+              <NInputNumber v-model:value="editForm.montantAcquisition" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
+            </div>
+
+            <div class="info-label">
+              Date acquisition :
+            </div>
+            <div class="info-value-edit">
+              <NDatePicker v-model:formatted-value="editForm.dateAcquisition" value-format="yyyy-MM-dd" size="large" style="width: 100%" />
+            </div>
+
+            <div class="info-label">
+              Tantième :
+            </div>
+            <div class="info-value-edit">
+              <NInputNumber v-model:value="editForm.tantieme" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
+            </div>
+
+            <div class="info-label">
+              Frais notaire :
+            </div>
+            <div class="info-value-edit">
+              <NInputNumber v-model:value="editForm.fraisNotaire" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
+            </div>
+
+            <div class="info-label">
+              Frais agence :
+            </div>
+            <div class="info-value-edit">
+              <NInputNumber v-model:value="editForm.fraisAgence" size="large" style="width: 100%" inputmode="decimal" pattern="[0-9]*" />
+            </div>
+          </div>
           <template #footer>
             <div class="flex justify-end gap-2">
               <NButton @click="cancelEditing">Annuler</NButton>
@@ -823,6 +822,7 @@ watch(showEditModal, (val) => {
   padding: 12px;
   background-color: var(--n-color-embedded);
   border-radius: 4px;
+  width: 100%;
 }
 .info-value-edit {
   padding: 0;
@@ -836,6 +836,7 @@ watch(showEditModal, (val) => {
 .info-value-edit > * {
   flex: 1 1 0%;
   min-width: 0;
+  width: 100%;
 }
 .edit-form {
   width: 100%;
@@ -853,7 +854,13 @@ watch(showEditModal, (val) => {
 }
 .n-form {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   width: 100%;
 }
@@ -1069,6 +1076,10 @@ watch(showEditModal, (val) => {
     font-size: 1.05rem;
   }
   .n-form {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  .info-grid {
     grid-template-columns: 1fr !important;
     gap: 12px;
   }

@@ -18,6 +18,7 @@ public class ChargeDTO {
     private String updatedAt;
     private String statut;
     private String immobilisationId;
+    private String echeanceCreditId;
 
     // Constructeurs
     public ChargeDTO() {}
@@ -62,6 +63,7 @@ public class ChargeDTO {
         dto.setCreatedAt(charge.getCreeLe() != null ? charge.getCreeLe().toString() : null);
         dto.setUpdatedAt(charge.getModifieLe() != null ? charge.getModifieLe().toString() : null);
         dto.setImmobilisationId(charge.getImmobilisation() != null ? charge.getImmobilisation().getId().toString() : null);
+        dto.setEcheanceCreditId(charge.getEcheanceCredit() != null ? charge.getEcheanceCredit().getId().toString() : null);
 
         return dto;
     }
@@ -182,7 +184,16 @@ public class ChargeDTO {
     public String getImmobilisationId() {
         return immobilisationId;
     }
+
     public void setImmobilisationId(String immobilisationId) {
         this.immobilisationId = immobilisationId;
+    }
+
+    public String getEcheanceCreditId() {
+        return echeanceCreditId;
+    }
+
+    public void setEcheanceCreditId(String echeanceCreditId) {
+        this.echeanceCreditId = echeanceCreditId;
     }
 } 

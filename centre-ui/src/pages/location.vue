@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { Add24Filled, Home24Filled } from '@vicons/fluent'
+import { Add24Filled, Delete24Regular, Home24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -11,6 +11,7 @@ import {
   NH1,
   NH3,
   NIcon,
+  NPopconfirm,
   NSpin,
   NText,
   useMessage,
@@ -37,7 +38,7 @@ async function fetchLocations() {
   try {
     loading.value = true
     const response = await fetch(
-      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocationsByUtilisateur/${utilisateurId}`
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getLocationsByUtilisateur/${utilisateurId}`,
     )
     if (!response.ok) throw new Error('Erreur chargement locations')
     locations.value = await response.json()
@@ -55,6 +56,29 @@ function viewLocationDetails(id: string) {
 
 function demarrerCreation() {
   router.push('/location-etape-1')
+}
+
+async function supprimerLocation(id: string) {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteLocation/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Erreur lors de la suppression')
+    }
+
+    message.success('Location supprimée')
+    await fetchLocations()
+  } catch (error) {
+    console.error('Erreur lors de la suppression :', error)
+    message.error(error instanceof Error ? error.message : 'Erreur lors de la suppression')
+  }
 }
 
 function formatDate(dateString: string) {
@@ -125,6 +149,29 @@ onMounted(() => {
                 </div>
               </div>
             </div>
+            <template #footer>
+              <div class="flex justify-end gap-2">
+                <NPopconfirm
+                  @positive-click="supprimerLocation(location.id)"
+                  positive-text="Supprimer"
+                  negative-text="Annuler"
+                >
+                  <template #trigger>
+                    <NButton
+                      size="small"
+                      type="error"
+                      ghost
+                      @click.stop
+                    >
+                      <template #icon>
+                        <NIcon :component="Delete24Regular" />
+                      </template>
+                    </NButton>
+                  </template>
+                  Êtes-vous sûr de vouloir supprimer cette location ?
+                </NPopconfirm>
+              </div>
+            </template>
           </NCard>
         </NGi>
       </NGrid>

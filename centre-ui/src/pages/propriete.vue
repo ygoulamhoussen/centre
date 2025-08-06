@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { storeToRefs } from 'pinia'
-import { Box24Regular, Building24Regular, Home24Regular, VehicleCar24Regular, Add24Filled } from '@vicons/fluent'
+import { Add24Filled, Box24Regular, Building24Regular, Delete24Regular, Home24Regular, VehicleCar24Regular } from '@vicons/fluent'
 import {
   NButton,
   NCard,
   NEmpty,
   NGi,
   NGrid,
+  NH1,
   NIcon,
   NPopconfirm,
   NSpace,
+  NSpin,
   useMessage,
-  NH1,
-  NSpin
 } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -24,7 +23,7 @@ definePage({
     title: 'Mes propriétés',
     icon: 'mdi:home-city',
     order: 2,
-  }
+  },
 })
 
 const router = useRouter()
@@ -39,7 +38,7 @@ async function fetchProprietes() {
     loading.value = true
     const userId = authStore.userInfo.userId
     const response = await fetch(
-      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/${userId}`
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/getProprietesByUtilisateur/${userId}`,
     )
     proprietes.value = await response.json()
   } catch (error) {
@@ -52,14 +51,35 @@ async function fetchProprietes() {
 
 async function supprimerPropriete(id: string) {
   try {
-    await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deletePropriete/${id}`, {
-      method: 'DELETE'
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deletePropriete/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
     })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      if (response.status === 400 && errorData.message) {
+        // Afficher le message d'erreur spécifique du serveur
+        message.error(errorData.message)
+        if (errorData.locations) {
+          // Afficher la liste des locations liées si disponible
+          const locationsList = errorData.locations.join('\n')
+          message.error(`Locations liées :\n${locationsList}`, { duration: 10000 })
+        }
+      } else {
+        throw new Error(errorData.message || 'Erreur lors de la suppression')
+      }
+      return
+    }
+
     message.success('Propriété supprimée')
     await fetchProprietes()
   } catch (error) {
     console.error('Erreur lors de la suppression :', error)
-    message.error('Erreur lors de la suppression')
+    message.error(error instanceof Error ? error.message : 'Erreur lors de la suppression')
   }
 }
 
@@ -115,9 +135,30 @@ onMounted(fetchProprietes)
           >
             <div class="mb-2 flex items-center gap-3">
               <NIcon :component="getIconComponent(propriete.typeBien)" size="40" :depth="1" />
-              <div>
+              <div class="flex-1">
                 <p>{{ propriete.adresse }}, {{ propriete.ville }}</p>
                 <p><strong>Type :</strong> {{ propriete.typeBien }}</p>
+              </div>
+              <div class="flex gap-2">
+                <NPopconfirm
+                  @positive-click="supprimerPropriete(propriete.id)"
+                  positive-text="Supprimer"
+                  negative-text="Annuler"
+                >
+                  <template #trigger>
+                    <NButton
+                      size="small"
+                      type="error"
+                      ghost
+                      @click.stop
+                    >
+                      <template #icon>
+                        <NIcon :component="Delete24Regular" />
+                      </template>
+                    </NButton>
+                  </template>
+                  Êtes-vous sûr de vouloir supprimer cette propriété ?
+                </NPopconfirm>
               </div>
             </div>
           </NCard>
@@ -130,7 +171,10 @@ onMounted(fetchProprietes)
 </template>
 
 <style scoped>
-.titre-principal, h1, h2, h3 {
+.titre-principal,
+h1,
+h2,
+h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
@@ -154,8 +198,20 @@ onMounted(fetchProprietes)
   justify-content: space-between;
   align-items: center;
 }
+.flex-1 {
+  flex: 1;
+}
+.gap-2 {
+  gap: 0.5rem;
+}
+.gap-3 {
+  gap: 0.75rem;
+}
 @media (max-width: 768px) {
-  .titre-principal, h1, h2, h3 {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
     font-size: 1.25rem !important;
   }
   .flex {

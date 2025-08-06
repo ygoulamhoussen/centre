@@ -23,4 +23,7 @@ public interface EcritureComptableRepository extends JpaRepository<EcritureCompt
 
     @Query("SELECT e FROM EcritureComptable e WHERE e.immobilisation.id = :immobilisationId")
     List<EcritureComptable> findByImmobilisation_Id(@Param("immobilisationId") UUID immobilisationId);
+
+    @Query("SELECT e FROM EcritureComptable e WHERE e.echeanceCredit.id = :echeanceCreditId")
+    List<EcritureComptable> findByEcheanceCredit_Id(@Param("echeanceCreditId") UUID echeanceCreditId);
 }

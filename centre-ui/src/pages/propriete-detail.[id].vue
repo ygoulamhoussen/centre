@@ -106,40 +106,6 @@ const documentTypes = [
 ]
 
 // Méthodes
-async function supprimerPropriete(id: string) {
-  try {
-    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deletePropriete/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include'
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      if (response.status === 400 && errorData.message) {
-        // Afficher le message d'erreur spécifique du serveur
-        message.error(errorData.message)
-        if (errorData.locations) {
-          // Afficher la liste des locations liées si disponible
-          const locationsList = errorData.locations.join('\n')
-          message.error(`Locations liées :\n${locationsList}`, { duration: 10000 })
-        }
-      } else {
-        throw new Error(errorData.message || 'Erreur lors de la suppression')
-      }
-      return
-    }
-
-    message.success('Propriété supprimée avec succès')
-    router.push('/propriete')
-  } catch (error) {
-    console.error('Erreur lors de la suppression :', error)
-    message.error(error instanceof Error ? error.message : 'Erreur lors de la suppression de la propriété')
-  }
-}
-
 async function fetchProprieteDetails() {
   try {
     loading.value = true
@@ -514,21 +480,6 @@ watch(showEditModal, (val) => {
         <NTabs v-if="proprieteDetail" v-model:value="activeTab" type="line" animated>
           <!-- Onglet Informations -->
           <NTabPane name="infos" :tab="() => h('span', [h(NIcon, { component: Info24Filled, size: 20, class: 'mr-1' }), ' Informations'])" title="Informations">
-            <div class="action-buttons">
-              <NPopconfirm
-                @positive-click="() => proprieteDetail.propriete && proprieteDetail.propriete.id && supprimerPropriete(proprieteDetail.propriete.id)"
-              >
-                <template #trigger>
-                  <NButton type="error" ghost class="action-button" title="Supprimer">
-                    <template #icon>
-                      <NIcon :component="Delete24Filled" />
-                    </template>
-                  </NButton>
-                </template>
-                Êtes-vous sûr de vouloir supprimer cette propriété ?
-              </NPopconfirm>
-            </div>
-
             <NCard class="propriete-info-card clickable-card" :bordered="false" @click="startEditing">
               <div class="propriete-info-grid">
                 <div class="propriete-info-item">

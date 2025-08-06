@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Add24Filled, Document24Filled, Person24Filled } from '@vicons/fluent'
+import { Add24Filled, Delete24Regular, Document24Filled, Person24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -7,6 +7,7 @@ import {
   NGi,
   NGrid,
   NIcon,
+  NPopconfirm,
   NSpin,
   NSpace,
   NH1,
@@ -71,6 +72,29 @@ function viewLocataireDetails(id: string) {
 // Rediriger vers la page d'ajout d'un locataire
 function addNewLocataire() {
   router.push('/locataire-etape-1')
+}
+
+async function supprimerLocataire(id: string) {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteLocataire/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Erreur lors de la suppression')
+    }
+
+    message.success('Locataire supprimé')
+    await fetchLocataires()
+  } catch (error) {
+    console.error('Erreur lors de la suppression :', error)
+    message.error(error instanceof Error ? error.message : 'Erreur lors de la suppression')
+  }
 }
 
 // Formater la date
@@ -163,6 +187,29 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
+            <template #footer>
+              <div class="flex justify-end gap-2">
+                <NPopconfirm
+                  @positive-click="supprimerLocataire(locataire.id)"
+                  positive-text="Supprimer"
+                  negative-text="Annuler"
+                >
+                  <template #trigger>
+                    <NButton
+                      size="small"
+                      type="error"
+                      ghost
+                      @click.stop
+                    >
+                      <template #icon>
+                        <NIcon :component="Delete24Regular" />
+                      </template>
+                    </NButton>
+                  </template>
+                  Êtes-vous sûr de vouloir supprimer ce locataire ?
+                </NPopconfirm>
+              </div>
+            </template>
           </NCard>
         </NGi>
       </NGrid>

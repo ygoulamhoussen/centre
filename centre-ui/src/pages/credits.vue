@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { h, onMounted, ref, onUnmounted } from 'vue'
+import { h, onMounted, onUnmounted, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
-import { NButton, NDataTable, NPopconfirm, NSpace, useMessage, NCard, NH1 } from 'naive-ui'
-import { getCreditsByUtilisateur, deleteCreditById } from '@/service/api/immobilisation'
+import { NCard, NH1, NButton, NDataTable, NPopconfirm, NSpace, useMessage } from 'naive-ui'
+import { deleteCreditById, getCreditsByUtilisateur } from '@/service/api/immobilisation'
 import { useAuthStore } from '@/store/modules/auth'
 
 definePage({
@@ -49,12 +49,45 @@ function viewEcheancier(credit: Credit) {
 
 async function deleteCredit(credit: Credit) {
   try {
-    await deleteCreditById(credit.id)
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/credits/${credit.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      if (response.status === 400 && errorData.message) {
+        // Afficher le message d'erreur spécifique du serveur
+        message.error(errorData.message)
+        if (errorData.echeances) {
+          // Afficher la liste des échéances liées si disponible
+          const echeancesList = errorData.echeances.join('\n')
+          message.error(`Échéances liées :\n${echeancesList}`, { duration: 10000 })
+        }
+        if (errorData.charges) {
+          // Afficher la liste des charges liées si disponible
+          const chargesList = errorData.charges.join('\n')
+          message.error(`Charges liées :\n${chargesList}`, { duration: 10000 })
+        }
+        if (errorData.ecritures) {
+          // Afficher la liste des écritures comptables liées si disponible
+          const ecrituresList = errorData.ecritures.join('\n')
+          message.error(`Écritures comptables liées :\n${ecrituresList}`, { duration: 10000 })
+        }
+      } else {
+        throw new Error(errorData.message || 'Erreur lors de la suppression')
+      }
+      return
+    }
+
     message.success('Crédit supprimé avec succès')
     await loadCredits()
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la suppression du crédit'
-    message.error(errorMessage)
+    console.error('Erreur lors de la suppression :', error)
+    message.error(error instanceof Error ? error.message : 'Erreur lors de la suppression du crédit')
   }
 }
 
@@ -115,10 +148,10 @@ onUnmounted(() => {
       </NButton>
     </div>
     <div v-if="!isMobile" class="desktop-cards">
-      <NCard 
-        v-for="credit in credits" 
-        :key="credit.id" 
-        class="credit-card clickable-card" 
+      <NCard
+        v-for="credit in credits"
+        :key="credit.id"
+        class="credit-card clickable-card"
         @click="viewEcheancier(credit)"
       >
         <div class="card-header">
@@ -133,10 +166,10 @@ onUnmounted(() => {
           </div>
           <NPopconfirm @positive-click="deleteCredit(credit)">
             <template #trigger>
-              <NButton 
-                size="small" 
-                quaternary 
-                type="error" 
+              <NButton
+                size="small"
+                quaternary
+                type="error"
                 class="delete-btn"
                 @click.stop
               >
@@ -153,10 +186,10 @@ onUnmounted(() => {
       </NCard>
     </div>
     <div v-else>
-      <NCard 
-        v-for="credit in credits" 
-        :key="credit.id" 
-        class="mobile-card clickable-card" 
+      <NCard
+        v-for="credit in credits"
+        :key="credit.id"
+        class="mobile-card clickable-card"
         @click="viewEcheancier(credit)"
       >
         <div class="mobile-card-header">
@@ -189,7 +222,10 @@ onUnmounted(() => {
 .credits-page {
   padding: 20px;
 }
-.titre-principal, h1, h2, h3 {
+.titre-principal,
+h1,
+h2,
+h3 {
   color: #222 !important;
   font-weight: bold;
 }
@@ -233,7 +269,10 @@ onUnmounted(() => {
   background: #fff;
   position: relative;
   box-shadow: 0 2px 8px #0001;
-  transition: box-shadow 0.18s, border-color 0.18s, transform 0.18s;
+  transition:
+    box-shadow 0.18s,
+    border-color 0.18s,
+    transform 0.18s;
 }
 .mobile-card:active {
   transform: scale(0.98);
@@ -296,12 +335,14 @@ onUnmounted(() => {
   background: #fafbfc;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(60,60,60,0.04);
-  transition: box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(60, 60, 60, 0.04);
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
 }
 
 .credit-card:hover {
-  box-shadow: 0 4px 16px rgba(60,60,60,0.10);
+  box-shadow: 0 4px 16px rgba(60, 60, 60, 0.1);
   border-color: #b3c0d1;
 }
 
@@ -384,7 +425,10 @@ onUnmounted(() => {
   justify-content: flex-end;
 }
 @media (max-width: 768px) {
-  .titre-principal, h1, h2, h3 {
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
     font-size: 1.25rem !important;
   }
   .flex {

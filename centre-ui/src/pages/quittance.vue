@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
-import { DocumentPdf24Filled } from '@vicons/fluent'
+import { Delete24Regular, DocumentPdf24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
@@ -11,6 +11,7 @@ import {
   NH1,
   NH3,
   NIcon,
+  NPopconfirm,
   NSpin,
   NTag,
   NText,
@@ -71,6 +72,29 @@ async function telechargerQuittance(id: string) {
   }
 }
 
+async function supprimerQuittance(id: string) {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/api/deleteQuittance/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Erreur lors de la suppression')
+    }
+
+    message.success('Quittance supprimée')
+    await fetchQuittances()
+  } catch (error) {
+    console.error('Erreur lors de la suppression :', error)
+    message.error(error instanceof Error ? error.message : 'Erreur lors de la suppression')
+  }
+}
+
 function getTotalQuittance(q: Record<string, any>) {
   const loyer = Number(q.montantLoyer) || 0
   const charges = Number(q.montantCharges) || 0
@@ -107,7 +131,7 @@ onMounted(() => fetchQuittances())
       </div>
       <NGrid v-else :x-gap="16" :y-gap="16" cols="1 s:1 m:2 l:3 xl:4">
         <NGi v-for="q in quittances" :key="q.id">
-          <NCard hoverable class="quittance-card cursor-pointer" @click="router.push(`/quittance-detail/${q.id}`)">
+          <NCard hoverable class="quittance-card" @click="router.push(`/quittance-detail/${q.id}`)">
             <div class="flex items-start gap-4">
               <div class="quittance-avatar">
                 <NIcon :component="DocumentPdf24Filled" size="32" />
@@ -133,21 +157,35 @@ onMounted(() => fetchQuittances())
             </div>
             <template #footer>
               <div class="flex justify-end gap-2">
-                <template v-if="q.statut !== 'PAYEE'">
+                <template v-if="q.statut === 'PAYEE'">
                   <NTooltip>
                     <template #trigger>
-                      <NButton size="small" type="primary" ghost :disabled="q.statut !== 'PAYEE'" @click.stop>
-                        Editer la quittance
+                      <NButton size="small" type="primary" ghost @click.stop="telechargerQuittance(q.id)">
+                        Télécharger
                       </NButton>
                     </template>
-                    La quittance n'est téléchargeable que si elle est payée.
+                    Télécharger le PDF
                   </NTooltip>
                 </template>
-                <template v-else>
-                  <NButton size="small" type="primary" ghost @click.stop="telechargerQuittance(q.id)">
-                    Editer la quittance
-                  </NButton>
-                </template>
+                <NPopconfirm
+                  @positive-click="supprimerQuittance(q.id)"
+                  positive-text="Supprimer"
+                  negative-text="Annuler"
+                >
+                  <template #trigger>
+                    <NButton
+                      size="small"
+                      type="error"
+                      ghost
+                      @click.stop
+                    >
+                      <template #icon>
+                        <NIcon :component="Delete24Regular" />
+                      </template>
+                    </NButton>
+                  </template>
+                  Êtes-vous sûr de vouloir supprimer cette quittance ?
+                </NPopconfirm>
               </div>
             </template>
           </NCard>

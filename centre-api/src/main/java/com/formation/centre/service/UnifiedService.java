@@ -632,9 +632,63 @@ public class UnifiedService {
 
     @Transactional
     public void deleteCredit(String id) {
-        UUID creditId = UUID.fromString(id);
-        echeanceCreditRepository.deleteByCreditId(creditId);
-        creditRepository.deleteById(creditId);
+        try {
+            UUID creditId = UUID.fromString(id);
+            
+            // Récupérer le crédit pour avoir accès à la propriété
+            Credit credit = creditRepository.findById(creditId)
+                .orElseThrow(() -> new IllegalArgumentException("Crédit introuvable"));
+            
+            // 1. Supprimer toutes les échéances de crédit et leurs données associées
+            List<EcheanceCredit> echeances = echeanceCreditRepository.findByCredit_Id(creditId);
+            for (EcheanceCredit echeance : echeances) {
+                // Supprimer les charges associées à cette échéance
+                List<Charge> charges = chargeRepository.findByEcheanceCredit_Id(echeance.getId());
+                for (Charge charge : charges) {
+                    // Supprimer l'écriture comptable associée à la charge
+                    if (charge.getEcritureComptable() != null) {
+                        ligneEcritureRepository.deleteByEcritureId(charge.getEcritureComptable().getId());
+                        ecritureComptableRepository.deleteById(charge.getEcritureComptable().getId());
+                    }
+                    chargeRepository.deleteById(charge.getId());
+                }
+                
+                // Supprimer les écritures comptables liées à cette échéance
+                List<EcritureComptable> ecritures = ecritureComptableRepository.findByEcheanceCredit_Id(echeance.getId());
+                for (EcritureComptable ecriture : ecritures) {
+                    ligneEcritureRepository.deleteByEcritureId(ecriture.getId());
+                    ecritureComptableRepository.deleteById(ecriture.getId());
+                }
+                
+                // Supprimer l'échéance
+                echeanceCreditRepository.deleteById(echeance.getId());
+            }
+            
+            // 2. Supprimer les charges liées au crédit via la propriété (charges d'intérêts et d'assurance)
+            if (credit.getPropriete() != null) {
+                List<Charge> chargesCredit = chargeRepository.findByProprieteId(credit.getPropriete().getId());
+                for (Charge charge : chargesCredit) {
+                    // Supprimer seulement les charges liées aux crédits (intérêts et assurance)
+                    if ("INTERETS_EMPRUNT".equals(charge.getNature()) || "ASSURANCE_EMPRUNT".equals(charge.getNature())) {
+                        // Vérifier si la charge est liée à ce crédit via l'intitulé ou la date
+                        if (charge.getIntitule() != null && charge.getIntitule().contains("échéance crédit")) {
+                            if (charge.getEcritureComptable() != null) {
+                                ligneEcritureRepository.deleteByEcritureId(charge.getEcritureComptable().getId());
+                                ecritureComptableRepository.deleteById(charge.getEcritureComptable().getId());
+                            }
+                            chargeRepository.deleteById(charge.getId());
+                        }
+                    }
+                }
+            }
+            
+            // 3. Supprimer le crédit lui-même
+            creditRepository.deleteById(creditId);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors de la suppression du crédit: " + e.getMessage(), e);
+        }
     }
 
     private CreditDTO toDto(Credit c) {
@@ -1460,6 +1514,13 @@ public ChargeDTO saveCharge(ChargeDTO dto) {
     
     if (dto.getImmobilisationId() != null && !dto.getImmobilisationId().isEmpty()) {
         c.setImmobilisation(immobilisationRepository.findById(UUID.fromString(dto.getImmobilisationId())).orElse(null));
+    }
+    
+    // Gérer l'échéance de crédit associée
+    if (dto.getEcheanceCreditId() != null && !dto.getEcheanceCreditId().isEmpty()) {
+        c.setEcheanceCredit(echeanceCreditRepository.findById(UUID.fromString(dto.getEcheanceCreditId())).orElse(null));
+    } else {
+        c.setEcheanceCredit(null);
     }
     
     c.setModifieLe(LocalDateTime.now());

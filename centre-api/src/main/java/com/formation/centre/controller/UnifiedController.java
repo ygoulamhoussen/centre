@@ -905,6 +905,7 @@ public ResponseEntity<?> createEcheancesCredit(@RequestBody List<EcheanceCreditD
                 chargeInteret.setMontant(echeance.getInteret());
                 chargeInteret.setIntitule("Intérêts échéance crédit");
                 chargeInteret.setStatut("PAYEE");
+                chargeInteret.setEcheanceCreditId(savedEcheance.getId()); // Lier à l'échéance
                 unifiedService.saveCharge(chargeInteret);
             }
             // Charge d'assurance
@@ -917,6 +918,7 @@ public ResponseEntity<?> createEcheancesCredit(@RequestBody List<EcheanceCreditD
                 chargeAssurance.setMontant(echeance.getAssurance());
                 chargeAssurance.setIntitule("Assurance échéance crédit");
                 chargeAssurance.setStatut("PAYEE");
+                chargeAssurance.setEcheanceCreditId(savedEcheance.getId()); // Lier à l'échéance
                 unifiedService.saveCharge(chargeAssurance);
             }
         }

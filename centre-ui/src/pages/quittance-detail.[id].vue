@@ -305,16 +305,6 @@ const paiementColumns = [
                 <NButton ghost @click="router.push('/quittance')" title="Précédent">
                   <template #icon><NIcon :component="ArrowLeft24Filled" /></template>
                 </NButton>
-                <div class="flex gap-2">
-                  <NPopconfirm @positive-click="supprimer" positive-text="Supprimer" negative-text="Annuler">
-                    <template #trigger>
-                      <NButton type="error" ghost title="Supprimer">
-                        <template #icon><NIcon :component="Delete24Filled" /></template>
-                      </NButton>
-                    </template>
-                    Confirmer la suppression ?
-                  </NPopconfirm>
-                </div>
               </div>
             </NTabPane>
             <NTabPane name="paiements" :tab="h('span', [h(NIcon, { component: Add24Filled, size: 20 }), ' Paiements'])">

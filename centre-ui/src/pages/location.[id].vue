@@ -510,21 +510,6 @@ onMounted(() => {
                 <span>Cliquez pour modifier</span>
               </div>
             </NCard>
-
-            <div class="flex justify-center mt-6">
-              <NPopconfirm
-                @positive-click="deleteLocation"
-                positive-text="Oui, supprimer"
-                negative-text="Annuler"
-              >
-                <template #trigger>
-                  <NButton type="error" ghost title="Supprimer la location">
-                    <template #icon><NIcon :component="Delete24Filled" /></template>
-                  </NButton>
-                </template>
-                Êtes-vous sûr de vouloir supprimer cette location ? Cette action est irréversible.
-              </NPopconfirm>
-            </div>
           </NTabPane>
 
           <NTabPane name="documents" tab="Documents">

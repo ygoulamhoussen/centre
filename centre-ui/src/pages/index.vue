@@ -4,7 +4,7 @@ definePage({
     constant: true,
     hideInMenu: true,
   },
-  redirect: import.meta.env.VITE_ROUTE_HOME || '/home',
+  redirect: '/landing',
 })
 </script>
 

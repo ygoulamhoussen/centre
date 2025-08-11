@@ -228,132 +228,207 @@ watch(
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="2" size="small">
-          <NStep title="Location" status="finish" description="Choix de la location" />
-          <NStep title="Période" status="finish" description="Année et mois/trimestre" />
-          <NStep title="Détails" status="process" description="Montants et statut" />
-          <NStep title="Récapitulatif" description="Vérification finale" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 3/4</div>
-        <div class="step-mobile-label">{{ stepTitles[2] }}</div>
-      </div>
-      <NH2 class="titre-principal mb-4">Étape 3 : Détails de la quittance</NH2>
-      <NForm label-placement="top">
-        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
-          <NFormItemGi label="Date émission *" :validation-status="errors.dateEmission ? 'error' : undefined" :feedback="errors.dateEmission ? 'Ce champ est obligatoire' : ''">
-            <NDatePicker :value="quittanceDTO.dateEmission || null" @update:value="val => quittanceDTO.dateEmission = val" type="date" value-format="yyyy-MM-dd" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Date échéance">
-            <NDatePicker
-              :value="quittanceDTO.dateEcheance || null"
-              @update:value="val => quittanceDTO.dateEcheance = val"
-              type="date"
-              value-format="yyyy-MM-dd"
-              size="large"
-              placeholder="Date calculée automatiquement"
-            />
-          </NFormItemGi>
-          <NFormItemGi label="Montant loyer (€) *" :validation-status="errors.montantLoyer ? 'error' : undefined" :feedback="errors.montantLoyer ? 'Ce champ est obligatoire' : ''">
-            <NInputNumber :value="quittanceDTO.montantLoyer ? Number.parseFloat(quittanceDTO.montantLoyer) : null" @update:value="val => quittanceDTO.montantLoyer = String(val)" min="0" placeholder="0.00" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Montant charges (€) *" :validation-status="errors.montantCharges ? 'error' : undefined" :feedback="errors.montantCharges ? 'Ce champ est obligatoire' : ''">
-            <NInputNumber :value="quittanceDTO.montantCharges ? Number.parseFloat(quittanceDTO.montantCharges) : null" @update:value="val => quittanceDTO.montantCharges = String(val)" min="0" placeholder="0.00" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Inclure caution ?">
-            <NRadioGroup v-model:value="quittanceDTO.inclureCaution">
-              <NRadio :value="true">Oui</NRadio>
-              <NRadio :value="false">Non</NRadio>
-            </NRadioGroup>
-          </NFormItemGi>
-          <NFormItemGi v-if="quittanceDTO.inclureCaution" label="Montant caution (€)">
-            <NInputNumber :value="quittanceDTO.depotGarantie ? Number.parseFloat(quittanceDTO.depotGarantie) : null" @update:value="val => quittanceDTO.depotGarantie = String(val)" min="0" placeholder="0.00" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Montant total (€)">
-            <NInputNumber :value="computedTotal" disabled size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Statut *" :validation-status="errors.statut ? 'error' : undefined" :feedback="errors.statut ? 'Ce champ est obligatoire' : ''">
-            <NSelect
-              v-model:value="quittanceDTO.statut"
-              :options="[
-                { label: 'PAYÉE', value: 'PAYEE' },
-                { label: 'PARTIELLE', value: 'PARTIELLE' },
-                { label: 'IMPAYÉE', value: 'IMPAYEE' },
-              ]"
-              size="large"
-            />
-          </NFormItemGi>
-        </NGrid>
-      </NForm>
-      <div class="flex justify-between mt-8">
-        <NButton @click="precedent" size="large">Précédent</NButton>
-        <NButton type="primary" @click="suivant" size="large">Suivant</NButton>
-      </div>
-    </NCard>
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="2" size="small">
+            <NStep title="Location" status="finish" description="Choix de la location" />
+            <NStep title="Période" status="finish" description="Année et mois/trimestre" />
+            <NStep title="Détails" status="process" description="Montants et statut" />
+            <NStep title="Récapitulatif" description="Vérification finale" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 3/4</div>
+          <div class="step-mobile-label">{{ stepTitles[2] }}</div>
+        </div>
+        
+        <div class="content-area">
+          <NH2 class="titre-principal mb-4">Étape 3 : Détails de la quittance</NH2>
+          <NForm label-placement="top">
+            <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
+              <NFormItemGi label="Date émission *" :validation-status="errors.dateEmission ? 'error' : undefined" :feedback="errors.dateEmission ? 'Ce champ est obligatoire' : ''">
+                <NDatePicker :value="quittanceDTO.dateEmission || null" @update:value="val => quittanceDTO.dateEmission = val" type="date" value-format="yyyy-MM-dd" size="large" />
+              </NFormItemGi>
+              <NFormItemGi label="Date échéance">
+                <NDatePicker
+                  :value="quittanceDTO.dateEcheance || null"
+                  @update:value="val => quittanceDTO.dateEcheance = val"
+                  type="date"
+                  value-format="yyyy-MM-dd"
+                  size="large"
+                  placeholder="Date calculée automatiquement"
+                />
+              </NFormItemGi>
+              <NFormItemGi label="Montant loyer (€) *" :validation-status="errors.montantLoyer ? 'error' : undefined" :feedback="errors.montantLoyer ? 'Ce champ est obligatoire' : ''">
+                <NInputNumber :value="quittanceDTO.montantLoyer ? Number.parseFloat(quittanceDTO.montantLoyer) : null" @update:value="val => quittanceDTO.montantLoyer = String(val)" min="0" placeholder="0.00" size="large" />
+              </NFormItemGi>
+              <NFormItemGi label="Montant charges (€) *" :validation-status="errors.montantCharges ? 'error' : undefined" :feedback="errors.montantCharges ? 'Ce champ est obligatoire' : ''">
+                <NInputNumber :value="quittanceDTO.montantCharges ? Number.parseFloat(quittanceDTO.montantCharges) : null" @update:value="val => quittanceDTO.montantCharges = String(val)" min="0" placeholder="0.00" size="large" />
+              </NFormItemGi>
+              <NFormItemGi label="Inclure caution ?">
+                <NRadioGroup v-model:value="quittanceDTO.inclureCaution">
+                  <NRadio :value="true">Oui</NRadio>
+                  <NRadio :value="false">Non</NRadio>
+                </NRadioGroup>
+              </NFormItemGi>
+              <NFormItemGi v-if="quittanceDTO.inclureCaution" label="Montant caution (€)">
+                <NInputNumber :value="quittanceDTO.depotGarantie ? Number.parseFloat(quittanceDTO.depotGarantie) : null" @update:value="val => quittanceDTO.depotGarantie = String(val)" min="0" placeholder="0.00" size="large" />
+              </NFormItemGi>
+              <NFormItemGi label="Montant total (€)">
+                <NInputNumber :value="computedTotal" disabled size="large" />
+              </NFormItemGi>
+              <NFormItemGi label="Statut *" :validation-status="errors.statut ? 'error' : undefined" :feedback="errors.statut ? 'Ce champ est obligatoire' : ''">
+                <NSelect
+                  v-model:value="quittanceDTO.statut"
+                  :options="[
+                    { label: 'PAYÉE', value: 'PAYEE' },
+                    { label: 'PARTIELLE', value: 'PARTIELLE' },
+                    { label: 'IMPAYÉE', value: 'IMPAYEE' },
+                  ]"
+                  size="large"
+                />
+              </NFormItemGi>
+            </NGrid>
+          </NForm>
+        </div>
+
+        <div class="button-container">
+          <div class="flex justify-between">
+            <NButton @click="precedent" size="large">Précédent</NButton>
+            <NButton type="primary" @click="suivant" size="large">Suivant</NButton>
+          </div>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .titre-principal, h1, h2, h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
+
 .flex {
   display: flex;
 }
+
 .justify-between {
   justify-content: space-between;
 }
+
 .mt-8 {
   margin-top: 2rem;
 }
+
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 768px) {
+  .page-container {
+    min-height: 100vh;
+  }
+
+  .recap-card {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .button-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+
   .n-steps {
     font-size: 12px !important;
     min-width: 400px;
   }
+
   .n-steps,
   .n-steps .n-steps-main {
     overflow-x: auto !important;
     white-space: nowrap !important;
     display: block !important;
   }
+
   .n-step {
     min-width: 120px !important;
   }
+
   .n-step__description {
     display: none !important;
   }
+
   .titre-principal, h1, h2, h3 {
     font-size: 1.25rem !important;
   }
+
   .p-4 {
     padding: 1rem !important;
   }
+
   .mb-8, .mt-8 {
     margin-bottom: 1rem !important;
     margin-top: 1rem !important;
   }
-}
-.mobile-stepper {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-.step-mobile-number {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1976d2;
-}
-.step-mobile-label {
-  font-size: 1.2rem;
-  color: #222;
-  margin-bottom: 1rem;
 }
 </style>

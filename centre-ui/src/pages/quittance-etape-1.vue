@@ -131,64 +131,90 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="0" size="small">
-          <NStep title="Location" status="process" description="Choix de la location" />
-          <NStep title="Période" description="Année et mois/trimestre" />
-          <NStep title="Détails" description="Montants et statut" />
-          <NStep title="Récapitulatif" description="Vérification finale" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 1/4</div>
-        <div class="step-mobile-label">Sélection de la location</div>
-      </div>
-      <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la location</NH2>
-      <NForm label-placement="top">
-        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
-          <NFormItemGi :span="2" label="Location">
-            <div class="locations-grid">
-              <NCard
-                v-for="loc in locations"
-                :key="loc.id"
-                class="location-card"
-                hoverable
-                @click="selectLocation(loc.id)"
-              >
-                <div class="flex items-start gap-4">
-                  <div class="location-avatar">
-                    <NIcon :component="Home24Filled" size="32" />
-                  </div>
-                  <div class="flex-1">
-                    <div class="location-titre mb-2">{{ loc.proprieteNom }}</div>
-                    <div class="text-sm space-y-1">
-                      <div class="flex items-center gap-2">
-                        <span class="i-carbon-user" />
-                        <span>{{ loc.locataireNom }} {{ loc.locatairePrenom }}</span>
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="0" size="small">
+            <NStep title="Location" status="process" description="Choix de la location" />
+            <NStep title="Période" description="Année et mois/trimestre" />
+            <NStep title="Détails" description="Montants et statut" />
+            <NStep title="Récapitulatif" description="Vérification finale" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 1/4</div>
+          <div class="step-mobile-label">Sélection de la location</div>
+        </div>
+        
+        <div class="content-area">
+          <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la location</NH2>
+          <NForm label-placement="top">
+            <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
+              <NFormItemGi :span="2" label="Location">
+                <div class="locations-grid">
+                  <NCard
+                    v-for="loc in locations"
+                    :key="loc.id"
+                    class="location-card"
+                    hoverable
+                    @click="selectLocation(loc.id)"
+                  >
+                    <div class="flex items-start gap-4">
+                      <div class="location-avatar">
+                        <NIcon :component="Home24Filled" size="32" />
                       </div>
-                      <div class="flex items-center gap-2">
-                        <span class="i-carbon-calendar" />
-                        <span>Début: {{ loc.dateDebut ? new Date(loc.dateDebut).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Non spécifié' }}</span>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <span class="i-carbon-money" />
-                        <span>{{ loc.loyerMensuel }}€ + {{ loc.chargesMensuelles }}€</span>
+                      <div class="flex-1">
+                        <div class="location-titre mb-2">{{ loc.proprieteNom }}</div>
+                        <div class="text-sm space-y-1">
+                          <div class="flex items-center gap-2">
+                            <span class="i-carbon-user" />
+                            <span>{{ loc.locataireNom }} {{ loc.locatairePrenom }}</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span class="i-carbon-calendar" />
+                            <span>Début: {{ loc.dateDebut ? new Date(loc.dateDebut).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Non spécifié' }}</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span class="i-carbon-money" />
+                            <span>{{ loc.loyerMensuel }}€ + {{ loc.chargesMensuelles }}€</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </NCard>
                 </div>
-              </NCard>
-            </div>
-          </NFormItemGi>
-        </NGrid>
-      </NForm>
-    </NCard>
+              </NFormItemGi>
+            </NGrid>
+          </NForm>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+/* Styles existants */
 .titre-principal,
 h1,
 h2,
@@ -196,15 +222,19 @@ h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
+
 .flex {
   display: flex;
 }
+
 .justify-end {
   justify-content: flex-end;
 }
+
 .mt-8 {
   margin-top: 2rem;
 }
+
 .locations-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -213,6 +243,7 @@ h3 {
   margin: 0;
   max-width: 100%;
 }
+
 .location-card {
   width: 100% !important;
   min-width: 0 !important;
@@ -220,10 +251,12 @@ h3 {
   box-sizing: border-box;
   margin: 0;
 }
+
 .location-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
 .location-avatar {
   background-color: var(--n-color-embedded);
   color: var(--n-color-target);
@@ -234,25 +267,61 @@ h3 {
   align-items: center;
   justify-content: center;
 }
+
 .location-titre {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--n-text-color);
 }
+
 :deep(.n-card__content) {
   flex: 1;
 }
+
 .location-card-selected {
   border: 2px solid var(--n-color-primary);
   background: #f5faff;
 }
+
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 768px) {
+  .page-container {
+    min-height: 100vh;
+  }
+
+  .recap-card {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+
   .steps-wrapper {
     overflow-x: auto !important;
   }
+
   .n-steps {
     font-size: 12px !important;
     min-width: 400px;
@@ -260,39 +329,30 @@ h3 {
     white-space: nowrap !important;
     display: block !important;
   }
+
   .n-step {
     min-width: 120px !important;
   }
+
   .n-step__description {
     display: none !important;
   }
+
   .titre-principal,
   h1,
   h2,
   h3 {
     font-size: 1.25rem !important;
   }
+
   .p-4 {
     padding: 0 !important;
   }
+
   .mb-8,
   .mt-8 {
     margin-bottom: 1rem !important;
     margin-top: 1rem !important;
   }
-}
-.mobile-stepper {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-.step-mobile-number {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1976d2;
-}
-.step-mobile-label {
-  font-size: 1.2rem;
-  color: #222;
-  margin-bottom: 1rem;
 }
 </style>

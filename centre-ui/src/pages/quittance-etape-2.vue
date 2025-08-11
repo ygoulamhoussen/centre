@@ -269,63 +269,101 @@ const quarterOptions = [
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="1" size="small">
-          <NStep title="Location" status="finish" description="Choix de la location" />
-          <NStep title="Période" status="process" description="Année et mois/trimestre" />
-          <NStep title="Détails" description="Montants et statut" />
-          <NStep title="Récapitulatif" description="Vérification finale" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 2/4</div>
-        <div class="step-mobile-label">Sélection de la période</div>
-      </div>
-      <NH2 class="titre-principal mb-4">Étape 2 : Sélection de la période</NH2>
-      <NForm label-placement="top">
-        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
-          <NFormItemGi v-if="frequence" label="Année" :validation-status="errors.year ? 'error' : undefined" :feedback="errors.year ? 'Ce champ est obligatoire' : ''">
-            <NSelect v-model:value="selectedYear" :options="yearOptions" size="large" />
-          </NFormItemGi>
-          <NFormItemGi v-if="frequence && frequence.toString().toUpperCase() === 'MENSUEL'" label="Mois" :validation-status="errors.month ? 'error' : undefined" :feedback="errors.month ? 'Ce champ est obligatoire' : ''">
-            <NSelect
-              v-model:value="selectedMonth"
-              :options="monthOptions"
-              clearable
-              placeholder="Choisir un mois"
-              size="large"
-            />
-          </NFormItemGi>
-          <NFormItemGi v-if="frequence && frequence.toString().toUpperCase() === 'TRIMESTRIEL'" label="Trimestre" :validation-status="errors.quarter ? 'error' : undefined" :feedback="errors.quarter ? 'Ce champ est obligatoire' : ''">
-            <NSelect
-              v-model:value="selectedQuarter"
-              :options="quarterOptions"
-              clearable
-              placeholder="Choisir un trimestre"
-              size="large"
-            />
-          </NFormItemGi>
-        </NGrid>
-      </NForm>
-      <div v-if="quittanceDTO && quittanceDTO.value && quittanceDTO.value.dateDebut && quittanceDTO.value.dateFin" class="periode-resume mt-4 mb-2">
-        <strong>Période sélectionnée :</strong>
-        du {{ quittanceDTO.value.dateDebut }} au {{ quittanceDTO.value.dateFin }}
-      </div>
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="1" size="small">
+            <NStep title="Location" status="finish" description="Choix de la location" />
+            <NStep title="Période" status="process" description="Année et mois/trimestre" />
+            <NStep title="Détails" description="Montants et statut" />
+            <NStep title="Récapitulatif" description="Vérification finale" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 2/4</div>
+          <div class="step-mobile-label">Sélection de la période</div>
+        </div>
+        
+        <div class="content-area">
+          <NH2 class="titre-principal mb-4">Étape 2 : Sélection de la période</NH2>
+          <NForm label-placement="top">
+            <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
+              <NFormItemGi v-if="frequence" label="Année" :validation-status="errors.year ? 'error' : undefined" :feedback="errors.year ? 'Ce champ est obligatoire' : ''">
+                <NSelect v-model:value="selectedYear" :options="yearOptions" size="large" />
+              </NFormItemGi>
+              <NFormItemGi v-if="frequence && frequence.toString().toUpperCase() === 'MENSUEL'" label="Mois" :validation-status="errors.month ? 'error' : undefined" :feedback="errors.month ? 'Ce champ est obligatoire' : ''">
+                <NSelect
+                  v-model:value="selectedMonth"
+                  :options="monthOptions"
+                  clearable
+                  placeholder="Choisir un mois"
+                  size="large"
+                />
+              </NFormItemGi>
+              <NFormItemGi v-if="frequence && frequence.toString().toUpperCase() === 'TRIMESTRIEL'" label="Trimestre" :validation-status="errors.quarter ? 'error' : undefined" :feedback="errors.quarter ? 'Ce champ est obligatoire' : ''">
+                <NSelect
+                  v-model:value="selectedQuarter"
+                  :options="quarterOptions"
+                  clearable
+                  placeholder="Choisir un trimestre"
+                  size="large"
+                />
+              </NFormItemGi>
+            </NGrid>
+          </NForm>
+          <div v-if="quittanceDTO && quittanceDTO.dateDebut && quittanceDTO.dateFin" class="periode-resume mt-4 mb-2">
+            <strong>Période sélectionnée :</strong>
+            du {{ quittanceDTO.dateDebut }} au {{ quittanceDTO.dateFin }}
+          </div>
+        </div>
 
-      <NSpace justify="end" class="mt-8">
-        <NButton type="primary" @click="suivant" size="large" title="Suivant">
-          <template #icon>
-            <NIcon :component="ArrowRight24Filled" />
-          </template>
-        </NButton>
-      </NSpace>
-    </NCard>
+        <div class="button-container">
+          <NSpace justify="end">
+            <NButton type="primary" @click="suivant" size="large" title="Suivant">
+              <template #icon>
+                <NIcon :component="ArrowRight24Filled" />
+              </template>
+            </NButton>
+          </NSpace>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .titre-principal,
 h1,
 h2,
@@ -333,64 +371,36 @@ h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
+
 .flex {
   display: flex;
 }
+
 .justify-between {
   justify-content: space-between;
 }
+
 .mt-8 {
   margin-top: 2rem;
 }
-@media (max-width: 768px) {
-  .mb-8 {
-    margin-bottom: 1rem !important;
-  }
-  .n-steps {
-    font-size: 12px !important;
-    min-width: 400px;
-  }
-  .n-steps,
-  .n-steps .n-steps-main {
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    display: block !important;
-  }
-  .n-step {
-    min-width: 120px !important;
-  }
-  .n-step__description {
-    display: none !important;
-  }
-  .titre-principal,
-  h1,
-  h2,
-  h3 {
-    font-size: 1.25rem !important;
-  }
-  .p-4 {
-    padding: 1rem !important;
-  }
-  .mb-8,
-  .mt-8 {
-    margin-bottom: 1rem !important;
-    margin-top: 1rem !important;
-  }
-}
+
 .mobile-stepper {
   text-align: center;
   margin-bottom: 1.5rem;
 }
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1976d2;
 }
+
 .step-mobile-label {
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
 }
+
 .periode-resume {
   font-size: 1.1rem;
   color: #1976d2;
@@ -398,5 +408,70 @@ h3 {
   border-radius: 6px;
   padding: 0.5rem 1rem;
   display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    min-height: 100vh;
+  }
+
+  .recap-card {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .button-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+
+  .n-steps {
+    font-size: 12px !important;
+    min-width: 400px;
+  }
+
+  .n-steps,
+  .n-steps .n-steps-main {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    display: block !important;
+  }
+
+  .n-step {
+    min-width: 120px !important;
+  }
+
+  .n-step__description {
+    display: none !important;
+  }
+
+  .titre-principal,
+  h1,
+  h2,
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  .p-4 {
+    padding: 1rem !important;
+  }
+
+  .mb-8,
+  .mt-8 {
+    margin-bottom: 1rem !important;
+    margin-top: 1rem !important;
+  }
 }
 </style>

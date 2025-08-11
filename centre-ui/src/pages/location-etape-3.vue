@@ -125,83 +125,119 @@ function precedent() {
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="2" size="small">
-          <NStep title="Propriété" status="finish" description="Choix du bien" />
-          <NStep title="Locataire" status="finish" description="Choix du locataire" />
-          <NStep title="Détails du bail" status="process" description="Loyer, dates, etc." />
-          <NStep title="Récapitulatif" description="Vérification finale" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 3/4</div>
-        <div class="step-mobile-label">{{ stepTitles[2] }}</div>
-      </div>
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="2" size="small">
+            <NStep title="Propriété" status="finish" description="Choix du bien" />
+            <NStep title="Locataire" status="finish" description="Choix du locataire" />
+            <NStep title="Détails du bail" status="process" description="Loyer, dates, etc." />
+            <NStep title="Récapitulatif" description="Vérification finale" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 3/4</div>
+          <div class="step-mobile-label">{{ stepTitles[2] }}</div>
+        </div>
+        
+        <div class="content-area">
+          <NH2 class="titre-principal mb-4">Étape 3: Détails du bail</NH2>
+          <NForm label-placement="top">
+            <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
+              <NFormItemGi label="Date de début *" :feedback="champsInvalides.dateDebut ? 'Champ obligatoire' : ''" :validation-status="champsInvalides.dateDebut ? 'error' : undefined">
+                <NDatePicker
+                  ref="champsRefs.dateDebut"
+                  v-model:formatted-value="locationDTO.dateDebut"
+                  value-format="yyyy-MM-dd"
+                  format="dd/MM/yyyy"
+                  type="date"
+                  clearable
+                  class="w-full"
+                  size="large"
+                />
+              </NFormItemGi>
+              <NFormItemGi label="Date de fin (optionnel)">
+                <NDatePicker
+                  v-model:formatted-value="locationDTO.dateFin"
+                  value-format="yyyy-MM-dd"
+                  format="dd/MM/yyyy"
+                  type="date"
+                  clearable
+                  class="w-full"
+                  size="large"
+                />
+              </NFormItemGi>
+              <NFormItemGi label="Loyer mensuel (€) *" :feedback="champsInvalides.loyerMensuel ? 'Champ obligatoire' : ''" :validation-status="champsInvalides.loyerMensuel ? 'error' : undefined">
+                <NInputNumber ref="champsRefs.loyerMensuel" v-model:value="loyerMensuel" min="0" placeholder="0.00" class="w-full" size="large" />
+              </NFormItemGi>
+              <NFormItemGi label="Charges mensuelles (€)">
+                <NInputNumber v-model:value="chargesMensuelles" min="0" placeholder="0.00" class="w-full" size="large" />
+              </NFormItemGi>
+              <NFormItemGi label="Dépôt de garantie (€)">
+                <NInputNumber v-model:value="depotGarantie" min="0" placeholder="0.00" class="w-full" size="large" />
+              </NFormItemGi>
+              <NFormItemGi label="Fréquence de paiement">
+                <NSelect v-model:value="locationDTO.frequenceLoyer" :options="frequences" placeholder="Choisir une fréquence" size="large" />
+              </NFormItemGi>
+              <NFormItemGi label="Jour d'échéance du loyer">
+                <NInputNumber v-model:value="jourEcheance" min="1" max="31" placeholder="ex: 5" class="w-full" size="large" />
+              </NFormItemGi>
+            </NGrid>
+          </NForm>
+        </div>
 
-      <NH2 class="titre-principal mb-4">Étape 3: Détails du bail</NH2>
-
-      <NForm label-placement="top">
-        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2">
-          <NFormItemGi label="Date de début *" :feedback="champsInvalides.dateDebut ? 'Champ obligatoire' : ''" :validation-status="champsInvalides.dateDebut ? 'error' : undefined">
-            <NDatePicker
-              ref="champsRefs.dateDebut"
-              v-model:formatted-value="locationDTO.dateDebut"
-              value-format="yyyy-MM-dd"
-              format="dd/MM/yyyy"
-              type="date"
-              clearable
-              class="w-full"
-              size="large"
-            />
-          </NFormItemGi>
-          <NFormItemGi label="Date de fin (optionnel)">
-            <NDatePicker
-              v-model:formatted-value="locationDTO.dateFin"
-              value-format="yyyy-MM-dd"
-              format="dd/MM/yyyy"
-              type="date"
-              clearable
-              class="w-full"
-              size="large"
-            />
-          </NFormItemGi>
-          <NFormItemGi label="Loyer mensuel (€) *" :feedback="champsInvalides.loyerMensuel ? 'Champ obligatoire' : ''" :validation-status="champsInvalides.loyerMensuel ? 'error' : undefined">
-            <NInputNumber ref="champsRefs.loyerMensuel" v-model:value="loyerMensuel" min="0" placeholder="0.00" class="w-full" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Charges mensuelles (€)">
-            <NInputNumber v-model:value="chargesMensuelles" min="0" placeholder="0.00" class="w-full" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Dépôt de garantie (€)">
-            <NInputNumber v-model:value="depotGarantie" min="0" placeholder="0.00" class="w-full" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Fréquence de paiement">
-            <NSelect v-model:value="locationDTO.frequenceLoyer" :options="frequences" placeholder="Choisir une fréquence" size="large" />
-          </NFormItemGi>
-          <NFormItemGi label="Jour d'échéance du loyer">
-            <NInputNumber v-model:value="jourEcheance" min="1" max="31" placeholder="ex: 5" class="w-full" size="large" />
-          </NFormItemGi>
-        </NGrid>
-      </NForm>
-
-      <NSpace class="flex justify-between mt-8">
-        <NButton @click="precedent" size="large" title="Précédent">
-          <template #icon>
-            <NIcon :component="ArrowLeft24Filled" />
-          </template>
-        </NButton>
-        <NButton type="primary" @click="suivant" size="large" title="Suivant">
-          <template #icon>
-            <NIcon :component="ArrowRight24Filled" />
-          </template>
-        </NButton>
-      </NSpace>
-    </NCard>
+        <div class="button-container">
+          <NSpace justify="space-between">
+            <NButton @click="precedent" size="large" title="Précédent">
+              <template #icon>
+                <NIcon :component="ArrowLeft24Filled" />
+              </template>
+            </NButton>
+            <NButton type="primary" @click="suivant" size="large" title="Suivant">
+              <template #icon>
+                <NIcon :component="ArrowRight24Filled" />
+              </template>
+            </NButton>
+          </NSpace>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .titre-principal,
 h1,
 h2,
@@ -209,52 +245,85 @@ h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
+
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 768px) {
+  .page-container {
+    min-height: 100vh;
+  }
+
+  .recap-card {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .button-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+
   .n-steps {
     font-size: 12px !important;
     min-width: 400px;
   }
+
   .n-steps,
   .n-steps .n-steps-main {
     overflow-x: auto !important;
     white-space: nowrap !important;
     display: block !important;
   }
+
   .n-step {
     min-width: 120px !important;
   }
+
   .n-step__description {
     display: none !important;
   }
+
   .titre-principal,
   h1,
   h2,
   h3 {
     font-size: 1.25rem !important;
   }
+
   .p-4 {
     padding: 1rem !important;
   }
+
   .mb-4,
   .mb-8 {
     margin-bottom: 1rem !important;
   }
-}
-.mobile-stepper {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-.step-mobile-number {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1976d2;
-}
-.step-mobile-label {
-  font-size: 1.2rem;
-  color: #222;
-  margin-bottom: 1rem;
 }
 </style>

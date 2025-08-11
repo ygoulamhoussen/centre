@@ -79,55 +79,92 @@ function precedent() {
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="2" size="small">
-          <NStep title="Informations personnelles" status="finish" />
-          <NStep title="Adresse" status="finish" />
-          <NStep title="Récapitulatif" status="process" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 3/3</div>
-        <div class="step-mobile-label">{{ stepTitles[2] }}</div>
-      </div>
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="2" size="small">
+            <NStep title="Informations personnelles" status="finish" />
+            <NStep title="Adresse" status="finish" />
+            <NStep title="Récapitulatif" status="process" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 3/3</div>
+          <div class="step-mobile-label">{{ stepTitles[2] }}</div>
+        </div>
+        
+        <div class="content-area">
+          <NDescriptions label-placement="top" bordered :column="isMobile ? 1 : 2">
+            <NDescriptionsItem label="Nom complet">
+              {{ locataireDTO.nom }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Téléphone">
+              {{ locataireDTO.telephone }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Email">
+              {{ locataireDTO.email }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Adresse">
+              {{ `${locataireDTO.adresse}, ${locataireDTO.codePostal} ${locataireDTO.ville}` }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Complément d'adresse" :span="2">
+              {{ locataireDTO.complementAdresse || 'N/A' }}
+            </NDescriptionsItem>
+          </NDescriptions>
+        </div>
 
-      <NDescriptions label-placement="top" bordered :column="isMobile ? 1 : 2">
-        <NDescriptionsItem label="Nom complet">
-          {{ locataireDTO.nom }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Téléphone">
-          {{ locataireDTO.telephone }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Email">
-          {{ locataireDTO.email }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Adresse">
-          {{ `${locataireDTO.adresse}, ${locataireDTO.codePostal} ${locataireDTO.ville}` }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Complément d'adresse" :span="2">
-          {{ locataireDTO.complementAdresse || 'N/A' }}
-        </NDescriptionsItem>
-      </NDescriptions>
-
-      <NSpace justify="center" class="mt-8">
-        <NButton @click="precedent" title="Précédent">
-          <template #icon>
-            <NIcon :component="ArrowLeft24Filled" />
-          </template>
-        </NButton>
-        <NButton type="primary" @click="enregistrer" :loading="chargement" title="Enregistrer">
-          <template #icon>
-            <NIcon :component="Checkmark24Filled" />
-          </template>
-        </NButton>
-      </NSpace>
-    </NCard>
+        <div class="button-container">
+          <NSpace justify="center">
+            <NButton @click="precedent" title="Précédent">
+              <template #icon>
+                <NIcon :component="ArrowLeft24Filled" />
+              </template>
+            </NButton>
+            <NButton type="primary" @click="enregistrer" :loading="chargement" title="Enregistrer">
+              <template #icon>
+                <NIcon :component="Checkmark24Filled" />
+              </template>
+            </NButton>
+          </NSpace>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .titre-principal,
 h1,
 h2,
@@ -135,138 +172,86 @@ h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
-.progress-steps {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 0 8px 0;
-}
-.step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  position: relative;
-}
-.step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  width: 100%;
-  height: 2px;
-  background-color: #e5e7eb;
-  z-index: 1;
-}
-.step.completed:not(:last-child)::after {
-  background-color: #9C27B0;
-}
-.step-number {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  background-color: #e5e7eb;
-  color: #6b7280;
-  z-index: 2;
-  position: relative;
-}
-.step.active .step-number {
-  background-color: #9C27B0;
-  color: white;
-}
-.step.completed .step-number {
-  background-color: #10b981;
-  color: white;
-}
-.step-label {
-  font-size: 14px;
-  color: #6b7280;
+
+.mobile-stepper {
   text-align: center;
+  margin-bottom: 1.5rem;
 }
-.step.active .step-label {
-  color: #9C27B0;
-  font-weight: 500;
-}
-.step.completed .step-label {
-  color: #10b981;
-  font-weight: 500;
-}
-.progress-steps-mobile-simple {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 0;
-  gap: 4px;
-}
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #9C27B0;
+  color: #1976d2;
 }
+
 .step-mobile-label {
-  font-size: 1rem;
-  color: #757575;
-  text-align: center;
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
 }
+
 @media (max-width: 768px) {
-  .progress-steps {
-    display: none !important;
+  .page-container {
+    min-height: 100vh;
   }
-  .progress-steps-mobile-simple {
-    margin-bottom: 1rem !important;
+
+  .recap-card {
+    min-height: calc(100vh - 2rem);
   }
+
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .button-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+
   .n-steps {
     font-size: 12px !important;
     min-width: 400px;
   }
+
   .n-steps,
   .n-steps .n-steps-main {
     overflow-x: auto !important;
     white-space: nowrap !important;
     display: block !important;
   }
+
   .n-step {
     min-width: 120px !important;
   }
+
   .n-step__description {
     display: none !important;
   }
+
   .titre-principal,
   h1,
   h2,
   h3 {
     font-size: 1.25rem !important;
   }
+
   .p-4 {
     padding: 1rem !important;
   }
+
   .mb-4,
   .mb-6,
   .mb-8 {
     margin-bottom: 1rem !important;
   }
-}
-.mobile-stepper {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-.step-mobile-number {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1976d2;
-}
-.step-mobile-label {
-  font-size: 1.2rem;
-  color: #222;
-  margin-bottom: 1rem;
 }
 </style>

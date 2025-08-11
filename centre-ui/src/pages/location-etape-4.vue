@@ -91,70 +91,106 @@ function formatDateFr(dateStr: string | null | undefined) {
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="3" size="small">
-          <NStep title="Propriété" status="finish" description="Choix du bien" />
-          <NStep title="Locataire" status="finish" description="Choix du locataire" />
-          <NStep title="Détails du bail" status="finish" description="Loyer, dates, etc." />
-          <NStep title="Récapitulatif" status="process" description="Vérification finale" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 4/4</div>
-        <div class="step-mobile-label">{{ stepTitles[3] }}</div>
-      </div>
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="3" size="small">
+            <NStep title="Propriété" status="finish" description="Choix du bien" />
+            <NStep title="Locataire" status="finish" description="Choix du locataire" />
+            <NStep title="Détails du bail" status="finish" description="Loyer, dates, etc." />
+            <NStep title="Récapitulatif" status="process" description="Vérification finale" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 4/4</div>
+          <div class="step-mobile-label">{{ stepTitles[3] }}</div>
+        </div>
+        
+        <div class="content-area">
+          <NH2 class="titre-principal mb-4">Étape 4: Récapitulatif</NH2>
+          <NDescriptions label-placement="top" bordered :column="isMobile ? 1 : 2">
+            <NDescriptionsItem label="Propriété">
+              {{ locationDTO.proprieteNom || 'Non défini' }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Locataire">
+              {{ locationDTO.locataireNom || 'Non défini' }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Date de début">
+              {{ formatDateFr(locationDTO.dateDebut) }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Date de fin">
+              {{ formatDateFr(locationDTO.dateFin) }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Loyer mensuel">
+              {{ locationDTO.loyerMensuel }} €
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Charges mensuelles">
+              {{ locationDTO.chargesMensuelles || 0 }} €
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Dépôt de garantie">
+              {{ locationDTO.depotGarantie || 0 }} €
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Fréquence de paiement">
+              {{ locationDTO.frequenceLoyer || 'Non définie' }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Jour d'échéance du loyer">
+              {{ locationDTO.jourEcheance || 'Non défini' }}
+            </NDescriptionsItem>
+          </NDescriptions>
+        </div>
 
-      <NH2 class="titre-principal mb-4">Étape 4: Récapitulatif</NH2>
-
-      <NDescriptions label-placement="top" bordered :column="isMobile ? 1 : 2">
-        <NDescriptionsItem label="Propriété">
-          {{ locationDTO.proprieteNom || 'Non défini' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Locataire">
-          {{ locationDTO.locataireNom || 'Non défini' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Date de début">
-          {{ formatDateFr(locationDTO.dateDebut) }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Date de fin">
-          {{ formatDateFr(locationDTO.dateFin) }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Loyer mensuel">
-          {{ locationDTO.loyerMensuel }} €
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Charges mensuelles">
-          {{ locationDTO.chargesMensuelles || 0 }} €
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Dépôt de garantie">
-          {{ locationDTO.depotGarantie || 0 }} €
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Fréquence de paiement">
-          {{ locationDTO.frequenceLoyer || 'Non définie' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Jour d'échéance du loyer">
-          {{ locationDTO.jourEcheance || 'Non défini' }}
-        </NDescriptionsItem>
-      </NDescriptions>
-
-      <div class="flex justify-between mt-8">
-        <NButton @click="precedent" size="large" title="Précédent">
-          <template #icon>
-            <NIcon :component="ArrowLeft24Filled" />
-          </template>
-        </NButton>
-        <NButton type="primary" :loading="chargement" @click="enregistrer" size="large" title="Enregistrer la location">
-          <template #icon>
-            <NIcon :component="Checkmark24Filled" />
-          </template>
-        </NButton>
-      </div>
-    </NCard>
+        <div class="button-container">
+          <div class="flex justify-between">
+            <NButton @click="precedent" size="large" title="Précédent">
+              <template #icon>
+                <NIcon :component="ArrowLeft24Filled" />
+              </template>
+            </NButton>
+            <NButton type="primary" :loading="chargement" @click="enregistrer" size="large" title="Enregistrer la location">
+              <template #icon>
+                <NIcon :component="Checkmark24Filled" />
+              </template>
+            </NButton>
+          </div>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .titre-principal,
 h1,
 h2,
@@ -162,52 +198,85 @@ h3 {
   color: var(--n-text-color) !important;
   font-weight: bold;
 }
+
+.mobile-stepper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.step-mobile-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.step-mobile-label {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 768px) {
+  .page-container {
+    min-height: 100vh;
+  }
+
+  .recap-card {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .button-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
   .mb-8 {
     margin-bottom: 1rem !important;
   }
+
   .n-steps {
     font-size: 12px !important;
     min-width: 400px;
   }
+
   .n-steps,
   .n-steps .n-steps-main {
     overflow-x: auto !important;
     white-space: nowrap !important;
     display: block !important;
   }
+
   .n-step {
     min-width: 120px !important;
   }
+
   .n-step__description {
     display: none !important;
   }
+
   .titre-principal,
   h1,
   h2,
   h3 {
     font-size: 1.25rem !important;
   }
+
   .p-4 {
     padding: 1rem !important;
   }
+
   .mb-4,
   .mb-8 {
     margin-bottom: 1rem !important;
   }
-}
-.mobile-stepper {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-.step-mobile-number {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1976d2;
-}
-.step-mobile-label {
-  font-size: 1.2rem;
-  color: #222;
-  margin-bottom: 1rem;
 }
 </style> 

@@ -101,56 +101,94 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="3" size="small">
-          <NStep title="Type et Nom" status="finish" />
-          <NStep title="Adresse" status="finish" />
-          <NStep title="Détails" status="finish" />
-          <NStep title="Récapitulatif" status="process" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 4/4</div>
-        <div class="step-mobile-label">{{ stepTitles[3] }}</div>
-      </div>
-      <NDescriptions label-placement="top" bordered :columns="2" title="Récapitulatif de la propriété">
-        <NDescriptionsItem label="Nom de la propriété" :label-style="{ fontWeight: 'bold' }">{{
-          proprieteDTO.nom
-        }}</NDescriptionsItem>
-        <NDescriptionsItem label="Type de bien" :label-style="{ fontWeight: 'bold' }">{{
-          proprieteDTO.typeBien
-        }}</NDescriptionsItem>
-        <NDescriptionsItem label="Adresse" :label-style="{ fontWeight: 'bold' }" :span="2">
-          {{ proprieteDTO.adresse }}, {{ proprieteDTO.codePostal }} {{ proprieteDTO.ville }}
-          <br>
-          <span v-if="proprieteDTO.complementAdresse">{{ proprieteDTO.complementAdresse }}</span>
-        </NDescriptionsItem>
-        <NDescriptionsItem label="Date d'acquisition">{{ proprieteDTO.dateAcquisition || 'Non spécifiée' }}</NDescriptionsItem>
-        <NDescriptionsItem label="Montant d'acquisition">{{ proprieteDTO.montantAcquisition }} €</NDescriptionsItem>
-        <NDescriptionsItem label="Frais de notaire">{{ proprieteDTO.fraisNotaire || 0 }} €</NDescriptionsItem>
-        <NDescriptionsItem label="Frais d'agence">{{ proprieteDTO.fraisAgence || 0 }} €</NDescriptionsItem>
-        <NDescriptionsItem label="Tantième">{{ proprieteDTO.tantieme || 'Non spécifié' }}</NDescriptionsItem>
-      </NDescriptions>
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="3" size="small">
+            <NStep title="Type et Nom" status="finish" />
+            <NStep title="Adresse" status="finish" />
+            <NStep title="Détails" status="finish" />
+            <NStep title="Récapitulatif" status="process" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 4/4</div>
+          <div class="step-mobile-label">{{ stepTitles[3] }}</div>
+        </div>
+        
+        <div class="content-area">
+          <NDescriptions label-placement="top" bordered :columns="2" title="Récapitulatif de la propriété">
+            <NDescriptionsItem label="Nom de la propriété" :label-style="{ fontWeight: 'bold' }">{{
+              proprieteDTO.nom
+            }}</NDescriptionsItem>
+            <NDescriptionsItem label="Type de bien" :label-style="{ fontWeight: 'bold' }">{{
+              proprieteDTO.typeBien
+            }}</NDescriptionsItem>
+            <NDescriptionsItem label="Adresse" :label-style="{ fontWeight: 'bold' }" :span="2">
+              {{ proprieteDTO.adresse }}, {{ proprieteDTO.codePostal }} {{ proprieteDTO.ville }}
+              <br>
+              <span v-if="proprieteDTO.complementAdresse">{{ proprieteDTO.complementAdresse }}</span>
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Date d'acquisition">{{ proprieteDTO.dateAcquisition || 'Non spécifiée' }}</NDescriptionsItem>
+            <NDescriptionsItem label="Montant d'acquisition">{{ proprieteDTO.montantAcquisition }} €</NDescriptionsItem>
+            <NDescriptionsItem label="Frais de notaire">{{ proprieteDTO.fraisNotaire || 0 }} €</NDescriptionsItem>
+            <NDescriptionsItem label="Frais d'agence">{{ proprieteDTO.fraisAgence || 0 }} €</NDescriptionsItem>
+            <NDescriptionsItem label="Tantième">{{ proprieteDTO.tantieme || 'Non spécifié' }}</NDescriptionsItem>
+          </NDescriptions>
+        </div>
 
-      <NSpace class="mt-8" :class="[isMobile ? 'flex-center' : 'flex-end']" justify="space-between">
-        <NButton @click="precedent" title="Précédent">
-          <template #icon>
-            <NIcon :component="ArrowLeft24Filled" />
-          </template>
-        </NButton>
-        <NButton type="primary" @click="enregistrer" :loading="chargement" title="Enregistrer la propriété">
-          <template #icon>
-            <NIcon :component="Save24Filled" />
-          </template>
-        </NButton>
-      </NSpace>
-    </NCard>
+        <div class="button-container">
+          <NSpace :class="[isMobile ? 'flex-center' : 'flex-end']" justify="space-between">
+            <NButton @click="precedent" title="Précédent">
+              <template #icon>
+                <NIcon :component="ArrowLeft24Filled" />
+              </template>
+            </NButton>
+            <NButton type="primary" @click="enregistrer" :loading="chargement" title="Enregistrer la propriété">
+              <template #icon>
+                <NIcon :component="Save24Filled" />
+              </template>
+            </NButton>
+          </NSpace>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .progress-steps {
   display: flex;
   align-items: center;
@@ -161,6 +199,7 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
   border-radius: 16px;
   margin-bottom: 2rem;
 }
+
 .step {
   display: flex;
   flex-direction: column;
@@ -169,9 +208,11 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
   opacity: 0.5;
   transition: opacity 0.2s;
 }
+
 .step.active, .step.completed {
   opacity: 1;
 }
+
 .step-number {
   width: 36px;
   height: 36px;
@@ -186,15 +227,18 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
   margin-bottom: 6px;
   border: 2px solid #1565c0;
 }
+
 .step.completed .step-number {
   background: #1565c0;
 }
+
 .step-label {
   font-size: 1rem;
   color: #1565c0;
   text-align: center;
   font-weight: 500;
 }
+
 .progress-steps-mobile-simple {
   display: flex;
   flex-direction: column;
@@ -206,54 +250,88 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
   border-radius: 12px;
   margin-bottom: 1rem;
 }
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1976d2;
 }
+
 .step-mobile-label {
   font-size: 1rem;
   color: #1565c0;
   text-align: center;
 }
-@media (max-width: 768px) {
-  .mb-8 {
-    margin-bottom: 1rem !important;
-  }
-  .progress-steps {
-    display: none !important;
-  }
-  .progress-steps-mobile-simple {
-    font-size: 1.15rem !important;
-    padding: 1rem 1.25rem !important;
-    margin-bottom: 1.5rem !important;
-  }
-  .p-4 {
-    padding: 1rem !important;
-  }
-  .form-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .form-grid .n-form-item-gi {
-    grid-column: 1 !important;
-  }
-  .flex-center, .flex-end {
-    justify-content: center !important;
-    margin-top: 1.5rem !important;
-  }
-}
+
 .mobile-stepper {
   text-align: center;
   margin-bottom: 1.5rem;
 }
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1976d2;
 }
+
 .step-mobile-label {
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    min-height: 100vh;
+  }
+  
+  .recap-card {
+    min-height: calc(100vh - 2rem);
+  }
+  
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+  
+  .button-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+  
+  .progress-steps {
+    display: none !important;
+  }
+  
+  .progress-steps-mobile-simple {
+    font-size: 1.15rem !important;
+    padding: 1rem 1.25rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .p-4 {
+    padding: 1rem !important;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .form-grid .n-form-item-gi {
+    grid-column: 1 !important;
+  }
+  
+  .flex-center, .flex-end {
+    justify-content: center !important;
+    margin-top: 1.5rem !important;
+  }
 }
 </style>

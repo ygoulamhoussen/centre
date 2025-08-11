@@ -69,127 +69,144 @@ const currentStep = 2
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="2" size="small">
-          <NStep title="Type et Nom" status="finish" />
-          <NStep title="Adresse" status="finish" />
-          <NStep title="Détails" status="process" />
-          <NStep title="Récapitulatif" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 3/4</div>
-        <div class="step-mobile-label">{{ stepTitles[2] }}</div>
-      </div>
-      <NForm>
-        <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
-          <NFormItemGi label="Date d'acquisition ou date de démarrage de l'activité*">
-            <NDatePicker
-              v-model:formatted-value="proprieteDTO.dateAcquisition"
-              value-format="yyyy-MM-dd"
-              type="date"
-              clearable
-              style="width: 100%"
-              size="large"
-            />
-          </NFormItemGi>
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="2" size="small">
+            <NStep title="Type et Nom" status="finish" />
+            <NStep title="Adresse" status="finish" />
+            <NStep title="Détails" status="process" />
+            <NStep title="Récapitulatif" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 3/4</div>
+          <div class="step-mobile-label">{{ stepTitles[2] }}</div>
+        </div>
+        
+        <div class="content-area">
+          <NForm>
+            <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
+              <NFormItemGi label="Date d'acquisition ou date de démarrage de l'activité*">
+                <NDatePicker
+                  v-model:formatted-value="proprieteDTO.dateAcquisition"
+                  value-format="yyyy-MM-dd"
+                  type="date"
+                  clearable
+                  style="width: 100%"
+                  size="large"
+                />
+              </NFormItemGi>
 
-          <NFormItemGi label="Montant d'acquisition (€) *">
-            <NInputNumber
-              v-model:value="proprieteDTO.montantAcquisition"
-              :min="0"
-              placeholder="0.00"
-              style="width: 100%"
-              size="large"
-              inputmode="numeric"
-              pattern="[0-9]*"
-            >
-              <template #prefix>
-                <NIcon :component="Money24Filled" />
-              </template>
-            </NInputNumber>
-          </NFormItemGi>
+              <NFormItemGi label="Montant d'acquisition (€) *">
+                <NInputNumber
+                  v-model:value="proprieteDTO.montantAcquisition"
+                  :min="0"
+                  placeholder="0.00"
+                  style="width: 100%"
+                  size="large"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                >
+                  <template #prefix>
+                    <NIcon :component="Money24Filled" />
+                  </template>
+                </NInputNumber>
+              </NFormItemGi>
 
-          <NFormItemGi>
-            <template #label>
-              Frais d'acquisition (€)
-              <NTooltip placement="top">
-                <template #trigger>
-                  <NIcon :component="QuestionCircle24Filled" size="18" style="color: #1976d2; margin-left: 6px; cursor: pointer; vertical-align: middle;" />
+              <NFormItemGi>
+                <template #label>
+                  Frais d'acquisition (€)
+                  <NTooltip placement="top">
+                    <template #trigger>
+                      <NIcon :component="QuestionCircle24Filled" size="18" style="color: #1976d2; margin-left: 6px; cursor: pointer; vertical-align: middle;" />
+                    </template>
+                    <div style="max-width: 320px;">
+                      <b>Que comprennent les frais d'acquisition&nbsp;?</b><br>
+                      <span>
+                        Ils incluent généralement&nbsp;:
+                        <ul style="margin: 0.5em 0 0 1.2em; padding: 0; font-size: 0.95em;">
+                          <li>Droits d'enregistrement (ou TVA si bien neuf)</li>
+                          <li>Émoluments du notaire</li>
+                          <li>Frais de formalités</li>
+                          <li>Frais d'agence (si payés par l'acquéreur)</li>
+                          <li>Frais de dossier de prêt (si inclus dans l'acte)</li>
+                          <li>Honoraires de conseils liés à l'achat</li>
+                        </ul>
+                      </span>
+                    </div>
+                  </NTooltip>
                 </template>
-                <div style="max-width: 320px;">
-                  <b>Que comprennent les frais d’acquisition&nbsp;?</b><br>
-                  <span>
-                    Ils incluent généralement&nbsp;:
-                    <ul style="margin: 0.5em 0 0 1.2em; padding: 0; font-size: 0.95em;">
-                      <li>Droits d’enregistrement (ou TVA si bien neuf)</li>
-                      <li>Émoluments du notaire</li>
-                      <li>Frais de formalités</li>
-                      <li>Frais d’agence (si payés par l’acquéreur)</li>
-                      <li>Frais de dossier de prêt (si inclus dans l’acte)</li>
-                      <li>Honoraires de conseils liés à l’achat</li>
-                    </ul>
-                  </span>
-                </div>
-              </NTooltip>
-            </template>
-            <NInputNumber
-              v-model:value="proprieteDTO.fraisNotaire"
-              :min="0"
-              placeholder="0.00"
-              style="width: 100%;"
-              size="large"
-              inputmode="numeric"
-              pattern="[0-9]*"
-            >
-              <template #prefix>
-                <NIcon :component="DocumentHeader24Filled" />
+                <NInputNumber
+                  v-model:value="proprieteDTO.fraisNotaire"
+                  :min="0"
+                  placeholder="0.00"
+                  style="width: 100%;"
+                  size="large"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                >
+                  <template #prefix>
+                    <NIcon :component="DocumentHeader24Filled" />
+                  </template>
+                </NInputNumber>
+              </NFormItemGi>
+            </NGrid>
+          </NForm>
+        </div>
+
+        <div class="button-container">
+          <NSpace :class="[isMobile ? 'flex-center' : 'flex-end']" justify="space-between">
+            <NButton @click="precedent" title="Précédent">
+              <template #icon>
+                <NIcon :component="ArrowLeft24Filled" />
               </template>
-            </NInputNumber>
-          </NFormItemGi>
-          
-
-
-
-<!--           <NFormItemGi label="Frais d'agence (€)">
-            <NInputNumber
-              v-model:value="proprieteDTO.fraisAgence"
-              min="0"
-              placeholder="0.00"
-              style="width: 100%"
-              size="large"
-              inputmode="numeric"
-              pattern="[0-9]*"
-            >
-              <template #prefix>
-                <NIcon :component="PeopleCommunity24Filled" />
+            </NButton>
+            <NButton type="primary" @click="suivant" title="Suivant">
+              <template #icon>
+                <NIcon :component="ArrowRight24Filled" />
               </template>
-            </NInputNumber>
-          </NFormItemGi> -->
-
-          <!-- Champ Tantième supprimé ici -->
-        </NGrid>
-      </NForm>
-
-      <NSpace class="mt-8" :class="[isMobile ? 'flex-center' : 'flex-end']" justify="space-between">
-        <NButton @click="precedent" title="Précédent">
-          <template #icon>
-            <NIcon :component="ArrowLeft24Filled" />
-          </template>
-        </NButton>
-        <NButton type="primary" @click="suivant" title="Suivant">
-          <template #icon>
-            <NIcon :component="ArrowRight24Filled" />
-          </template>
-        </NButton>
-      </NSpace>
-    </NCard>
+            </NButton>
+          </NSpace>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .progress-steps {
   display: flex;
   align-items: center;
@@ -200,6 +217,7 @@ const currentStep = 2
   border-radius: 16px;
   margin-bottom: 2rem;
 }
+
 .step {
   display: flex;
   flex-direction: column;
@@ -208,9 +226,12 @@ const currentStep = 2
   opacity: 0.5;
   transition: opacity 0.2s;
 }
-.step.active, .step.completed {
+
+.step.active,
+.step.completed {
   opacity: 1;
 }
+
 .step-number {
   width: 36px;
   height: 36px;
@@ -225,15 +246,18 @@ const currentStep = 2
   margin-bottom: 6px;
   border: 2px solid #1565c0;
 }
+
 .step.completed .step-number {
   background: #1565c0;
 }
+
 .step-label {
   font-size: 1rem;
   color: #1565c0;
   text-align: center;
   font-weight: 500;
 }
+
 .progress-steps-mobile-simple {
   display: flex;
   flex-direction: column;
@@ -245,64 +269,103 @@ const currentStep = 2
   border-radius: 12px;
   margin-bottom: 1rem;
 }
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1976d2;
 }
+
 .step-mobile-label {
   font-size: 1rem;
   color: #1565c0;
   text-align: center;
 }
+
 .form-grid {
   grid-template-columns: 1fr 1fr !important;
 }
+
 .form-grid .n-form-item-gi {
   grid-column: 1 !important;
 }
-.flex-center, .flex-end {
+
+.flex-center,
+.flex-end {
   justify-content: center !important;
   margin-top: 1.5rem !important;
 }
-@media (max-width: 768px) {
-  .mb-8 {
-    margin-bottom: 1rem !important;
-  }
-  .progress-steps {
-    display: none !important;
-  }
-  .progress-steps-mobile-simple {
-    font-size: 1.15rem !important;
-    padding: 1rem 1.25rem !important;
-    margin-bottom: 1.5rem !important;
-  }
-  .p-4 {
-    padding: 1rem !important;
-  }
-  .form-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .form-grid .n-form-item-gi {
-    grid-column: 1 !important;
-  }
-  .flex-center, .flex-end {
-    justify-content: center !important;
-    margin-top: 1.5rem !important;
-  }
-}
+
 .mobile-stepper {
   text-align: center;
   margin-bottom: 1.5rem;
 }
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1976d2;
 }
+
 .step-mobile-label {
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    min-height: 100vh;
+  }
+
+  .recap-card {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .button-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+
+  .progress-steps {
+    display: none !important;
+  }
+
+  .progress-steps-mobile-simple {
+    font-size: 1.15rem !important;
+    padding: 1rem 1.25rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .p-4 {
+    padding: 1rem !important;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-grid .n-form-item-gi {
+    grid-column: 1 !important;
+  }
+
+  .flex-center,
+  .flex-end {
+    justify-content: center !important;
+    margin-top: 1.5rem !important;
+  }
 }
 </style>

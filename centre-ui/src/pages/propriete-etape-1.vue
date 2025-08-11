@@ -78,68 +78,107 @@ const currentStep = 0
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="0" size="small">
-          <NStep title="Type et Nom" status="process" />
-          <NStep title="Adresse" />
-          <NStep title="Détails" />
-          <NStep title="Récapitulatif" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 1/4</div>
-        <div class="step-mobile-label">{{ stepTitles[0] }}</div>
-      </div>
-      <NForm>
-        <NGrid :cols="isMobile ? 1 : 2" :x-gap="24" :y-gap="24" class="form-grid">
-          <NFormItemGi>
-            <NInput
-              v-model:value="proprieteDTO.nom"
-              placeholder="Ex : Résidence Les Lilas, Parking centre-ville..."
-              size="large"
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="0" size="small">
+            <NStep title="Type et Nom" status="process" />
+            <NStep title="Adresse" />
+            <NStep title="Détails" />
+            <NStep title="Récapitulatif" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 1/4</div>
+          <div class="step-mobile-label">{{ stepTitles[0] }}</div>
+        </div>
+        
+        <div class="content-area">
+          <NForm>
+            <NGrid :cols="isMobile ? 1 : 2" :x-gap="24" :y-gap="24" class="form-grid">
+              <NFormItemGi>
+                <NInput
+                  v-model:value="proprieteDTO.nom"
+                  placeholder="Ex : Résidence Les Lilas, Parking centre-ville..."
+                  size="large"
+                >
+                  <template #prefix>
+                    <NIcon :component="Tag24Filled" />
+                  </template>
+                </NInput>
+              </NFormItemGi>
+            </NGrid>
+          </NForm>
+          <div class="type-titre mb-4">Quel est le type de bien ?</div>
+          <NGrid :cols="isMobile ? 1 : 2" :x-gap="12" :y-gap="12" responsive="screen" :item-responsive="true" class="type-grid">
+            <NGi v-for="type in typesBien" :key="type.value">
+              <NButton
+                block
+                size="large"
+                :type="proprieteDTO.typeBien === type.value ? 'primary' : 'default'"
+                @click="choisirType(type.value)"
+              >
+                <template #icon>
+                  <NIcon :component="type.icon" />
+                </template>
+                {{ type.label }}
+              </NButton>
+            </NGi>
+          </NGrid>
+        </div>
+
+        <div class="button-container">
+          <div :class="[isMobile ? 'flex-center' : 'flex-end']">
+            <NButton
+              type="primary"
+              @click="valider"
+              :disabled="!proprieteDTO.typeBien || !proprieteDTO.nom"
+              title="Suivant"
             >
-              <template #prefix>
-                <NIcon :component="Tag24Filled" />
+              <template #icon>
+                <NIcon :component="ArrowRight24Filled" />
               </template>
-            </NInput>
-          </NFormItemGi>
-        </NGrid>
-      </NForm>
-      <div class="type-titre mb-4">Quel est le type de bien ?</div>
-      <NGrid :cols="isMobile ? 1 : 2" :x-gap="12" :y-gap="12" responsive="screen" :item-responsive="true" class="type-grid">
-        <NGi v-for="type in typesBien" :key="type.value">
-          <NButton
-            block
-            size="large"
-            :type="proprieteDTO.typeBien === type.value ? 'primary' : 'default'"
-            @click="choisirType(type.value)"
-          >
-            <template #icon>
-              <NIcon :component="type.icon" />
-            </template>
-            {{ type.label }}
-          </NButton>
-        </NGi>
-      </NGrid>
-      <div class="mt-8" :class="[isMobile ? 'flex-center' : 'flex-end']">
-        <NButton
-          type="primary"
-          @click="valider"
-          :disabled="!proprieteDTO.typeBien || !proprieteDTO.nom"
-          title="Suivant"
-        >
-          <template #icon>
-            <NIcon :component="ArrowRight24Filled" />
-          </template>
-        </NButton>
-      </div>
-    </NCard>
+            </NButton>
+          </div>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .progress-steps {
   display: flex;
   align-items: center;
@@ -150,6 +189,7 @@ const currentStep = 0
   border-radius: 16px;
   margin-bottom: 2rem;
 }
+
 .step {
   display: flex;
   flex-direction: column;
@@ -158,9 +198,12 @@ const currentStep = 0
   opacity: 0.5;
   transition: opacity 0.2s;
 }
-.step.active, .step.completed {
+
+.step.active,
+.step.completed {
   opacity: 1;
 }
+
 .step-number {
   width: 36px;
   height: 36px;
@@ -175,15 +218,18 @@ const currentStep = 0
   margin-bottom: 6px;
   border: 2px solid #1565c0;
 }
+
 .step.completed .step-number {
   background: #1565c0;
 }
+
 .step-label {
   font-size: 1rem;
   color: #1565c0;
   text-align: center;
   font-weight: 500;
 }
+
 .progress-steps-mobile-simple {
   display: flex;
   flex-direction: column;
@@ -195,37 +241,66 @@ const currentStep = 0
   border-radius: 12px;
   margin-bottom: 1rem;
 }
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1976d2;
 }
+
 .step-mobile-label {
   font-size: 1rem;
   color: #1565c0;
   text-align: center;
 }
-@media (max-width: 768px) {
-  .progress-steps {
-    display: none !important;
-  }
-  .progress-steps-mobile-simple {
-    font-size: 1.15rem !important;
-    padding: 1rem 1.25rem !important;
-  }
-}
+
 .mobile-stepper {
   text-align: center;
   margin-bottom: 1.5rem;
 }
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1976d2;
 }
+
 .step-mobile-label {
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    min-height: 100vh;
+  }
+
+  .recap-card {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .button-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .progress-steps {
+    display: none !important;
+  }
+
+  .progress-steps-mobile-simple {
+    font-size: 1.15rem !important;
+    padding: 1rem 1.25rem !important;
+  }
 }
 </style>

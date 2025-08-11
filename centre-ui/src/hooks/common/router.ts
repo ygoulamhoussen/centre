@@ -100,7 +100,9 @@ export function useRouterPush(inSetup = true) {
       await routerPush(redirect)
     }
     else {
-      await toHome()
+      // Rediriger vers le tableau de bord au lieu de la landing page
+      const routeHome = import.meta.env.VITE_ROUTE_HOME || '/home'
+      await routerPush(routeHome)
     }
   }
 

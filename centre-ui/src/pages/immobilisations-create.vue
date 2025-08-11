@@ -304,65 +304,47 @@ const currentStatus = ref<StepsProps['status']>('process')
 const immobilisationComponents = ref([
   {
     key: 'terrain',
-    label: 'Terrain',
-    defaultPercentage: 15,
-    percent: 15,
+    label: 'Terrains',
+    defaultPercentage: 6,
+    percent: 6,
     dureeAmortissement: '',
     typeImmobilisation: '',
     amortissable: false,
   },
   {
     key: 'structure',
-    label: 'Structure / Gros œuvre',
-    defaultPercentage: 55,
-    percent: 55,
+    label: 'Gros œuvre',
+    defaultPercentage: 50,
+    percent: 50,
     dureeAmortissement: '40',
     typeImmobilisation: 'BIEN_IMMOBILIER',
     amortissable: true,
   },
   {
-    key: 'toiture',
-    label: 'Toiture',
-    defaultPercentage: 7,
-    percent: 7,
+    key: 'facades',
+    label: 'Façades, étanchéité',
+    defaultPercentage: 10,
+    percent: 10,
     dureeAmortissement: '25',
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
   },
   {
-    key: 'installations',
-    label: 'Installations techniques',
-    defaultPercentage: 8,
-    percent: 8,
+    key: 'igt',
+    label: 'IGT',
+    defaultPercentage: 22,
+    percent: 22,
     dureeAmortissement: '15',
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
   },
   {
-    key: 'menuiseries',
-    label: 'Menuiseries / Huisseries',
-    defaultPercentage: 7,
-    percent: 7,
-    dureeAmortissement: '18',
-    typeImmobilisation: 'TRAVAUX',
-    amortissable: true,
-  },
-  {
-    key: 'revetements',
-    label: 'Revêtements sols/murs',
-    defaultPercentage: 3,
-    percent: 3,
+    key: 'agencements',
+    label: 'Agencements',
+    defaultPercentage: 12,
+    percent: 12,
     dureeAmortissement: '12',
     typeImmobilisation: 'TRAVAUX',
-    amortissable: true,
-  },
-  {
-    key: 'mobilier',
-    label: 'Mobilier et électroménager',
-    defaultPercentage: 5,
-    percent: 5,
-    dureeAmortissement: '8',
-    typeImmobilisation: 'MOBILIER',
     amortissable: true,
   },
 ])
@@ -640,19 +622,15 @@ function getDureeOptions(component: any) {
     durees.push({ label: '30 ans', value: '30' })
     durees.push({ label: '40 ans', value: '40' })
     durees.push({ label: '50 ans', value: '50' })
-  } else if (component.key === 'toiture') {
+  } else if (component.key === 'facades') {
     durees.push({ label: '20 ans', value: '20' })
     durees.push({ label: '25 ans', value: '25' })
     durees.push({ label: '30 ans', value: '30' })
-  } else if (component.key === 'installations') {
+  } else if (component.key === 'igt') {
     durees.push({ label: '10 ans', value: '10' })
     durees.push({ label: '15 ans', value: '15' })
     durees.push({ label: '20 ans', value: '20' })
-  } else if (component.key === 'menuiseries') {
-    durees.push({ label: '15 ans', value: '15' })
-    durees.push({ label: '18 ans', value: '18' })
-    durees.push({ label: '20 ans', value: '20' })
-  } else if (component.key === 'revetements') {
+  } else if (component.key === 'agencements') {
     durees.push({ label: '10 ans', value: '10' })
     durees.push({ label: '12 ans', value: '12' })
     durees.push({ label: '15 ans', value: '15' })
@@ -683,9 +661,6 @@ function getCategorieFiscaleLabel(component: any) {
   }
   if (component.key === 'structure') {
     return `Bien immobilier (${component.dureeAmortissement || '—'} ans)`
-  }
-  if (component.key === 'mobilier') {
-    return `Mobilier (${component.dureeAmortissement || '—'} ans)`
   }
   // Pour tous les autres composants
   return `Travaux (${component.dureeAmortissement || '—'} ans)`

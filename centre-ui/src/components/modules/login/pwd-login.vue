@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { loginModuleRecord } from '@/constants/app'
 import { useFormRules, useNaiveForm } from '@/hooks/common/form'
 import { useRouterPush } from '@/hooks/common/router'
 import { $t } from '@/locales'
@@ -80,11 +79,12 @@ async function handleSubmit() {
         {{ $t('common.confirm') }}
       </NButton>
       <div class="flex-y-center justify-between gap-12px">
-        <NButton class="flex-1" block @click="toggleLoginModule('register')">
-          {{ $t(loginModuleRecord.register) }}
-        </NButton>
+        <RouterLink to="/landing" class="flex-1">
+          <NButton block quaternary>
+            {{ $t('common.back') }}
+          </NButton>
+        </RouterLink>
       </div>
-
     </NSpace>
   </NForm>
 </template>

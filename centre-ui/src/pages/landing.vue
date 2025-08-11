@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { ref } from 'vue'
+import { useAuthStore } from '@/store/modules/auth'
+import { computed, ref } from 'vue'
 
 definePage({
   meta: {
@@ -20,6 +21,8 @@ const kpis = [
 ]
 
 const files = ['EDF_2025-02.pdf', 'Facture_peinture.jpg', 'Relevé_Banque_Mars.csv']
+
+const partners = ['Finances Publiques', 'Atrium', 'Time2Start', 'Akoneo']
 
 const features = [
   { icon: 'mdi:file-document-outline', title: 'Liasse fiscale 2033/2031', desc: 'Générez vos formulaires et exports FEC prêts à télétransmettre.' },
@@ -41,9 +44,59 @@ const social = [
 ]
 
 const plans = [
-  { name: 'Starter', price: '9€', period: '/mois', tagline: 'Idéal pour 1 bien', features: ['1 propriété', 'Quittances PDF illimitées', 'Export Excel/CSV', 'Assistance e‑mail'], cta: 'Essayer Starter', highlighted: false },
-  { name: 'Pro', price: '24€', period: '/mois', tagline: 'Pour 2 à 5 biens', features: ['Jusqu\'à 5 propriétés', 'Liasse fiscale (2033/2031)', 'Imports bancaires & OCR', 'Support prioritaire'], cta: 'Choisir Pro', highlighted: true },
-  { name: 'Entreprise', price: 'Sur devis', period: '', tagline: 'Portefeuilles > 5 biens', features: ['Propriétés illimitées', 'Accès multi‑utilisateurs', 'SSO & API', 'Accompagnement dédié'], cta: 'Parler à un expert', highlighted: false },
+  {
+    name: 'Autonome',
+    price: '9,99€',
+    period: '/mois HT',
+    tagline: 'Gérez votre bien facilement',
+    features: [
+      'Locataires illimités',
+      'Quittances illimitées',
+      'Locations illimitées',
+      'Archivage des documents',
+      'Catégories personnalisées',
+      'Accès au bilan comptable',
+      'Génération de la liasse fiscale',
+      'Envoi de la liasse fiscale',
+    ],
+    cta: 'Essai gratuit 30 jours',
+    highlighted: true,
+  },
+  {
+    name: 'Supervisé',
+    price: '19,99€',
+    period: '/mois HT',
+    tagline: 'Accompagnement par un expert‑comptable',
+    features: [
+      'Tout le plan Autonome',
+      'Révision par un expert‑comptable',
+      'Attestations',
+      'Support prioritaire',
+    ],
+    cta: 'Arrive prochainement',
+    highlighted: false,
+  },
+]
+
+const testimonials = [
+  {
+    name: 'Nathan',
+    role: 'Gérant d\'une SCI',
+    text:
+      'Outil parfait pour gérer ses propriétés sans tracas, intuitif et complet pour la gestion locative et la comptabilité.',
+  },
+  {
+    name: 'Adil',
+    role: 'Propriétaire d\'un bien en LMNP',
+    text:
+      'Interface intuitive et comptabilité intégrée qui simplifie vraiment la gestion financière. Je recommande vivement.',
+  },
+  {
+    name: 'Rywan',
+    role: 'Propriétaire en SCI et LMNP',
+    text:
+      'Ils ajoutent des fonctionnalités rapidement, l\'outil reste simple et efficace pour gérer plusieurs statuts.',
+  },
 ]
 
 const faq = [
@@ -72,6 +125,14 @@ const themeOverrides = {
     borderRadius: '16px',
   },
 } as const
+
+const authStore = useAuthStore()
+const isLogin = computed(() => authStore.isLogin)
+const routeHome = import.meta.env.VITE_ROUTE_HOME || '/home'
+
+function logout() {
+  authStore.resetStore()
+}
 </script>
 
 <template>
@@ -98,8 +159,20 @@ const themeOverrides = {
             <a href="#faq">FAQ</a>
           </nav>
           <div class="row gap-xs">
-            <RouterLink to="/login"><n-button quaternary>Connexion</n-button></RouterLink>
-            <RouterLink to="/login?tab=register"><n-button type="warning">S'inscrire</n-button></RouterLink>
+            <template v-if="!isLogin">
+              <RouterLink to="/login">
+                <n-button quaternary>Connexion</n-button>
+              </RouterLink>
+              <RouterLink :to="{ name: '/login', params: { module: 'register' } }">
+                <n-button type="warning">S'inscrire</n-button>
+              </RouterLink>
+            </template>
+            <template v-else>
+              <a :href="routeHome" target="_blank" rel="noopener noreferrer">
+                <n-button type="primary">Aller au tableau de bord</n-button>
+              </a>
+              <n-button secondary @click="logout">Se déconnecter</n-button>
+            </template>
           </div>
         </div>
       </n-layout-header>
@@ -110,15 +183,21 @@ const themeOverrides = {
           <div>
             <n-tag type="success" round size="small" class="mb-2">Nouveau — Spécial LMNP au réel</n-tag>
             <h1 class="hero-title">
-              Automatisez votre compta <span class="primary">LMNP</span> et vos obligations fiscales
+              La gestion locative et comptable simplifiée des investisseurs en <span class="primary">SCI</span> et en <span class="primary">LMNP</span>
             </h1>
             <p class="lead">
-              Zymo centralise vos loyers, charges, documents et génère votre liasse en quelques minutes. Moins de paperasse, plus de rendement.
+              Gérez vos biens en toute sérénité : quittances, locataires, transactions, immobilisations et liasse fiscale au même endroit.
             </p>
-            <n-form class="row gap-xs mt-3" @submit.prevent>
+            <n-form v-if="!isLogin" class="row gap-xs mt-3" @submit.prevent>
               <n-input v-model:value="email" type="text" inputmode="email" placeholder="Votre e‑mail" class="flex-1" />
               <n-button type="primary" size="large">Demander un accès</n-button>
             </n-form>
+            <div v-else class="row gap-xs mt-3">
+              <a :href="routeHome" target="_blank" rel="noopener noreferrer">
+                <n-button type="primary" size="large">Ouvrir mon espace</n-button>
+              </a>
+              <n-button secondary size="large" @click="logout">Se déconnecter</n-button>
+            </div>
             <div class="muted sm mt-1 row center gap-xxs">
               <n-icon size="16"><Icon icon="mdi:shield-check" /></n-icon>
               RGPD • Données hébergées en UE • Annulation à tout moment
@@ -166,6 +245,16 @@ const themeOverrides = {
               </n-gi>
             </n-grid>
           </n-card>
+        </div>
+      </section>
+
+      <!-- Partners -->
+      <section class="partners">
+        <div class="container center">
+          <div class="muted xs mb-2">Des partenaires de confiance</div>
+          <div class="partners-row">
+            <span class="partner" v-for="p in partners" :key="p">{{ p }}</span>
+          </div>
         </div>
       </section>
 
@@ -246,7 +335,7 @@ const themeOverrides = {
         <div class="container">
           <div class="center text">
             <h2>Des tarifs simples et transparents</h2>
-            <p class="muted">Sans engagement. 14 jours d'essai gratuit sur tous les plans.</p>
+            <p class="muted">Sans engagement. Essai gratuit de 30 jours sur le plan Autonome.</p>
           </div>
           <n-grid cols="1 m:3" x-gap="16" y-gap="16" class="mt-2">
             <n-gi v-for="p in plans" :key="p.name">
@@ -269,6 +358,21 @@ const themeOverrides = {
                 <template #action>
                   <n-button type="primary" block>{{ p.cta }}</n-button>
                 </template>
+              </n-card>
+            </n-gi>
+          </n-grid>
+        </div>
+      </section>
+
+      <!-- Testimonials -->
+      <section class="section">
+        <div class="container">
+          <h2 class="center">Avis des utilisateurs</h2>
+          <n-grid cols="1 m:3" x-gap="16" y-gap="16" class="mt-2">
+            <n-gi v-for="t in testimonials" :key="t.name">
+              <n-card :title="t.name">
+                <div class="xs muted">{{ t.role }}</div>
+                <p class="sm mt-1">{{ t.text }}</p>
               </n-card>
             </n-gi>
           </n-grid>

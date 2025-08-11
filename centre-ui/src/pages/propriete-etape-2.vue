@@ -58,74 +58,112 @@ const currentStep = 1
 </script>
 
 <template>
-  <div class="p-4">
-    <NCard :bordered="false">
-      <div class="mb-8" v-if="!isMobile">
-        <NSteps :current="1" size="small">
-          <NStep title="Type et Nom" status="finish" />
-          <NStep title="Adresse" status="process" />
-          <NStep title="Détails" />
-          <NStep title="Récapitulatif" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape 2/4</div>
-        <div class="step-mobile-label">{{ stepTitles[1] }}</div>
-      </div>
-      <NForm>
-        <NGrid :x-gap="24" :y-gap="24" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
-          <NFormItemGi :span="2" label="Adresse">
-            <NInput v-model:value="proprieteDTO.adresse" placeholder="Saisir l'adresse" size="large">
-              <template #prefix>
-                <NIcon :component="Home24Filled" />
-              </template>
-            </NInput>
-          </NFormItemGi>
-          <NFormItemGi :span="2" label="Complément d'adresse">
-            <NInput
-              v-model:value="proprieteDTO.complementAdresse"
-              placeholder="Appartement, étage, etc."
-              size="large"
-            >
-              <template #prefix>
-                <NIcon :component="AddSquare24Filled" />
-              </template>
-            </NInput>
-          </NFormItemGi>
-          <NFormItemGi :span="1" label="Code postal">
-            <NInput v-model:value="proprieteDTO.codePostal" placeholder="Saisir le code postal" size="large" inputmode="numeric" pattern="[0-9]*">
-              <template #prefix>
-                <NIcon :component="Location24Filled" />
-              </template>
-            </NInput>
-          </NFormItemGi>
-          <NFormItemGi :span="1" label="Ville">
-            <NInput v-model:value="proprieteDTO.ville" placeholder="Saisir la ville" size="large">
-              <template #prefix>
-                <NIcon :component="City24Filled" />
-              </template>
-            </NInput>
-          </NFormItemGi>
-        </NGrid>
-      </NForm>
+  <div class="page-container">
+    <div class="p-4">
+      <NCard :bordered="false" class="recap-card">
+        <div class="mb-8" v-if="!isMobile">
+          <NSteps :current="1" size="small">
+            <NStep title="Type et Nom" status="finish" />
+            <NStep title="Adresse" status="process" />
+            <NStep title="Détails" />
+            <NStep title="Récapitulatif" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape 2/4</div>
+          <div class="step-mobile-label">{{ stepTitles[1] }}</div>
+        </div>
+        
+        <div class="content-area">
+          <NForm>
+            <NGrid :x-gap="24" :y-gap="24" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
+              <NFormItemGi :span="2" label="Adresse">
+                <NInput v-model:value="proprieteDTO.adresse" placeholder="Saisir l'adresse" size="large">
+                  <template #prefix>
+                    <NIcon :component="Home24Filled" />
+                  </template>
+                </NInput>
+              </NFormItemGi>
+              <NFormItemGi :span="2" label="Complément d'adresse">
+                <NInput
+                  v-model:value="proprieteDTO.complementAdresse"
+                  placeholder="Appartement, étage, etc."
+                  size="large"
+                >
+                  <template #prefix>
+                    <NIcon :component="AddSquare24Filled" />
+                  </template>
+                </NInput>
+              </NFormItemGi>
+              <NFormItemGi :span="1" label="Code postal">
+                <NInput v-model:value="proprieteDTO.codePostal" placeholder="Saisir le code postal" size="large" inputmode="numeric" pattern="[0-9]*">
+                  <template #prefix>
+                    <NIcon :component="Location24Filled" />
+                  </template>
+                </NInput>
+              </NFormItemGi>
+              <NFormItemGi :span="1" label="Ville">
+                <NInput v-model:value="proprieteDTO.ville" placeholder="Saisir la ville" size="large">
+                  <template #prefix>
+                    <NIcon :component="City24Filled" />
+                  </template>
+                </NInput>
+              </NFormItemGi>
+            </NGrid>
+          </NForm>
+        </div>
 
-      <NSpace class="mt-8" :class="[isMobile ? 'flex-center' : 'flex-end']" justify="space-between">
-        <NButton @click="precedent" title="Précédent">
-          <template #icon>
-            <NIcon :component="ArrowLeft24Filled" />
-          </template>
-        </NButton>
-        <NButton type="primary" @click="valider" title="Suivant">
-          <template #icon>
-            <NIcon :component="ArrowRight24Filled" />
-          </template>
-        </NButton>
-      </NSpace>
-    </NCard>
+        <div class="button-container">
+          <NSpace :class="[isMobile ? 'flex-center' : 'flex-end']" justify="space-between">
+            <NButton @click="precedent" title="Précédent">
+              <template #icon>
+                <NIcon :component="ArrowLeft24Filled" />
+              </template>
+            </NButton>
+            <NButton type="primary" @click="valider" title="Suivant">
+              <template #icon>
+                <NIcon :component="ArrowRight24Filled" />
+              </template>
+            </NButton>
+          </NSpace>
+        </div>
+      </NCard>
+    </div>
   </div>
 </template>
 
 <style>
+/* Layout principal */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 2rem);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .progress-steps {
   display: flex;
   align-items: center;
@@ -136,6 +174,7 @@ const currentStep = 1
   border-radius: 16px;
   margin-bottom: 2rem;
 }
+
 .step {
   display: flex;
   flex-direction: column;
@@ -144,9 +183,12 @@ const currentStep = 1
   opacity: 0.5;
   transition: opacity 0.2s;
 }
-.step.active, .step.completed {
+
+.step.active,
+.step.completed {
   opacity: 1;
 }
+
 .step-number {
   width: 36px;
   height: 36px;
@@ -161,15 +203,18 @@ const currentStep = 1
   margin-bottom: 6px;
   border: 2px solid #1565c0;
 }
+
 .step.completed .step-number {
   background: #1565c0;
 }
+
 .step-label {
   font-size: 1rem;
   color: #1565c0;
   text-align: center;
   font-weight: 500;
 }
+
 .progress-steps-mobile-simple {
   display: flex;
   flex-direction: column;
@@ -181,54 +226,89 @@ const currentStep = 1
   border-radius: 12px;
   margin-bottom: 1rem;
 }
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1976d2;
 }
+
 .step-mobile-label {
   font-size: 1rem;
   color: #1565c0;
   text-align: center;
 }
-@media (max-width: 768px) {
-  .mb-8 {
-    margin-bottom: 1rem !important;
-  }
-  .progress-steps {
-    display: none !important;
-  }
-  .progress-steps-mobile-simple {
-    font-size: 1.15rem !important;
-    padding: 1rem 1.25rem !important;
-    margin-bottom: 1.5rem !important;
-  }
-  .p-4 {
-    padding: 1rem !important;
-  }
-  .form-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .form-grid .n-form-item-gi {
-    grid-column: 1 !important;
-  }
-  .flex-center, .flex-end {
-    justify-content: center !important;
-    margin-top: 1.5rem !important;
-  }
-}
+
 .mobile-stepper {
   text-align: center;
   margin-bottom: 1.5rem;
 }
+
 .step-mobile-number {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1976d2;
 }
+
 .step-mobile-label {
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    min-height: 100vh;
+  }
+
+  .recap-card {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .content-area {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .button-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+
+  .progress-steps {
+    display: none !important;
+  }
+
+  .progress-steps-mobile-simple {
+    font-size: 1.15rem !important;
+    padding: 1rem 1.25rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .p-4 {
+    padding: 1rem !important;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-grid .n-form-item-gi {
+    grid-column: 1 !important;
+  }
+
+  .flex-center,
+  .flex-end {
+    justify-content: center !important;
+    margin-top: 1.5rem !important;
+  }
 }
 </style>

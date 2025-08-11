@@ -39,9 +39,10 @@ export function createRouteGuard(router: Router) {
 
     const hasAuth = authStore.isStaticSuper || !routeRoles.length || hasRole
 
-    // if it is login route when logged in, then switch to the root page
+    // if it is login route when logged in, then switch to the dashboard
     if (to.name === loginRoute && isLogin) {
-      next({ name: rootRoute })
+      const routeHome = import.meta.env.VITE_ROUTE_HOME || '/home'
+      next({ path: routeHome })
       return
     }
     // if the route does not need login, then it is allowed to access directly

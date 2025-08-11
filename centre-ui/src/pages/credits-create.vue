@@ -440,242 +440,256 @@ definePage({
 </script>
 
 <template>
-  <div class="credits-create-page">
-    <NCard class="progress-card">
-      <div v-if="!isMobileRef" class="mb-8">
-        <NSteps :current="Number(currentStep)" size="small">
-          <NStep title="Propriété" :status="currentStep === 0 ? 'process' : 'finish'" />
-          <NStep title="Caractéristiques" :status="currentStep === 1 ? 'process' : (currentStep > 1 ? 'finish' : undefined)" />
-          <NStep title="Échéancier" :status="currentStep === 2 ? 'process' : (currentStep > 2 ? 'finish' : undefined)" />
-          <NStep title="Confirmation" :status="currentStep === 3 ? 'process' : undefined" />
-        </NSteps>
-      </div>
-      <div v-else class="mobile-stepper mb-8">
-        <div class="step-mobile-number">Étape {{ currentStep + 1 }}/4</div>
-        <div class="step-mobile-label">{{ stepTitles[currentStep] }}</div>
-      </div>
-    </NCard>
-    <!-- Étape 0 : Sélection de la propriété -->
-    <div v-if="currentStep === 0">
-      <NH2 class="titre-principal mb-4">Étape 1 : Sélection de la propriété</NH2>
-      <div class="proprietes-grid">
-        <NCard
-          v-for="p in proprieteOptions"
-          :key="p.value"
-          :class="['propriete-card', { selected: proprieteIdSelected === String(p.value) }]"
-          @click="selectProprieteCredit(p)"
-          hoverable
-          tabindex="0"
-          @keydown.enter="selectProprieteCredit(p)"
-        >
-          <div class="flex items-start gap-4">
-            <div class="propriete-avatar">
-              <NIcon :component="BuildingHome24Filled" size="32" />
-            </div>
-            <div class="flex-1">
-              <div class="propriete-nom mb-2">{{ p.label }}</div>
-              <div class="text-sm space-y-1">
-                <div v-if="p.adresse">{{ p.adresse }}</div>
-                <div v-if="p.surface">Surface : {{ p.surface }} m²</div>
-                <div v-if="p.type">Type : {{ p.type }}</div>
+  <div class="page-container">
+    <div class="p-4 credits-create-page">
+      <NCard class="progress-card">
+        <div v-if="!isMobileRef" class="mb-8">
+          <NSteps :current="Number(currentStep)" size="small">
+            <NStep title="Propriété" :status="currentStep === 0 ? 'process' : 'finish'" />
+            <NStep title="Caractéristiques" :status="currentStep === 1 ? 'process' : (currentStep > 1 ? 'finish' : undefined)" />
+            <NStep title="Échéancier" :status="currentStep === 2 ? 'process' : (currentStep > 2 ? 'finish' : undefined)" />
+            <NStep title="Confirmation" :status="currentStep === 3 ? 'process' : undefined" />
+          </NSteps>
+        </div>
+        <div v-else class="mobile-stepper mb-8">
+          <div class="step-mobile-number">Étape {{ currentStep + 1 }}/4</div>
+          <div class="step-mobile-label">{{ stepTitles[currentStep] }}</div>
+        </div>
+      </NCard>
+      
+      <div class="content-area">
+        <!-- Étape 0 : Sélection de la propriété -->
+        <NCard v-if="currentStep === 0" title="Étape 1 : Sélection de la propriété" class="step-card">
+          <div class="proprietes-grid">
+            <NCard
+              v-for="p in proprieteOptions"
+              :key="p.value"
+              :class="['propriete-card', { selected: proprieteIdSelected === String(p.value) }]"
+              @click="selectProprieteCredit(p)"
+              hoverable
+              tabindex="0"
+              @keydown.enter="selectProprieteCredit(p)"
+            >
+              <div class="flex items-start gap-4">
+                <div class="propriete-avatar">
+                  <NIcon :component="BuildingHome24Filled" size="32" />
+                </div>
+                <div class="flex-1">
+                  <div class="propriete-nom mb-2">{{ p.label }}</div>
+                  <div class="text-sm space-y-1">
+                    <div v-if="p.adresse">{{ p.adresse }}</div>
+                    <div v-if="p.surface">Surface : {{ p.surface }} m²</div>
+                    <div v-if="p.type">Type : {{ p.type }}</div>
+                  </div>
+                </div>
               </div>
+            </NCard>
+          </div>
+          <div v-if="!loadingProprietes && proprieteOptions.length === 0" style="color: #dc2626; margin-top: 4px;">Aucune propriété disponible</div>
+        </NCard>
+        
+        <!-- Étape 1 : Saisie des caractéristiques -->
+        <NCard v-if="currentStep === 1" title="Étape 2 : Caractéristiques du crédit" class="step-card">
+          <NForm :class="{ 'mobile-form': isMobileRef }" :label-placement="isMobileRef ? 'top' : 'left'" label-width="auto">
+            <NFormItem label="Montant emprunté (€)" required>
+              <NInputNumber v-model:value="formData.montant as number" min="0" style="width: 100%" />
+            </NFormItem>
+            <NFormItem label="Durée (mois)" required>
+              <NInputNumber v-model:value="formData.duree as number" min="1" style="width: 100%" />
+            </NFormItem>
+            <NFormItem label="Taux d'intérêt (%)" required>
+              <NInputNumber v-model:value="formData.taux as number" min="0" max="100" precision="2" style="width: 100%" />
+            </NFormItem>
+            <NFormItem label="Type de crédit" required>
+              <NSelect v-model:value="formData.type" :options="typeOptions" style="width: 100%" />
+            </NFormItem>
+            <NFormItem label="Date de début" required>
+              <NDatePicker v-model:value="formData.dateDebut as number | null" type="date" style="width: 100%" format="dd/MM/yyyy" />
+            </NFormItem>
+            <NFormItem label="Périodicité" required>
+              <NSelect v-model:value="formData.periodicite" :options="periodiciteOptions" style="width: 100%" />
+            </NFormItem>
+            <NFormItem label="Banque" required>
+              <NInput v-model:value="formData.banque" placeholder="Nom de la banque" />
+            </NFormItem>
+          </NForm>
+        </NCard>
+        
+        <!-- Étape 2 : Génération de l'échéancier -->
+        <NCard v-if="currentStep === 2" title="Étape 3 : Échéancier" class="step-card">
+          <div class="echeancier-section">
+            <NButton @click="generateEcheancier" type="primary">Générer l'échéancier</NButton>
+            <NButton @click="addEcheanceManuelle" style="margin-left: 8px;">Ajouter une échéance manuelle</NButton>
+            <NDataTable v-if="!isMobileRef" :columns="echeancierColumns" :data="echeancier" :loading="generatingEcheancier" :row-key="(row: any) => row.numero" striped />
+            <div v-else>
+              <NCard v-for="(e, idx) in echeancier" :key="e.numero" class="mobile-card">
+                <div><b>N° :</b> {{ e.numero }}</div>
+                <div><b>Date :</b>
+                  <template v-if="e.isEditing">
+                    <NDatePicker v-model:value="e.date" type="date" format="dd/MM/yyyy" style="width: 100%" :ref="el => { if (el) echeanceRefs[e.numero] = el }" />
+                  </template>
+                  <template v-else>
+                    {{ formatDate(e.date) }}
+                  </template>
+                </div>
+                <div><b>Capital remboursé :</b>
+                  <template v-if="e.isEditing">
+                    <NInputNumber v-model:value="e.capital" style="width: 100%" />
+                  </template>
+                  <template v-else>
+                    {{ e.capital }}
+                  </template>
+                </div>
+                <div><b>Intérêts :</b>
+                  <template v-if="e.isEditing">
+                    <NInputNumber v-model:value="e.interets" style="width: 100%" />
+                  </template>
+                  <template v-else>
+                    {{ e.interets }}
+                  </template>
+                </div>
+                <div><b>Total échéance :</b>
+                  <template v-if="e.isEditing">
+                    <NInputNumber v-model:value="e.total" style="width: 100%" />
+                  </template>
+                  <template v-else>
+                    {{ e.total }}
+                  </template>
+                </div>
+                <div><b>Solde restant dû :</b>
+                  <template v-if="e.isEditing">
+                    <NInputNumber v-model:value="e.solde" style="width: 100%" />
+                  </template>
+                  <template v-else>
+                    {{ e.solde }}
+                  </template>
+                </div>
+                <div class="actions">
+                  <NButton size="small" v-if="!e.isEditing" @click="handleEdit(e)">Modifier</NButton>
+                  <NButton size="small" v-if="!e.isEditing" @click="removeEcheance(idx)">Supprimer</NButton>
+                  <NButton size="small" v-if="e.isEditing" type="primary" @click="handleSave(e)">OK</NButton>
+                  <NButton size="small" v-if="e.isEditing" @click="handleCancel(e, idx)">Annuler</NButton>
+                </div>
+              </NCard>
+            </div>
+          </div>
+        </NCard>
+        
+        <!-- Étape 3 : Récapitulatif et confirmation -->
+        <NCard v-if="currentStep === 3" title="Étape 4 : Confirmation" class="step-card">
+          <div class="recap-section">
+            <h3>Récapitulatif du crédit</h3>
+            <ul>
+              <li><strong>Propriété :</strong> {{ proprieteOptions.find(p => p.value === proprieteIdSelected)?.label || 'Aucune sélection' }}</li>
+              <li><strong>Montant :</strong> {{ formData.montant }} €</li>
+              <li><strong>Durée :</strong> {{ formData.duree }} mois</li>
+              <li><strong>Taux :</strong> {{ formData.taux }} %</li>
+              <li><strong>Type :</strong> {{ formData.type }}</li>
+              <li><strong>Date de début :</strong> {{ formatDate(formData.dateDebut) }}</li>
+              <li><strong>Périodicité :</strong> {{ formData.periodicite }}</li>
+            </ul>
+            <h3>Échéancier</h3>
+            <NDataTable v-if="!isMobileRef" :columns="recapColumns" :data="echeancier" striped />
+            <div v-else>
+              <NCard v-for="(e, idx) in echeancier" :key="e.numero" class="mobile-card">
+                <div><b>N° :</b> {{ e.numero }}</div>
+                <div><b>Date :</b> {{ formatDate(e.date) }}</div>
+                <div><b>Capital remboursé :</b> {{ e.capital }}</div>
+                <div><b>Intérêts :</b> {{ e.interets }}</div>
+                <div><b>Total échéance :</b> {{ e.total }}</div>
+                <div><b>Solde restant dû :</b> {{ e.solde }}</div>
+              </NCard>
             </div>
           </div>
         </NCard>
       </div>
-      <div v-if="!loadingProprietes && proprieteOptions.length === 0" style="color: #dc2626; margin-top: 4px;">Aucune propriété disponible</div>
-      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
-        <NButton @click="goBack">Annuler</NButton>
-        <NButton type="primary" :disabled="!isStep0Valid" @click="nextStep">
-          Suivant
-          <template #icon>
-            <Icon icon="material-symbols:arrow-forward" />
-          </template>
-        </NButton>
+
+      <!-- Boutons de navigation -->
+      <div class="button-container">
+        <div v-if="currentStep === 0" :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
+          <NButton @click="goBack">Annuler</NButton>
+          <NButton type="primary" :disabled="!isStep0Valid" @click="nextStep">
+            Suivant
+            <template #icon>
+              <Icon icon="material-symbols:arrow-forward" />
+            </template>
+          </NButton>
+        </div>
+        <div v-if="currentStep === 1" :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
+          <NButton @click="goBack">Annuler</NButton>
+          <NButton type="primary" :disabled="!isStep1Valid" @click="nextStep">
+            Suivant
+            <template #icon>
+              <Icon icon="material-symbols:arrow-forward" />
+            </template>
+          </NButton>
+        </div>
+        <div v-if="currentStep === 2" :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
+          <NButton @click="previousStep">
+            <template #icon>
+              <Icon icon="material-symbols:arrow-back" />
+            </template>
+            Précédent
+          </NButton>
+          <NButton type="primary" :disabled="echeancier.length === 0" @click="nextStep">
+            Suivant
+            <template #icon>
+              <Icon icon="material-symbols:arrow-forward" />
+            </template>
+          </NButton>
+        </div>
+        <div v-if="currentStep === 3" :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
+          <NButton @click="previousStep">
+            <template #icon>
+              <Icon icon="material-symbols:arrow-back" />
+            </template>
+            Précédent
+          </NButton>
+          <NButton type="primary" @click="saveCredit" :loading="saving">
+            <template #icon>
+              <Icon icon="material-symbols:check" />
+            </template>
+            Créer le crédit
+          </NButton>
+        </div>
       </div>
     </div>
-    <!-- Étape 1 : Saisie des caractéristiques -->
-    <NCard v-if="currentStep === 1" title="Étape 2 : Caractéristiques du crédit" class="step-card">
-      <NForm :class="{ 'mobile-form': isMobileRef }" :label-placement="isMobileRef ? 'top' : 'left'" label-width="auto">
-        <NFormItem label="Montant emprunté (€)" required>
-          <NInputNumber v-model:value="formData.montant as number" min="0" style="width: 100%" />
-        </NFormItem>
-        <NFormItem label="Durée (mois)" required>
-          <NInputNumber v-model:value="formData.duree as number" min="1" style="width: 100%" />
-        </NFormItem>
-        <NFormItem label="Taux d'intérêt (%)" required>
-          <NInputNumber v-model:value="formData.taux as number" min="0" max="100" precision="2" style="width: 100%" />
-        </NFormItem>
-        <NFormItem label="Type de crédit" required>
-          <NSelect v-model:value="formData.type" :options="typeOptions" style="width: 100%" />
-        </NFormItem>
-        <NFormItem label="Date de début" required>
-          <NDatePicker v-model:value="formData.dateDebut as number | null" type="date" style="width: 100%" format="dd/MM/yyyy" />
-        </NFormItem>
-        <NFormItem label="Périodicité" required>
-          <NSelect v-model:value="formData.periodicite" :options="periodiciteOptions" style="width: 100%" />
-        </NFormItem>
-        <NFormItem label="Banque" required>
-          <NInput v-model:value="formData.banque" placeholder="Nom de la banque" />
-        </NFormItem>
-      </NForm>
-      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
-        <NButton @click="goBack">Annuler</NButton>
-        <NButton type="primary" :disabled="!isStep1Valid" @click="nextStep">
-          Suivant
-          <template #icon>
-            <Icon icon="material-symbols:arrow-forward" />
-          </template>
-        </NButton>
-      </div>
-    </NCard>
-    <!-- Étape 2 : Génération de l'échéancier -->
-    <NCard v-if="currentStep === 2" title="Étape 3 : Échéancier" class="step-card">
-      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]" style="margin-bottom: 16px;">
-        <NButton @click="previousStep">
-          <template #icon>
-            <Icon icon="material-symbols:arrow-back" />
-          </template>
-          Précédent
-        </NButton>
-        <NButton type="primary" :disabled="echeancier.length === 0" @click="nextStep">
-          Suivant
-          <template #icon>
-            <Icon icon="material-symbols:arrow-forward" />
-          </template>
-        </NButton>
-      </div>
-      <div class="echeancier-section">
-        <NButton @click="generateEcheancier" type="primary">Générer l'échéancier</NButton>
-        <NButton @click="addEcheanceManuelle" style="margin-left: 8px;">Ajouter une échéance manuelle</NButton>
-        <NDataTable v-if="!isMobileRef" :columns="echeancierColumns" :data="echeancier" :loading="generatingEcheancier" :row-key="(row: any) => row.numero" striped />
-        <div v-else>
-          <NCard v-for="(e, idx) in echeancier" :key="e.numero" class="mobile-card">
-            <div><b>N° :</b> {{ e.numero }}</div>
-            <div><b>Date :</b>
-              <template v-if="e.isEditing">
-                <NDatePicker v-model:value="e.date" type="date" format="dd/MM/yyyy" style="width: 100%" :ref="el => { if (el) echeanceRefs[e.numero] = el }" />
-              </template>
-              <template v-else>
-                {{ formatDate(e.date) }}
-              </template>
-            </div>
-            <div><b>Capital remboursé :</b>
-              <template v-if="e.isEditing">
-                <NInputNumber v-model:value="e.capital" style="width: 100%" />
-              </template>
-              <template v-else>
-                {{ e.capital }}
-              </template>
-            </div>
-            <div><b>Intérêts :</b>
-              <template v-if="e.isEditing">
-                <NInputNumber v-model:value="e.interets" style="width: 100%" />
-              </template>
-              <template v-else>
-                {{ e.interets }}
-              </template>
-            </div>
-            <div><b>Total échéance :</b>
-              <template v-if="e.isEditing">
-                <NInputNumber v-model:value="e.total" style="width: 100%" />
-              </template>
-              <template v-else>
-                {{ e.total }}
-              </template>
-            </div>
-            <div><b>Solde restant dû :</b>
-              <template v-if="e.isEditing">
-                <NInputNumber v-model:value="e.solde" style="width: 100%" />
-              </template>
-              <template v-else>
-                {{ e.solde }}
-              </template>
-            </div>
-            <div class="actions">
-              <NButton size="small" v-if="!e.isEditing" @click="handleEdit(e)">Modifier</NButton>
-              <NButton size="small" v-if="!e.isEditing" @click="removeEcheance(idx)">Supprimer</NButton>
-              <NButton size="small" v-if="e.isEditing" type="primary" @click="handleSave(e)">OK</NButton>
-              <NButton size="small" v-if="e.isEditing" @click="handleCancel(e, idx)">Annuler</NButton>
-            </div>
-          </NCard>
-        </div>
-      </div>
-      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
-        <NButton @click="previousStep">
-          <template #icon>
-            <Icon icon="material-symbols:arrow-back" />
-          </template>
-          Précédent
-        </NButton>
-        <NButton type="primary" :disabled="echeancier.length === 0" @click="nextStep">
-          Suivant
-          <template #icon>
-            <Icon icon="material-symbols:arrow-forward" />
-          </template>
-        </NButton>
-      </div>
-    </NCard>
-    <!-- Étape 3 : Récapitulatif et confirmation -->
-    <NCard v-if="currentStep === 3" title="Étape 4 : Confirmation" class="step-card">
-      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]" style="margin-bottom: 16px;">
-        <NButton @click="previousStep">
-          <template #icon>
-            <Icon icon="material-symbols:arrow-back" />
-          </template>
-          Précédent
-        </NButton>
-        <NButton type="primary" @click="saveCredit" :loading="saving">
-          <template #icon>
-            <Icon icon="material-symbols:check" />
-          </template>
-          Créer le crédit
-        </NButton>
-      </div>
-      <div class="recap-section">
-        <h3>Récapitulatif du crédit</h3>
-        <ul>
-          <li><strong>Propriété :</strong> {{ proprieteOptions.find(p => p.value === proprieteIdSelected)?.label || 'Aucune sélection' }}</li>
-          <li><strong>Montant :</strong> {{ formData.montant }} €</li>
-          <li><strong>Durée :</strong> {{ formData.duree }} mois</li>
-          <li><strong>Taux :</strong> {{ formData.taux }} %</li>
-          <li><strong>Type :</strong> {{ formData.type }}</li>
-          <li><strong>Date de début :</strong> {{ formatDate(formData.dateDebut) }}</li>
-          <li><strong>Périodicité :</strong> {{ formData.periodicite }}</li>
-        </ul>
-        <h3>Échéancier</h3>
-        <NDataTable v-if="!isMobileRef" :columns="recapColumns" :data="echeancier" striped />
-        <div v-else>
-          <NCard v-for="(e, idx) in echeancier" :key="e.numero" class="mobile-card">
-            <div><b>N° :</b> {{ e.numero }}</div>
-            <div><b>Date :</b> {{ formatDate(e.date) }}</div>
-            <div><b>Capital remboursé :</b> {{ e.capital }}</div>
-            <div><b>Intérêts :</b> {{ e.interets }}</div>
-            <div><b>Total échéance :</b> {{ e.total }}</div>
-            <div><b>Solde restant dû :</b> {{ e.solde }}</div>
-          </NCard>
-        </div>
-      </div>
-      <div :class="['step-actions', { 'step-actions-mobile': isMobileRef }]">
-        <NButton @click="previousStep">
-          <template #icon>
-            <Icon icon="material-symbols:arrow-back" />
-          </template>
-          Précédent
-        </NButton>
-        <NButton type="primary" @click="saveCredit" :loading="saving">
-          <template #icon>
-            <Icon icon="material-symbols:check" />
-          </template>
-          Créer le crédit
-        </NButton>
-      </div>
-    </NCard>
   </div>
 </template>
 
 <style scoped>
+/* Layout principal aligné sur immobilisations-create.vue */
+.page-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+}
+
+.button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Styles existants */
 .credits-create-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0; /* indispensable pour que .content-area (flex:1) puisse scroller */
   padding: 20px;
   background: #f5f6fa;
 }
@@ -684,6 +698,14 @@ definePage({
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(60,60,60,0.04);
+}
+/* Etirer le contenu interne des cartes pour s'adapter au formulaire */
+.step-card :deep(.n-card__content),
+.progress-card :deep(.n-card__content) {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
 }
 .progress-steps {
   display: flex;
@@ -850,6 +872,14 @@ definePage({
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
+  min-height: 0; /* permet le scroll interne si nécessaire */
+}
+@media (max-width: 768px) {
+  .proprietes-grid {
+    max-height: 60vh; /* évite que la liste dépasse la carte */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 .propriete-card {
   cursor: pointer;

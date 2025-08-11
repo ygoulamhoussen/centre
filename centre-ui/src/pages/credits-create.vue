@@ -676,7 +676,7 @@ definePage({
 
 .button-container {
   margin-top: auto;
-  padding-top: 1rem;
+  padding: 8px 12px;
   border-top: 1px solid #f0f0f0;
   background: white;
   position: sticky;
@@ -794,9 +794,11 @@ definePage({
 .step-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #eee;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border-top: none;
 }
 .echeancier-section {
   margin-bottom: 24px;
@@ -819,9 +821,9 @@ definePage({
 }
 .step-actions-mobile {
   flex-direction: column !important;
-  gap: 10px !important;
+  gap: 8px !important;
   align-items: stretch !important;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 .step-actions-mobile .n-button {
   width: 100%;

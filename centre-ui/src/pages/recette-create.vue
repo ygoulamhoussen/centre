@@ -231,7 +231,7 @@ async function valider() {
 
 .button-container {
   margin-top: auto;
-  padding-top: 1rem;
+  padding: 8px 12px;
   border-top: 1px solid #f0f0f0;
   background: white;
   position: sticky;
@@ -288,7 +288,7 @@ async function valider() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .step-actions-mobile {

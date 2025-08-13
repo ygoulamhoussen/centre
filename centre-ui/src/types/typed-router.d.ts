@@ -43,6 +43,7 @@ declare module 'vue-router/auto-routes' {
     '/immobilisations': RouteRecordInfo<'/immobilisations', '/immobilisations', Record<never, never>, Record<never, never>>,
     '/immobilisations-create': RouteRecordInfo<'/immobilisations-create', '/immobilisations-create', Record<never, never>, Record<never, never>>,
     '/landing': RouteRecordInfo<'/landing', '/landing', Record<never, never>, Record<never, never>>,
+    '/landingold': RouteRecordInfo<'/landingold', '/landingold', Record<never, never>, Record<never, never>>,
     '/liasse-fiscale': RouteRecordInfo<'/liasse-fiscale', '/liasse-fiscale', Record<never, never>, Record<never, never>>,
     '/locataire': RouteRecordInfo<'/locataire', '/locataire', Record<never, never>, Record<never, never>>,
     '/locataire-etape-1': RouteRecordInfo<'/locataire-etape-1', '/locataire-etape-1', Record<never, never>, Record<never, never>>,

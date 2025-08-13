@@ -1,6 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Icon } from '@iconify/vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { 
+  ArrowRight, 
+  CheckCircle, 
+  Star, 
+  Calculator, 
+  Users, 
+  FileText, 
+  Shield,
+  Menu,
+  X,
+  Mail,
+  Phone,
+  MapPin,
+  ChevronDown
+} from 'lucide-vue-next'
 
 definePage({
   meta: {
@@ -10,1092 +24,851 @@ definePage({
   },
 })
 
-// Fonctionnalités clés pour LMNP
-const features = [
-  { 
-    icon: 'mdi:file-export', 
-    title: 'Export automatisé des données comptables', 
-    desc: 'Exportez vos données vers les formats fiscaux requis en un clic, sans erreur.' 
-  },
-  { 
-    icon: 'mdi:link-variant', 
-    title: 'Intégration logiciels comptables', 
-    desc: 'Compatible avec les principaux logiciels comptables du marché.' 
-  },
-  { 
-    icon: 'mdi:chart-line', 
-    title: 'Interface claire et indicateurs clés', 
-    desc: 'Suivez vos loyers, charges et rendement en temps réel avec des tableaux de bord intuitifs.' 
-  },
-  { 
-    icon: 'mdi:infinity', 
-    title: 'Propriétés illimitées', 
-    desc: 'Aucune limite sur le nombre de propriétés gérées dans votre portefeuille.' 
-  },
-  { 
-    icon: 'mdi:headset', 
-    title: 'Support dédié LMNP', 
-    desc: 'Assistance réactive spécialisée dans les particularités du LMNP.' 
-  },
-]
+const isMenuOpen = ref(false)
+const openFAQ = ref<number | null>(null)
+const isScrolled = ref(false)
 
-// Statistiques sociales
-const socialProof = [
-  { metric: '+15h', description: 'économisées par déclaration' },
-  { metric: '0', description: 'erreur fiscale avec Zymo' },
-  { metric: '98%', description: 'de clients satisfaits' },
-]
-
-// Tarification simple
-const pricing = {
-  price: '199€',
-  period: '/an TTC',
-  features: [
-    'Propriétés illimitées',
-    'Export données comptables',
-    'Intégration logiciels existants',
-    'Support spécialisé LMNP',
-    'Mises à jour incluses',
-    'Conformité fiscale garantie'
-  ]
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 50
 }
 
-// Témoignages clients
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
+
+// Navigation items
+const navItems = [
+  { name: 'Accueil', href: '#hero' },
+  { name: 'Fonctionnalités', href: '#features' },
+  { name: 'Tarifs', href: '#pricing' },
+  { name: 'FAQ', href: '#faq' },
+  { name: 'Contact', href: '#contact' }
+]
+
+// FAQ data
+const faqData = [
+  {
+    question: "Qu'est-ce que la LMNP et pourquoi ai-je besoin de Zymo ?",
+    answer: "La Location Meublée Non Professionnelle (LMNP) est un statut fiscal qui vous permet de louer des biens meublés. Zymo simplifie toute la gestion comptable, fiscale et administrative de vos locations LMNP, vous garantissant la conformité avec l'administration fiscale."
+  },
+  {
+    question: "Comment Zymo assure-t-il la conformité fiscale ?",
+    answer: "Zymo est développé en conformité avec les dernières réglementations fiscales françaises. Notre logiciel génère automatiquement tous les documents requis par l'administration fiscale, incluant la liasse fiscale obligatoire pour le régime réel."
+  },
+  {
+    question: "Puis-je essayer Zymo gratuitement ?",
+    answer: "Oui ! Nous proposons un essai gratuit de 30 jours sans engagement. Vous pouvez tester toutes les fonctionnalités et voir comment Zymo simplifie votre gestion LMNP."
+  },
+  {
+    question: "Que se passe-t-il si j'ai des questions ou besoin d'aide ?",
+    answer: "Notre équipe support est disponible pour vous accompagner. Nous proposons également des guides détaillés et des webinaires pour vous aider à maîtriser votre fiscalité LMNP en toute sérénité."
+  },
+  {
+    question: "Mes données sont-elles sécurisées ?",
+    answer: "Absolument. Zymo utilise un chiffrement de niveau bancaire et est hébergé sur des serveurs sécurisés en France. Vos données personnelles et financières sont protégées selon les normes RGPD les plus strictes."
+  }
+]
+
+const features = [
+  {
+    icon: Calculator,
+    title: "Comptabilité automatisée",
+    description: "Enregistrement automatique des revenus et charges. Calcul instantané de vos bénéfices et amortissements.",
+    image: "https://images.unsplash.com/photo-1576272531110-2a342fe22342?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwyfHxzb2Z0d2FyZSUyMGludGVyZmFjZXxlbnwwfHx8Ymx1ZXwxNzUzNTA4ODE1fDA&ixlib=rb-4.1.0&q=85"
+  },
+  {
+    icon: Users,
+    title: "Gestion des locataires",
+    description: "Suivi des baux, des paiements et de la communication avec vos locataires en un seul endroit.",
+    image: "https://images.unsplash.com/photo-1573496130103-a442a3754d0e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbHxlbnwwfHx8Ymx1ZXwxNzUzNDg5ODA1fDA&ixlib=rb-4.1.0&q=85"
+  },
+  {
+    icon: FileText,
+    title: "Documents centralisés",
+    description: "Stockage sécurisé de tous vos documents : baux, factures, justificatifs. Tout à portée de clic.",
+    image: "https://images.unsplash.com/photo-1664526937033-fe2c11f1be25?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHw0fHxzb2Z0d2FyZSUyMGludGVyZmFjZXxlbnwwfHx8Ymx1ZXwxNzUzNTA4ODE1fDA&ixlib=rb-4.1.0&q=85"
+  },
+  {
+    icon: Shield,
+    title: "Liasse fiscale automatique",
+    description: "Génération automatique de votre liasse fiscale. Conformité garantie avec l'administration fiscale.",
+    image: "https://images.unsplash.com/photo-1582647509870-c19b2ebb4a8f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwzfHxwcm9wZXJ0eSUyMG1hbmFnZW1lbnR8ZW58MHx8fGJsdWV8MTc1MzQ2MzEwOXww&ixlib=rb-4.1.0&q=85"
+  }
+]
+
 const testimonials = [
   {
-    name: 'Marie L.',
-    role: 'Propriétaire LMNP - 3 biens',
-    text: 'Zymo m\'a fait gagner des heures sur ma déclaration fiscale. L\'export est parfait et le support très réactif.',
-    avatar: 'ML'
+    name: "Marie Dubois",
+    role: "Propriétaire de 3 appartements",
+    content: "Zymo m'a fait gagner des heures chaque mois ! Plus besoin de me prendre la tête avec la comptabilité LMNP. Tout est automatisé et conforme.",
+    rating: 5,
+    image: "https://images.unsplash.com/photo-1573497490790-9053816a01d4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwyfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbHxlbnwwfHx8Ymx1ZXwxNzUzNDg5ODA1fDA&ixlib=rb-4.1.0&q=85"
   },
   {
-    name: 'Thomas B.',
-    role: 'Investisseur LMNP - 7 biens',
-    text: 'Enfin un outil qui comprend les spécificités du LMNP ! Plus d\'erreurs dans mes déclarations.',
-    avatar: 'TB'
+    name: "Pierre Martin",
+    role: "Investisseur immobilier",
+    content: "Interface très intuitive et support réactif. J'ai pu générer ma première liasse fiscale en quelques clics. Parfait pour les non-experts !",
+    rating: 5,
+    image: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwzfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbHxlbnwwfHx8Ymx1ZXwxNzUzNDg5ODA1fDA&ixlib=rb-4.1.0&q=85"
   },
   {
-    name: 'Sophie R.',
-    role: 'Gérante LMNP - 2 biens',
-    text: 'Interface simple et efficace. Je recommande à tous les loueurs en meublé.',
-    avatar: 'SR'
-  },
+    name: "Sophie Laurent",
+    role: "Propriétaire débutante",
+    content: "Je ne connaissais rien à la fiscalité LMNP. Zymo m'a rassurée et guidée pas à pas. Maintenant je gère tout en toute sérénité !",
+    rating: 5,
+    image: "https://images.unsplash.com/photo-1590650624342-f527904ca1b3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHwxfHx0ZWFtJTIwbWVldGluZ3xlbnwwfHx8Ymx1ZXwxNzUzNTA4ODI2fDA&ixlib=rb-4.1.0&q=85"
+  }
 ]
 
-// Thème Tomappart - Couleurs Zymo
-const themeOverrides = {
-  common: {
-    primaryColor: '#213B7E',      // Bleu foncé
-    primaryColorHover: '#1a2f68',
-    primaryColorPressed: '#142654',
-    successColor: '#16a34a',
-    warningColor: '#F7941D',      // Orange vif
-    warningColorHover: '#e67c00',
-    warningColorPressed: '#cc6a00',
-    infoColor: '#06b6d4',
-  },
-  Button: {
-    borderRadius: '8px',
-    heightLarge: '48px',
-    fontWeight: '600',
-  },
-  Card: {
-    borderRadius: '12px',
-  },
-} as const
-
-const email = ref('')
-
-function handleFreeTrial() {
-  console.log('Essai gratuit demandé')
-}
-
-function handleDemo() {
-  console.log('Démo demandée')
-}
-
-function handleSubscribe() {
-  console.log('Abonnement demandé')
-}
-
-function handleFinalCta() {
-  console.log('CTA final activé')
-}
+const pricingPlans = [
+  {
+    name: "Zymo Pro",
+    price: "99",
+    description: "Tarif unique annuel",
+    features: [
+      "Propriétés illimitées",
+      "Comptabilité complète",
+      "Gestion des locataires",
+      "Génération liasse fiscale",
+      "Support prioritaire",
+      "Tableau de bord avancé",
+      "API d'intégration",
+      "Support téléphonique",
+      "Formation personnalisée",
+      "Conseiller fiscal dédié"
+    ],
+    recommended: true
+  }
+]
 </script>
 
 <template>
-  <n-config-provider :theme-overrides="themeOverrides">
-    <div class="landing-page">
-      <!-- Header -->
-      <header class="header">
-        <div class="container">
-          <div class="header-content">
-            <div class="brand">
-              <div class="logo">
-                <n-icon size="24" color="#213B7E">
-                  <Icon icon="mdi:calculator-variant" />
-                </n-icon>
+  <div class="min-h-screen bg-slate-900">
+    <!-- Navigation -->
+    <nav 
+      :class="[
+        'fixed top-0 w-full z-50 transition-all duration-300',
+        isScrolled 
+          ? 'bg-slate-900/95 backdrop-blur-md shadow-lg border-b border-slate-700/50' 
+          : 'bg-transparent'
+      ]"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+                                <div class="flex items-center">
+             <a href="#hero" class="hover:scale-105 transition-transform cursor-pointer">
+               <img 
+                 src="/zymo-logo.svg" 
+                 alt="Zymo Logo" 
+                 :class="[
+                   'h-20 md:h-24 w-auto transition-opacity duration-300',
+                   'md:opacity-100',
+                   isScrolled ? 'opacity-100' : 'opacity-0 md:opacity-100'
+                 ]" 
+               />
+             </a>
+           </div>
+          
+          <!-- Desktop Navigation -->
+          <div class="hidden md:flex items-center space-x-8">
+            <a
+              v-for="item in navItems"
+              :key="item.name"
+              :href="item.href"
+              class="text-white hover:text-blue-400 transition-colors duration-200 hover:-translate-y-0.5 transition-transform"
+            >
+              {{ item.name }}
+            </a>
+                         <a href="/register" class="cta-button text-white px-6 py-2 rounded-lg font-semibold hover:scale-105 transition-transform">
+               Essayer gratuitement
+             </a>
+             <a href="/login" class="border-2 border-white text-white px-6 py-2 rounded-lg font-semibold hover:bg-white hover:text-slate-900 transition-all duration-300">
+               Se connecter
+             </a>
+          </div>
+
+                     <!-- Mobile menu button -->
+           <div class="md:hidden">
+             <button
+               @click="isMenuOpen = !isMenuOpen"
+               class="text-white/80 hover:text-white hover:scale-95 transition-all duration-200 bg-transparent border-none p-2"
+             >
+               <X v-if="isMenuOpen" :size="24" />
+               <Menu v-else :size="24" />
+             </button>
+           </div>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation -->
+      <div
+        v-if="isMenuOpen"
+        class="md:hidden glass-effect transition-all duration-300"
+      >
+        <div class="px-4 py-2 space-y-2">
+          <a
+            v-for="item in navItems"
+            :key="item.name"
+            :href="item.href"
+            class="block text-white hover:text-blue-400 py-2"
+            @click="isMenuOpen = false"
+          >
+            {{ item.name }}
+          </a>
+                     <a href="/register" class="w-full cta-button text-white py-2 rounded-lg font-semibold mt-4 text-center block">
+             Essayer gratuitement
+           </a>
+           <a href="/login" class="w-full border-2 border-white text-white py-2 rounded-lg font-semibold text-center block hover:bg-white hover:text-slate-900 transition-all duration-300 mt-2">
+             Se connecter
+           </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero-gradient min-h-screen flex items-center relative overflow-hidden">
+      <div class="absolute inset-0 opacity-20">
+        <img 
+          src="https://images.unsplash.com/photo-1524292691042-82ed9c62673b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwxfHxwcm9wZXJ0eSUyMG1hbmFnZW1lbnR8ZW58MHx8fGJsdWV8MTc1MzQ2MzEwOXww&ixlib=rb-4.1.0&q=85" 
+          alt="Property Management" 
+          class="w-full h-full object-cover"
+        />
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 to-slate-800/90"></div>
+      </div>
+      
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+          <div class="animate-fade-in-left">
+                         <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
+               Simplifiez votre  <span class="gradient-text"> fiscalité LMNP</span> en toute sérénité
+             </h1>
+            <p class="text-xl text-slate-300 mb-8 leading-relaxed">
+              Zymo automatise votre comptabilité, gère vos locataires et génère votre liasse fiscale.
+              Gagnez du temps et assurez-vous de la conformité fiscale de vos locations meublées.
+            </p>
+                         <div class="flex flex-col sm:flex-row gap-4">
+               <a href="/register" class="cta-button text-white px-8 py-4 rounded-lg font-semibold text-lg flex items-center justify-center hover:scale-105 transition-transform">
+                 Essayer gratuitement
+                 <ArrowRight class="ml-2" :size="20" />
+               </a>
+               <button class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg bg-transparent hover:bg-white hover:text-slate-900 transition-all duration-300">
+                 Voir la démonstration
+               </button>
+             </div>
+            
+            <!-- Trust indicators -->
+            <div class="flex items-center mt-8 space-x-6">
+              <div class="flex items-center">
+                <CheckCircle class="text-green-400 mr-2" :size="20" />
+                <span class="text-slate-300">Conforme DGFIP</span>
               </div>
-              <div class="brand-text">
-                <h1 class="brand-name">Zymo</h1>
-                <span class="brand-tagline">LMNP simplifié</span>
+              <div class="flex items-center">
+                <CheckCircle class="text-green-400 mr-2" :size="20" />
+                <span class="text-slate-300">30 jours gratuits</span>
+              </div>
+              <div class="flex items-center">
+                <CheckCircle class="text-green-400 mr-2" :size="20" />
+                <span class="text-slate-300">Support français</span>
               </div>
             </div>
-            
-            <nav class="navigation">
-              <a href="#fonctionnalites" class="nav-link">Fonctionnalités</a>
-              <a href="#tarifs" class="nav-link">Tarifs</a>
-              <a href="#temoignages" class="nav-link">Témoignages</a>
-              <a href="#contact" class="nav-link">Contact</a>
-            </nav>
-            
-            <div class="header-actions">
-              <n-button quaternary size="medium">Connexion</n-button>
-              <n-button type="warning" size="medium">S'inscrire</n-button>
+          </div>
+          
+          <div class="relative animate-fade-in-right">
+            <div class="glass-effect rounded-2xl p-8 shadow-2xl">
+              <img 
+                src="https://images.unsplash.com/photo-1659035260002-11d486d6e9f5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwxfHxzb2Z0d2FyZSUyMGludGVyZmFjZXxlbnwwfHx8Ymx1ZXwxNzUzNTA4ODE1fDA&ixlib=rb-4.1.0&q=85" 
+                alt="Zymo Dashboard" 
+                class="w-full rounded-lg"
+              />
+              <div class="absolute -bottom-4 -right-4 glass-effect rounded-xl p-4">
+                <div class="flex items-center text-white">
+                  <Star class="text-yellow-400 mr-1" :size="16" />
+                  <span class="font-semibold">4.9/5</span>
+                  <span class="text-sm text-slate-300 ml-2">+500 utilisateurs</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </header>
+      </div>
+    </section>
 
-      <!-- Hero Section -->
-      <section class="hero">
-        <div class="container">
-          <div class="hero-content">
-            <div class="hero-text">
-              <n-tag type="success" round size="small" class="hero-badge">
-                Spécialisé LMNP au régime réel
-              </n-tag>
-              
-              <h1 class="hero-title">
-                Exportez vos données comptables <span class="gradient-text">LMNP</span> en toute simplicité
-              </h1>
-              
-              <p class="hero-subtitle">
-                Gagnez du temps et assurez votre conformité fiscale, sans effort.
-              </p>
-              
-              <div class="hero-actions">
-                <n-button type="primary" size="large" @click="handleFreeTrial">
-                  Essayer gratuitement
-                </n-button>
-                <n-button type="warning" size="large" @click="handleDemo">
-                  Demander une démo
-                </n-button>
-              </div>
-              
-              <div class="hero-trust">
-                <n-icon size="16" color="#16a34a">
-                  <Icon icon="mdi:shield-check" />
-                </n-icon>
-                <span>RGPD • Données hébergées en UE • Annulation à tout moment</span>
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 animate-fade-in-up">
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+            Tout ce dont vous avez besoin pour votre
+            <span class="gradient-text">LMNP</span>
+          </h2>
+          <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+            Zymo centralise toute la gestion de vos locations meublées non professionnelles
+            dans une interface simple et intuitive.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div
+            v-for="(feature, index) in features"
+            :key="index"
+            class="feature-card bg-white rounded-2xl p-8 shadow-lg border border-slate-200 hover:scale-102 transition-transform animate-fade-in-up"
+            :style="{ animationDelay: `${index * 0.2}s` }"
+          >
+            <div class="mb-6">
+              <img 
+                :src="feature.image" 
+                :alt="feature.title" 
+                class="w-full h-48 object-cover rounded-lg mb-4"
+              />
+              <component :is="feature.icon" class="text-blue-500" :size="40" />
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-4">{{ feature.title }}</h3>
+            <p class="text-slate-600 leading-relaxed">{{ feature.description }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-20 bg-slate-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 animate-fade-in-up">
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+            Ils nous font confiance
+          </h2>
+          <p class="text-xl text-slate-600">
+            Découvrez comment Zymo a simplifié la gestion LMNP de nos utilisateurs
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <div
+            v-for="(testimonial, index) in testimonials"
+            :key="index"
+            class="bg-white rounded-2xl p-8 shadow-lg border border-slate-200 hover:scale-102 transition-transform animate-fade-in-up"
+            :style="{ animationDelay: `${index * 0.2}s` }"
+          >
+            <div class="flex items-center mb-6">
+              <img 
+                :src="testimonial.image" 
+                :alt="testimonial.name"
+                class="w-16 h-16 rounded-full object-cover mr-4"
+              />
+              <div>
+                <h4 class="font-bold text-slate-900">{{ testimonial.name }}</h4>
+                <p class="text-slate-600 text-sm">{{ testimonial.role }}</p>
               </div>
             </div>
+            <div class="flex mb-4">
+              <Star
+                v-for="i in testimonial.rating"
+                :key="i"
+                class="text-yellow-400 fill-current"
+                :size="20"
+              />
+            </div>
+            <p class="text-slate-700 italic leading-relaxed">"{{ testimonial.content }}"</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                 <div class="text-center mb-16 animate-fade-in-up">
+           <h2 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+             Un tarif unique et transparent
+           </h2>
+           <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+             Une seule formule annuelle pour tous vos besoins LMNP.
+             Inclut l'essai gratuit de 30 jours.
+           </p>
+         </div>
+
+                 <div class="max-w-2xl mx-auto">
+          <div
+            v-for="(plan, index) in pricingPlans"
+            :key="index"
+            :class="[
+              'rounded-2xl p-8 shadow-lg border-2 hover:scale-102 transition-transform animate-fade-in-up',
+              plan.recommended 
+                ? 'border-blue-500 bg-blue-50 relative' 
+                : 'border-slate-200 bg-white'
+            ]"
+            :style="{ animationDelay: `${index * 0.1}s` }"
+          >
+            <div
+              v-if="plan.recommended"
+              class="absolute -top-4 left-1/2 transform -translate-x-1/2"
+            >
+              <span class="bg-blue-500 text-white px-6 py-2 rounded-full text-sm font-semibold">
+                Recommandé
+              </span>
+            </div>
             
-            <div class="hero-visual">
-              <div class="dashboard-preview">
-                <div class="dashboard-header">
-                  <div class="dashboard-tabs">
-                    <div class="tab active">Tableau de bord</div>
-                    <div class="tab">Déclarations</div>
-                    <div class="tab">Export</div>
+            <div class="text-center mb-8">
+              <h3 class="text-2xl font-bold text-slate-900 mb-2">{{ plan.name }}</h3>
+              <p class="text-slate-600 mb-4">{{ plan.description }}</p>
+                             <div class="flex items-center justify-center">
+                 <span class="text-4xl font-bold text-slate-900">{{ plan.price }}€</span>
+                 <span class="text-slate-600 ml-2">/an</span>
+               </div>
+            </div>
+
+            <ul class="space-y-4 mb-8">
+              <li
+                v-for="(feature, featureIndex) in plan.features"
+                :key="featureIndex"
+                class="flex items-center"
+              >
+                <CheckCircle class="text-green-500 mr-3 flex-shrink-0" :size="20" />
+                <span class="text-slate-700">{{ feature }}</span>
+              </li>
+            </ul>
+
+            <button
+              :class="[
+                'w-full py-4 rounded-lg font-semibold text-lg hover:scale-102 transition-transform',
+                plan.recommended
+                  ? 'cta-button text-white'
+                  : 'border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300'
+              ]"
+            >
+              Commencer l'essai gratuit
+            </button>
+          </div>
+        </div>
+
+        <div class="text-center mt-12 animate-fade-in-up">
+          <p class="text-slate-600 mb-4">
+            Tous les tarifs s'entendent hors taxes • Résiliation à tout moment
+          </p>
+          <p class="text-sm text-slate-500">
+            💡 <strong>Astuce :</strong> Les frais d'abonnement Zymo sont déductibles de vos revenus LMNP !
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-20 bg-slate-50">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 animate-fade-in-up">
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+            Questions fréquentes
+          </h2>
+          <p class="text-xl text-slate-600">
+            Tout ce que vous devez savoir sur Zymo et la fiscalité LMNP
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <div
+            v-for="(faq, index) in faqData"
+            :key="index"
+            class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden animate-fade-in-up"
+            :style="{ animationDelay: `${index * 0.1}s` }"
+          >
+            <button
+              class="w-full p-6 text-left flex justify-between items-center hover:bg-slate-50 transition-colors duration-200"
+              @click="openFAQ = openFAQ === index ? null : index"
+            >
+              <h3 class="text-lg font-semibold text-slate-900 pr-4">
+                {{ faq.question }}
+              </h3>
+              <div
+                :class="[
+                  'transition-transform duration-300',
+                  openFAQ === index ? 'rotate-180' : ''
+                ]"
+              >
+                <ChevronDown class="text-slate-500" :size="24" />
+              </div>
+            </button>
+            <div
+              v-if="openFAQ === index"
+              class="px-6 pb-6 text-slate-700 leading-relaxed transition-all duration-300"
+            >
+              {{ faq.answer }}
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-12 animate-fade-in-up">
+          <p class="text-slate-600 mb-6">
+            Vous avez d'autres questions ? Notre équipe est là pour vous aider.
+          </p>
+          <button class="cta-button text-white px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform">
+            Contactez notre support
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 animate-fade-in-up">
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+            Prêt à simplifier votre LMNP ?
+          </h2>
+          <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+            Rejoignez des centaines de propriétaires qui font confiance à Zymo
+            pour leur gestion fiscale LMNP. Commencez dès aujourd'hui !
+          </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+          <div class="animate-fade-in-left">
+            <div class="glass-effect rounded-2xl p-8 shadow-xl">
+              <h3 class="text-2xl font-bold text-slate-900 mb-6">
+                Demandez une démonstration personnalisée
+              </h3>
+              <form class="space-y-6">
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                      Prénom
+                    </label>
+                    <input
+                      type="text"
+                      class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                      placeholder="Votre prénom"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                      Nom
+                    </label>
+                    <input
+                      type="text"
+                      class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                      placeholder="Votre nom"
+                    />
                   </div>
                 </div>
-                <div class="dashboard-content">
-                  <div class="metric-cards">
-                    <div class="metric-card">
-                      <div class="metric-label">Loyers annuels</div>
-                      <div class="metric-value">25 800€</div>
-                      <div class="metric-trend positive">+6.2%</div>
-                    </div>
-                    <div class="metric-card">
-                      <div class="metric-label">Charges déductibles</div>
-                      <div class="metric-value">8 450€</div>
-                      <div class="metric-trend">-2.1%</div>
-                    </div>
-                  </div>
-                  <div class="export-section">
-                    <div class="export-button">
-                      <n-icon size="16" color="#213B7E">
-                        <Icon icon="mdi:download" />
-                      </n-icon>
-                      <span>Exporter vers DGFiP</span>
-                    </div>
-                  </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">
+                    Email professionnel
+                  </label>
+                  <input
+                    type="email"
+                    class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    placeholder="votre@email.com"
+                  />
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Problème et Solution -->
-      <section class="problem-solution">
-        <div class="container">
-          <div class="problem-solution-grid">
-            <div class="problem-card">
-              <div class="problem-icon">
-                <n-icon size="32" color="#F7941D">
-                  <Icon icon="mdi:alert-circle-outline" />
-                </n-icon>
-              </div>
-              <h3>Les défis du LMNP au régime réel</h3>
-              <p>
-                Liasse fiscale complexe, saisie comptable fastidieuse, risques d'erreurs coûteuses... 
-                Les obligations fiscales LMNP peuvent vite devenir un casse-tête pour les propriétaires.
-              </p>
-            </div>
-            
-            <div class="solution-card">
-              <div class="solution-icon">
-                <n-icon size="32" color="#213B7E">
-                  <Icon icon="mdi:check-circle-outline" />
-                </n-icon>
-              </div>
-              <h3>Zymo simplifie tout</h3>
-              <p>
-                Solution simple, rapide et sécurisée, spécialement conçue pour les loueurs en meublé non professionnels. 
-                Export automatisé, conformité garantie, tranquillité d'esprit assurée.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Fonctionnalités -->
-      <section id="fonctionnalites" class="features">
-        <div class="container">
-          <div class="section-header">
-            <h2>Fonctionnalités clés pour le <span class="gradient-text">LMNP</span></h2>
-            <p>Tout ce dont vous avez besoin pour gérer vos obligations fiscales en toute sérénité.</p>
-          </div>
-          
-          <div class="features-grid">
-            <div v-for="feature in features" :key="feature.title" class="feature-card">
-              <div class="feature-icon">
-                <n-icon size="24" color="#213B7E">
-                  <Icon :icon="feature.icon" />
-                </n-icon>
-              </div>
-              <h3>{{ feature.title }}</h3>
-              <p>{{ feature.desc }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Preuves sociales -->
-      <section class="social-proof">
-        <div class="container">
-          <div class="social-proof-grid">
-            <div v-for="proof in socialProof" :key="proof.metric" class="proof-card">
-              <div class="proof-metric">{{ proof.metric }}</div>
-              <div class="proof-description">{{ proof.description }}</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Témoignages -->
-      <section id="temoignages" class="testimonials">
-        <div class="container">
-          <div class="section-header">
-            <h2>Avis des utilisateurs</h2>
-            <p>Découvrez ce que pensent nos clients de Zymo</p>
-          </div>
-          
-          <div class="testimonials-grid">
-            <div v-for="testimonial in testimonials" :key="testimonial.name" class="testimonial-card">
-              <div class="testimonial-content">
-                <p>"{{ testimonial.text }}"</p>
-              </div>
-              <div class="testimonial-author">
-                <div class="author-avatar">{{ testimonial.avatar }}</div>
-                <div class="author-info">
-                  <div class="author-name">{{ testimonial.name }}</div>
-                  <div class="author-role">{{ testimonial.role }}</div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">
+                    Nombre de biens LMNP
+                  </label>
+                  <select class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200">
+                    <option>1 bien</option>
+                    <option>2-3 biens</option>
+                    <option>4-5 biens</option>
+                    <option>Plus de 5 biens</option>
+                  </select>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Tarifs -->
-      <section id="tarifs" class="pricing">
-        <div class="container">
-          <div class="section-header">
-            <h2>Un tarif simple et transparent</h2>
-            <p>Pas de surprises, pas de frais cachés. Tout inclus pour votre activité LMNP.</p>
-          </div>
-          
-          <div class="pricing-card">
-            <div class="pricing-header">
-              <div class="price">{{ pricing.price }}<span class="period">{{ pricing.period }}</span></div>
-              <div class="pricing-subtitle">Propriétés illimitées</div>
-            </div>
-            
-            <div class="pricing-features">
-              <div v-for="feature in pricing.features" :key="feature" class="pricing-feature">
-                <n-icon size="16" color="#16a34a">
-                  <Icon icon="mdi:check" />
-                </n-icon>
-                <span>{{ feature }}</span>
-              </div>
-            </div>
-            
-            <div class="pricing-action">
-              <n-button type="warning" size="large" block @click="handleSubscribe">
-                S'abonner maintenant
-              </n-button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Appel à l'action final -->
-      <section class="final-cta">
-        <div class="container">
-          <div class="cta-content">
-            <h2>Simplifiez votre comptabilité LMNP dès aujourd'hui</h2>
-            <p>Rejoignez les centaines de propriétaires qui nous font confiance pour leurs obligations fiscales.</p>
-            <n-button type="primary" size="large" @click="handleFinalCta">
-              Commencer maintenant
-            </n-button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Footer -->
-      <footer class="footer">
-        <div class="container">
-          <div class="footer-content">
-            <div class="footer-brand">
-              <div class="brand">
-                <div class="logo">
-                  <n-icon size="20" color="#213B7E">
-                    <Icon icon="mdi:calculator-variant" />
-                  </n-icon>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">
+                    Message (optionnel)
+                  </label>
+                  <textarea
+                    rows="4"
+                    class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    placeholder="Dites-nous en plus sur vos besoins..."
+                  ></textarea>
                 </div>
-                <div class="brand-text">
-                  <h3 class="brand-name">Zymo</h3>
-                </div>
-              </div>
-              <p>Le copilote des propriétaires en LMNP.</p>
+                <button
+                  type="submit"
+                  class="w-full cta-button text-white py-4 rounded-lg font-semibold text-lg hover:scale-102 transition-transform"
+                >
+                  Demander ma démonstration
+                </button>
+              </form>
             </div>
-            
-            <div class="footer-links">
-              <div class="link-group">
-                <h4>Produit</h4>
-                <ul>
-                  <li><a href="#fonctionnalites">Fonctionnalités</a></li>
-                  <li><a href="#tarifs">Tarifs</a></li>
-                  <li><a href="#demo">Démo</a></li>
-                </ul>
-              </div>
+          </div>
+
+          <div class="space-y-8 animate-fade-in-right">
+            <div class="text-center lg:text-left">
+              <h3 class="text-2xl font-bold text-slate-900 mb-6">
+                Ou contactez-nous directement
+              </h3>
               
-              <div class="link-group">
-                <h4>Ressources</h4>
-                <ul>
-                  <li><a href="#">Centre d'aide</a></li>
-                  <li><a href="#">Documentation</a></li>
-                  <li><a href="#">API</a></li>
-                </ul>
+              <div class="space-y-6">
+                <div class="flex items-center justify-center lg:justify-start">
+                  <div class="bg-blue-100 p-3 rounded-full mr-4">
+                    <Mail class="text-blue-600" :size="24" />
+                  </div>
+                  <div>
+                    <p class="font-semibold text-slate-900">Email</p>
+                    <p class="text-slate-600">contact@zymo.fr</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center justify-center lg:justify-start">
+                  <div class="bg-green-100 p-3 rounded-full mr-4">
+                    <Phone class="text-green-600" :size="24" />
+                  </div>
+                  <div>
+                    <p class="font-semibold text-slate-900">Téléphone</p>
+                    <p class="text-slate-600">01 23 45 67 89</p>
+                    <p class="text-sm text-slate-500">Lun-Ven 9h-18h</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center justify-center lg:justify-start">
+                  <div class="bg-purple-100 p-3 rounded-full mr-4">
+                    <MapPin class="text-purple-600" :size="24" />
+                  </div>
+                  <div>
+                    <p class="font-semibold text-slate-900">Adresse</p>
+                    <p class="text-slate-600">123 Avenue des Champs-Élysées</p>
+                    <p class="text-slate-600">75008 Paris, France</p>
+                  </div>
+                </div>
               </div>
-              
-              <div class="link-group">
-                <h4>Légal</h4>
-                <ul>
-                  <li><a href="#">Mentions légales</a></li>
-                  <li><a href="#">Confidentialité</a></li>
-                  <li><a href="#">Conditions d'utilisation</a></li>
-                </ul>
+
+              <div class="mt-8 p-6 bg-green-50 rounded-xl border border-green-200">
+                <div class="flex items-center justify-center lg:justify-start mb-4">
+                  <CheckCircle class="text-green-500 mr-2" :size="24" />
+                  <span class="font-semibold text-green-800">Support français garanti</span>
+                </div>
+                <p class="text-green-700 text-sm">
+                  Notre équipe support basée en France vous répond en moins de 4 heures
+                  ouvrées. Expertise fiscale LMNP incluse.
+                </p>
               </div>
-            </div>
-          </div>
-          
-          <div class="footer-bottom">
-            <div class="footer-bottom-content">
-              <span>© {{ new Date().getFullYear() }} Zymo. Tous droits réservés.</span>
-              <span>Fait avec ❤️ en France</span>
             </div>
           </div>
         </div>
-      </footer>
-    </div>
-  </n-config-provider>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-4 gap-8 mb-8">
+                     <div>
+                                        <div class="mb-4">
+               <a href="#hero" class="hover:scale-105 transition-transform cursor-pointer">
+                 <img src="/zymo-logo.svg" alt="Zymo Logo" class="h-24 md:h-28 w-auto" />
+               </a>
+             </div>
+            <p class="text-slate-400 mb-6">
+              La solution de référence pour simplifier votre fiscalité LMNP
+              et gérer vos locations meublées en toute sérénité.
+            </p>
+            <div class="flex space-x-4">
+              <!-- Social media links would go here -->
+            </div>
+          </div>
+          
+          <div>
+            <h4 class="font-semibold mb-4">Produit</h4>
+            <ul class="space-y-2 text-slate-400">
+              <li><a href="#features" class="hover:text-white transition-colors duration-200">Fonctionnalités</a></li>
+              <li><a href="#pricing" class="hover:text-white transition-colors duration-200">Tarifs</a></li>
+              <li><a href="#" class="hover:text-white transition-colors duration-200">Sécurité</a></li>
+              <li><a href="#" class="hover:text-white transition-colors duration-200">Intégrations</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 class="font-semibold mb-4">Ressources</h4>
+            <ul class="space-y-2 text-slate-400">
+              <li><a href="#" class="hover:text-white transition-colors duration-200">Guide LMNP</a></li>
+              <li><a href="#" class="hover:text-white transition-colors duration-200">Centre d'aide</a></li>
+              <li><a href="#" class="hover:text-white transition-colors duration-200">Blog</a></li>
+              <li><a href="#" class="hover:text-white transition-colors duration-200">Webinaires</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 class="font-semibold mb-4">Entreprise</h4>
+            <ul class="space-y-2 text-slate-400">
+              <li><a href="#" class="hover:text-white transition-colors duration-200">À propos</a></li>
+              <li><a href="#contact" class="hover:text-white transition-colors duration-200">Contact</a></li>
+              <li><a href="#" class="hover:text-white transition-colors duration-200">Carrières</a></li>
+              <li><a href="#" class="hover:text-white transition-colors duration-200">Presse</a></li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <p class="text-slate-400 text-sm">
+            © 2025 Zymo. Tous droits réservés.
+          </p>
+          <div class="flex space-x-6 mt-4 md:mt-0">
+            <a href="#" class="text-slate-400 hover:text-white text-sm transition-colors duration-200">
+              Mentions légales
+            </a>
+            <a href="#" class="text-slate-400 hover:text-white text-sm transition-colors duration-200">
+              Politique de confidentialité
+            </a>
+            <a href="#" class="text-slate-400 hover:text-white text-sm transition-colors duration-200">
+              CGU
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+         <!-- Floating CTA Button -->
+     <div class="fixed bottom-8 right-8 z-40 animate-fade-in-scale" style="animation-delay: 2s;">
+       <a href="/register" class="cta-button text-white px-6 py-3 rounded-full font-semibold shadow-2xl flex items-center hover:scale-105 transition-transform">
+         <span class="mr-2">Créer mon compte</span>
+         <ArrowRight :size="20" />
+       </a>
+     </div>
+  </div>
 </template>
 
 <style scoped>
-/* Variables CSS */
 :root {
-  --primary-color: #213B7E;
-  --accent-color: #F7941D;
-  --background-light: #F5F5F5;
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --white: #FFFFFF;
-  --border-light: rgba(0, 0, 0, 0.08);
-  --shadow-light: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --color-primary: #213B7E;
+  --color-accent: #F7941D;
+  --color-bg: #F5F5F5;
+  --color-text: #333333;
+  --color-muted: #666666;
+  --color-white: #FFFFFF;
 }
 
-/* Reset et base */
-* {
-  box-sizing: border-box;
-}
-
-.landing-page {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  line-height: 1.6;
-  color: var(--text-primary);
-  background: var(--white);
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-/* Header */
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-light);
-  padding: 16px 0;
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 32px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logo {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(33, 59, 126, 0.1);
-  border-radius: 8px;
-}
-
-.brand-name {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--primary-color);
-  margin: 0;
-}
-
-.brand-tagline {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-left: 8px;
-}
-
-.navigation {
-  display: none;
-  align-items: center;
-  gap: 32px;
-}
-
-@media (min-width: 768px) {
-  .navigation {
-    display: flex;
-  }
-}
-
-.nav-link {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: var(--primary-color);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* Hero Section */
-.hero {
-  padding: 120px 0 80px;
-  background: linear-gradient(135deg, var(--background-light) 0%, var(--white) 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(33, 59, 126, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(247, 148, 29, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-.hero-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 48px;
-  align-items: center;
-  position: relative;
-  z-index: 1;
-}
-
-@media (min-width: 768px) {
-  .hero-content {
-    grid-template-columns: 1.2fr 0.8fr;
-  }
-}
-
-.hero-badge {
-  margin-bottom: 16px;
-}
-
-.hero-title {
-  font-size: clamp(32px, 5vw, 48px);
-  font-weight: 800;
-  line-height: 1.1;
-  margin: 0 0 20px 0;
-  color: var(--text-primary);
+/* Variables CSS globales pour s'assurer qu'elles sont disponibles */
+:global(:root) {
+  --color-primary: #213B7E;
+  --color-accent: #F7941D;
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  background: linear-gradient(135deg, var(--color-primary), #4a90e2);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.hero-subtitle {
-  font-size: 20px;
-  color: var(--text-secondary);
-  margin: 0 0 32px 0;
-  max-width: 480px;
+.cta-button {
+  background: var(--color-primary) !important;
+  border: none;
 }
 
-.hero-actions {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+.cta-button:hover {
+  background: #1a2f68 !important;
 }
 
-.hero-trust {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--text-secondary);
+.glass-effect {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Dashboard Preview */
-.dashboard-preview {
-  background: var(--white);
-  border-radius: 16px;
-  box-shadow: var(--shadow-medium);
-  border: 1px solid var(--border-light);
-  overflow: hidden;
-}
-
-.dashboard-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--background-light);
-}
-
-.dashboard-tabs {
-  display: flex;
-  gap: 20px;
-}
-
-.tab {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.tab.active {
-  background: var(--primary-color);
-  color: var(--white);
-}
-
-.dashboard-content {
-  padding: 24px;
-}
-
-.metric-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.metric-card {
-  padding: 16px;
-  background: var(--background-light);
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-}
-
-.metric-label {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-}
-
-.metric-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--primary-color);
-  margin-bottom: 4px;
-}
-
-.metric-trend {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.metric-trend.positive {
-  color: #16a34a;
-}
-
-.export-section {
-  display: flex;
-  justify-content: center;
-}
-
-.export-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: var(--primary-color);
-  color: var(--white);
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.export-button:hover {
-  background: #1a2f68;
-}
-
-/* Problème et Solution */
-.problem-solution {
-  padding: 80px 0;
-  background: var(--background-light);
-}
-
-.problem-solution-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
-}
-
-@media (min-width: 768px) {
-  .problem-solution-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.problem-card,
-.solution-card {
-  background: var(--white);
-  padding: 32px;
-  border-radius: 16px;
-  box-shadow: var(--shadow-light);
-  text-align: center;
-  border: 1px solid var(--border-light);
-}
-
-.problem-icon,
-.solution-icon {
-  margin-bottom: 16px;
-}
-
-.problem-card h3,
-.solution-card h3 {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-  color: var(--text-primary);
-}
-
-.problem-card p,
-.solution-card p {
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.6;
-}
-
-/* Sections communes */
-.features,
-.testimonials,
-.pricing {
-  padding: 80px 0;
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: 48px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.section-header h2 {
-  font-size: 32px;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-  color: var(--text-primary);
-}
-
-.section-header p {
-  font-size: 18px;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-/* Fonctionnalités */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+.hero-gradient {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
 }
 
 .feature-card {
-  background: var(--white);
-  padding: 32px;
-  border-radius: 16px;
-  box-shadow: var(--shadow-light);
-  border: 1px solid var(--border-light);
-  text-align: center;
   transition: all 0.3s ease;
 }
 
 .feature-card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-medium);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-.feature-icon {
-  margin-bottom: 16px;
-}
-
-.feature-card h3 {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0 0 12px 0;
-  color: var(--text-primary);
-}
-
-.feature-card p {
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.6;
-}
-
-/* Preuves sociales */
-.social-proof {
-  padding: 60px 0;
-  background: var(--background-light);
-  border-top: 1px solid var(--border-light);
-  border-bottom: 1px solid var(--border-light);
-}
-
-.social-proof-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 32px;
-}
-
-.proof-card {
-  text-align: center;
-  background: var(--white);
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: var(--shadow-light);
-}
-
-.proof-metric {
-  font-size: 36px;
-  font-weight: 800;
-  color: var(--primary-color);
-  margin-bottom: 8px;
-}
-
-.proof-description {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-/* Témoignages */
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-}
-
-.testimonial-card {
-  background: var(--white);
-  padding: 32px;
-  border-radius: 16px;
-  box-shadow: var(--shadow-light);
-  border: 1px solid var(--border-light);
-}
-
-.testimonial-content {
-  margin-bottom: 20px;
-}
-
-.testimonial-content p {
-  font-style: italic;
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.6;
-}
-
-.testimonial-author {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.author-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--primary-color);
-  color: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.author-name {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 2px;
-}
-
-.author-role {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-/* Tarifs */
-.pricing {
-  background: var(--background-light);
-}
-
-.pricing-card {
-  max-width: 400px;
-  margin: 0 auto;
-  background: var(--white);
-  border-radius: 20px;
-  box-shadow: var(--shadow-medium);
-  border: 1px solid var(--border-light);
-  overflow: hidden;
-}
-
-.pricing-header {
-  text-align: center;
-  padding: 32px;
-  background: var(--primary-color);
-  color: var(--white);
-}
-
-.price {
-  font-size: 48px;
-  font-weight: 800;
-  margin-bottom: 8px;
-}
-
-.period {
-  font-size: 18px;
-  font-weight: 400;
-  opacity: 0.8;
-}
-
-.pricing-subtitle {
-  font-size: 16px;
-  opacity: 0.9;
-}
-
-.pricing-features {
-  padding: 32px;
-}
-
-.pricing-feature {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.pricing-feature:last-child {
-  margin-bottom: 0;
-}
-
-.pricing-feature span {
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-.pricing-action {
-  padding: 0 32px 32px;
-}
-
-/* CTA Final */
-.final-cta {
-  padding: 80px 0;
-  background: linear-gradient(135deg, var(--primary-color), #1a2f68);
-  color: var(--white);
-  text-align: center;
-}
-
-.cta-content h2 {
-  font-size: 32px;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-  color: var(--white);
-}
-
-.cta-content p {
-  font-size: 18px;
-  margin: 0 0 32px 0;
-  opacity: 0.9;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Footer */
-.footer {
-  background: var(--white);
-  border-top: 1px solid var(--border-light);
-  padding: 48px 0 24px;
-}
-
-.footer-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
-  margin-bottom: 32px;
-}
-
-@media (min-width: 768px) {
-  .footer-content {
-    grid-template-columns: 2fr 1fr 1fr 1fr;
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.footer-brand p {
-  color: var(--text-secondary);
-  margin: 16px 0 0 0;
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.footer-links {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 32px;
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.link-group h4 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 16px 0;
-  color: var(--text-primary);
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.link-group ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
 }
 
-.link-group li {
-  margin-bottom: 8px;
+.animate-fade-in-left {
+  animation: fadeInLeft 0.8s ease-out forwards;
 }
 
-.link-group a {
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: color 0.2s ease;
+.animate-fade-in-right {
+  animation: fadeInRight 0.8s ease-out 0.2s forwards;
 }
 
-.link-group a:hover {
-  color: var(--primary-color);
+.animate-fade-in-scale {
+  animation: fadeInScale 0.5s ease-out forwards;
+  opacity: 0;
 }
 
-.footer-bottom {
-  border-top: 1px solid var(--border-light);
-  padding-top: 24px;
-}
-
-.footer-bottom-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-/* Responsive */
+/* Responsive utilities */
 @media (max-width: 768px) {
-  .container {
-    padding: 0 16px;
+  .hero-gradient {
+    min-height: 100vh;
   }
   
-  .hero {
-    padding: 100px 0 60px;
+  .text-4xl {
+    font-size: 2rem;
   }
   
-  .hero-actions {
-    flex-direction: column;
-    align-items: stretch;
+  .md\:text-6xl {
+    font-size: 2.5rem;
   }
-  
-  .section-header h2 {
-    font-size: 28px;
-  }
-  
-  .footer-bottom-content {
-    flex-direction: column;
-    text-align: center;
-  }
+}
+
+.hover\:scale-102:hover {
+  transform: scale(1.02);
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+.hover\:scale-95:hover {
+  transform: scale(0.95);
+}
+
+.transition-transform {
+  transition: transform 0.2s ease;
 }
 </style>

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zymo – Landing React</title>
+    <meta name="description" content="Zymo automatise l’export des écritures LMNP pour une déclaration sereine et conforme." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --color-primary: #213b7e;
+        --color-accent: #f7941d;
+      }
+      .gradient-text { background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .cta-button { background: var(--color-primary); }
+      .cta-button:hover { background: #1a2f68; }
+      .glass-effect { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(10px); }
+      .hero-gradient { background: radial-gradient(1200px 600px at 20% 0%, rgba(33,59,126,.25), transparent 60%), radial-gradient(1200px 600px at 80% 10%, rgba(247,148,29,.18), transparent 60%), linear-gradient(180deg, #0f172a, #0b1223); }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-900 text-white">
+    <div id="root"></div>
+
+    <script type="module">
+      import React, { useState, useEffect } from 'https://esm.sh/react@18';
+      import { createRoot } from 'https://esm.sh/react-dom@18/client';
+      import { motion, AnimatePresence } from 'https://esm.sh/framer-motion@11';
+      import { 
+        ArrowRight, 
+        CheckCircle, 
+        Star, 
+        Calculator, 
+        Users, 
+        FileText, 
+        Shield,
+        Menu,
+        X,
+        Mail,
+        Phone,
+        MapPin,
+        ChevronDown
+      } from 'https://esm.sh/lucide-react@latest';
+
+      const LandingPage = () => {
+        const [isMenuOpen, setIsMenuOpen] = useState(false);
+        const [openFAQ, setOpenFAQ] = useState(null);
+        const [isScrolled, setIsScrolled] = useState(false);
+
+        useEffect(() => {
+          const handleScroll = () => setIsScrolled(window.scrollY > 50);
+          window.addEventListener('scroll', handleScroll);
+          return () => window.removeEventListener('scroll', handleScroll);
+        }, []);
+
+        const fadeInUp = {
+          initial: { opacity: 0, y: 30 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.6 }
+        };
+
+        const staggerContainer = { animate: { transition: { staggerChildren: 0.2 } } };
+
+        const navItems = [
+          { name: 'Accueil', href: '#hero' },
+          { name: 'Fonctionnalités', href: '#features' },
+          { name: 'Tarifs', href: '#pricing' },
+          { name: 'FAQ', href: '#faq' },
+          { name: 'Contact', href: '#contact' }
+        ];
+
+        const faqData = [
+          {
+            question: "Qu'est-ce que la LMNP et pourquoi ai-je besoin de Zymo ?",
+            answer: "La Location Meublée Non Professionnelle (LMNP) est un statut fiscal qui vous permet de louer des biens meublés. Zymo simplifie toute la gestion comptable, fiscale et administrative de vos locations LMNP, vous garantissant la conformité avec l'administration fiscale."
+          },
+          {
+            question: 'Comment Zymo assure-t-il la conformité fiscale ?',
+            answer: "Zymo est développé en conformité avec les dernières réglementations fiscales françaises. Notre logiciel génère automatiquement tous les documents requis par l'administration fiscale, incluant la liasse fiscale obligatoire pour le régime réel."
+          },
+          {
+            question: 'Puis-je essayer Zymo gratuitement ?',
+            answer: "Oui ! Nous proposons un essai gratuit de 30 jours sans engagement. Vous pouvez tester toutes les fonctionnalités et voir comment Zymo simplifie votre gestion LMNP."
+          },
+          {
+            question: "Que se passe-t-il si j'ai des questions ou besoin d'aide ?",
+            answer: "Notre équipe support est disponible pour vous accompagner. Nous proposons également des guides détaillés et des webinaires pour vous aider à maîtriser votre fiscalité LMNP en toute sérénité."
+          },
+          {
+            question: 'Mes données sont-elles sécurisées ?',
+            answer: "Absolument. Zymo utilise un chiffrement de niveau bancaire et est hébergé sur des serveurs sécurisés en France. Vos données personnelles et financières sont protégées selon les normes RGPD les plus strictes."
+          }
+        ];
+
+        return (
+          <div className="min-h-screen bg-slate-900">
+            <motion.nav 
+              className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+                isScrolled ? 'bg-slate-900/95 backdrop-blur-md shadow-lg border-b border-slate-700/50' : 'bg-transparent'
+              }`}
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center py-4">
+                  <div className="flex items-center">
+                    <motion.div className="text-2xl font-bold gradient-text" whileHover={{ scale: 1.05 }}>Zymo</motion.div>
+                  </div>
+                  <div className="hidden md:flex items-center space-x-8">
+                    {navItems.map((item) => (
+                      <motion.a key={item.name} href={item.href} className="text-white hover:text-blue-400 transition-colors duration-200" whileHover={{ y: -2 }}>
+                        {item.name}
+                      </motion.a>
+                    ))}
+                    <motion.button className="cta-button text-white px-6 py-2 rounded-lg font-semibold" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      Essayer gratuitement
+                    </motion.button>
+                  </div>
+                  <div className="md:hidden">
+                    <motion.button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white" whileTap={{ scale: 0.95 }}>
+                      {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+              <AnimatePresence>
+                {isMenuOpen && (
+                  <motion.div className="md:hidden glass-effect" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                    <div className="px-4 py-2 space-y-2">
+                      {navItems.map((item) => (
+                        <a key={item.name} href={item.href} className="block text-white hover:text-blue-400 py-2" onClick={() => setIsMenuOpen(false)}>
+                          {item.name}
+                        </a>
+                      ))}
+                      <button className="w-full cta-button text-white py-2 rounded-lg font-semibold mt-4">Essayer gratuitement</button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.nav>
+
+            <section id="hero" className="hero-gradient min-h-screen flex items-center relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20">
+                <img src="https://images.unsplash.com/photo-1524292691042-82ed9c62673b?auto=format&fit=crop&w=1600&q=80" alt="Property Management" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 to-slate-800/90"></div>
+              </div>
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div className="grid lg:grid-cols-2 gap-12 items-center">
+                  <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+                    <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
+                      Simplifiez votre <span className="gradient-text">fiscalité LMNP</span> en toute sérénité
+                    </h1>
+                    <p className="text-xl text-slate-300 mb-8 leading-relaxed">
+                      Zymo automatise votre comptabilité et génère vos exports conformes. Gagnez du temps et assurez votre conformité.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <motion.button className="cta-button text-white px-8 py-4 rounded-lg font-semibold text-lg flex items-center justify-center" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        Essayer gratuitement
+                        <ArrowRight className="ml-2" size={20} />
+                      </motion.button>
+                      <motion.button className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-slate-900 transition-all duration-300" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        Voir la démonstration
+                      </motion.button>
+                    </div>
+                    <div className="flex items-center mt-8 space-x-6">
+                      <div className="flex items-center"><CheckCircle className="text-green-400 mr-2" size={20} /><span className="text-slate-300">Conforme DGFIP</span></div>
+                      <div className="flex items-center"><CheckCircle className="text-green-400 mr-2" size={20} /><span className="text-slate-300">30 jours gratuits</span></div>
+                      <div className="flex items-center"><CheckCircle className="text-green-400 mr-2" size={20} /><span className="text-slate-300">Support français</span></div>
+                    </div>
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="relative">
+                    <div className="glass-effect rounded-2xl p-8 shadow-2xl">
+                      <img src="https://images.unsplash.com/photo-1659035260002-11d486d6e9f5?auto=format&fit=crop&w=1200&q=80" alt="Zymo Dashboard" className="w-full rounded-lg" />
+                      <div className="absolute -bottom-4 -right-4 glass-effect rounded-xl p-4">
+                        <div className="flex items-center text-white"><Star className="text-yellow-400 mr-1" size={16} /><span className="font-semibold">4.9/5</span><span className="text-sm text-slate-300 ml-2">+500 utilisateurs</span></div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+            </section>
+
+            <section id="features" className="py-20 bg-white text-slate-900">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
+                  <h2 className="text-4xl md:text-5xl font-bold mb-6">Tout ce dont vous avez besoin pour votre <span className="gradient-text">LMNP</span></h2>
+                  <p className="text-xl text-slate-600 max-w-3xl mx-auto">Zymo centralise la gestion de vos locations meublées dans une interface simple et intuitive.</p>
+                </motion.div>
+
+                <motion.div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8" variants={staggerContainer} initial="initial" whileInView="animate" viewport={{ once: true }}>
+                  {[
+                    { icon: <Calculator className="text-blue-500" size={40} />, title: 'Comptabilité automatisée', description: 'Enregistrement automatique des revenus et charges. Calcul instantané.', image: 'https://images.unsplash.com/photo-1576272531110-2a342fe22342?auto=format&fit=crop&w=1200&q=80' },
+                    { icon: <Users className="text-green-500" size={40} />, title: 'Gestion des locataires', description: 'Suivi des baux et paiements en un seul endroit.', image: 'https://images.unsplash.com/photo-1573496130103-a442a3754d0e?auto=format&fit=crop&w=1200&q=80' },
+                    { icon: <FileText className="text-purple-500" size={40} />, title: 'Documents centralisés', description: 'Vue unifiée de vos pièces. (Pas de stockage de documents par Zymo)', image: 'https://images.unsplash.com/photo-1664526937033-fe2c11f1be25?auto=format&fit=crop&w=1200&q=80' },
+                    { icon: <Shield className="text-red-500" size={40} />, title: 'Liasse fiscale automatique', description: 'Génération de fichiers conformes pour la déclaration.', image: 'https://images.unsplash.com/photo-1582647509870-c19b2ebb4a8f?auto=format&fit=crop&w=1200&q=80' }
+                  ].map((feature, index) => (
+                    <motion.div key={index} className="feature-card bg-white rounded-2xl p-8 shadow-lg border border-slate-200" variants={fadeInUp} whileHover={{ scale: 1.02 }}>
+                      <div className="mb-6">
+                        <img src={feature.image} alt={feature.title} className="w-full h-48 object-cover rounded-lg mb-4" />
+                        {feature.icon}
+                      </div>
+                      <h3 className="text-xl font-bold mb-4">{feature.title}</h3>
+                      <p className="text-slate-600 leading-relaxed">{feature.description}</p>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            </section>
+
+            <section id="pricing" className="py-20 bg-white text-slate-900">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
+                  <h2 className="text-4xl md:text-5xl font-bold mb-6">Un prix simple, tout compris.</h2>
+                  <p className="text-xl text-slate-600 max-w-3xl mx-auto">Formule annuelle, pas de frais cachés.</p>
+                </motion.div>
+                <div className="grid place-items-center">
+                  <div className="max-w-md w-full rounded-2xl p-8 shadow-lg border-2 border-blue-500 bg-blue-50 relative">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <span className="bg-blue-500 text-white px-6 py-2 rounded-full text-sm font-semibold">Formule annuelle</span>
+                    </div>
+                    <div className="text-center mb-8">
+                      <h3 className="text-2xl font-bold mb-2">199€ <span className="text-slate-600 text-base">/ an TTC</span></h3>
+                      <p className="text-slate-600">Propriétés illimitées • Toutes les fonctionnalités • Pas de frais cachés</p>
+                    </div>
+                    <button className="w-full cta-button text-white py-4 rounded-lg font-semibold text-lg">S’abonner maintenant</button>
+                    <p className="text-slate-600 text-sm text-center mt-3">Annulable à tout moment avant renouvellement.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="faq" className="py-20 bg-slate-50 text-slate-900">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
+                  <h2 className="text-4xl md:text-5xl font-bold mb-6">Questions fréquentes</h2>
+                  <p className="text-xl text-slate-600">Tout ce que vous devez savoir</p>
+                </motion.div>
+                <motion.div className="space-y-4" variants={staggerContainer} initial="initial" whileInView="animate" viewport={{ once: true }}>
+                  {faqData.map((faq, index) => (
+                    <motion.div key={index} className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden" variants={fadeInUp}>
+                      <motion.button className="w-full p-6 text-left flex justify-between items-center hover:bg-slate-50 transition-colors duration-200" onClick={() => setOpenFAQ(openFAQ === index ? null : index)} whileHover={{ backgroundColor: '#f8fafc' }}>
+                        <h3 className="text-lg font-semibold text-slate-900 pr-4">{faq.question}</h3>
+                        <motion.div animate={{ rotate: openFAQ === index ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                          <ChevronDown className="text-slate-500" size={24} />
+                        </motion.div>
+                      </motion.button>
+                      <AnimatePresence>
+                        {openFAQ === index && (
+                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}>
+                            <div className="px-6 pb-6 text-slate-700 leading-relaxed">{faq.answer}</div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            </section>
+
+            <footer id="contact" className="bg-slate-900 text-white py-16">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid md:grid-cols-4 gap-8 mb-8">
+                  <div>
+                    <div className="text-2xl font-bold gradient-text mb-4">Zymo</div>
+                    <p className="text-slate-400 mb-6">La solution de référence pour simplifier votre fiscalité LMNP et gérer vos locations meublées.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-4">Produit</h4>
+                    <ul className="space-y-2 text-slate-400">
+                      <li><a href="#features" className="hover:text-white transition-colors duration-200">Fonctionnalités</a></li>
+                      <li><a href="#pricing" className="hover:text-white transition-colors duration-200">Tarifs</a></li>
+                      <li><a href="#faq" className="hover:text-white transition-colors duration-200">FAQ</a></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-4">Contact</h4>
+                    <ul className="space-y-2 text-slate-400">
+                      <li className="flex items-center"><Mail size={18} className="mr-2" /> contact@zymo.fr</li>
+                      <li className="flex items-center"><Phone size={18} className="mr-2" /> 01 23 45 67 89</li>
+                      <li className="flex items-center"><MapPin size={18} className="mr-2" /> 75008 Paris</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-4">Entreprise</h4>
+                    <ul className="space-y-2 text-slate-400">
+                      <li><a href="#contact" className="hover:text-white transition-colors duration-200">Nous contacter</a></li>
+                      <li><a href="#" className="hover:text-white transition-colors duration-200">Mentions légales</a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                  <p className="text-slate-400 text-sm">© 2025 Zymo. Tous droits réservés.</p>
+                  <div className="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors duration-200">Mentions légales</a>
+                    <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors duration-200">Confidentialité</a>
+                    <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors duration-200">CGU</a>
+                  </div>
+                </div>
+              </div>
+            </footer>
+
+            <motion.div className="fixed bottom-8 right-8 z-40" initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 2, duration: 0.5 }}>
+              <motion.button className="cta-button text-white px-6 py-3 rounded-full font-semibold shadow-2xl flex items-center" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <span className="mr-2">Créer mon compte</span>
+                <ArrowRight size={20} />
+              </motion.button>
+            </motion.div>
+          </div>
+        );
+      };
+
+      const root = createRoot(document.getElementById('root'));
+      root.render(React.createElement(LandingPage));
+    </script>
+  </body>
+  </html>
+
+

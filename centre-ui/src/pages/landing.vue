@@ -152,8 +152,10 @@ const pricingPlans = [
     <nav 
       :class="[
         'fixed top-0 w-full z-50 transition-all duration-300',
-        isScrolled 
-          ? 'bg-slate-900/95 backdrop-blur-md shadow-lg border-b border-slate-700/50' 
+        isScrolled && !isMenuOpen
+          ? 'md:bg-slate-900/95 md:backdrop-blur-md md:shadow-lg md:border-b md:border-slate-700/50 bg-transparent' 
+          : isMenuOpen
+          ? 'bg-slate-900/95 backdrop-blur-md shadow-lg border-b border-slate-700/50'
           : 'bg-transparent'
       ]"
     >
@@ -164,11 +166,11 @@ const pricingPlans = [
                <img 
                  src="/zymo-logo.svg" 
                  alt="Zymo Logo" 
-                 :class="[
-                   'h-20 md:h-24 w-auto transition-opacity duration-300',
-                   'md:opacity-100',
-                   isScrolled ? 'opacity-100' : 'opacity-0 md:opacity-100'
-                 ]" 
+                                   :class="[
+                    'h-20 md:h-24 w-auto transition-opacity duration-300',
+                    'md:opacity-100',
+                    (isScrolled && !isMenuOpen) ? 'opacity-0 md:opacity-100' : isMenuOpen ? 'opacity-100' : 'opacity-0 md:opacity-100'
+                  ]" 
                />
              </a>
            </div>
@@ -193,10 +195,10 @@ const pricingPlans = [
 
                      <!-- Mobile menu button -->
            <div class="md:hidden">
-             <button
-               @click="isMenuOpen = !isMenuOpen"
-               class="text-white/80 hover:text-white hover:scale-95 transition-all duration-200 bg-transparent border-none p-2"
-             >
+                           <button
+                @click="isMenuOpen = !isMenuOpen"
+                class="text-blue-400 hover:text-blue-300 hover:scale-95 transition-all duration-200 bg-transparent border-none p-2"
+              >
                <X v-if="isMenuOpen" :size="24" />
                <Menu v-else :size="24" />
              </button>
@@ -207,7 +209,7 @@ const pricingPlans = [
       <!-- Mobile Navigation -->
       <div
         v-if="isMenuOpen"
-        class="md:hidden glass-effect transition-all duration-300"
+        class="md:hidden bg-slate-900/95 backdrop-blur-md shadow-lg border-b border-slate-700/50 transition-all duration-300"
       >
         <div class="px-4 py-2 space-y-2">
           <a
@@ -718,13 +720,7 @@ const pricingPlans = [
       </div>
     </footer>
 
-         <!-- Floating CTA Button -->
-     <div class="fixed bottom-8 right-8 z-40 animate-fade-in-scale" style="animation-delay: 2s;">
-       <a href="/register" class="cta-button text-white px-6 py-3 rounded-full font-semibold shadow-2xl flex items-center hover:scale-105 transition-transform">
-         <span class="mr-2">Créer mon compte</span>
-         <ArrowRight :size="20" />
-       </a>
-     </div>
+         
   </div>
 </template>
 

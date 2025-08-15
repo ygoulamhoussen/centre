@@ -19,6 +19,7 @@ const local: App.I18n.Schema = {
     columnSetting: 'Paramètres des colonnes',
     config: 'Configuration',
     confirm: 'Confirmer',
+    back: 'Retour',
     delete: 'Supprimer',
     deleteSuccess: 'Suppression réussie',
     confirmDelete: 'Êtes-vous sûr de vouloir supprimer ?',
@@ -226,6 +227,7 @@ const local: App.I18n.Schema = {
         otherLoginMode: 'Autre mode de connexion',
         superAdmin: 'Super Administrateur',
         admin: 'Administrateur',
+        back: 'Retour',
         user: 'Utilisateur',
       },
       codeLogin: {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, reactive } from 'vue'
 import { 
   ArrowRight, 
   CheckCircle, 
@@ -28,9 +28,163 @@ const isMenuOpen = ref(false)
 const openFAQ = ref<number | null>(null)
 const isScrolled = ref(false)
 
+// Formulaire d'inscription
+const registerLoading = ref(false)
+const acceptTerms = ref(false)
+
+interface RegisterFormModel {
+  login: string
+  email: string
+  password: string
+  confirmPassword: string
+  nom: string
+  prenom: string
+}
+
+const registerModel: RegisterFormModel = reactive({
+  login: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  nom: '',
+  prenom: '',
+})
+
+interface CapitalIdentitesModel {
+  nomExploitant: string
+  prenomExploitant: string
+  adresseExploitant: string
+  codePostalExploitant: string
+  villeExploitant: string
+  qualite: string
+  apportsNumeraires: number | null
+  apportsNature: number | null
+  apportsIndustrie: number | null
+  partsDetenues: string
+}
+
+const capitalModel: CapitalIdentitesModel = reactive({
+  nomExploitant: '',
+  prenomExploitant: '',
+  adresseExploitant: '',
+  codePostalExploitant: '',
+  villeExploitant: '',
+  qualite: 'Exploitant individuel',
+  apportsNumeraires: null,
+  apportsNature: null,
+  apportsIndustrie: null,
+  partsDetenues: 'N/A',
+})
+
 const handleScroll = () => {
   isScrolled.value = window.scrollY > 50
 }
+
+async function handleRegisterSubmit() {
+  // Validation basique
+  if (!registerModel.login || !registerModel.email || !registerModel.password || !registerModel.confirmPassword || !registerModel.nom || !registerModel.prenom) {
+    window.$message?.error('Veuillez remplir tous les champs obligatoires')
+    return
+  }
+  
+  if (registerModel.password !== registerModel.confirmPassword) {
+    window.$message?.error('Les mots de passe ne correspondent pas')
+    return
+  }
+  
+  if (registerModel.password.length < 6) {
+    window.$message?.error('Le mot de passe doit contenir au moins 6 caractères')
+    return
+  }
+  
+  // Validation de l'email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(registerModel.email)) {
+    window.$message?.error('Veuillez saisir une adresse email valide')
+    return
+  }
+  
+  if (!acceptTerms.value) {
+    window.$message?.error('Vous devez accepter les conditions d\'utilisation')
+    return
+  }
+
+  registerLoading.value = true
+  try {
+    // Mise à jour du modèle capital avec les données du formulaire
+    capitalModel.nomExploitant = registerModel.nom
+    capitalModel.prenomExploitant = registerModel.prenom
+    
+    // Construction du payload
+    const payload = {
+      userName: registerModel.login,
+      password: registerModel.password,
+      email: registerModel.email,
+      nom: registerModel.nom,
+      prenom: registerModel.prenom,
+      capitalIdentites: {
+        ...capitalModel,
+      },
+    }
+    
+    // Inscription directe
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(error)
+    }
+    
+    // Connexion automatique après inscription
+    try {
+      const loginResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          username: registerModel.login, 
+          password: registerModel.password 
+        }),
+      })
+      
+      if (loginResponse.ok) {
+        const loginData = await loginResponse.json()
+        // Stockage du token (si nécessaire)
+        if (loginData.token) {
+          localStorage.setItem('token', loginData.token)
+        }
+        window.$message?.success('Inscription réussie et connexion automatique !')
+        window.location.href = '/'
+      } else {
+        window.$message?.success('Inscription réussie ! Veuillez vous connecter.')
+        window.location.href = '/login'
+      }
+    } catch {
+      window.$message?.success('Inscription réussie ! Veuillez vous connecter.')
+      window.location.href = '/login'
+    }
+  }
+  catch (e: any) {
+    // Gestion spécifique des erreurs courantes
+    if (e.message.includes('utilisateur_email_key') || e.message.includes('email') || e.message.includes('dupliqu')) {
+      window.$message?.error('Cette adresse email est déjà utilisée. Veuillez utiliser une autre adresse ou vous connecter.')
+    } else if (e.message.includes('utilisateur_user_name_key') || e.message.includes('username') || e.message.includes('login')) {
+      window.$message?.error('Ce nom d\'utilisateur est déjà pris. Veuillez en choisir un autre.')
+    } else if (e.message.includes('validation') || e.message.includes('invalide')) {
+      window.$message?.error('Veuillez vérifier les informations saisies et réessayer.')
+    } else {
+      window.$message?.error(e.message || 'Erreur lors de l\'inscription. Veuillez réessayer.')
+    }
+  }
+  finally {
+    registerLoading.value = false
+  }
+}
+
+
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
@@ -526,73 +680,113 @@ const pricingPlans = [
         </div>
 
         <div class="grid lg:grid-cols-2 gap-12 items-center">
-          <div class="animate-fade-in-left">
-            <div class="glass-effect rounded-2xl p-8 shadow-xl">
-              <h3 class="text-2xl font-bold text-slate-900 mb-6">
-                Demandez une démonstration personnalisée
-              </h3>
-              <form class="space-y-6">
-                <div class="grid md:grid-cols-2 gap-4">
+                       <div class="animate-fade-in-left">
+                                         <div class="glass-effect rounded-2xl p-8 shadow-xl">
+                 <h3 class="text-2xl font-bold text-slate-900 mb-6">
+                   Créez votre compte gratuitement
+                 </h3>
+                 
+                 <!-- Formulaire d'inscription -->
+                 <div class="space-y-6">
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-slate-700 mb-2">
+                        Prénom
+                      </label>
+                      <input
+                        v-model="registerModel.prenom"
+                        type="text"
+                        class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="Votre prénom"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-slate-700 mb-2">
+                        Nom
+                      </label>
+                      <input
+                        v-model="registerModel.nom"
+                        type="text"
+                        class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="Votre nom"
+                        required
+                      />
+                    </div>
+                  </div>
                   <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">
-                      Prénom
+                      Nom d'utilisateur
                     </label>
                     <input
+                      v-model="registerModel.login"
                       type="text"
                       class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                      placeholder="Votre prénom"
+                      placeholder="Votre nom d'utilisateur"
+                      required
                     />
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">
-                      Nom
+                      Email professionnel
                     </label>
                     <input
-                      type="text"
+                      v-model="registerModel.email"
+                      type="email"
                       class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                      placeholder="Votre nom"
+                      placeholder="votre@email.com"
+                      required
                     />
                   </div>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">
-                    Email professionnel
-                  </label>
-                  <input
-                    type="email"
-                    class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="votre@email.com"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">
-                    Nombre de biens LMNP
-                  </label>
-                  <select class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200">
-                    <option>1 bien</option>
-                    <option>2-3 biens</option>
-                    <option>4-5 biens</option>
-                    <option>Plus de 5 biens</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">
-                    Message (optionnel)
-                  </label>
-                  <textarea
-                    rows="4"
-                    class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="Dites-nous en plus sur vos besoins..."
-                  ></textarea>
-                </div>
-                <button
-                  type="submit"
-                  class="w-full cta-button text-white py-4 rounded-lg font-semibold text-lg hover:scale-102 transition-transform"
-                >
-                  Demander ma démonstration
-                </button>
-              </form>
-            </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                      Mot de passe
+                    </label>
+                    <input
+                      v-model="registerModel.password"
+                      type="password"
+                      class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                      placeholder="Votre mot de passe"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                      Confirmer le mot de passe
+                    </label>
+                    <input
+                      v-model="registerModel.confirmPassword"
+                      type="password"
+                      class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                      placeholder="Confirmez votre mot de passe"
+                      required
+                    />
+                  </div>
+                                     <div class="flex items-start">
+                     <input
+                       v-model="acceptTerms"
+                       type="checkbox"
+                       id="terms"
+                       class="mt-1 mr-3 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                       required
+                     />
+                     <label for="terms" class="text-sm text-slate-600">
+                       J'accepte les <a href="#" class="text-blue-600 hover:underline">conditions d'utilisation</a> et la <a href="#" class="text-blue-600 hover:underline">politique de confidentialité</a>
+                     </label>
+                   </div>
+                                     <button
+                     @click="handleRegisterSubmit"
+                     :disabled="registerLoading || !acceptTerms"
+                     class="w-full cta-button text-white py-4 rounded-lg font-semibold text-lg hover:scale-102 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     <span v-if="registerLoading">Envoi en cours...</span>
+                     <span v-else>Créer mon compte gratuitement</span>
+                   </button>
+                                     <p class="text-sm text-slate-600 text-center">
+                     Déjà un compte ? <a href="/login" class="text-blue-600 hover:underline font-semibold">Se connecter</a>
+                   </p>
+                 </div>
+              </div>
           </div>
 
           <div class="space-y-8 animate-fade-in-right">

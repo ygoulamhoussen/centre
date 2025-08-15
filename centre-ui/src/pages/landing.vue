@@ -139,33 +139,9 @@ async function handleRegisterSubmit() {
       throw new Error(error)
     }
     
-    // Connexion automatique après inscription
-    try {
-      const loginResponse = await fetch(`${import.meta.env.VITE_SERVICE_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username: registerModel.login, 
-          password: registerModel.password 
-        }),
-      })
-      
-      if (loginResponse.ok) {
-        const loginData = await loginResponse.json()
-        // Stockage du token (si nécessaire)
-        if (loginData.token) {
-          localStorage.setItem('token', loginData.token)
-        }
-        window.$message?.success('Inscription réussie et connexion automatique !')
-        window.location.href = '/'
-      } else {
-        window.$message?.success('Inscription réussie ! Veuillez vous connecter.')
-        window.location.href = '/login'
-      }
-    } catch {
-      window.$message?.success('Inscription réussie ! Veuillez vous connecter.')
-      window.location.href = '/login'
-    }
+    // Redirection vers la page de login avec l'identifiant prérempli
+    window.$message?.success('Inscription réussie ! Vous pouvez maintenant vous connecter.')
+    window.location.href = `/login?username=${encodeURIComponent(registerModel.login)}`
   }
   catch (e: any) {
     // Gestion spécifique des erreurs courantes
@@ -339,9 +315,9 @@ const pricingPlans = [
             >
               {{ item.name }}
             </a>
-                         <a href="/register" class="cta-button text-white px-6 py-2 rounded-lg font-semibold hover:scale-105 transition-transform">
-               Essayer gratuitement
-             </a>
+                                                   <a href="#contact" class="cta-button text-white px-6 py-2 rounded-lg font-semibold hover:scale-105 transition-transform">
+                Essayer gratuitement
+              </a>
              <a href="/login" class="border-2 border-white text-white px-6 py-2 rounded-lg font-semibold hover:bg-white hover:text-slate-900 transition-all duration-300">
                Se connecter
              </a>
@@ -375,9 +351,9 @@ const pricingPlans = [
           >
             {{ item.name }}
           </a>
-                     <a href="/register" class="w-full cta-button text-white py-2 rounded-lg font-semibold mt-4 text-center block">
-             Essayer gratuitement
-           </a>
+                                           <a href="#contact" class="w-full cta-button text-white py-2 rounded-lg font-semibold mt-4 text-center block">
+              Essayer gratuitement
+            </a>
            <a href="/login" class="w-full border-2 border-white text-white py-2 rounded-lg font-semibold text-center block hover:bg-white hover:text-slate-900 transition-all duration-300 mt-2">
              Se connecter
            </a>
@@ -407,10 +383,10 @@ const pricingPlans = [
               Gagnez du temps et assurez-vous de la conformité fiscale de vos locations meublées.
             </p>
                          <div class="flex flex-col sm:flex-row gap-4">
-               <a href="/register" class="cta-button text-white px-8 py-4 rounded-lg font-semibold text-lg flex items-center justify-center hover:scale-105 transition-transform">
-                 Essayer gratuitement
-                 <ArrowRight class="ml-2" :size="20" />
-               </a>
+                               <a href="#contact" class="cta-button text-white px-8 py-4 rounded-lg font-semibold text-lg flex items-center justify-center hover:scale-105 transition-transform">
+                  Essayer gratuitement
+                  <ArrowRight class="ml-2" :size="20" />
+                </a>
                <button class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg bg-transparent hover:bg-white hover:text-slate-900 transition-all duration-300">
                  Voir la démonstration
                </button>
@@ -792,7 +768,7 @@ const pricingPlans = [
           <div class="space-y-8 animate-fade-in-right">
             <div class="text-center lg:text-left">
               <h3 class="text-2xl font-bold text-slate-900 mb-6">
-                Ou contactez-nous directement
+                Contactez-nous directement
               </h3>
               
               <div class="space-y-6">

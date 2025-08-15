@@ -18,8 +18,17 @@ interface FormModel {
 }
 
 const model: FormModel = reactive({
-  userName: 'Yussouf',
-  password: '123456',
+  userName: '',
+  password: '',
+})
+
+// Récupérer le paramètre username de l'URL et le préremplir
+onMounted(() => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const username = urlParams.get('username')
+  if (username) {
+    model.userName = decodeURIComponent(username)
+  }
 })
 
 const rules = computed<Record<keyof FormModel, App.Global.FormRule[]>>(() => {

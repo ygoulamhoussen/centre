@@ -315,49 +315,54 @@ const currentStatus = ref<StepsProps['status']>('process')
 // Composants immobiliers avec leurs pourcentages par défaut
 const immobilisationComponents = ref([
   {
-    key: 'terrain',
+    key: 'terrains',
     label: 'Terrains',
     defaultPercentage: 6,
     percent: 6,
     dureeAmortissement: '',
-    typeImmobilisation: '',
+    typeImmobilisation: 'TERRAIN',
     amortissable: false,
+    categorie: 'Immobilisations incorporelles',
   },
   {
-    key: 'structure',
-    label: 'Gros œuvre',
+    key: 'constructions',
+    label: 'Constructions',
     defaultPercentage: 50,
     percent: 50,
     dureeAmortissement: '40',
     typeImmobilisation: 'BIEN_IMMOBILIER',
     amortissable: true,
+    categorie: 'Immobilisations incorporelles',
   },
   {
-    key: 'facades',
-    label: 'Façades, étanchéité',
-    defaultPercentage: 10,
-    percent: 10,
-    dureeAmortissement: '25',
-    typeImmobilisation: 'TRAVAUX',
-    amortissable: true,
-  },
-  {
-    key: 'igt',
-    label: 'IGT',
-    defaultPercentage: 22,
-    percent: 22,
+    key: 'installations_techniques',
+    label: 'Installations techniques matériel et outillage industriels',
+    defaultPercentage: 15,
+    percent: 15,
     dureeAmortissement: '15',
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
+    categorie: 'Installations techniques matériel et outillage industriels',
   },
   {
-    key: 'agencements',
-    label: 'Agencements',
-    defaultPercentage: 12,
-    percent: 12,
+    key: 'installations_generales',
+    label: 'Installations générales agencement divers',
+    defaultPercentage: 20,
+    percent: 20,
     dureeAmortissement: '12',
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
+    categorie: 'Installations générales agencement divers',
+  },
+  {
+    key: 'autres_corporelles',
+    label: 'Autres immobilisations corporelles',
+    defaultPercentage: 9,
+    percent: 9,
+    dureeAmortissement: '10',
+    typeImmobilisation: 'TRAVAUX',
+    amortissable: true,
+    categorie: 'Autres immobilisations corporelles',
   },
 ])
 
@@ -630,22 +635,22 @@ function getDureeOptions(component: any) {
     return [{ label: 'Non amortissable', value: '' }]
   }
   const durees = []
-  if (component.key === 'structure') {
+  if (component.key === 'constructions') {
     durees.push({ label: '30 ans', value: '30' })
     durees.push({ label: '40 ans', value: '40' })
     durees.push({ label: '50 ans', value: '50' })
-  } else if (component.key === 'facades') {
-    durees.push({ label: '20 ans', value: '20' })
-    durees.push({ label: '25 ans', value: '25' })
-    durees.push({ label: '30 ans', value: '30' })
-  } else if (component.key === 'igt') {
+  } else if (component.key === 'installations_techniques') {
     durees.push({ label: '10 ans', value: '10' })
     durees.push({ label: '15 ans', value: '15' })
     durees.push({ label: '20 ans', value: '20' })
-  } else if (component.key === 'agencements') {
+  } else if (component.key === 'installations_generales') {
     durees.push({ label: '10 ans', value: '10' })
     durees.push({ label: '12 ans', value: '12' })
     durees.push({ label: '15 ans', value: '15' })
+  } else if (component.key === 'autres_corporelles') {
+    durees.push({ label: '5 ans', value: '5' })
+    durees.push({ label: '8 ans', value: '8' })
+    durees.push({ label: '10 ans', value: '10' })
   } else {
     durees.push({ label: '5 ans', value: '5' })
     durees.push({ label: '8 ans', value: '8' })
@@ -668,10 +673,10 @@ function selectProprieteImmobilisation(propriete: any) {
 
 // Ajout d'une fonction utilitaire pour afficher la catégorie fiscale réelle
 function getCategorieFiscaleLabel(component: any) {
-  if (component.key === 'terrain') {
+  if (component.key === 'terrains') {
     return 'Non amortissable'
   }
-  if (component.key === 'structure') {
+  if (component.key === 'constructions') {
     return `Bien immobilier (${component.dureeAmortissement || '—'} ans)`
   }
   // Pour tous les autres composants

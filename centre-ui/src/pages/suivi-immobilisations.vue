@@ -28,7 +28,102 @@
       </n-alert>
 
       <div v-if="suiviData" class="space-y-6">
-        <!-- Tableau des immobilisations -->
+        <!-- Tableau d'évolution des immobilisations -->
+        <n-card title="État des immobilisations" size="small">
+          <div v-if="!isMobile">
+            <n-table :bordered="false" :single-line="false" size="small">
+                             <thead>
+                 <tr>
+                   <th class="text-left">Numéro de compte</th>
+                   <th class="text-left">Libellé</th>
+                   <th class="text-center">Valeur brute au début de l'exercice</th>
+                   <th class="text-center">Augmentations</th>
+                   <th class="text-center">Diminutions</th>
+                   <th class="text-center">Valeur brute à la fin de l'exercice</th>
+                 </tr>
+               </thead>
+              <tbody>
+                                 <tr v-for="categorie in categoriesImmobilisations" :key="categorie.code">
+                   <td class="font-medium text-center">{{ categorie.code }}</td>
+                   <td class="font-medium">{{ categorie.nom }}</td>
+                  <td class="text-center">
+                    <div class="code-montant">
+                      <span class="code">{{ categorie.codeDebut }}</span>
+                      <span class="montant">{{ formatCurrency(categorie.valeurDebut) }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <div class="code-montant">
+                      <span class="code">{{ categorie.codeAugmentation }}</span>
+                      <span class="montant">{{ formatCurrency(categorie.augmentations) }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <div class="code-montant">
+                      <span class="code">{{ categorie.codeDiminution }}</span>
+                      <span class="montant">{{ formatCurrency(categorie.diminutions) }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <div class="code-montant">
+                      <span class="code">{{ categorie.codeFin }}</span>
+                      <span class="montant">{{ formatCurrency(categorie.valeurFin) }}</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+                             <tfoot>
+                 <tr class="font-bold bg-gray-50">
+                   <td class="text-center">490-496</td>
+                   <td>TOTAL</td>
+                  <td class="text-center">
+                    <div class="code-montant">
+                      <span class="code">490</span>
+                      <span class="montant">{{ formatCurrency(totalValeurDebut) }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <div class="code-montant">
+                      <span class="code">492</span>
+                      <span class="montant">{{ formatCurrency(totalAugmentations) }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <div class="code-montant">
+                      <span class="code">494</span>
+                      <span class="montant">{{ formatCurrency(totalDiminutions) }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <div class="code-montant">
+                      <span class="code">496</span>
+                      <span class="montant">{{ formatCurrency(totalValeurFin) }}</span>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+            </n-table>
+          </div>
+          <div v-else class="cards-mobile-list">
+                         <n-card v-for="categorie in categoriesImmobilisations" :key="categorie.code" class="mobile-detail-card mb-2" size="small">
+               <div class="font-bold mb-2">{{ categorie.code }} - {{ categorie.nom }}</div>
+              <div class="text-xs text-gray-500 mb-1">
+                <b>Valeur brute au début :</b> {{ categorie.codeDebut }} {{ formatCurrency(categorie.valeurDebut) }}
+              </div>
+              <div class="text-xs text-gray-500 mb-1">
+                <b>Augmentations :</b> {{ categorie.codeAugmentation }} {{ formatCurrency(categorie.augmentations) }}
+              </div>
+              <div class="text-xs text-gray-500 mb-1">
+                <b>Diminutions :</b> {{ categorie.codeDiminution }} {{ formatCurrency(categorie.diminutions) }}
+              </div>
+              <div class="text-xs text-gray-500 mb-1">
+                <b>Valeur brute à la fin :</b> {{ categorie.codeFin }} {{ formatCurrency(categorie.valeurFin) }}
+              </div>
+            </n-card>
+          </div>
+        </n-card>
+
+        <!-- Tableau des immobilisations détaillé -->
         <n-card title="Détail des immobilisations" size="small">
           <div v-if="!isMobile">
             <n-table :bordered="false" :single-line="false" size="small">
@@ -231,6 +326,138 @@ onMounted(() => {
 
 const { width } = useWindowSize()
 const isMobile = computed(() => width.value <= 640)
+
+// Calcul des catégories d'immobilisations
+const categoriesImmobilisations = computed(() => {
+  if (!suiviData.value?.immobilisations) return []
+  
+  const categories = [
+    {
+      nom: 'Terrains',
+      code: '420',
+      codeDebut: '420',
+      codeAugmentation: '422',
+      codeDiminution: '424',
+      codeFin: '426',
+      valeurDebut: 0,
+      augmentations: 0,
+      diminutions: 0,
+      valeurFin: 0,
+    },
+    {
+      nom: 'Constructions',
+      code: '430',
+      codeDebut: '430',
+      codeAugmentation: '432',
+      codeDiminution: '434',
+      codeFin: '436',
+      valeurDebut: 0,
+      augmentations: 0,
+      diminutions: 0,
+      valeurFin: 0,
+    },
+    {
+      nom: 'Installations techniques matériel et outillage industriels',
+      code: '440',
+      codeDebut: '440',
+      codeAugmentation: '442',
+      codeDiminution: '444',
+      codeFin: '446',
+      valeurDebut: 0,
+      augmentations: 0,
+      diminutions: 0,
+      valeurFin: 0,
+    },
+    {
+      nom: 'Installations générales agencement divers',
+      code: '450',
+      codeDebut: '450',
+      codeAugmentation: '452',
+      codeDiminution: '454',
+      codeFin: '456',
+      valeurDebut: 0,
+      augmentations: 0,
+      diminutions: 0,
+      valeurFin: 0,
+    },
+    {
+      nom: 'Autres immobilisations corporelles',
+      code: '470',
+      codeDebut: '470',
+      codeAugmentation: '472',
+      codeDiminution: '474',
+      codeFin: '476',
+      valeurDebut: 0,
+      augmentations: 0,
+      diminutions: 0,
+      valeurFin: 0,
+    },
+    {
+      nom: 'Immobilisations financières',
+      code: '480',
+      codeDebut: '480',
+      codeAugmentation: '482',
+      codeDiminution: '484',
+      codeFin: '486',
+      valeurDebut: 0,
+      augmentations: 0,
+      diminutions: 0,
+      valeurFin: 0,
+    },
+  ]
+  
+  // Calculer les valeurs pour chaque catégorie
+  suiviData.value.immobilisations.forEach((immo: any) => {
+    const montantHT = immo.montantHT || 0
+    const cumulAnterieur = immo.cumulAmortissementsAnterieurs || 0
+    const dotationExercice = immo.dotationExercice || 0
+    
+    // Déterminer la catégorie selon la nature
+    let categorieIndex = -1
+    if (immo.nature.toLowerCase().includes('terrain')) {
+      categorieIndex = 0 // Terrains
+    } else if (immo.nature.toLowerCase().includes('construction') || immo.nature.toLowerCase().includes('bâtiment')) {
+      categorieIndex = 1 // Constructions
+    } else if (immo.nature.toLowerCase().includes('technique') || immo.nature.toLowerCase().includes('industriel')) {
+      categorieIndex = 2 // Installations techniques
+    } else if (immo.nature.toLowerCase().includes('général') || immo.nature.toLowerCase().includes('agencement')) {
+      categorieIndex = 3 // Installations générales
+    } else if (immo.nature.toLowerCase().includes('financier')) {
+      categorieIndex = 5 // Immobilisations financières
+    } else {
+      categorieIndex = 4 // Autres immobilisations corporelles
+    }
+    
+    if (categorieIndex >= 0) {
+      // Valeur brute = montant HT (pas de déduction des amortissements)
+      categories[categorieIndex].valeurDebut += montantHT
+      // Les dotations d'amortissement sont des diminutions
+      categories[categorieIndex].diminutions += dotationExercice
+      // Valeur brute à la fin = valeur brute début - dotations
+      categories[categorieIndex].valeurFin += montantHT - dotationExercice
+      // Pas d'augmentations pour l'instant (à adapter selon les besoins)
+    }
+  })
+  
+  return categories
+})
+
+// Calcul des totaux
+const totalValeurDebut = computed(() => {
+  return categoriesImmobilisations.value.reduce((sum, cat) => sum + cat.valeurDebut, 0)
+})
+
+const totalAugmentations = computed(() => {
+  return categoriesImmobilisations.value.reduce((sum, cat) => sum + cat.augmentations, 0)
+})
+
+const totalDiminutions = computed(() => {
+  return categoriesImmobilisations.value.reduce((sum, cat) => sum + cat.diminutions, 0)
+})
+
+const totalValeurFin = computed(() => {
+  return categoriesImmobilisations.value.reduce((sum, cat) => sum + cat.valeurFin, 0)
+})
 </script>
 
 <style scoped>
@@ -293,5 +520,60 @@ const isMobile = computed(() => width.value <= 640)
   .header-row {
     gap: 8px;
   }
+}
+
+/* Styles pour le tableau d'état des immobilisations */
+.code-montant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.code-montant .code {
+  font-weight: bold;
+  color: #1e40af;
+  font-size: 0.85em;
+  background-color: #e0f2fe;
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.code-montant .montant {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: #374151;
+}
+
+.n-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+}
+
+.n-table th:first-child {
+  text-align: left;
+}
+
+.n-table td {
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+
+.n-table tfoot tr {
+  border-top: 2px solid #e5e7eb;
+}
+
+.n-table tfoot .code-montant .code {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.n-table tfoot .code-montant .montant {
+  font-weight: bold;
+  color: #065f46;
 }
 </style> 

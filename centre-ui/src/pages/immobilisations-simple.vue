@@ -14,6 +14,7 @@ definePage({
     title: 'Immobilisation Simple',
     icon: 'mdi:domain',
     order: 8,
+    hideInMenu: true,
   },
 })
 
@@ -30,19 +31,20 @@ const selectedPropriete = ref('')
 // Workflow steps
 const steps = [
   { label: 'Sélection propriété' },
-  { label: 'Catégorie fiscale' },
+  { label: 'Type d\'immobilisation' },
   { label: 'Détails immobilisation' },
 ]
 
 // État du formulaire
 const formData = ref({
-  intitule: '',
-  montant: null as number | null,
-  categorieFiscale: '',
-  dateAcquisition: null as Date | null,
-  dureeAmortissement: null as number | null,
-  description: ''
+  libelle: '',
+  montantTtc: null as number | null,
+  dateAcquisition: null as number | null, // Changé de Date à number pour NDatePicker
+  dureeAnnees: null as number | null,
 })
+
+// Type d'immobilisation sélectionné
+const selectedType = ref('')
 
 // État de l'interface
 const loading = ref(false)
@@ -51,41 +53,83 @@ const proprietes = ref<any[]>([])
 // Validation
 const formRef = ref()
 const rules = {
-  intitule: {
+  libelle: {
     required: true,
-    message: 'L\'intitulé est requis',
+    message: 'Le libellé est requis',
     trigger: 'blur'
   },
-  montant: {
+  montantTtc: {
     required: true,
-    message: 'Le montant est requis',
-    trigger: 'blur'
-  },
-  categorieFiscale: {
-    required: true,
-    message: 'La catégorie fiscale est requise',
-    trigger: 'change'
+    message: 'Le montant TTC est requis',
+    trigger: 'blur',
+    validator: (rule: any, value: any) => {
+      if (!value || value <= 0) {
+        return new Error('Le montant doit être supérieur à 0')
+      }
+      return true
+    }
   },
   dateAcquisition: {
     required: true,
     message: 'La date d\'acquisition est requise',
-    trigger: 'change'
+    trigger: 'change',
+    validator: (rule: any, value: any) => {
+      if (!value) {
+        return new Error('La date d\'acquisition est requise')
+      }
+      const today = new Date()
+      today.setHours(23, 59, 59, 999)
+      if (value > today) {
+        return new Error('La date d\'acquisition ne peut pas être dans le futur')
+      }
+      return true
+    }
   },
-  dureeAmortissement: {
+  dureeAnnees: {
     required: true,
-    message: 'La durée d\'amortissement est requise',
-    trigger: 'blur'
+    message: 'La durée est requise',
+    trigger: 'blur',
+    validator: (rule: any, value: any) => {
+      if (!value || value <= 0) {
+        return new Error('La durée doit être supérieure à 0')
+      }
+      return true
+    }
   }
 }
 
-// Options pour les catégories fiscales basées sur le tableau fourni
-const categorieOptions = computed(() => [
-  { label: '500 - Immobilisations incorporelles', value: '500' },
-  { label: '510 - Terrains', value: '510' },
-  { label: '520 - Constructions', value: '520' },
-  { label: '530 - Installations techniques matériel et outillage industriels', value: '530' },
-  { label: '540 - Installations générales agencement divers', value: '540' },
-  { label: '560 - Autres immobilisations corporelles', value: '560' },
+// Options pour les types d'immobilisation
+const typeOptions = computed(() => [
+  { 
+    label: 'Appartement', 
+    value: 'APPARTEMENT',
+    icon: '🏠',
+    dureeDefaut: 25 // Correspond à BATIMENT_25_ANS
+  },
+  { 
+    label: 'Travaux', 
+    value: 'TRAVAUX',
+    icon: '🛠️',
+    dureeDefaut: 10 // Correspond à TRAVAUX_10_ANS
+  },
+  { 
+    label: 'Mobilier', 
+    value: 'MOBILIER',
+    icon: '🪑',
+    dureeDefaut: 5 // Correspond à MOBILIER_5_ANS
+  },
+  { 
+    label: 'Équipement', 
+    value: 'EQUIPEMENT',
+    icon: '🔌',
+    dureeDefaut: 5 // Correspond à EQUIPEMENT_5_ANS
+  },
+  { 
+    label: 'Frais d\'acquisition', 
+    value: 'FRAIS_ACQUISITION',
+    icon: '📑',
+    dureeDefaut: 5 // Correspond à TRAVAUX_5_ANS
+  },
 ])
 
 // Informations de la propriété sélectionnée
@@ -117,22 +161,28 @@ function selectPropriete(propriete: any) {
   selectedPropriete.value = propriete.id
   
   // Pré-remplir le formulaire avec les informations de la propriété
-  formData.value.intitule = `Immobilisation - ${propriete.nom}`
+  formData.value.libelle = `Immobilisation - ${propriete.nom}`
   
   // Utiliser la date d'acquisition de la propriété si disponible
   if (propriete.dateAcquisition) {
-    formData.value.dateAcquisition = new Date(propriete.dateAcquisition)
+    formData.value.dateAcquisition = new Date(propriete.dateAcquisition).getTime()
   } else {
-    formData.value.dateAcquisition = new Date()
+    formData.value.dateAcquisition = Date.now()
   }
   
   // Passer à l'étape suivante
   nextStep()
 }
 
-// Sélection de catégorie fiscale
-function selectCategorie(categorieValue: string) {
-  formData.value.categorieFiscale = categorieValue
+// Sélection de type d'immobilisation
+function selectType(typeValue: string) {
+  selectedType.value = typeValue
+  
+  // Pré-remplir la durée selon le type sélectionné
+  const typeInfo = typeOptions.value.find(t => t.value === typeValue)
+  if (typeInfo) {
+    formData.value.dureeAnnees = typeInfo.dureeDefaut
+  }
   
   // Passer à l'étape suivante
   nextStep()
@@ -157,13 +207,17 @@ async function submitForm() {
     
     loading.value = true
     
+    // Mapper les champs selon la structure attendue par le backend
     const immobilisationData = {
-      ...formData.value,
       proprieteId: selectedPropriete.value,
       utilisateurId: userId,
-      typeImmobilisation: 'TRAVAUX',
-      montant: formData.value.montant?.toString() || '0',
-      dateAcquisition: formData.value.dateAcquisition?.toISOString().split('T')[0]
+      typeImmobilisation: selectedType.value,
+      intitule: formData.value.libelle, // Le backend attend 'intitule', pas 'libelle'
+      montant: formData.value.montantTtc?.toString() || '0', // Le backend attend 'montant', pas 'montantTtc'
+      dateAcquisition: formData.value.dateAcquisition ? new Date(formData.value.dateAcquisition).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      dureeAmortissement: formData.value.dureeAnnees?.toString() || '0', // Le backend attend 'dureeAmortissement', pas 'dureeAnnees'
+      categorieFiscale: getCategorieFiscaleFromType(selectedType.value), // Ajouter la catégorie fiscale
+      commentaire: '' // Champ requis par le backend
     }
     
     await immobilisationApi.createImmobilisation(immobilisationData)
@@ -176,6 +230,24 @@ async function submitForm() {
     message.error('Erreur lors de la création de l\'immobilisation')
   } finally {
     loading.value = false
+  }
+}
+
+// Fonction pour déterminer la catégorie fiscale selon le type d'immobilisation
+function getCategorieFiscaleFromType(type: string): string {
+  switch (type) {
+    case 'APPARTEMENT':
+      return 'BATIMENT_25_ANS' // Bâtiment avec durée standard
+    case 'TRAVAUX':
+      return 'TRAVAUX_10_ANS' // Travaux avec durée standard
+    case 'MOBILIER':
+      return 'MOBILIER_5_ANS' // Mobilier avec durée standard
+    case 'EQUIPEMENT':
+      return 'EQUIPEMENT_5_ANS' // Équipement avec durée standard
+    case 'FRAIS_ACQUISITION':
+      return 'TRAVAUX_5_ANS' // Frais d'acquisition assimilés aux travaux
+    default:
+      return 'MOBILIER_5_ANS'
   }
 }
 
@@ -206,7 +278,7 @@ onMounted(async () => {
              <div class="mb-8" v-if="!isMobile">
          <NSteps :current="currentStep + 1" size="small">
            <NStep title="Propriété" status="process" description="Choix du bien" />
-           <NStep title="Catégorie" description="Catégorie fiscale" />
+           <NStep title="Type" description="Type d'immobilisation" />
            <NStep title="Détails" description="Informations immobilisation" />
          </NSteps>
        </div>
@@ -268,9 +340,9 @@ onMounted(async () => {
          </NGrid>
       </div>
 
-             <!-- Étape 2: Sélection de la catégorie fiscale -->
+             <!-- Étape 2: Sélection du type d'immobilisation -->
        <div v-if="currentStep === 1">
-         <NH2 class="titre-principal mb-4">Étape 2 : Sélection de la catégorie fiscale</NH2>
+         <NH2 class="titre-principal mb-4">Étape 2 : Sélection du type d'immobilisation</NH2>
          
          <div class="propriete-info mb-4">
            <NAlert type="success">
@@ -285,20 +357,21 @@ onMounted(async () => {
            <template #icon>
              <Icon icon="material-symbols:info-outline" />
            </template>
-           Sélectionnez la catégorie fiscale appropriée pour votre immobilisation selon les standards comptables français.
+           Sélectionnez le type d'immobilisation approprié. La durée d'amortissement sera pré-remplie automatiquement.
          </NAlert>
 
-         <div class="categorie-grid">
+         <div class="type-grid">
            <NCard
-             v-for="categorie in categorieOptions"
-             :key="categorie.value"
+             v-for="type in typeOptions"
+             :key="type.value"
              hoverable
-             class="categorie-card"
-             @click="selectCategorie(categorie.value)"
+             class="type-card"
+             @click="selectType(type.value)"
            >
-             <div class="categorie-content">
-               <div class="categorie-code">{{ categorie.value }}</div>
-               <div class="categorie-label">{{ categorie.label.replace(categorie.value + ' - ', '') }}</div>
+             <div class="type-content">
+               <div class="type-icon">{{ type.icon }}</div>
+               <div class="type-label">{{ type.label }}</div>
+               <div class="type-duree">{{ type.dureeDefaut }} ans</div>
              </div>
            </NCard>
          </div>
@@ -317,27 +390,27 @@ onMounted(async () => {
           </NAlert>
         </div>
 
-        <NForm
-          ref="formRef"
-          :model="formData"
-          :rules="rules"
-          label-placement="left"
-          label-width="auto"
-          require-mark-placement="right-hanging"
-          size="large"
-        >
-          <div class="form-grid">
-            <NFormItem label="Intitulé" path="intitule">
-              <NInput
-                v-model:value="formData.intitule"
-                placeholder="Ex: Ordinateur portable, Mobilier de bureau..."
-                clearable
-              />
-            </NFormItem>
+                 <NForm
+           ref="formRef"
+           :model="formData"
+           :rules="rules"
+           label-placement="left"
+           label-width="auto"
+           require-mark-placement="right-hanging"
+           size="large"
+         >
+           <div class="form-grid">
+             <NFormItem label="Libellé" path="libelle">
+               <NInput
+                 v-model:value="formData.libelle"
+                 placeholder="Ex: Ordinateur portable, Mobilier de bureau..."
+                 clearable
+               />
+             </NFormItem>
 
-                                      <NFormItem label="Montant (€)" path="montant">
+             <NFormItem label="Montant TTC (€)" path="montantTtc">
                <NInputNumber
-                 v-model:value="formData.montant"
+                 v-model:value="formData.montantTtc"
                  placeholder="0,00"
                  :min="0"
                  :precision="2"
@@ -346,46 +419,36 @@ onMounted(async () => {
                />
              </NFormItem>
 
-             <NFormItem label="Catégorie fiscale sélectionnée" path="categorieFiscale">
+             <NFormItem label="Type sélectionné" path="selectedType">
                <NInput
-                 :value="formData.categorieFiscale ? categorieOptions.find(c => c.value === formData.categorieFiscale)?.label : ''"
+                 :value="selectedType ? typeOptions.find(t => t.value === selectedType)?.label : ''"
                  readonly
                  style="width: 100%"
                />
              </NFormItem>
 
-            <NFormItem label="Date d'acquisition" path="dateAcquisition">
-              <NDatePicker
-                v-model:value="formData.dateAcquisition"
-                type="date"
-                placeholder="Sélectionnez une date"
-                clearable
-                style="width: 100%"
-              />
-            </NFormItem>
+             <NFormItem label="Date d'acquisition" path="dateAcquisition">
+               <NDatePicker
+                 v-model:value="formData.dateAcquisition"
+                 type="date"
+                 placeholder="Sélectionnez une date"
+                 clearable
+                 style="width: 100%"
+               />
+             </NFormItem>
 
-            <NFormItem label="Durée d'amortissement (années)" path="dureeAmortissement">
-              <NInputNumber
-                v-model:value="formData.dureeAmortissement"
-                placeholder="Ex: 5"
-                :min="1"
-                :max="50"
-                clearable
-                style="width: 100%"
-              />
-            </NFormItem>
-
-            <NFormItem label="Description" path="description" class="full-width">
-              <NInput
-                v-model:value="formData.description"
-                type="textarea"
-                placeholder="Description détaillée de l'immobilisation..."
-                :rows="3"
-                clearable
-              />
-            </NFormItem>
-          </div>
-        </NForm>
+             <NFormItem label="Durée (années)" path="dureeAnnees">
+               <NInputNumber
+                 v-model:value="formData.dureeAnnees"
+                 placeholder="Ex: 5"
+                 :min="1"
+                 :max="50"
+                 clearable
+                 style="width: 100%"
+               />
+             </NFormItem>
+           </div>
+         </NForm>
       </div>
 
              <!-- Boutons de navigation -->
@@ -567,6 +630,55 @@ onMounted(async () => {
   font-size: 0.9rem;
   color: var(--n-text-color-2);
   line-height: 1.4;
+}
+
+/* Styles pour les cartes de type d'immobilisation */
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+  width: 100%;
+}
+
+.type-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  padding: 20px;
+  text-align: center;
+}
+
+.type-card:hover {
+  border-color: var(--n-primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.type-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.type-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.type-label {
+  font-weight: 600;
+  color: var(--n-text-color);
+  font-size: 1rem;
+}
+
+.type-duree {
+  font-size: 0.8rem;
+  color: var(--n-text-color-2);
+  background: var(--n-color-modal);
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 /* Amélioration de la lisibilité des champs de formulaire */

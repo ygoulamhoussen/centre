@@ -28,153 +28,49 @@
       </n-alert>
 
       <div v-if="suiviData" class="space-y-6">
-        <!-- Tableau d'évolution des immobilisations -->
-        <n-card title="État des immobilisations" size="small">
-          <div v-if="!isMobile">
-            <n-table :bordered="false" :single-line="false" size="small">
-                             <thead>
-                 <tr>
-                   <th class="text-left">Numéro de compte</th>
-                   <th class="text-left">Libellé</th>
-                   <th class="text-center">Valeur brute au début de l'exercice</th>
-                   <th class="text-center">Augmentations</th>
-                   <th class="text-center">Diminutions</th>
-                   <th class="text-center">Valeur brute à la fin de l'exercice</th>
-                 </tr>
-               </thead>
-              <tbody>
-                                 <tr v-for="categorie in categoriesImmobilisations" :key="categorie.code">
-                   <td class="font-medium text-center">{{ categorie.code }}</td>
-                   <td class="font-medium">{{ categorie.nom }}</td>
-                  <td class="text-center">
-                    <div class="code-montant">
-                      <span class="code">{{ categorie.codeDebut }}</span>
-                      <span class="montant">{{ formatCurrency(categorie.valeurDebut) }}</span>
-                    </div>
-                  </td>
-                  <td class="text-center">
-                    <div class="code-montant">
-                      <span class="code">{{ categorie.codeAugmentation }}</span>
-                      <span class="montant">{{ formatCurrency(categorie.augmentations) }}</span>
-                    </div>
-                  </td>
-                  <td class="text-center">
-                    <div class="code-montant">
-                      <span class="code">{{ categorie.codeDiminution }}</span>
-                      <span class="montant">{{ formatCurrency(categorie.diminutions) }}</span>
-                    </div>
-                  </td>
-                  <td class="text-center">
-                    <div class="code-montant">
-                      <span class="code">{{ categorie.codeFin }}</span>
-                      <span class="montant">{{ formatCurrency(categorie.valeurFin) }}</span>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-                             <tfoot>
-                 <tr class="font-bold bg-gray-50">
-                   <td class="text-center">490-496</td>
-                   <td>TOTAL</td>
-                  <td class="text-center">
-                    <div class="code-montant">
-                      <span class="code">490</span>
-                      <span class="montant">{{ formatCurrency(totalValeurDebut) }}</span>
-                    </div>
-                  </td>
-                  <td class="text-center">
-                    <div class="code-montant">
-                      <span class="code">492</span>
-                      <span class="montant">{{ formatCurrency(totalAugmentations) }}</span>
-                    </div>
-                  </td>
-                  <td class="text-center">
-                    <div class="code-montant">
-                      <span class="code">494</span>
-                      <span class="montant">{{ formatCurrency(totalDiminutions) }}</span>
-                    </div>
-                  </td>
-                  <td class="text-center">
-                    <div class="code-montant">
-                      <span class="code">496</span>
-                      <span class="montant">{{ formatCurrency(totalValeurFin) }}</span>
-                    </div>
-                  </td>
-                </tr>
-              </tfoot>
-            </n-table>
-          </div>
-          <div v-else class="cards-mobile-list">
-                         <n-card v-for="categorie in categoriesImmobilisations" :key="categorie.code" class="mobile-detail-card mb-2" size="small">
+                 <!-- Tableau d'évolution des amortissements -->
+         <n-card title="État des amortissements" size="small">
+           <div v-if="!isMobile">
+             <n-data-table
+               :columns="amortissementColumns"
+               :data="categoriesImmobilisations"
+               :pagination="false"
+               :bordered="false"
+               size="small"
+               :row-class-name="getRowClassName"
+             />
+           </div>
+           <div v-else class="cards-mobile-list">
+             <n-card v-for="categorie in categoriesImmobilisations" :key="categorie.code" class="mobile-detail-card mb-2" size="small">
                <div class="font-bold mb-2">{{ categorie.code }} - {{ categorie.nom }}</div>
-              <div class="text-xs text-gray-500 mb-1">
-                <b>Valeur brute au début :</b> {{ categorie.codeDebut }} {{ formatCurrency(categorie.valeurDebut) }}
-              </div>
-              <div class="text-xs text-gray-500 mb-1">
-                <b>Augmentations :</b> {{ categorie.codeAugmentation }} {{ formatCurrency(categorie.augmentations) }}
-              </div>
-              <div class="text-xs text-gray-500 mb-1">
-                <b>Diminutions :</b> {{ categorie.codeDiminution }} {{ formatCurrency(categorie.diminutions) }}
-              </div>
-              <div class="text-xs text-gray-500 mb-1">
-                <b>Valeur brute à la fin :</b> {{ categorie.codeFin }} {{ formatCurrency(categorie.valeurFin) }}
-              </div>
-            </n-card>
-          </div>
-        </n-card>
+               <div class="text-xs text-gray-500 mb-1">
+                 <b>Valeur brute au début :</b> {{ categorie.codeDebut }} {{ formatCurrency(categorie.valeurDebut) }}
+               </div>
+               <div class="text-xs text-gray-500 mb-1">
+                 <b>Augmentations :</b> {{ categorie.codeAugmentation }} {{ formatCurrency(categorie.augmentations) }}
+               </div>
+               <div class="text-xs text-gray-500 mb-1">
+                 <b>Diminutions :</b> {{ categorie.codeDiminution }} {{ formatCurrency(categorie.diminutions) }}
+               </div>
+               <div class="text-xs text-gray-500 mb-1">
+                 <b>Valeur brute à la fin :</b> {{ categorie.codeFin }} {{ formatCurrency(categorie.valeurFin) }}
+               </div>
+             </n-card>
+           </div>
+         </n-card>
 
-        <!-- Tableau des immobilisations détaillé -->
-        <n-card title="Détail des immobilisations" size="small">
-          <div v-if="!isMobile">
-            <n-table :bordered="false" :single-line="false" size="small">
-              <thead>
-                <tr>
-                  <th class="text-left">Nature de l'immobilisation</th>
-                  <th class="text-center">Date d'acquisition</th>
-                  <th class="text-right">Montant HT</th>
-                  <th class="text-right">Base amortissable</th>
-                  <th class="text-center">Durée (ans)</th>
-                  <th class="text-center">Taux (%)</th>
-                  <th class="text-right">Cumul antérieur</th>
-                  <th class="text-right">Dotation exercice</th>
-                  <th class="text-right">Amort. exceptionnel</th>
-                  <th class="text-right">Cumul clôture</th>
-                  <th class="text-right">VNC</th>
-                  <th class="text-left">Propriété</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="immo in suiviData.immobilisations" :key="immo.id">
-                  <td class="font-medium">{{ immo.nature }}</td>
-                  <td class="text-center">{{ formatDate(immo.dateAcquisition) }}</td>
-                  <td class="text-right">{{ formatCurrency(immo.montantHT) }}</td>
-                  <td class="text-right">{{ formatCurrency(immo.baseAmortissable) }}</td>
-                  <td class="text-center">{{ immo.dureeAmortissement }}</td>
-                  <td class="text-center">{{ formatPercentage(immo.tauxAmortissement) }}</td>
-                  <td class="text-right">{{ formatCurrency(immo.cumulAmortissementsAnterieurs) }}</td>
-                  <td class="text-right font-medium text-blue-600">{{ formatCurrency(immo.dotationExercice) }}</td>
-                  <td class="text-right">{{ formatCurrency(immo.amortissementExceptionnel) }}</td>
-                  <td class="text-right">{{ formatCurrency(immo.cumulAmortissementsCloture) }}</td>
-                  <td class="text-right font-bold text-green-600">{{ formatCurrency(immo.valeurNetteComptable) }}</td>
-                  <td class="text-sm text-gray-600">{{ immo.propriete }}</td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr class="font-bold bg-gray-50">
-                  <td colspan="3" class="text-right">TOTAUX :</td>
-                  <td class="text-right">{{ formatCurrency(suiviData.totalBaseAmortissable) }}</td>
-                  <td></td>
-                  <td></td>
-                  <td class="text-right">{{ formatCurrency(suiviData.totalCumulAmortissementsAnterieurs) }}</td>
-                  <td class="text-right text-blue-600">{{ formatCurrency(suiviData.totalDotationExercice) }}</td>
-                  <td></td>
-                  <td class="text-right">{{ formatCurrency(suiviData.totalCumulAmortissementsCloture) }}</td>
-                  <td class="text-right text-green-600">{{ formatCurrency(suiviData.totalValeurNetteComptable) }}</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </n-table>
-          </div>
+                 <!-- Tableau des immobilisations détaillé -->
+         <n-card title="Détail des immobilisations" size="small">
+           <div v-if="!isMobile">
+             <n-data-table
+               :columns="detailColumns"
+               :data="detailImmobilisations"
+               :pagination="false"
+               :bordered="false"
+               size="small"
+               :row-class-name="getDetailRowClassName"
+             />
+           </div>
           <div v-else class="cards-mobile-list">
             <n-card v-for="immo in suiviData.immobilisations" :key="immo.id" class="mobile-detail-card mb-2" size="small">
               <div class="font-bold mb-1">{{ immo.nature }}</div>
@@ -241,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, h } from 'vue'
 import { useMessage } from 'naive-ui'
 import { InformationCircleOutline } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
@@ -266,9 +162,9 @@ const error = ref('')
 const suiviData = ref<any>(null)
 
 // Options pour les années
-const yearOptions = Array.from({ length: 10 }, (_, i) => ({
-  label: (new Date().getFullYear() - 5 + i).toString(),
-  value: new Date().getFullYear() - 5 + i
+const yearOptions = Array.from({ length: 20 }, (_, i) => ({
+  label: (new Date().getFullYear() - 10 + i).toString(),
+  value: new Date().getFullYear() - 10 + i
 }))
 
 // Chargement des données
@@ -307,11 +203,15 @@ const formatDate = (date: string) => {
 
 const formatCurrency = (amount: number) => {
   if (amount === null || amount === undefined) return '0,00 €'
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2
+  
+  // Formatage personnalisé pour correspondre au tableau
+  const formatted = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: true
   }).format(amount)
+  
+  return `${formatted} €`
 }
 
 const formatPercentage = (rate: number) => {
@@ -327,18 +227,30 @@ onMounted(() => {
 const { width } = useWindowSize()
 const isMobile = computed(() => width.value <= 640)
 
-// Calcul des catégories d'immobilisations
+// Calcul des catégories d'amortissements selon le tableau fourni
 const categoriesImmobilisations = computed(() => {
   if (!suiviData.value?.immobilisations) return []
   
   const categories = [
     {
+      nom: 'Immobilisations incorporelles',
+      code: '500',
+      codeDebut: '500',
+      codeAugmentation: '502',
+      codeDiminution: '504',
+      codeFin: '506',
+      valeurDebut: 0,
+      augmentations: 0,
+      diminutions: 0,
+      valeurFin: 0,
+    },
+    {
       nom: 'Terrains',
-      code: '420',
-      codeDebut: '420',
-      codeAugmentation: '422',
-      codeDiminution: '424',
-      codeFin: '426',
+      code: '510',
+      codeDebut: '510',
+      codeAugmentation: '512',
+      codeDiminution: '514',
+      codeFin: '516',
       valeurDebut: 0,
       augmentations: 0,
       diminutions: 0,
@@ -346,11 +258,11 @@ const categoriesImmobilisations = computed(() => {
     },
     {
       nom: 'Constructions',
-      code: '430',
-      codeDebut: '430',
-      codeAugmentation: '432',
-      codeDiminution: '434',
-      codeFin: '436',
+      code: '520',
+      codeDebut: '520',
+      codeAugmentation: '522',
+      codeDiminution: '524',
+      codeFin: '526',
       valeurDebut: 0,
       augmentations: 0,
       diminutions: 0,
@@ -358,11 +270,11 @@ const categoriesImmobilisations = computed(() => {
     },
     {
       nom: 'Installations techniques matériel et outillage industriels',
-      code: '440',
-      codeDebut: '440',
-      codeAugmentation: '442',
-      codeDiminution: '444',
-      codeFin: '446',
+      code: '530',
+      codeDebut: '530',
+      codeAugmentation: '532',
+      codeDiminution: '534',
+      codeFin: '536',
       valeurDebut: 0,
       augmentations: 0,
       diminutions: 0,
@@ -370,11 +282,11 @@ const categoriesImmobilisations = computed(() => {
     },
     {
       nom: 'Installations générales agencement divers',
-      code: '450',
-      codeDebut: '450',
-      codeAugmentation: '452',
-      codeDiminution: '454',
-      codeFin: '456',
+      code: '540',
+      codeDebut: '540',
+      codeAugmentation: '542',
+      codeDiminution: '544',
+      codeFin: '546',
       valeurDebut: 0,
       augmentations: 0,
       diminutions: 0,
@@ -382,23 +294,11 @@ const categoriesImmobilisations = computed(() => {
     },
     {
       nom: 'Autres immobilisations corporelles',
-      code: '470',
-      codeDebut: '470',
-      codeAugmentation: '472',
-      codeDiminution: '474',
-      codeFin: '476',
-      valeurDebut: 0,
-      augmentations: 0,
-      diminutions: 0,
-      valeurFin: 0,
-    },
-    {
-      nom: 'Immobilisations financières',
-      code: '480',
-      codeDebut: '480',
-      codeAugmentation: '482',
-      codeDiminution: '484',
-      codeFin: '486',
+      code: '560',
+      codeDebut: '560',
+      codeAugmentation: '562',
+      codeDiminution: '564',
+      codeFin: '566',
       valeurDebut: 0,
       augmentations: 0,
       diminutions: 0,
@@ -406,58 +306,292 @@ const categoriesImmobilisations = computed(() => {
     },
   ]
   
-  // Calculer les valeurs pour chaque catégorie
+  // Calculer les montants dynamiquement à partir des données du backend
   suiviData.value.immobilisations.forEach((immo: any) => {
-    const montantHT = immo.montantHT || 0
-    const cumulAnterieur = immo.cumulAmortissementsAnterieurs || 0
-    const dotationExercice = immo.dotationExercice || 0
+    const nature = immo.nature.toLowerCase()
+    const cumulAnterieurs = Number(immo.cumulAmortissementsAnterieurs) || 0
+    const dotationExercice = Number(immo.dotationExercice) || 0
+    const cumulCloture = Number(immo.cumulAmortissementsCloture) || 0
     
-    // Déterminer la catégorie selon la nature
-    let categorieIndex = -1
-    if (immo.nature.toLowerCase().includes('terrain')) {
-      categorieIndex = 0 // Terrains
-    } else if (immo.nature.toLowerCase().includes('construction') || immo.nature.toLowerCase().includes('bâtiment')) {
-      categorieIndex = 1 // Constructions
-    } else if (immo.nature.toLowerCase().includes('technique') || immo.nature.toLowerCase().includes('industriel')) {
-      categorieIndex = 2 // Installations techniques
-    } else if (immo.nature.toLowerCase().includes('général') || immo.nature.toLowerCase().includes('agencement')) {
-      categorieIndex = 3 // Installations générales
-    } else if (immo.nature.toLowerCase().includes('financier')) {
-      categorieIndex = 5 // Immobilisations financières
+    // Catégoriser selon la nature de l'immobilisation
+    if (nature.includes('terrain')) {
+      // 510 - Terrains (non amortissables)
+      categories[1].valeurDebut += cumulAnterieurs
+      categories[1].augmentations += dotationExercice
+      categories[1].valeurFin += cumulCloture
+    } else if (nature.includes('construction') || nature.includes('gros œuvre') || nature.includes('structure')) {
+      // 520 - Constructions
+      categories[2].valeurDebut += cumulAnterieurs
+      categories[2].augmentations += dotationExercice
+      categories[2].valeurFin += cumulCloture
+    } else if (nature.includes('installation') || nature.includes('technique') || nature.includes('façade') || nature.includes('étanchéité') || nature.includes('igt')) {
+      // 530 - Installations techniques
+      categories[3].valeurDebut += cumulAnterieurs
+      categories[3].augmentations += dotationExercice
+      categories[3].valeurFin += cumulCloture
+    } else if (nature.includes('agencement') || nature.includes('cloisons') || nature.includes('chapes') || nature.includes('plateries') || nature.includes('revetement') || nature.includes('plomberie') || nature.includes('cablage')) {
+      // 540 - Installations générales
+      categories[4].valeurDebut += cumulAnterieurs
+      categories[4].augmentations += dotationExercice
+      categories[4].valeurFin += cumulCloture
     } else {
-      categorieIndex = 4 // Autres immobilisations corporelles
-    }
-    
-    if (categorieIndex >= 0) {
-      // Valeur brute = montant HT (pas de déduction des amortissements)
-      categories[categorieIndex].valeurDebut += montantHT
-      // Les dotations d'amortissement sont des diminutions
-      categories[categorieIndex].diminutions += dotationExercice
-      // Valeur brute à la fin = valeur brute début - dotations
-      categories[categorieIndex].valeurFin += montantHT - dotationExercice
-      // Pas d'augmentations pour l'instant (à adapter selon les besoins)
+      // 560 - Autres immobilisations corporelles
+      categories[5].valeurDebut += cumulAnterieurs
+      categories[5].augmentations += dotationExercice
+      categories[5].valeurFin += cumulCloture
     }
   })
   
-  return categories
+  console.log('Catégories calculées:', categories)
+  
+  // Calculer les totaux
+  const totalValeurDebut = categories.reduce((sum, cat) => sum + cat.valeurDebut, 0)
+  const totalAugmentations = categories.reduce((sum, cat) => sum + cat.augmentations, 0)
+  const totalDiminutions = categories.reduce((sum, cat) => sum + cat.diminutions, 0)
+  const totalValeurFin = categories.reduce((sum, cat) => sum + cat.valeurFin, 0)
+  
+  // Ajouter la ligne de total
+  const categoriesWithTotal = [...categories, {
+    nom: 'TOTAL',
+    code: '570-576',
+    codeDebut: '570',
+    codeAugmentation: '572',
+    codeDiminution: '574',
+    codeFin: '576',
+    valeurDebut: totalValeurDebut,
+    augmentations: totalAugmentations,
+    diminutions: totalDiminutions,
+    valeurFin: totalValeurFin,
+  }]
+  
+  return categoriesWithTotal
 })
 
-// Calcul des totaux
-const totalValeurDebut = computed(() => {
-  return categoriesImmobilisations.value.reduce((sum, cat) => sum + cat.valeurDebut, 0)
+// Configuration des colonnes pour NDataTable
+const amortissementColumns = [
+  {
+    title: 'Numéro de compte',
+    key: 'code',
+    width: 120,
+    align: 'center',
+    className: 'font-medium'
+  },
+  {
+    title: 'Libellé',
+    key: 'nom',
+    width: 300,
+    align: 'left',
+    className: 'font-medium'
+  },
+  {
+    title: 'Code',
+    key: 'codeDebut',
+    width: 60,
+    align: 'center',
+    className: 'font-medium'
+  },
+  {
+    title: 'Montant des amortissements au début de l\'exercice',
+    key: 'valeurDebut',
+    width: 180,
+    align: 'center',
+    render: (row: any) => formatCurrency(row.valeurDebut)
+  },
+  {
+    title: 'Code',
+    key: 'codeAugmentation',
+    width: 60,
+    align: 'center',
+    className: 'font-medium'
+  },
+  {
+    title: 'Augmentations (dotations de l\'exercice)',
+    key: 'augmentations',
+    width: 180,
+    align: 'center',
+    render: (row: any) => formatCurrency(row.augmentations)
+  },
+  {
+    title: 'Code',
+    key: 'codeDiminution',
+    width: 60,
+    align: 'center',
+    className: 'font-medium'
+  },
+  {
+    title: 'Diminutions (amortissements afférents aux éléments sortis de l\'actif et reprises)',
+    key: 'diminutions',
+    width: 180,
+    align: 'center',
+    render: (row: any) => formatCurrency(row.diminutions)
+  },
+  {
+    title: 'Code',
+    key: 'codeFin',
+    width: 60,
+    align: 'center',
+    className: 'font-medium'
+  },
+  {
+    title: 'Montant des amortissements à la fin de l\'exercice',
+    key: 'valeurFin',
+    width: 180,
+    align: 'center',
+    render: (row: any) => formatCurrency(row.valeurFin)
+  }
+]
+
+// Fonction pour appliquer des classes CSS aux lignes
+const getRowClassName = (row: any) => {
+  if (row.code === '570-576') {
+    return 'total-row'
+  }
+  return ''
+}
+
+// Données détaillées des immobilisations avec ligne de total
+const detailImmobilisations = computed(() => {
+  if (!suiviData.value?.immobilisations) return []
+  
+  const immobilisations = suiviData.value.immobilisations.map((immo: any) => ({
+    id: immo.id,
+    nature: immo.nature,
+    dateAcquisition: immo.dateAcquisition,
+    montantHT: Number(immo.montantHT) || 0,
+    baseAmortissable: Number(immo.baseAmortissable) || 0,
+    dureeAmortissement: immo.dureeAmortissement,
+    tauxAmortissement: Number(immo.tauxAmortissement) || 0,
+    cumulAmortissementsAnterieurs: Number(immo.cumulAmortissementsAnterieurs) || 0,
+    dotationExercice: Number(immo.dotationExercice) || 0,
+    amortissementExceptionnel: Number(immo.amortissementExceptionnel) || 0,
+    cumulAmortissementsCloture: Number(immo.cumulAmortissementsCloture) || 0,
+    valeurNetteComptable: Number(immo.valeurNetteComptable) || 0,
+    propriete: immo.propriete,
+  }))
+  
+  // Calculer les totaux
+  const totalBaseAmortissable = immobilisations.reduce((sum, immo) => sum + immo.baseAmortissable, 0)
+  const totalCumulAmortissementsAnterieurs = immobilisations.reduce((sum, immo) => sum + immo.cumulAmortissementsAnterieurs, 0)
+  const totalDotationExercice = immobilisations.reduce((sum, immo) => sum + immo.dotationExercice, 0)
+  const totalCumulAmortissementsCloture = immobilisations.reduce((sum, immo) => sum + immo.cumulAmortissementsCloture, 0)
+  const totalValeurNetteComptable = immobilisations.reduce((sum, immo) => sum + immo.valeurNetteComptable, 0)
+  
+  // Ajouter la ligne de total
+  const immobilisationsWithTotal = [...immobilisations, {
+    id: 'total',
+    nature: 'TOTAUX',
+    dateAcquisition: '',
+    montantHT: 0,
+    baseAmortissable: totalBaseAmortissable,
+    dureeAmortissement: '',
+    tauxAmortissement: 0,
+    cumulAmortissementsAnterieurs: totalCumulAmortissementsAnterieurs,
+    dotationExercice: totalDotationExercice,
+    amortissementExceptionnel: 0,
+    cumulAmortissementsCloture: totalCumulAmortissementsCloture,
+    valeurNetteComptable: totalValeurNetteComptable,
+    propriete: '',
+  }]
+  
+  return immobilisationsWithTotal
 })
 
-const totalAugmentations = computed(() => {
-  return categoriesImmobilisations.value.reduce((sum, cat) => sum + cat.augmentations, 0)
-})
+// Configuration des colonnes pour le tableau détaillé
+const detailColumns = [
+  {
+    title: 'Nature de l\'immobilisation',
+    key: 'nature',
+    width: 250,
+    align: 'left',
+    className: 'font-medium'
+  },
+  {
+    title: 'Date d\'acquisition',
+    key: 'dateAcquisition',
+    width: 120,
+    align: 'center',
+    render: (row: any) => formatDate(row.dateAcquisition)
+  },
+  {
+    title: 'Montant HT',
+    key: 'montantHT',
+    width: 120,
+    align: 'right',
+    render: (row: any) => formatCurrency(row.montantHT)
+  },
+  {
+    title: 'Base amortissable',
+    key: 'baseAmortissable',
+    width: 140,
+    align: 'right',
+    render: (row: any) => formatCurrency(row.baseAmortissable)
+  },
+  {
+    title: 'Durée (ans)',
+    key: 'dureeAmortissement',
+    width: 100,
+    align: 'center'
+  },
+  {
+    title: 'Taux (%)',
+    key: 'tauxAmortissement',
+    width: 100,
+    align: 'center',
+    render: (row: any) => formatPercentage(row.tauxAmortissement)
+  },
+  {
+    title: 'Cumul antérieur',
+    key: 'cumulAmortissementsAnterieurs',
+    width: 140,
+    align: 'right',
+    render: (row: any) => formatCurrency(row.cumulAmortissementsAnterieurs)
+  },
+  {
+    title: 'Dotation exercice',
+    key: 'dotationExercice',
+    width: 140,
+    align: 'right',
+    render: (row: any) => formatCurrency(row.dotationExercice),
+    className: 'text-blue-600 font-medium'
+  },
+  {
+    title: 'Amort. exceptionnel',
+    key: 'amortissementExceptionnel',
+    width: 140,
+    align: 'right',
+    render: (row: any) => formatCurrency(row.amortissementExceptionnel)
+  },
+  {
+    title: 'Cumul clôture',
+    key: 'cumulAmortissementsCloture',
+    width: 140,
+    align: 'right',
+    render: (row: any) => formatCurrency(row.cumulAmortissementsCloture)
+  },
+  {
+    title: 'VNC',
+    key: 'valeurNetteComptable',
+    width: 120,
+    align: 'right',
+    render: (row: any) => formatCurrency(row.valeurNetteComptable),
+    className: 'text-green-600 font-bold'
+  },
+  {
+    title: 'Propriété',
+    key: 'propriete',
+    width: 150,
+    align: 'left',
+    className: 'text-sm text-gray-600'
+  }
+]
 
-const totalDiminutions = computed(() => {
-  return categoriesImmobilisations.value.reduce((sum, cat) => sum + cat.diminutions, 0)
-})
-
-const totalValeurFin = computed(() => {
-  return categoriesImmobilisations.value.reduce((sum, cat) => sum + cat.valeurFin, 0)
-})
+// Fonction pour appliquer des classes CSS aux lignes du tableau détaillé
+const getDetailRowClassName = (row: any) => {
+  if (row.id === 'total') {
+    return 'detail-total-row'
+  }
+  return ''
+}
 </script>
 
 <style scoped>
@@ -527,53 +661,256 @@ const totalValeurFin = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  padding: 8px 4px;
+}
+
+.code-montant-horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  justify-content: flex-start;
 }
 
 .code-montant .code {
-  font-weight: bold;
+  font-weight: 600;
   color: #1e40af;
-  font-size: 0.85em;
-  background-color: #e0f2fe;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: 0.75em;
+  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+  padding: 3px 6px;
+  border-radius: 6px;
   min-width: 40px;
   text-align: center;
+  border: 1px solid #81d4fa;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .code-montant .montant {
-  font-weight: 500;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: #374151;
+  color: #1f2937;
+  font-size: 0.95em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.n-table {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .n-table th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-  color: #374151;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-weight: 700;
+  color: #1e293b;
   text-align: center;
+  padding: 16px 12px;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #cbd5e1;
+  line-height: 1.3;
+  white-space: normal;
+  vertical-align: middle;
+  min-height: 60px;
 }
 
 .n-table th:first-child {
   text-align: left;
+  width: 80px;
+  min-width: 80px;
+}
+
+.n-table th:nth-child(2) {
+  text-align: left;
+  width: 300px;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+/* Styles spécifiques pour le tableau détaillé */
+.n-table tbody tr td:nth-child(7),
+.n-table tbody tr td:nth-child(8),
+.n-table tbody tr td:nth-child(10),
+.n-table tbody tr td:nth-child(11) {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.n-table tbody tr td:nth-child(8) {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.n-table tbody tr td:nth-child(11) {
+  color: #059669;
+  font-weight: 700;
+}
+
+/* Styles pour les totaux du tableau détaillé */
+.n-table tfoot tr td:nth-child(4),
+.n-table tfoot tr td:nth-child(7),
+.n-table tfoot tr td:nth-child(8),
+.n-table tfoot tr td:nth-child(10),
+.n-table tfoot tr td:nth-child(11) {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.n-table tfoot tr td:nth-child(8) {
+  color: #2563eb;
+}
+
+.n-table tfoot tr td:nth-child(11) {
+  color: #059669;
 }
 
 .n-table td {
-  padding: 8px 12px;
+  padding: 12px;
   vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+}
+
+.n-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.n-table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
 }
 
 .n-table tfoot tr {
-  border-top: 2px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
 }
 
 .n-table tfoot .code-montant .code {
-  background-color: #d1fae5;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
   color: #065f46;
+  border: 1px solid #6ee7b7;
+  font-weight: 700;
 }
 
 .n-table tfoot .code-montant .montant {
-  font-weight: bold;
+  font-weight: 700;
   color: #065f46;
+  font-size: 1em;
+}
+
+/* Styles pour les cellules avec codes */
+.n-table td:first-child {
+  font-weight: 600;
+  color: #1e40af;
+  background-color: #f8fafc;
+  width: 80px;
+  min-width: 80px;
+}
+
+.n-table td:nth-child(2) {
+  font-weight: 600;
+  color: #374151;
+  width: 300px;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+/* Colonnes avec uniquement des montants - plus petites */
+.n-table td:nth-child(3),
+.n-table td:nth-child(4),
+.n-table td:nth-child(5),
+.n-table td:nth-child(6) {
+  width: 140px;
+  min-width: 140px;
+  max-width: 160px;
+}
+
+.n-table th:nth-child(3),
+.n-table th:nth-child(4),
+.n-table th:nth-child(5),
+.n-table th:nth-child(6) {
+  width: 140px;
+  min-width: 140px;
+  max-width: 160px;
+}
+
+/* Animation pour les montants */
+.code-montant .montant {
+  transition: transform 0.2s ease;
+}
+
+.code-montant:hover .montant {
+  transform: scale(1.05);
+}
+
+/* Responsive design amélioré */
+@media (max-width: 768px) {
+  .n-table th,
+  .n-table td {
+    padding: 8px 6px;
+    font-size: 0.85em;
+  }
+  
+  .code-montant .code {
+    font-size: 0.75em;
+    padding: 2px 6px;
+    min-width: 35px;
+  }
+  
+  .code-montant .montant {
+    font-size: 0.85em;
+  }
+}
+
+/* Styles pour NDataTable */
+.n-data-table .total-row {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  font-weight: 700;
+  border-top: 3px solid #3b82f6;
+}
+
+.n-data-table .total-row .code-montant .code,
+.n-data-table .total-row .code-montant-horizontal .code {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  font-weight: 700;
+}
+
+.n-data-table .total-row .code-montant .montant,
+.n-data-table .total-row .code-montant-horizontal .montant {
+  font-weight: 700;
+  color: #065f46;
+  font-size: 1em;
+}
+
+/* Styles pour la ligne de total du tableau détaillé */
+.n-data-table .detail-total-row {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  font-weight: 700;
+  border-top: 3px solid #3b82f6;
+}
+
+.n-data-table .detail-total-row td {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.n-data-table .detail-total-row td:nth-child(4),
+.n-data-table .detail-total-row td:nth-child(7),
+.n-data-table .detail-total-row td:nth-child(8),
+.n-data-table .detail-total-row td:nth-child(10),
+.n-data-table .detail-total-row td:nth-child(11) {
+  font-variant-numeric: tabular-nums;
+}
+
+.n-data-table .detail-total-row td:nth-child(8) {
+  color: #2563eb;
+}
+
+.n-data-table .detail-total-row td:nth-child(11) {
+  color: #059669;
 }
 </style> 

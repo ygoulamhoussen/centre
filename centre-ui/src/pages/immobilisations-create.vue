@@ -55,7 +55,13 @@
                 Montant total : <strong>{{ formatCurrency(formData.montant) }}</strong>
               </p>
               <p class="info-text">
-                Nous proposons une décomposition automatique selon les standards immobiliers. Vous pouvez ajuster les montants.
+                Frais d'acquisition : <strong>{{ formatCurrency(fraisAcquisition) }}</strong>
+              </p>
+              <p class="info-text">
+                Montant total amortissable : <strong>{{ formatCurrency(montantTotalAmortissable) }}</strong>
+              </p>
+              <p class="info-text">
+                Nous proposons une décomposition automatique selon les standards fiscaux français (BOFiP). Les frais d'acquisition font partie de la base amortissable.
               </p>
             </div>
             <div class="decomposition-section mb-4">
@@ -66,7 +72,7 @@
                     <template #icon>
                       <Icon icon="material-symbols:refresh" />
                     </template>
-                    Appliquer la décomposition standard
+                    Appliquer la décomposition BOFiP
                   </NButton>
                   <NButton size="small" @click="setAllToZero">
                     <template #icon>
@@ -80,7 +86,7 @@
                     <template #icon>
                       <Icon icon="material-symbols:refresh" />
                     </template>
-                    Appliquer la décomposition standard
+                    Appliquer la décomposition BOFiP
                   </NButton>
                   <NButton size="small" @click="setAllToZero">
                     <template #icon>
@@ -113,34 +119,25 @@
                     </div>
                     <div class="detail-item">
                       <span class="detail-label">Durée d'amortissement :</span>
-                      <NSelect
-                        :value="String(component.dureeAmortissement)"
-                        :options="getDureeOptions(component)"
+                      <NInputNumber
+                        v-if="component.amortissable"
+                        v-model:value="component.dureeAmortissement"
+                        :min="0"
+                        :max="100"
+                        :precision="0"
+                        suffix=" ans"
+                        placeholder="Durée en années"
                         style="width: 100%"
-                        @update:value="val => component.dureeAmortissement = String(val)"
                       />
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Type :</span>
-                      <div class="readonly-value">
-                        {{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation as TypeImmobilisation] || '—' }}
+                      <div v-else class="readonly-value">
+                        NON AMORTISSABLE
                       </div>
                     </div>
+
                   </div>
-                  <div class="component-montant">Montant : {{ formatCurrency(Number(component.percent) * formData.montant / 100) }}</div>
+                  <div class="component-montant">Montant : {{ formatCurrency(Number(component.percent) * montantTotalAmortissable / 100) }}</div>
                 </div>
-                <div class="component-card acquisition-fees-card">
-                  <div class="component-header">
-                    <h4>Frais d'acquisition</h4>
-                  </div>
-                  <div class="component-details">
-                    <div class="detail-item">
-                      <span class="detail-label">Montant :</span>
-                      <span>{{ formatCurrency(fraisAcquisition) }}</span>
-                    </div>
-                  </div>
-                  <div class="component-montant">Montant : {{ formatCurrency(fraisAcquisition) }}</div>
-                </div>
+
               </div>
               <div class="decomposition-summary mt-4">
                 <div class="summary-header">
@@ -151,9 +148,9 @@
                     <span>Total des composants :</span>
                     <span class="summary-value">{{ formatCurrency(totalComponents) }}</span>
                   </div>
-                  <div class="summary-item" :class="{ error: totalComponents !== formData.montant }">
+                  <div class="summary-item" :class="{ error: totalComponents !== montantTotalAmortissable }">
                     <span>Différence :</span>
-                    <span class="summary-value">{{ formatCurrency(formData.montant - totalComponents) }}</span>
+                    <span class="summary-value">{{ formatCurrency(montantTotalAmortissable - totalComponents) }}</span>
                   </div>
                   <div class="summary-item">
                     <span>Pourcentage utilisé :</span>
@@ -190,7 +187,6 @@
                       <th>%</th>
                       <th>Montant</th>
                       <th>Durée</th>
-                      <th>Type</th>
                       <th>Catégorie fiscale</th>
                     </tr>
                   </thead>
@@ -198,9 +194,8 @@
                     <tr v-for="component in immobilisationComponents" :key="component.key">
                       <td>{{ component.label }}</td>
                       <td>{{ component.percent }}</td>
-                      <td>{{ formatCurrency(component.percent * formData.montant / 100) }}</td>
-                      <td>{{ component.dureeAmortissement || '—' }}</td>
-                      <td>{{ TYPE_IMMOBILISATION_LABELS[component.typeImmobilisation as TypeImmobilisation] || '—' }}</td>
+                      <td>{{ formatCurrency(component.percent * montantTotalAmortissable / 100) }}</td>
+                      <td>{{ component.dureeAmortissement ? `${component.dureeAmortissement} ans` : '—' }}</td>
                       <td>{{ getCategorieFiscaleLabel(component) }}</td>
                     </tr>
                   </tbody>
@@ -209,7 +204,7 @@
                       <th>Total</th>
                       <th>{{ totalPercent }}</th>
                       <th>{{ formatCurrency(totalComponents) }}</th>
-                      <th colspan="3"></th>
+                      <th colspan="2"></th>
                     </tr>
                   </tfoot>
                 </table>
@@ -229,7 +224,7 @@
             </NButton>
             <NButton
               type="primary"
-              :disabled="Math.abs(totalPercent - 100) > 0.01"
+              :disabled="Math.abs(totalPercent - 100) > 0.01 || Math.abs(totalComponents - montantTotalAmortissable) > 0.01"
               @click="nextStep"
             >
               Suivant
@@ -312,64 +307,73 @@ const currentStep = ref(0)
 const selectedPropriete = ref('')
 const currentStatus = ref<StepsProps['status']>('process')
 
-// Composants immobiliers avec leurs pourcentages par défaut
+// Composants immobiliers selon la décomposition fournie
 const immobilisationComponents = ref([
   {
     key: 'terrains',
     label: 'Terrains',
-    defaultPercentage: 6,
-    percent: 6,
-    dureeAmortissement: '',
+    defaultPercentage: 10,
+    percent: 10,
+    dureeAmortissement: null as number | null,
     typeImmobilisation: 'TERRAIN',
     amortissable: false,
-    categorie: 'Immobilisations incorporelles',
+    categorie: 'Terrains (510)',
   },
   {
-    key: 'constructions',
-    label: 'Constructions',
-    defaultPercentage: 50,
-    percent: 50,
-    dureeAmortissement: '40',
+    key: 'gros_oeuvre',
+    label: 'Structure (Gros œuvre)',
+    defaultPercentage: 40,
+    percent: 40,
+    dureeAmortissement: 50,
     typeImmobilisation: 'BIEN_IMMOBILIER',
     amortissable: true,
-    categorie: 'Immobilisations incorporelles',
+    categorie: 'Constructions (520)',
   },
   {
-    key: 'installations_techniques',
-    label: 'Installations techniques matériel et outillage industriels',
+    key: 'facades_etancheite',
+    label: 'Façades, étanchéité',
     defaultPercentage: 15,
     percent: 15,
-    dureeAmortissement: '15',
+    dureeAmortissement: 40,
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
-    categorie: 'Installations techniques matériel et outillage industriels',
+    categorie: 'Installations techniques matériel et outillage industriels (530)',
   },
   {
-    key: 'installations_generales',
-    label: 'Installations générales agencement divers',
+    key: 'igt',
+    label: 'IGT, Equipement',
     defaultPercentage: 20,
     percent: 20,
-    dureeAmortissement: '12',
+    dureeAmortissement: 25,
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
-    categorie: 'Installations générales agencement divers',
+    categorie: 'Installations générales agencement divers (540)',
   },
   {
-    key: 'autres_corporelles',
-    label: 'Autres immobilisations corporelles',
-    defaultPercentage: 9,
-    percent: 9,
-    dureeAmortissement: '10',
+    key: 'agencements',
+    label: 'Agencements (cloisons, chapes, plateries, revetement, plomberie, cablage)',
+    defaultPercentage: 15,
+    percent: 15,
+    dureeAmortissement: 15,
     typeImmobilisation: 'TRAVAUX',
     amortissable: true,
-    categorie: 'Autres immobilisations corporelles',
+    categorie: 'Autres immobilisations corporelles (560)',
   },
 ])
 
-// 2. Ajout d'une variable pour les frais d'acquisition récupérés de la propriété sélectionnée
+// Frais d'acquisition intégrés dans le montant total
 const fraisAcquisition = computed(() => {
   const propriete = selectedProprieteInfo.value
   return propriete?.fraisNotaire || 0
+})
+
+// Montant total amortissable (incluant les frais d'acquisition)
+const montantTotalAmortissable = computed(() => {
+  const montant = typeof formData.value.montant === 'string' ? parseFloat(formData.value.montant) : formData.value.montant
+  const frais = typeof fraisAcquisition.value === 'string' ? parseFloat(fraisAcquisition.value) : fraisAcquisition.value
+  const total = montant + frais
+  console.log('Debug - montant:', montant, 'fraisAcquisition:', frais, 'total:', total)
+  return total
 })
 
 // Workflow steps
@@ -454,7 +458,7 @@ const categorieFiscaleOptions = computed(() =>
 
 // Calcul du total des composants (en montant)
 const totalComponents = computed(() =>
-  immobilisationComponents.value.reduce((total, component) => total + (Number(component.percent) * formData.value.montant / 100), 0)
+  immobilisationComponents.value.reduce((total, component) => total + (Number(component.percent) * montantTotalAmortissable.value / 100), 0)
 )
 
 // Calcul du total des pourcentages
@@ -501,7 +505,7 @@ function onProprieteSelect(proprieteId: string) {
   
   // Récupérer les informations de la propriété sélectionnée
   const propriete = selectedProprieteInfo.value
-  const montantAcquisition = propriete?.montantAcquisition || 0
+  const montantAcquisition = Number(propriete?.montantAcquisition) || 0
   
   formData.value.intitule = `Immobilisation - ${propriete?.nom || 'Propriété'}`
   
@@ -545,9 +549,9 @@ async function saveImmobilisation() {
 
     const composantsAEnregistrer = immobilisationComponents.value.filter(c => Number(c.percent) > 0)
 
-    // Enregistrer les composants classiques
+    // Enregistrer les composants avec frais d'acquisition intégrés
     for (const composant of composantsAEnregistrer) {
-      const montant = (Number(composant.percent) * formData.value.montant) / 100
+      const montant = (Number(composant.percent) * montantTotalAmortissable.value) / 100
       const typeImmobilisationValue = composant.typeImmobilisation || (composant.key === 'terrain' ? 'TERRAIN' : undefined)
       const data: any = {
         intitule: `${formData.value.intitule} - ${composant.label}`,
@@ -561,29 +565,13 @@ async function saveImmobilisation() {
         data.typeImmobilisation = typeImmobilisationValue
       }
       if (composant.amortissable && composant.dureeAmortissement) {
-        data.categorieFiscale = getCategorieFiscaleFromDuree(String(composant.dureeAmortissement))
-        data.dureeAmortissement = String(composant.dureeAmortissement)
+        data.categorieFiscale = getCategorieFiscaleFromDuree(composant.dureeAmortissement.toString())
+        data.dureeAmortissement = composant.dureeAmortissement.toString()
       }
       await immobilisationApi.createImmobilisation(data)
     }
 
-    // Enregistrement séparé pour les frais d'acquisition
-    if (fraisAcquisition.value > 0) {
-      const dataFrais = {
-        intitule: `${formData.value.intitule} - Frais d'acquisition`,
-        montant: fraisAcquisition.value.toString(),
-        dateAcquisition: formData.value.dateAcquisition ? new Date(formData.value.dateAcquisition).toISOString().split('T')[0] : '',
-        proprieteId: formData.value.proprieteId,
-        commentaire: formData.value.commentaire,
-        utilisateurId: formData.value.utilisateurId,
-        typeImmobilisation: 'FRAIS',
-        categorieFiscale: getCategorieFiscaleFromDuree('8'),
-        dureeAmortissement: '8',
-      }
-      await immobilisationApi.createImmobilisation(dataFrais)
-    }
-
-    message.success(`${composantsAEnregistrer.length + (fraisAcquisition.value > 0 ? 1 : 0)} immobilisation(s) créée(s) avec succès`)
+    message.success(`${composantsAEnregistrer.length} immobilisation(s) créée(s) avec succès`)
     router.push('/immobilisations')
   } catch (error) {
     console.error('Erreur complète:', error)
@@ -630,34 +618,7 @@ function updateTotalMontant() {
   // Le total est calculé automatiquement via le computed totalComponents
 }
 
-function getDureeOptions(component: any) {
-  if (!component.amortissable) {
-    return [{ label: 'Non amortissable', value: '' }]
-  }
-  const durees = []
-  if (component.key === 'constructions') {
-    durees.push({ label: '30 ans', value: '30' })
-    durees.push({ label: '40 ans', value: '40' })
-    durees.push({ label: '50 ans', value: '50' })
-  } else if (component.key === 'installations_techniques') {
-    durees.push({ label: '10 ans', value: '10' })
-    durees.push({ label: '15 ans', value: '15' })
-    durees.push({ label: '20 ans', value: '20' })
-  } else if (component.key === 'installations_generales') {
-    durees.push({ label: '10 ans', value: '10' })
-    durees.push({ label: '12 ans', value: '12' })
-    durees.push({ label: '15 ans', value: '15' })
-  } else if (component.key === 'autres_corporelles') {
-    durees.push({ label: '5 ans', value: '5' })
-    durees.push({ label: '8 ans', value: '8' })
-    durees.push({ label: '10 ans', value: '10' })
-  } else {
-    durees.push({ label: '5 ans', value: '5' })
-    durees.push({ label: '8 ans', value: '8' })
-    durees.push({ label: '10 ans', value: '10' })
-  }
-  return durees
-}
+
 
 function getStepStatus(index: number) {
   if (index < currentStep.value) return 'finish'
@@ -674,13 +635,21 @@ function selectProprieteImmobilisation(propriete: any) {
 // Ajout d'une fonction utilitaire pour afficher la catégorie fiscale réelle
 function getCategorieFiscaleLabel(component: any) {
   if (component.key === 'terrains') {
-    return 'Non amortissable'
+    return 'Terrains (510) - Non amortissable'
   }
-  if (component.key === 'constructions') {
-    return `Bien immobilier (${component.dureeAmortissement || '—'} ans)`
+  if (component.key === 'gros_oeuvre') {
+    return `Constructions (520) - ${component.dureeAmortissement || '—'} ans`
   }
-  // Pour tous les autres composants
-  return `Travaux (${component.dureeAmortissement || '—'} ans)`
+  if (component.key === 'facades_etancheite') {
+    return `Installations techniques matériel et outillage industriels (530) - ${component.dureeAmortissement || '—'} ans`
+  }
+  if (component.key === 'igt') {
+    return `Installations générales agencement divers (540) - ${component.dureeAmortissement || '—'} ans`
+  }
+  if (component.key === 'agencements') {
+    return `Autres immobilisations corporelles (560) - ${component.dureeAmortissement || '—'} ans`
+  }
+  return `Travaux - ${component.dureeAmortissement || '—'} ans`
 }
 
 // Initialisation

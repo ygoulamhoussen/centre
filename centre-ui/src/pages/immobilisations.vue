@@ -55,6 +55,11 @@ function navigateToCreate() {
   router.push('/immobilisations-create')
 }
 
+// Navigation vers la page de création simple
+function navigateToCreateSimple() {
+  router.push('/immobilisations-simple')
+}
+
 // Options pour les filtres
 const proprieteOptions = computed(() =>
   proprietes.value.map(p => ({
@@ -227,21 +232,37 @@ onMounted(async () => {
   <div class="immobilisations-page">
     <div v-if="!isMobile" class="flex items-center justify-between">
       <NH1 class="titre-principal">Gestion des Immobilisations</NH1>
-      <NButton type="primary" @click="navigateToCreate">
-        <template #icon>
-          <Icon icon="material-symbols:add" />
-        </template>
-        Nouvelle Immobilisation
-      </NButton>
+      <div class="flex gap-3">
+        <NButton type="default" @click="navigateToCreateSimple">
+          <template #icon>
+            <Icon icon="material-symbols:add-circle-outline" />
+          </template>
+          Immobilisation simple
+        </NButton>
+        <NButton type="primary" @click="navigateToCreate">
+          <template #icon>
+            <Icon icon="material-symbols:add" />
+          </template>
+          Décomposer une propriété
+        </NButton>
+      </div>
     </div>
     <div v-else class="mobile-header">
       <NH1 class="titre-principal mobile-title">Immobilisations</NH1>
-      <NButton block size="small" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
-        <template #icon>
-          <Icon icon="material-symbols:add" />
-        </template>
-        Nouvelle Immobilisation
-      </NButton>
+      <div class="mobile-buttons">
+        <NButton block size="small" type="default" class="mobile-journal-btn" @click="navigateToCreateSimple">
+          <template #icon>
+            <Icon icon="material-symbols:add-circle-outline" />
+          </template>
+          Immobilisation simple
+        </NButton>
+        <NButton block size="small" type="primary" class="mobile-journal-btn" @click="navigateToCreate">
+          <template #icon>
+            <Icon icon="material-symbols:add" />
+          </template>
+          Décomposer une propriété
+        </NButton>
+      </div>
     </div>
     <div v-if="!isMobile" class="filters">
       <!-- Filtres desktop -->
@@ -322,6 +343,14 @@ h3 {
   align-items: center;
   gap: 12px;
   margin-bottom: 1.5rem;
+}
+
+.mobile-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
 }
 .mobile-title {
   font-size: 1.5rem;

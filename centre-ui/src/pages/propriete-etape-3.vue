@@ -1,17 +1,11 @@
 <script setup lang="ts">
+import { useAuthStore } from '@/store/modules/auth'
 import { useUnifiedStore } from '@/store/unifiedStore'
 import {
   ArrowLeft24Filled,
-  ArrowRight24Filled,
   CalendarLtr24Filled,
-  ChartMultiple24Filled,
-  DocumentHeader24Filled,
-  Edit24Filled,
-  Home24Filled,
-  PeopleCommunity24Filled,
-  Tag24Filled,
   Money24Filled,
-  QuestionCircle24Filled,
+  Tag24Filled,
 } from '@vicons/fluent'
 import {
   NButton,
@@ -21,20 +15,20 @@ import {
   NFormItemGi,
   NGrid,
   NIcon,
+  NInput,
   NInputNumber,
   NSpace,
   NStep,
   NSteps,
   useMessage,
-  NTooltip,
 } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
-    title: 'Nouvelle propriété - Détails',
+    title: 'Nouvelle propriété - Infos essentielles',
     hideInMenu: true,
     activeMenu: '/propriete',
   },
@@ -42,14 +36,17 @@ definePage({
 
 const store = useUnifiedStore()
 const { proprieteDTO } = storeToRefs(store)
+const authStore = useAuthStore()
 const router = useRouter()
 const message = useMessage()
 
-const stepTitles = ['Type et Nom', 'Adresse', 'Détails', 'Récapitulatif']
+const chargement = ref(false)
 const isMobile = ref(window.innerWidth < 768)
+
 function handleResize() {
   isMobile.value = window.innerWidth < 768
 }
+
 onMounted(() => window.addEventListener('resize', handleResize))
 onUnmounted(() => window.removeEventListener('resize', handleResize))
 
@@ -57,15 +54,70 @@ function precedent() {
   router.push('/propriete-etape-2')
 }
 
-function suivant() {
-  if (proprieteDTO.value.dateAcquisition === null || proprieteDTO.value.montantAcquisition === null) {
+async function valider() {
+  // Validation des champs obligatoires
+  if (!proprieteDTO.value.nom || !proprieteDTO.value.dateAcquisition || !proprieteDTO.value.montantAcquisition) {
     message.warning('Veuillez remplir tous les champs obligatoires.')
     return
   }
-  router.push('/propriete-etape-4')
-}
 
-const currentStep = 2
+  // Validation du prix d'acquisition
+  if (proprieteDTO.value.montantAcquisition <= 0) {
+    message.warning('Le prix d\'acquisition doit être supérieur à 0.')
+    return
+  }
+
+  // Validation de la date (≤ aujourd'hui)
+  const today = new Date()
+  today.setHours(23, 59, 59, 999) // Fin de la journée
+  const acquisitionDate = new Date(proprieteDTO.value.dateAcquisition)
+  
+  if (acquisitionDate > today) {
+    message.warning('La date d\'acquisition ne peut pas être dans le futur.')
+    return
+  }
+
+  chargement.value = true
+  try {
+    const utilisateurId = authStore.userInfo.userId
+    const finalDTO = {
+      typeBien: proprieteDTO.value.typeBien,
+      nom: proprieteDTO.value.nom,
+      dateAcquisition: proprieteDTO.value.dateAcquisition,
+      montantAcquisition: proprieteDTO.value.montantAcquisition,
+      adresse: proprieteDTO.value.adresse || null,
+      codePostal: proprieteDTO.value.codePostal || null,
+      ville: proprieteDTO.value.ville || null,
+    }
+
+    const response = await fetch(
+      `${import.meta.env.VITE_SERVICE_BASE_URL}/api/createPropriete/${utilisateurId}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(finalDTO),
+      },
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Erreur lors de la sauvegarde de la propriété')
+    }
+
+    const result = await response.json()
+    store.resetProprieteDTO()
+    message.success('Propriété créée avec succès 👍')
+    
+    // Redirection vers la liste des propriétés
+    router.push('/propriete')
+  }
+  catch (e: any) {
+    message.error(e.message || 'Erreur inconnue lors de la création de la propriété')
+  }
+  finally {
+    chargement.value = false
+  }
+}
 </script>
 
 <template>
@@ -74,21 +126,40 @@ const currentStep = 2
       <NCard :bordered="false" class="recap-card">
         <div class="mb-8" v-if="!isMobile">
           <NSteps :current="2" size="small">
-            <NStep title="Type et Nom" status="finish" />
+            <NStep title="Type de bien" status="finish" />
             <NStep title="Adresse" status="finish" />
-            <NStep title="Détails" status="process" />
-            <NStep title="Récapitulatif" />
+            <NStep title="Infos essentielles" status="process" />
           </NSteps>
         </div>
         <div v-else class="mobile-stepper mb-8">
-          <div class="step-mobile-number">Étape 3/4</div>
-          <div class="step-mobile-label">{{ stepTitles[2] }}</div>
+          <div class="step-mobile-number">Étape 3/3</div>
+          <div class="step-mobile-label">Infos essentielles</div>
         </div>
-        
+
         <div class="content-area">
+          <div class="section-title mb-6">
+            <h2>Informations essentielles</h2>
+            <p class="section-subtitle">Tous les champs sont obligatoires</p>
+          </div>
+
           <NForm>
-            <NGrid :x-gap="24" :y-gap="16" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
-              <NFormItemGi label="Date d'acquisition ou date de démarrage de l'activité*">
+            <NGrid :x-gap="24" :y-gap="24" :cols="isMobile ? 1 : 2" :item-responsive="true" class="form-grid">
+              <NFormItemGi :span="2" label="Nom du bien *">
+                <NInput
+                  v-model:value="proprieteDTO.nom"
+                  placeholder="Ex : Résidence Les Lilas, Parking centre-ville..."
+                  size="large"
+                >
+                  <template #prefix>
+                    <NIcon :component="Tag24Filled" />
+                  </template>
+                </NInput>
+                <template #feedback>
+                  <span class="field-help">Libellé court pour identifier la propriété dans l'app</span>
+                </template>
+              </NFormItemGi>
+
+              <NFormItemGi label="Date d'acquisition *">
                 <NDatePicker
                   v-model:formatted-value="proprieteDTO.dateAcquisition"
                   value-format="yyyy-MM-dd"
@@ -96,10 +167,15 @@ const currentStep = 2
                   clearable
                   style="width: 100%"
                   size="large"
-                />
+                  :is-date-disabled="(timestamp) => timestamp > Date.now()"
+                >
+                  <template #prefix>
+                    <NIcon :component="CalendarLtr24Filled" />
+                  </template>
+                </NDatePicker>
               </NFormItemGi>
 
-              <NFormItemGi label="Montant d'acquisition (€) *">
+              <NFormItemGi label="Prix d'acquisition TTC (€) *">
                 <NInputNumber
                   v-model:value="proprieteDTO.montantAcquisition"
                   :min="0"
@@ -114,44 +190,6 @@ const currentStep = 2
                   </template>
                 </NInputNumber>
               </NFormItemGi>
-
-              <NFormItemGi>
-                <template #label>
-                  Frais d'acquisition (€)
-                  <NTooltip placement="top">
-                    <template #trigger>
-                      <NIcon :component="QuestionCircle24Filled" size="18" style="color: #1976d2; margin-left: 6px; cursor: pointer; vertical-align: middle;" />
-                    </template>
-                    <div style="max-width: 320px;">
-                      <b>Que comprennent les frais d'acquisition&nbsp;?</b><br>
-                      <span>
-                        Ils incluent généralement&nbsp;:
-                        <ul style="margin: 0.5em 0 0 1.2em; padding: 0; font-size: 0.95em;">
-                          <li>Droits d'enregistrement (ou TVA si bien neuf)</li>
-                          <li>Émoluments du notaire</li>
-                          <li>Frais de formalités</li>
-                          <li>Frais d'agence (si payés par l'acquéreur)</li>
-                          <li>Frais de dossier de prêt (si inclus dans l'acte)</li>
-                          <li>Honoraires de conseils liés à l'achat</li>
-                        </ul>
-                      </span>
-                    </div>
-                  </NTooltip>
-                </template>
-                <NInputNumber
-                  v-model:value="proprieteDTO.fraisNotaire"
-                  :min="0"
-                  placeholder="0.00"
-                  style="width: 100%;"
-                  size="large"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                >
-                  <template #prefix>
-                    <NIcon :component="DocumentHeader24Filled" />
-                  </template>
-                </NInputNumber>
-              </NFormItemGi>
             </NGrid>
           </NForm>
         </div>
@@ -162,11 +200,16 @@ const currentStep = 2
               <template #icon>
                 <NIcon :component="ArrowLeft24Filled" />
               </template>
+              Précédent
             </NButton>
-            <NButton type="primary" @click="suivant" title="Suivant">
-              <template #icon>
-                <NIcon :component="ArrowRight24Filled" />
-              </template>
+            <NButton 
+              type="primary" 
+              @click="valider" 
+              :loading="chargement"
+              title="Créer la propriété"
+              size="large"
+            >
+              Créer la propriété
             </NButton>
           </NSpace>
         </div>
@@ -206,96 +249,32 @@ const currentStep = 2
   z-index: 10;
 }
 
-/* Styles existants */
-.progress-steps {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 32px;
-  padding: 16px 0;
-  background: transparent;
-  border-radius: 16px;
+/* Styles pour les sections */
+.section-title {
+  text-align: center;
   margin-bottom: 2rem;
 }
 
-.step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 90px;
-  opacity: 0.5;
-  transition: opacity 0.2s;
+.section-title h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
 }
 
-.step.active,
-.step.completed {
-  opacity: 1;
-}
-
-.step-number {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #1976d2;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.2rem;
-  margin-bottom: 6px;
-  border: 2px solid #1565c0;
-}
-
-.step.completed .step-number {
-  background: #1565c0;
-}
-
-.step-label {
+.section-subtitle {
   font-size: 1rem;
-  color: #1565c0;
-  text-align: center;
-  font-weight: 500;
+  color: #666;
+  margin: 0;
 }
 
-.progress-steps-mobile-simple {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 0;
-  gap: 4px;
-  background: transparent;
-  border-radius: 12px;
-  margin-bottom: 1rem;
+.field-help {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
 }
 
-.step-mobile-number {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1976d2;
-}
-
-.step-mobile-label {
-  font-size: 1rem;
-  color: #1565c0;
-  text-align: center;
-}
-
-.form-grid {
-  grid-template-columns: 1fr 1fr !important;
-}
-
-.form-grid .n-form-item-gi {
-  grid-column: 1 !important;
-}
-
-.flex-center,
-.flex-end {
-  justify-content: center !important;
-  margin-top: 1.5rem !important;
-}
-
+/* Mobile stepper */
 .mobile-stepper {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -311,6 +290,16 @@ const currentStep = 2
   font-size: 1.2rem;
   color: #222;
   margin-bottom: 1rem;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+}
+
+.flex-end {
+  display: flex;
+  justify-content: flex-end;
 }
 
 @media (max-width: 768px) {
@@ -336,36 +325,16 @@ const currentStep = 2
     border-top: 1px solid #f0f0f0;
   }
 
-  .mb-8 {
-    margin-bottom: 1rem !important;
+  .section-title h2 {
+    font-size: 1.3rem;
   }
 
-  .progress-steps {
-    display: none !important;
+  .section-subtitle {
+    font-size: 0.9rem;
   }
 
-  .progress-steps-mobile-simple {
-    font-size: 1.15rem !important;
-    padding: 1rem 1.25rem !important;
-    margin-bottom: 1.5rem !important;
-  }
-
-  .p-4 {
-    padding: 1rem !important;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .form-grid .n-form-item-gi {
-    grid-column: 1 !important;
-  }
-
-  .flex-center,
-  .flex-end {
-    justify-content: center !important;
-    margin-top: 1.5rem !important;
+  .field-help {
+    font-size: 0.8rem;
   }
 }
 </style>

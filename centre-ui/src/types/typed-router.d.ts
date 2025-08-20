@@ -104,7 +104,6 @@ declare module 'vue-router/auto-routes' {
     '/propriete-etape-1': RouteRecordInfo<'/propriete-etape-1', '/propriete-etape-1', Record<never, never>, Record<never, never>>,
     '/propriete-etape-2': RouteRecordInfo<'/propriete-etape-2', '/propriete-etape-2', Record<never, never>, Record<never, never>>,
     '/propriete-etape-3': RouteRecordInfo<'/propriete-etape-3', '/propriete-etape-3', Record<never, never>, Record<never, never>>,
-    '/propriete-etape-4': RouteRecordInfo<'/propriete-etape-4', '/propriete-etape-4', Record<never, never>, Record<never, never>>,
     '/quittance': RouteRecordInfo<'/quittance', '/quittance', Record<never, never>, Record<never, never>>,
     '/quittance-detail.[id]': RouteRecordInfo<'/quittance-detail.[id]', '/quittance-detail/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/quittance-etape-1': RouteRecordInfo<'/quittance-etape-1', '/quittance-etape-1', Record<never, never>, Record<never, never>>,
